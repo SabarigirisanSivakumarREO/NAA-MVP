@@ -728,19 +728,19 @@
   <div class="hero-header">
     <h1>AI CRO Audit System <span class="accent">Architecture</span></h1>
     <div class="hero-subtitle">COMPLETE SYSTEM ARCHITECTURE &middot; REO DIGITAL</div>
-    <div class="hero-version">v2.1 &middot; April 2026 &middot; 33 Sections &middot; 211 Tasks</div>
-    <p class="hero-desc">AI-powered CRO audit platform. Browser agent navigates sites with human-like behavior. Analysis agent evaluates against 100 research-grounded heuristics using a 5-step pipeline with 3-layer hallucination filtering. Produces evidence-grounded findings with annotated screenshots. Consultant review gate ensures quality before client delivery.</p>
+    <div class="hero-version">v2.2 &middot; April 2026 &middot; 36 Sections &middot; 255 Tasks &middot; 12 Phases</div>
+    <p class="hero-desc">AI-powered CRO audit platform. Browser agent navigates sites with human-like behavior. Analysis agent evaluates against 100 benchmark-backed heuristics using a 5-step pipeline with 3-layer hallucination filtering. Cross-page pattern detection, funnel analysis, and perception quality gating. Token-level cost accounting, LLM failover, and operational observability. Produces evidence-grounded findings with annotated screenshots, executive summary, action plan, and PDF reports. Consultant review gate ensures quality before client delivery.</p>
   </div>
 
   <!-- PART 2: STATS BAR -->
   <div class="hero-stats">
     <div class="hero-stat"><div class="hero-stat-value">5</div><div class="hero-stat-label">Layers</div></div>
-    <div class="hero-stat"><div class="hero-stat-value">28</div><div class="hero-stat-label">Tools (23+5)</div></div>
-    <div class="hero-stat"><div class="hero-stat-value">100</div><div class="hero-stat-label">Heuristics</div></div>
-    <div class="hero-stat"><div class="hero-stat-value">11</div><div class="hero-stat-label">Grounding Rules</div></div>
+    <div class="hero-stat"><div class="hero-stat-value">31</div><div class="hero-stat-label">Tools (23+5+3)</div></div>
+    <div class="hero-stat"><div class="hero-stat-value">100</div><div class="hero-stat-label">Heuristics + Benchmarks</div></div>
+    <div class="hero-stat"><div class="hero-stat-value">12</div><div class="hero-stat-label">Grounding Rules</div></div>
     <div class="hero-stat"><div class="hero-stat-value">3</div><div class="hero-stat-label">Reliability Tiers</div></div>
-    <div class="hero-stat"><div class="hero-stat-value">110</div><div class="hero-stat-label">Failure Modes</div></div>
-    <div class="hero-stat"><div class="hero-stat-value">11</div><div class="hero-stat-label">Phases (211)</div></div>
+    <div class="hero-stat"><div class="hero-stat-value">110+</div><div class="hero-stat-label">Failure Modes</div></div>
+    <div class="hero-stat"><div class="hero-stat-value">12</div><div class="hero-stat-label">Phases (255)</div></div>
     <div class="hero-stat"><div class="hero-stat-value">~$0.35</div><div class="hero-stat-label">-1.80 Cost/Page</div></div>
   </div>
 
@@ -765,17 +765,23 @@
         <div class="hero-flow-arrow">&#8594;</div>
         <div class="hero-flow-chip fc-analyze">Deep Perceive</div>
         <div class="hero-flow-arrow">&#8594;</div>
+        <div class="hero-flow-chip fc-ground">Quality Gate</div>
+        <div class="hero-flow-arrow">&#8594;</div>
         <div class="hero-flow-chip fc-analyze">Evaluate (CoT)</div>
         <div class="hero-flow-arrow">&#8594;</div>
         <div class="hero-flow-chip fc-critique">Self-Critique</div>
         <div class="hero-flow-arrow">&#8594;</div>
-        <div class="hero-flow-chip fc-ground">Evidence Ground</div>
+        <div class="hero-flow-chip fc-ground">Evidence Ground (12 rules)</div>
         <div class="hero-flow-arrow">&#8594;</div>
         <div class="hero-flow-chip fc-analyze">Annotate</div>
         <div class="hero-flow-arrow">&#8594;</div>
         <div class="hero-flow-chip fc-data">Store + Review Gate</div>
         <div class="hero-flow-arrow">&#8594;</div>
         <div class="hero-flow-chip fc-orch">Next Page / Workflow</div>
+        <div class="hero-flow-arrow">&#8594;</div>
+        <div class="hero-flow-chip fc-orch">Cross-Page Analysis</div>
+        <div class="hero-flow-arrow">&#8594;</div>
+        <div class="hero-flow-chip fc-deliver">Report + PDF</div>
         <div class="hero-flow-arrow">&#8594;</div>
         <div class="hero-flow-chip fc-orch">Complete</div>
         <div class="hero-flow-arrow">&#8594;</div>
@@ -788,7 +794,7 @@
         <div class="hero-flow-chip fc-learn">Learn</div>
       </div>
       <div class="hero-flow-caption">
-        Browse &#8596; Analyze loop repeats for each page. Post-audit: findings go through review gate &#8594; published store &#8594; client delivery. Learning loop improves future audits.
+        Browse &#8596; Analyze loop repeats for each page. Perception quality gate prevents wasted LLM calls. Cross-page analysis detects patterns + funnel issues. Report generator produces PDF with executive summary + action plan. Post-audit: findings go through review gate &#8594; published store &#8594; client delivery. Learning loop improves future audits.
       </div>
       <div class="hero-flow-legend">
         <div class="hero-legend-item"><span class="hero-legend-dot" style="background:rgba(59,130,246,0.5)"></span> Orchestration</div>
@@ -860,6 +866,10 @@
 &#9474;  <span class="hl-orange">&#9474;</span>  <span class="hl-yellow">Step 1: deep_perceive</span>                                                            &#9474;
 &#9474;  <span class="hl-orange">&#9474;</span>     page_analyze() + screenshots + per-state screenshots                            &#9474;
 &#9474;  <span class="hl-orange">&#9474;</span>                                                                                    &#9474;
+&#9474;  <span class="hl-orange">&#9474;</span>  <span class="hl-green">Step 1b: perception quality gate</span> <span class="hl-red">(NEW &sect;36)</span>                                       &#9474;
+&#9474;  <span class="hl-orange">&#9474;</span>     Score: content + CTAs + nav + headings + overlays + errors                      &#9474;
+&#9474;  <span class="hl-orange">&#9474;</span>     &ge;0.6 &#8594; proceed | 0.3-0.59 &#8594; partial (Tier 1 only) | &lt;0.3 &#8594; skip page        &#9474;
+&#9474;  <span class="hl-orange">&#9474;</span>                                                                                    &#9474;
 &#9474;  <span class="hl-orange">&#9474;</span>  <span class="hl-yellow">Step 2: evaluate</span>                                                                 &#9474;
 &#9474;  <span class="hl-orange">&#9474;</span>     Interactive CoT (&#167;33) or static. Split: global / per_state / transition          &#9474;
 &#9474;  <span class="hl-orange">&#9474;</span>                                                                                    &#9474;
@@ -869,7 +879,8 @@
 &#9474;  <span class="hl-orange">&#9474;</span>  <span class="hl-yellow">Step 3: self-critique</span>  <span class="hl-red">(SEPARATE LLM call)</span>                                        &#9474;
 &#9474;  <span class="hl-orange">&#9474;</span>     Reviews Pass 1 + Pass 2 findings                                                &#9474;
 &#9474;  <span class="hl-orange">&#9474;</span>                                                                                    &#9474;
-&#9474;  <span class="hl-orange">&#9474;</span>  <span class="hl-green">Step 4: evidence ground</span>  (11 rules GR-001..GR-011, deterministic code, NO LLM)    &#9474;
+&#9474;  <span class="hl-orange">&#9474;</span>  <span class="hl-green">Step 4: evidence ground</span>  (12 rules GR-001..GR-012, deterministic code, NO LLM)    &#9474;
+&#9474;  <span class="hl-orange">&#9474;</span>     GR-012: benchmark claims validated against heuristic benchmark data              &#9474;
 &#9474;  <span class="hl-orange">&#9474;</span>                                                                                    &#9474;
 &#9474;  <span class="hl-orange">&#9474;</span>  <span class="hl-yellow">Step 5: annotate + store</span>                                                         &#9474;
 &#9474;  <span class="hl-orange">&#9474;</span>     Sharp overlay pins, DB persist, R2 screenshots                                  &#9474;
@@ -901,16 +912,23 @@
 &#9474; PHASE 4: AUDIT COMPLETION                                                                   &#9474;
 &#9474;                                                                                            &#9474;
 &#9474;  <span class="hl-green">audit_complete</span> node                                                                    &#9474;
+&#9474;     &#9500;&#9472; <span class="hl-purple">cross_page_analyze</span> node <span class="hl-red">(NEW &sect;35)</span>                                              &#9474;
+&#9474;     &#9474;     1. Pattern detection (deterministic): group findings by heuristic across pages    &#9474;
+&#9474;     &#9474;        Same heuristic on 3+ pages &#8594; PatternFinding                                    &#9474;
+&#9474;     &#9474;     2. Consistency check (deterministic): CTA styles, nav, trust signals              &#9474;
+&#9474;     &#9474;     3. Funnel analysis (LLM, 1 call, $1 cap): journey friction, promise mismatch     &#9474;
+&#9474;     &#9474;                                                                                      &#9474;
 &#9474;     &#9500;&#9472; Update audit_run status (<span class="hl-green">completed</span> / <span class="hl-yellow">budget_exceeded</span> / <span class="hl-red">failed</span>)                        &#9474;
-&#9474;     &#9500;&#9472; Generate summary (pages, findings, cost, duration)                                 &#9474;
-&#9474;     &#9500;&#9472; Run cross-page consistency check (CTA styling, nav, colors, typography)             &#9474;
+&#9474;     &#9500;&#9472; Generate <span class="hl-cyan">executive summary</span> <span class="hl-red">(NEW &sect;35)</span>                                              &#9474;
+&#9474;     &#9474;     Overall score (0-100), grade (A-F), top 5 findings, strengths, category stats    &#9474;
+&#9474;     &#9500;&#9472; Generate <span class="hl-cyan">action plan</span> (deterministic bucketing by effort/impact quadrant)              &#9474;
+&#9474;     &#9474;     Quick wins | Strategic | Incremental | Deprioritized                              &#9474;
 &#9474;     &#9500;&#9472; Run competitor comparison (if configured &#8212; <span class="hl-orange">pairwise, NOT absolute scoring</span>)          &#9474;
-&#9474;     &#9474;     Client CTA vs Competitor CTA on specific dimensions                               &#9474;
-&#9474;     &#9474;     Separate audit run for each competitor                                             &#9474;
 &#9474;     &#9500;&#9472; Run version diff (if previous audit exists)                                        &#9474;
-&#9474;     &#9474;     <span class="hl-green">Resolved:</span> in v1 but not v2 (fixes!)                                              &#9474;
-&#9474;     &#9474;     <span class="hl-yellow">Persisted:</span> in both v1 and v2 (still open)                                       &#9474;
-&#9474;     &#9474;     <span class="hl-red">New:</span> in v2 but not v1 (regressions or new areas)                                 &#9474;
+&#9474;     &#9474;     <span class="hl-green">Resolved:</span> in v1 but not v2 | <span class="hl-yellow">Persisted:</span> in both | <span class="hl-red">New:</span> in v2 only             &#9474;
+&#9474;     &#9500;&#9472; Generate <span class="hl-green">PDF report</span> <span class="hl-red">(NEW &sect;35)</span>                                                     &#9474;
+&#9474;     &#9474;     Cover &#8594; Exec Summary &#8594; Action Plan &#8594; Findings &#8594; Patterns &#8594; Methodology           &#9474;
+&#9474;     &#9474;     Branded per client. Stored in R2. &lt;5MB.                                           &#9474;
 &#9474;     &#9492;&#9472; Emit: <span class="hl-green">session_completed</span>                                                           &#9474;
 &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span>
                  &#9474;
@@ -1183,7 +1201,7 @@ Reproducibility:
         <div class="pipe-step" onclick="toggleNode(this)">
           <div class="pipe-step-name">SELF-CRITIQUE</div>
           <div class="pipe-step-time">~2&ndash;3s</div>
-          <div class="node-details">Second LLM pass reviews draft findings for hallucinations, weak evidence, false positives. Applies Evidence Grounder rules GR-001 through GR-011. Drops or downgrades findings that fail grounding.</div>
+          <div class="node-details">Second LLM pass reviews draft findings for hallucinations, weak evidence, false positives. Applies Evidence Grounder rules GR-001 through GR-012 (including benchmark validation). Drops or downgrades findings that fail grounding.</div>
         </div>
         <span class="pipe-arrow">&#9654;</span>
         <div class="pipe-step" onclick="toggleNode(this)">
@@ -1209,9 +1227,9 @@ Reproducibility:
         </div>
         <div class="node-box" onclick="toggleNode(this)">
           <span class="expand-indicator">&#9660;</span>
-          <div class="node-title"><span class="req-id">GR-001..GR-011</span> Evidence Grounder</div>
-          <div class="node-desc">11 grounding rules to eliminate hallucinations</div>
-          <div class="node-details">11 deterministic rules (GR-001 through GR-011) that validate every finding's evidence chain. Checks include: selector existence, screenshot region verification, metric substantiation, cross-reference consistency, and temporal validity.</div>
+          <div class="node-title"><span class="req-id">GR-001..GR-012</span> Evidence Grounder</div>
+          <div class="node-desc">12 grounding rules to eliminate hallucinations</div>
+          <div class="node-details">12 deterministic rules (GR-001 through GR-012) that validate every finding's evidence chain. Checks include: selector existence, screenshot region verification, metric substantiation, cross-reference consistency, temporal validity, and benchmark data validation (GR-012).</div>
         </div>
         <div class="node-box" onclick="toggleNode(this)">
           <span class="expand-indicator">&#9660;</span>
@@ -2428,7 +2446,7 @@ Reproducibility:
 
   <div class="tab-header">
     <h2>Heuristic Knowledge Base & Evidence Grounding</h2>
-    <div class="subtitle">100 heuristics / 3 reliability tiers / 11 grounding rules</div>
+    <div class="subtitle">100 heuristics with benchmarks / 3 reliability tiers / 12 grounding rules</div>
   </div>
 
   <!-- Section 1: Heuristic Schema -->
@@ -2461,6 +2479,14 @@ Reproducibility:
         <span class="field-chip">details</span>
         <span class="field-chip">researchBacking</span>
       </div>
+      <div class="schema-key">benchmark <span class="badge-blocked" style="font-size:.55rem">REQUIRED</span></div>
+      <div class="schema-val">
+        <strong>Quantitative:</strong> <span class="field-chip">value</span> <span class="field-chip">source</span> <span class="field-chip">unit</span> <span class="field-chip">comparison</span> <span class="field-chip">threshold_warning</span> <span class="field-chip">threshold_critical</span><br>
+        <strong>Qualitative:</strong> <span class="field-chip">standard</span> <span class="field-chip">source</span> <span class="field-chip">positive_exemplar</span> <span class="field-chip">negative_exemplar</span><br>
+        <span style="font-size:.7rem;color:var(--text3)">Every heuristic MUST have a benchmark. Quantitative for structural (form fields, contrast). Qualitative for content/persuasion (standards + exemplars).</span>
+      </div>
+      <div class="schema-key">viewport_applicability</div>
+      <div class="schema-val"><span class="badge-safe">desktop</span> <span class="badge-caution">mobile</span> <span class="badge-tier1">both</span> &mdash; default: both (Phase 12)</div>
     </div>
   </div>
 
@@ -2545,7 +2571,7 @@ Reproducibility:
 
   <!-- Section 5: 11 Evidence Grounding Rules -->
   <div class="diagram-section">
-    <div class="section-title"><span class="section-num">5</span> 11 Evidence Grounding Rules</div>
+    <div class="section-title"><span class="section-num">5</span> 12 Evidence Grounding Rules</div>
     <table class="data-table">
       <thead>
         <tr>
@@ -2567,6 +2593,7 @@ Reproducibility:
         <tr><td><span class="req-id">GR-009</span></td><td>Hidden-state content must include state provenance (Phase 7+)</td><td>Deterministic</td><td>Missing provenance</td></tr>
         <tr><td><span class="req-id">GR-010</span></td><td>Cross-step finding must reference &ge;2 steps (Phase 8+)</td><td>Deterministic</td><td>Wrong scope</td></tr>
         <tr><td><span class="req-id">GR-011</span></td><td>Per-state finding must reference correct state data (Phase 7+)</td><td>Deterministic</td><td>Wrong state data</td></tr>
+        <tr style="background:rgba(34,197,94,.06)"><td><span class="req-id">GR-012</span></td><td>Benchmark claims must match heuristic benchmark data (&plusmn;20% for quantitative; standard reference for qualitative)</td><td>Deterministic</td><td>Hallucinated industry numbers</td></tr>
       </tbody>
     </table>
   </div>
@@ -2965,6 +2992,48 @@ Reproducibility:
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <!-- Section 3b: LLM Rate Limiting & Failover (v2.2) -->
+  <div class="diagram-section">
+    <div class="section-title"><span class="section-num">3b</span> LLM Rate Limiting &amp; Failover <span class="req-id">v2.2 NEW</span></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">LLM API Rate Limits</div>
+        <table class="data-table">
+          <thead><tr><th>Provider</th><th>RPM</th><th>TPM</th><th>Concurrent</th></tr></thead>
+          <tbody>
+            <tr><td>Anthropic (Claude)</td><td>50</td><td>80K</td><td>5</td></tr>
+            <tr><td>OpenAI (GPT-4o)</td><td>60</td><td>150K</td><td>5</td></tr>
+          </tbody>
+        </table>
+        <div style="font-size:.7rem;color:var(--text3);margin-top:6px">Sliding window in Redis. Exponential backoff with &plusmn;20% jitter. Configurable per provider via env vars.</div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Failover Policy (per-call)</div>
+        <div style="font-size:.75rem;color:var(--text2);line-height:1.6">
+          1. Try primary (Claude) &mdash; up to 3 retries with backoff<br>
+          2. All 3 fail &rarr; switch to fallback (GPT-4o) for THIS CALL ONLY<br>
+          3. Fallback: up to 2 retries<br>
+          4. All fail &rarr; LLMUnavailableError<br>
+          5. 3+ consecutive page failures &rarr; audit PAUSES<br>
+          6. Resume scheduled in 5min via BullMQ (3 attempts max)<br>
+          7. Finding gets <span class="req-id">model_mismatch = true</span> if produced by fallback
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3c: Token-Level Cost Accounting (v2.2) -->
+  <div class="diagram-section">
+    <div class="section-title"><span class="section-num">3c</span> Token-Level Cost Accounting <span class="req-id">v2.2 NEW</span></div>
+    <div style="font-size:.75rem;color:var(--text2);line-height:1.7">
+      <strong>Every LLM call logged atomically:</strong> audit_run_id, page_url, node_name, heuristic_id, model, input_tokens, output_tokens, cost_usd, duration_ms, cache_hit<br>
+      <strong>Pre-call budget gate:</strong> estimate cost from prompt token count. If estimated &gt; remaining budget &rarr; skip call or split heuristic batch.<br>
+      <strong>Post-audit summary:</strong> actual_cost_usd, cost_breakdown by node, cost_per_page_avg, cache_hit_rate &rarr; stored in audit_runs.cost_summary (JSONB)<br>
+      <strong>Per-client attribution:</strong> llm_call_log JOIN audit_runs GROUP BY client_id &mdash; enables billing and profitability analysis.
     </div>
   </div>
 
@@ -3541,9 +3610,59 @@ Reproducibility:
     </div>
   </div>
 
-  <!-- Section 6: Client Visibility Rules -->
+  <!-- Section 6: New Specs (v2.2 Refinement) -->
   <div class="diagram-section">
-    <div class="section-title"><span class="section-num">6</span> Client Visibility Rules</div>
+    <div class="section-title"><span class="section-num">6</span> v2.2 Additions: &sect;34 Observability + &sect;35 Reports + &sect;36 Quality</div>
+
+    <div class="iface-grid">
+      <div class="iface-card" style="border-left:4px solid var(--green)">
+        <div class="iface-card-title"><span class="req-id">&sect;34</span> Observability &amp; Operational Monitoring</div>
+        <div class="iface-card-items">
+          <strong>3 layers:</strong><br>
+          1. <strong>Structured logging</strong> (Pino) with audit_run_id + page_url correlation<br>
+          2. <strong>Audit events table</strong> &mdash; 22 event types (audit_started through cross_page_completed)<br>
+          3. <strong>Derived metrics</strong> &mdash; heuristic health scores, cost tracking, alerting rules<br><br>
+          <strong>Alerting:</strong> audit stuck &gt;45min, grounding &gt;80% rejection, cost &gt;2&times; estimate, LLM errors<br>
+          <strong>Dashboard:</strong> /console/admin/operations (admin only)
+        </div>
+      </div>
+      <div class="iface-card" style="border-left:4px solid var(--orange)">
+        <div class="iface-card-title"><span class="req-id">&sect;35</span> Report Generation &amp; Export</div>
+        <div class="iface-card-items">
+          <strong>Executive Summary:</strong> overall score (0-100), grade (A-F), top 5 findings, strengths, category breakdown<br>
+          <strong>Action Plan:</strong> 4 quadrants &mdash; quick wins / strategic / incremental / deprioritized<br>
+          <strong>PDF Report:</strong> Cover &rarr; Summary &rarr; Action Plan &rarr; Findings &rarr; Patterns &rarr; Methodology<br>
+          <strong>Tech:</strong> Next.js HTML template &rarr; Playwright page.pdf() &mdash; branded per client, &lt;5MB
+        </div>
+      </div>
+      <div class="iface-card" style="border-left:4px solid var(--purple)">
+        <div class="iface-card-title"><span class="req-id">&sect;36</span> Golden Test Suite &amp; Quality Assurance</div>
+        <div class="iface-card-items">
+          <strong>Golden tests:</strong> 20 saved page snapshots with validated expected findings<br>
+          <strong>CI fast mode:</strong> MockLLMAdapter, tests grounding/filtering/scoring (every PR)<br>
+          <strong>CI nightly:</strong> Real LLM calls, ~$1-2/run, catches prompt regressions<br>
+          <strong>Pass criteria:</strong> TP &ge;80%, FP &le;20%, no test below 60% TP<br>
+          <strong>Offline mode:</strong> NEURAL_MODE=offline &mdash; MockBrowserEngine + MockLLMAdapter
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px">
+      <div class="db-group">
+        <div class="db-group-title">
+          <span class="db-group-badge" style="background:rgba(168,85,247,.15);color:var(--purple)">NEW TABLES (v2.2)</span>
+        </div>
+        <div class="db-tables">
+          <div class="db-tbl"><div class="db-tbl-name">llm_call_log</div><div class="db-tbl-cols">audit_run_id, node_name, model, input_tokens, output_tokens, cost_usd, duration_ms, cache_hit</div></div>
+          <div class="db-tbl"><div class="db-tbl-name">audit_events</div><div class="db-tbl-cols">audit_run_id, client_id, event_type (22 types), page_url, metadata, timestamp</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 7: Client Visibility Rules -->
+  <div class="diagram-section">
+    <div class="section-title"><span class="section-num">7</span> Client Visibility Rules</div>
 
     <div class="vis-split">
       <div class="vis-col">
@@ -3575,8 +3694,8 @@ Reproducibility:
   </div>
 </div>
 <div class="tab-pane" id="tab-9">
-  <h1 class="page-title">11-Phase Implementation Plan &mdash; 211 Tasks</h1>
-  <p class="page-subtitle">Phased delivery from monorepo setup through interactive audit composition, with interface-first bake-in and gate checks.</p>
+  <h1 class="page-title">12-Phase Implementation Plan &mdash; 255 Tasks</h1>
+  <p class="page-subtitle">Phased delivery from monorepo setup through interactive audit composition + mobile viewport, with cross-page analysis, observability, report generation, golden tests, and interface-first bake-in.</p>
 
   <!-- Section 1: Phase Overview Table -->
   <div class="diagram-section">
@@ -3593,18 +3712,19 @@ Reproducibility:
         </tr>
       </thead>
       <tbody>
-        <tr><td class="phase-num">0</td><td>Setup</td><td>5</td><td>0&ndash;1</td><td>Monorepo ready</td></tr>
-        <tr><td class="phase-num">1</td><td>Perception</td><td>10</td><td>1&ndash;2</td><td>Agent can see</td></tr>
+        <tr><td class="phase-num">0</td><td>Setup + Golden Test Infra</td><td>7</td><td>0&ndash;1</td><td>Monorepo + offline mock mode ready</td></tr>
+        <tr><td class="phase-num">1</td><td>Perception</td><td>11</td><td>1&ndash;2</td><td>Agent can see + fixture capture</td></tr>
         <tr><td class="phase-num">2</td><td>Tools + Behavior</td><td>35</td><td>2&ndash;4</td><td>Agent can act</td></tr>
         <tr><td class="phase-num">3</td><td>Verification</td><td>15</td><td>4&ndash;5</td><td>Agent verifies</td></tr>
-        <tr><td class="phase-num">4</td><td>Safety + Infra</td><td>15</td><td>5&ndash;6</td><td>Foundation solid</td></tr>
-        <tr style="background:rgba(34,197,94,.04)"><td class="phase-num">5</td><td class="milestone-cell">Browse MVP</td><td>20</td><td>6&ndash;7</td><td class="milestone-cell">Browse works</td></tr>
-        <tr><td class="phase-num">6</td><td>Heuristic KB</td><td>12</td><td>7&ndash;8</td><td>Knowledge ready</td></tr>
-        <tr><td class="phase-num">7</td><td>Analysis Pipeline</td><td>22</td><td>8&ndash;10</td><td>Analysis works</td></tr>
-        <tr style="background:rgba(34,197,94,.04)"><td class="phase-num">8</td><td class="milestone-cell">Orchestrator</td><td>21</td><td>10&ndash;11</td><td class="milestone-cell">Single-site audit</td></tr>
-        <tr><td class="phase-num">9</td><td>Master Foundations</td><td>20</td><td>11&ndash;13</td><td>Platform ready</td></tr>
-        <tr><td class="phase-num">10</td><td>State Exploration</td><td>18</td><td>13&ndash;15</td><td>State-aware audit</td></tr>
-        <tr style="background:rgba(34,197,94,.04)"><td class="phase-num">11</td><td class="milestone-cell">Agent Composition</td><td>18</td><td>15&ndash;17</td><td class="milestone-cell">Interactive audit (MOAT)</td></tr>
+        <tr><td class="phase-num">4</td><td>Safety + Infra + Cost</td><td>21</td><td>5&ndash;7</td><td>Foundation + token-level cost + LLM failover</td></tr>
+        <tr style="background:rgba(34,197,94,.04)"><td class="phase-num">5</td><td class="milestone-cell">Browse MVP</td><td>20</td><td>7&ndash;8</td><td class="milestone-cell">Browse works</td></tr>
+        <tr><td class="phase-num">6</td><td>Heuristic KB + Benchmarks</td><td>16</td><td>8&ndash;9</td><td>100 heuristics with benchmarks + GR-012</td></tr>
+        <tr><td class="phase-num">7</td><td>Analysis Pipeline + Quality</td><td>26</td><td>9&ndash;11</td><td>Analysis + perception gate + error recovery</td></tr>
+        <tr style="background:rgba(34,197,94,.04)"><td class="phase-num">8</td><td class="milestone-cell">Orchestrator + Cross-Page</td><td>28</td><td>11&ndash;13</td><td class="milestone-cell">Full audit + cross-page analysis</td></tr>
+        <tr><td class="phase-num">9</td><td>Foundations + Observability + Reports</td><td>33</td><td>13&ndash;16</td><td>Platform + &sect;34/&sect;35 + PDF export</td></tr>
+        <tr><td class="phase-num">10</td><td>State Exploration</td><td>18</td><td>16&ndash;18</td><td>State-aware audit</td></tr>
+        <tr style="background:rgba(34,197,94,.04)"><td class="phase-num">11</td><td class="milestone-cell">Agent Composition</td><td>20</td><td>18&ndash;20</td><td class="milestone-cell">Interactive audit (MOAT)</td></tr>
+        <tr><td class="phase-num">12</td><td>Mobile Viewport</td><td>5</td><td>20&ndash;21</td><td>Dual-viewport audits + mobile heuristics</td></tr>
       </tbody>
     </table>
   </div>
@@ -3628,17 +3748,19 @@ Reproducibility:
     </div>
     <div class="pipeline" style="margin-top:4px">
       <span class="pipe-arrow">&rarr;</span>
-      <div class="pipe-step"><div class="pipe-step-name">Phase 6</div><div class="pipe-step-sub">Heuristics</div></div>
+      <div class="pipe-step"><div class="pipe-step-name">Phase 6</div><div class="pipe-step-sub">Heuristics + Benchmarks</div></div>
       <span class="pipe-arrow">&rarr;</span>
-      <div class="pipe-step"><div class="pipe-step-name">Phase 7</div><div class="pipe-step-sub">Analysis</div></div>
+      <div class="pipe-step"><div class="pipe-step-name">Phase 7</div><div class="pipe-step-sub">Analysis + Quality</div></div>
       <span class="pipe-arrow">&rarr;</span>
-      <div class="pipe-step milestone"><div class="pipe-step-name">Phase 8</div><div class="pipe-step-sub">MVP AUDIT</div></div>
+      <div class="pipe-step milestone"><div class="pipe-step-name">Phase 8</div><div class="pipe-step-sub">MVP + CROSS-PAGE</div></div>
       <span class="pipe-arrow">&rarr;</span>
-      <div class="pipe-step"><div class="pipe-step-name">Phase 9</div><div class="pipe-step-sub">Platform</div></div>
+      <div class="pipe-step"><div class="pipe-step-name">Phase 9</div><div class="pipe-step-sub">Platform + &sect;34/&sect;35</div></div>
       <span class="pipe-arrow">&rarr;</span>
       <div class="pipe-step"><div class="pipe-step-name">Phase 10</div><div class="pipe-step-sub">States</div></div>
       <span class="pipe-arrow">&rarr;</span>
       <div class="pipe-step milestone"><div class="pipe-step-name">Phase 11</div><div class="pipe-step-sub">FULL PRODUCT</div></div>
+      <span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-step"><div class="pipe-step-name">Phase 12</div><div class="pipe-step-sub">Mobile</div></div>
     </div>
   </div>
 
