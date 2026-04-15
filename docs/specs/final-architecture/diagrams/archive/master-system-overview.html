@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Architecture — System Overview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0a0a0f; --surface: #12121c; --surface-2: #1a1a26; --border: #2a2a3e;
+    --text: #e8e8f0; --text-dim: #9090a8; --text-muted: #606078;
+    --accent: #6366f1; --browse: #4e82ff; --analyze: #ff824e;
+    --orchestration: #8b5cf6; --data: #fbbf24; --delivery: #ec4899;
+    --explore: #14b8a6; --discover: #a78bfa; --workflow: #f472b6;
+    --cost: #facc15; --repro: #38bdf8; --learn: #34d399;
+    --tier-1: #10b981; --tier-2: #f59e0b; --tier-3: #ef4444;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px 20px; line-height: 1.6; }
+  .container { max-width: 1400px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 50px; padding: 40px 20px; background: linear-gradient(180deg, rgba(99,102,241,0.08), transparent); border-radius: 16px; border: 1px solid var(--border); }
+  .header h1 { font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-bottom: 8px; }
+  .header h1 span { color: var(--accent); }
+  .header .subtitle { font-size: 14px; color: var(--text-dim); letter-spacing: 3px; text-transform: uppercase; }
+  .header .version { display: inline-block; margin-top: 16px; padding: 6px 16px; background: var(--accent); color: #fff; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .header .desc { font-size: 14px; color: var(--text-dim); margin-top: 16px; max-width: 700px; margin-left: auto; margin-right: auto; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 40px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 8px; text-align: center; }
+  .stat-value { font-size: 24px; font-weight: 800; color: #fff; }
+  .stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+  .section { margin-bottom: 40px; padding: 30px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .section-num { width: 36px; height: 36px; border-radius: 8px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; }
+  .section-title { font-size: 22px; font-weight: 700; color: #fff; }
+  .section-desc { font-size: 13px; color: var(--text-dim); }
+
+  .flow { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; margin: 16px 0; }
+  .flow-step { padding: 10px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; font-size: 11px; font-weight: 600; color: var(--text); white-space: nowrap; transition: all 0.2s; }
+  .flow-step:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .flow-arrow { color: var(--text-muted); font-size: 14px; }
+
+  .flow-step.trigger { border-color: rgba(139,92,246,0.5); color: #c4b5fd; }
+  .flow-step.discover { border-color: rgba(167,139,250,0.5); color: #c4b5fd; }
+  .flow-step.browse { border-color: rgba(78,130,255,0.5); color: #93c5fd; }
+  .flow-step.explore { border-color: rgba(20,184,166,0.5); color: #5eead4; }
+  .flow-step.analyze { border-color: rgba(255,130,78,0.5); color: #fdba74; }
+  .flow-step.score { border-color: rgba(250,204,21,0.5); color: #fde047; }
+  .flow-step.review { border-color: rgba(236,72,153,0.5); color: #f9a8d4; }
+  .flow-step.deliver { border-color: rgba(236,72,153,0.5); color: #f9a8d4; }
+  .flow-step.learn { border-color: rgba(52,211,153,0.5); color: #6ee7b7; }
+  .flow-step.new { position: relative; }
+  .flow-step.new::after { content: 'NEW'; position: absolute; top: -8px; right: -8px; background: var(--tier-3); color: #fff; font-size: 8px; padding: 1px 5px; border-radius: 4px; font-weight: 800; }
+
+  .modules { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .module { padding: 16px; border-radius: 10px; border: 1px solid; transition: all 0.2s; }
+  .module:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+  .module-id { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .module-name { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .module-desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+  .module-phase { font-size: 10px; margin-top: 8px; padding: 2px 8px; border-radius: 4px; display: inline-block; font-weight: 600; }
+
+  .m-trigger { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.3); }
+  .m-trigger .module-id { color: #c4b5fd; }
+  .m-trigger .module-phase { background: rgba(139,92,246,0.15); color: #c4b5fd; }
+
+  .m-browse { background: rgba(78,130,255,0.06); border-color: rgba(78,130,255,0.3); }
+  .m-browse .module-id { color: #93c5fd; }
+  .m-browse .module-phase { background: rgba(78,130,255,0.15); color: #93c5fd; }
+
+  .m-explore { background: rgba(20,184,166,0.06); border-color: rgba(20,184,166,0.3); }
+  .m-explore .module-id { color: #5eead4; }
+  .m-explore .module-phase { background: rgba(20,184,166,0.15); color: #5eead4; }
+
+  .m-analyze { background: rgba(255,130,78,0.06); border-color: rgba(255,130,78,0.3); }
+  .m-analyze .module-id { color: #fdba74; }
+  .m-analyze .module-phase { background: rgba(255,130,78,0.15); color: #fdba74; }
+
+  .m-data { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.3); }
+  .m-data .module-id { color: #fcd34d; }
+  .m-data .module-phase { background: rgba(251,191,36,0.15); color: #fcd34d; }
+
+  .m-delivery { background: rgba(236,72,153,0.06); border-color: rgba(236,72,153,0.3); }
+  .m-delivery .module-id { color: #f9a8d4; }
+  .m-delivery .module-phase { background: rgba(236,72,153,0.15); color: #f9a8d4; }
+
+  .m-future { background: rgba(52,211,153,0.06); border-color: rgba(52,211,153,0.3); }
+  .m-future .module-id { color: #6ee7b7; }
+  .m-future .module-phase { background: rgba(52,211,153,0.15); color: #6ee7b7; }
+
+  .layers { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+  .layer { border-radius: 12px; padding: 20px 24px; border: 1px solid; position: relative; }
+  .layer-label { position: absolute; top: -12px; left: 20px; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+  .layer-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .layer-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { padding: 5px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 10px; color: var(--text-dim); }
+  .chip-new { border-color: rgba(239,68,68,0.4); color: #fca5a5; position: relative; }
+
+  .l5 { background: rgba(236,72,153,0.06); border-color: rgba(236,72,153,0.3); }
+  .l5 .layer-label { background: rgba(236,72,153,0.2); color: #f9a8d4; }
+  .l5 .layer-title { color: #f9a8d4; }
+  .l4 { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.3); }
+  .l4 .layer-label { background: rgba(251,191,36,0.2); color: #fcd34d; }
+  .l4 .layer-title { color: #fcd34d; }
+  .l3 { background: rgba(255,130,78,0.06); border-color: rgba(255,130,78,0.3); }
+  .l3 .layer-label { background: rgba(255,130,78,0.2); color: #fdba74; }
+  .l3 .layer-title { color: #fdba74; }
+  .l2 { background: rgba(78,130,255,0.06); border-color: rgba(78,130,255,0.3); }
+  .l2 .layer-label { background: rgba(78,130,255,0.2); color: #93c5fd; }
+  .l2 .layer-title { color: #93c5fd; }
+  .l1 { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.3); }
+  .l1 .layer-label { background: rgba(139,92,246,0.2); color: #c4b5fd; }
+  .l1 .layer-title { color: #c4b5fd; }
+
+  .det-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  .det-table th { text-align: left; padding: 8px 12px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+  .det-table td { padding: 8px 12px; font-size: 12px; color: var(--text-dim); border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .det-table .det { color: var(--tier-1); font-weight: 600; }
+  .det-table .llm { color: var(--tier-2); font-weight: 600; }
+  .det-table .hybrid { color: var(--accent); font-weight: 600; }
+
+  .phase-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .phase-card { padding: 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); text-align: center; transition: all 0.2s; }
+  .phase-card:hover { border-color: var(--accent); }
+  .phase-num { font-size: 20px; font-weight: 800; color: var(--accent); }
+  .phase-name { font-size: 11px; font-weight: 600; color: #fff; margin-top: 4px; }
+  .phase-spec { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .phase-card.mvp { border-color: rgba(16,185,129,0.4); }
+  .phase-card.mvp .phase-num { color: var(--tier-1); }
+
+  .principle { padding: 12px 16px; border-left: 3px solid var(--accent); margin-bottom: 8px; font-size: 12px; color: var(--text-dim); }
+  .principle strong { color: var(--text); }
+
+  @media (max-width: 768px) {
+    .stats { grid-template-columns: repeat(4, 1fr); }
+    .modules { grid-template-columns: 1fr; }
+    .phase-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>Master <span>Architecture</span></h1>
+    <div class="subtitle">COMPLETE RUNTIME VIEW</div>
+    <div class="version">v1.0 + Extensions &middot; April 2026</div>
+    <div class="desc">AI CRO Audit Platform &mdash; 30 specification sections, 20 modules, 16 phases, 94 failure modes. Production-grade master plan from which the MVP is extracted.</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-value">30</div><div class="stat-label">SPEC SECTIONS</div></div>
+    <div class="stat"><div class="stat-value">20</div><div class="stat-label">MODULES</div></div>
+    <div class="stat"><div class="stat-value">28</div><div class="stat-label">TOOLS</div></div>
+    <div class="stat"><div class="stat-value">100</div><div class="stat-label">HEURISTICS</div></div>
+    <div class="stat"><div class="stat-value">10</div><div class="stat-label">GROUNDING RULES</div></div>
+    <div class="stat"><div class="stat-value">94</div><div class="stat-label">FAILURE MODES</div></div>
+    <div class="stat"><div class="stat-value">16</div><div class="stat-label">PHASES</div></div>
+    <div class="stat"><div class="stat-value">192</div><div class="stat-label">MVP TASKS</div></div>
+  </div>
+
+  <!-- Section 1: Design Principles -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div><div class="section-title">Design Principles</div><div class="section-desc">Non-negotiable architectural rules</div></div>
+    </div>
+    <div class="principle"><strong>P1:</strong> Findings are hypotheses until grounded and approved.</div>
+    <div class="principle"><strong>P2:</strong> Deterministic by default. LLM only where deterministic is brittle.</div>
+    <div class="principle"><strong>P3:</strong> Bounded autonomy for agents. Rules first, LLM fallback.</div>
+    <div class="principle"><strong>P4:</strong> Evidence is the primary artifact. Findings are derived views.</div>
+    <div class="principle"><strong>P5:</strong> Template-first, not page-first. Representative coverage.</div>
+    <div class="principle"><strong>P6:</strong> Workflow is a unit of analysis.</div>
+    <div class="principle"><strong>P7:</strong> Reproducibility = audit defensibility. Version everything.</div>
+    <div class="principle"><strong>P8:</strong> Consultant is source of truth for client delivery.</div>
+    <div class="principle"><strong>P9:</strong> No conversion prediction. Business impact is deterministic.</div>
+    <div class="principle"><strong>P10:</strong> Loose coupling via adapters. Every external dep swappable.</div>
+  </div>
+
+  <!-- Section 2: End-to-End Lifecycle -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div><div class="section-title">End-to-End Audit Lifecycle</div><div class="section-desc">From trigger to client delivery</div></div>
+    </div>
+    <div class="flow">
+      <div class="flow-step trigger">Trigger (CLI/MCP/Dashboard/Scheduler)</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step trigger new">Gateway + AuditRequest</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step trigger">Audit Init + Reproducibility Snapshot</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step discover new">Template-First Discovery</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step discover new">Queue Synthesis</div>
+    </div>
+    <div class="flow">
+      <span class="flow-arrow">&darr; per page</span>
+    </div>
+    <div class="flow">
+      <div class="flow-step browse">Browse: Navigate + Stabilise</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step explore new">State Exploration (Pass 1 + 2)</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step analyze">Deep Perceive (MultiState)</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step analyze">Evaluate (CoT)</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step analyze">Self-Critique</div>
+    </div>
+    <div class="flow">
+      <div class="flow-step analyze">Evidence Ground (10 rules)</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step score new">4D Score (sev+conf+impact+effort)</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step analyze">Annotate Screenshots</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step score new">Dedup + Rollup</div>
+    </div>
+    <div class="flow">
+      <span class="flow-arrow">&darr; per workflow</span>
+    </div>
+    <div class="flow">
+      <div class="flow-step browse new">Workflow Traversal (funnel steps)</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step analyze new">Cross-Step Analysis (8 dimensions)</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step score new">Workflow Findings (GR-010)</div>
+    </div>
+    <div class="flow">
+      <span class="flow-arrow">&darr; post-audit</span>
+    </div>
+    <div class="flow">
+      <div class="flow-step review new">Two-Store Review Gate + Warm-Up</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step review">Consultant Approve/Edit/Reject</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step deliver">Published Store &rarr; Client Dashboard + MCP</div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step learn new">Learning Service &rarr; Calibration</div>
+    </div>
+  </div>
+
+  <!-- Section 3: 5-Layer Architecture -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div><div class="section-title">5-Layer System Architecture</div><div class="section-desc">With master extensions highlighted</div></div>
+    </div>
+    <div class="layers">
+      <div class="layer l5">
+        <div class="layer-label">LAYER 5</div>
+        <div class="layer-title">Delivery</div>
+        <div class="layer-chips">
+          <div class="chip">CRO Audit MCP Server</div>
+          <div class="chip">Client Dashboard</div>
+          <div class="chip">Consultant Dashboard</div>
+          <div class="chip chip-new">Trigger Gateway (NEW)</div>
+          <div class="chip chip-new">Two-Store Pattern (NEW)</div>
+        </div>
+      </div>
+      <div class="layer l4">
+        <div class="layer-label">LAYER 4</div>
+        <div class="layer-title">Data</div>
+        <div class="layer-chips">
+          <div class="chip">PostgreSQL + pgvector</div>
+          <div class="chip">Cloudflare R2</div>
+          <div class="chip">Heuristic Repo (encrypted)</div>
+          <div class="chip">Drizzle ORM + RLS</div>
+          <div class="chip chip-new">Reproducibility Snapshots (NEW)</div>
+          <div class="chip chip-new">Evidence Table (NEW)</div>
+          <div class="chip chip-new">State Graph Tables (NEW)</div>
+          <div class="chip chip-new">Analytics Signals (NEW)</div>
+        </div>
+      </div>
+      <div class="layer l3">
+        <div class="layer-label">LAYER 3</div>
+        <div class="layer-title">Analysis Engine</div>
+        <div class="layer-chips">
+          <div class="chip">5-Step Pipeline</div>
+          <div class="chip">8 Grounding Rules + GR-009 + GR-010</div>
+          <div class="chip">Heuristic Evaluator (3 tiers)</div>
+          <div class="chip">Screenshot Annotator (Sharp)</div>
+          <div class="chip chip-new">4D Scoring Pipeline (NEW)</div>
+          <div class="chip chip-new">Findings Engine: Dedup/Rollup (NEW)</div>
+          <div class="chip chip-new">Workflow Analyzer (NEW)</div>
+          <div class="chip chip-new">Heuristic Retrieval: Vector (NEW)</div>
+        </div>
+      </div>
+      <div class="layer l2">
+        <div class="layer-label">LAYER 2</div>
+        <div class="layer-title">Browser Agent (v3.1)</div>
+        <div class="layer-chips">
+          <div class="chip">8 Layers, 23 Tools, 3 Modes</div>
+          <div class="chip">Perception (AX-tree + dual filter)</div>
+          <div class="chip">Verification (9 strategies)</div>
+          <div class="chip">ghost-cursor + stealth</div>
+          <div class="chip chip-new">State Exploration Engine (NEW)</div>
+          <div class="chip chip-new">Disclosure Rule Library (NEW)</div>
+          <div class="chip chip-new">MultiStatePerception (NEW)</div>
+        </div>
+      </div>
+      <div class="layer l1">
+        <div class="layer-label">LAYER 1</div>
+        <div class="layer-title">Orchestration</div>
+        <div class="layer-chips">
+          <div class="chip">Audit Orchestrator (LangGraph.js)</div>
+          <div class="chip">Page Queue</div>
+          <div class="chip">Client Manager</div>
+          <div class="chip">Heuristic Filter</div>
+          <div class="chip">SSE Events</div>
+          <div class="chip chip-new">Temporal Durable Workflows (NEW)</div>
+          <div class="chip chip-new">Template Discovery (NEW)</div>
+          <div class="chip chip-new">Workflow Orchestrator (NEW)</div>
+          <div class="chip chip-new">Cost & Budget Gates (NEW)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: 20 Modules -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div><div class="section-title">20 Core Modules</div><div class="section-desc">Logical services with phase assignments</div></div>
+    </div>
+    <div class="modules">
+      <div class="module m-trigger"><div class="module-id">M1</div><div class="module-name">Trigger Gateway</div><div class="module-desc">Fan-in from CLI, MCP, dashboards, scheduler &rarr; AuditRequest</div><div class="module-phase">Phase 6</div></div>
+      <div class="module m-trigger"><div class="module-id">M2</div><div class="module-name">Audit Orchestrator</div><div class="module-desc">Audit lifecycle, checkpointing, budget enforcement</div><div class="module-phase">Phase 1-5</div></div>
+      <div class="module m-trigger"><div class="module-id">M3</div><div class="module-name">Client Profile Service</div><div class="module-desc">Tenant metadata, overlays, learned patterns</div><div class="module-phase">Phase 4</div></div>
+      <div class="module m-trigger"><div class="module-id">M4</div><div class="module-name">Discovery Service</div><div class="module-desc">Template clustering, classification, queue synthesis</div><div class="module-phase">Phase 8</div></div>
+      <div class="module m-data"><div class="module-id">M5</div><div class="module-name">Work Queue Service</div><div class="module-desc">PAGE/STATE/WORKFLOW items, priority, retry</div><div class="module-phase">Phase 8</div></div>
+      <div class="module m-browse"><div class="module-id">M6</div><div class="module-name">Browser Agent Runtime</div><div class="module-desc">Playwright pool, stealth, 3-tier bounded autonomy</div><div class="module-phase">Phase 1-5</div></div>
+      <div class="module m-explore"><div class="module-id">M7</div><div class="module-name">State Exploration Engine</div><div class="module-desc">Pass 1 heuristic + Pass 2 bounded, rule library</div><div class="module-phase">Phase 10</div></div>
+      <div class="module m-browse"><div class="module-id">M8</div><div class="module-name">Perception Service</div><div class="module-desc">DOM, AX, screenshots, state captures, normalize</div><div class="module-phase">Phase 1</div></div>
+      <div class="module m-analyze"><div class="module-id">M9</div><div class="module-name">Heuristic KB Service</div><div class="module-desc">Storage, versioning, filtering, vector retrieval</div><div class="module-phase">Phase 6+</div></div>
+      <div class="module m-analyze"><div class="module-id">M10</div><div class="module-name">Analysis Agent Runtime</div><div class="module-desc">CoT evaluation, self-critique, grounding</div><div class="module-phase">Phase 7</div></div>
+      <div class="module m-analyze"><div class="module-id">M11</div><div class="module-name">Findings Engine</div><div class="module-desc">Dedup, merge, rollup, 4D scoring, suppress</div><div class="module-phase">Phase 6/9</div></div>
+      <div class="module m-analyze"><div class="module-id">M12</div><div class="module-name">Workflow Analyzer</div><div class="module-desc">Cross-step synthesis, funnel findings</div><div class="module-phase">Phase 9</div></div>
+      <div class="module m-delivery"><div class="module-id">M13</div><div class="module-name">Review Workflow</div><div class="module-desc">Finding lifecycle, consultant actions, warm-up</div><div class="module-phase">Phase 6</div></div>
+      <div class="module m-delivery"><div class="module-id">M14</div><div class="module-name">Delivery Service</div><div class="module-desc">Client API, dashboards, MCP server</div><div class="module-phase">Phase 10</div></div>
+      <div class="module m-data"><div class="module-id">M15</div><div class="module-name">Asset Service</div><div class="module-desc">R2 storage, lifecycle (hot/warm/cold)</div><div class="module-phase">Phase 4</div></div>
+      <div class="module m-data"><div class="module-id">M16</div><div class="module-name">Cost & Budget Service</div><div class="module-desc">Pre-flight estimation, layered gates, kill-switch</div><div class="module-phase">Phase 6</div></div>
+      <div class="module m-data"><div class="module-id">M17</div><div class="module-name">Observability</div><div class="module-desc">LangSmith, Sentry, WAREX, scorecards</div><div class="module-phase">Phase 4+</div></div>
+      <div class="module m-future"><div class="module-id">M18</div><div class="module-name">Learning Service</div><div class="module-desc">Calibration from consultant decisions + analytics</div><div class="module-phase">Phase 12</div></div>
+      <div class="module m-future"><div class="module-id">M19</div><div class="module-name">Hypothesis Pipeline</div><div class="module-desc">Findings &rarr; hypotheses &rarr; test plans &rarr; variations</div><div class="module-phase">Phase 14</div></div>
+      <div class="module m-future"><div class="module-id">M20</div><div class="module-name">Competitor Audit Mode</div><div class="module-desc">Separate audit, pairwise comparison offline</div><div class="module-phase">Phase 10</div></div>
+    </div>
+  </div>
+
+  <!-- Section 5: Deterministic vs LLM -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div><div class="section-title">Deterministic vs LLM-Driven Split</div><div class="section-desc">Ruthlessly explicit &mdash; every decision classified</div></div>
+    </div>
+    <table class="det-table">
+      <tr><th>Concern</th><th>Classification</th><th>Rationale</th></tr>
+      <tr><td>Trigger routing, auth, validation</td><td class="det">DETERMINISTIC</td><td>Security, contracts</td></tr>
+      <tr><td>Template clustering (HDBSCAN)</td><td class="det">DETERMINISTIC</td><td>Reproducibility</td></tr>
+      <tr><td>Template classification</td><td class="hybrid">HYBRID</td><td>Rules first, LLM fallback</td></tr>
+      <tr><td>State exploration Pass 1</td><td class="det">DETERMINISTIC</td><td>Heuristic-primed, rule-matched</td></tr>
+      <tr><td>State exploration Pass 2</td><td class="hybrid">HYBRID</td><td>Rules first, 1 LLM fallback call</td></tr>
+      <tr><td>Meaningful-state detection</td><td class="det">DETERMINISTIC</td><td>Text Jaccard + DOM diff</td></tr>
+      <tr><td>Heuristic evaluation (CoT)</td><td class="llm">LLM-DRIVEN</td><td>Unavoidable interpretation</td></tr>
+      <tr><td>Self-critique</td><td class="llm">LLM-DRIVEN</td><td>Separate call, adversarial</td></tr>
+      <tr><td>Evidence grounding (GR-001..010)</td><td class="det">DETERMINISTIC</td><td>Code validates facts</td></tr>
+      <tr><td>Severity assignment</td><td class="det">DETERMINISTIC</td><td>From heuristic + evidence</td></tr>
+      <tr><td>Confidence scoring</td><td class="det">DETERMINISTIC</td><td>Tier &times; grounding &times; evidence</td></tr>
+      <tr><td>Business impact</td><td class="det">DETERMINISTIC</td><td>Matrix lookup, never LLM</td></tr>
+      <tr><td>Effort estimation</td><td class="det">DETERMINISTIC</td><td>Category lookup</td></tr>
+      <tr><td>Priority computation</td><td class="det">DETERMINISTIC</td><td>Formula</td></tr>
+      <tr><td>Finding narrative text</td><td class="llm">LLM-DRIVEN</td><td>Writing</td></tr>
+      <tr><td>Recommendation text</td><td class="llm">LLM-DRIVEN</td><td>Writing</td></tr>
+      <tr><td>Publish gate (warm-up, tier routing)</td><td class="det">DETERMINISTIC</td><td>Rules, always</td></tr>
+      <tr><td>Workflow cross-step analysis</td><td class="llm">LLM-DRIVEN</td><td>Cross-step interpretation</td></tr>
+      <tr><td>Hypothesis generation (future)</td><td class="llm">LLM-DRIVEN</td><td>Heavily gated</td></tr>
+    </table>
+  </div>
+
+  <!-- Section 6: 16 Phases -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div><div class="section-title">16-Phase Master Roadmap</div><div class="section-desc">MVP = Phases 1-5 + selected Phase 6/10 foundations</div></div>
+    </div>
+    <div class="phase-grid">
+      <div class="phase-card mvp"><div class="phase-num">1-5</div><div class="phase-name">Agent MVP</div><div class="phase-spec">&sect;01-&sect;17</div></div>
+      <div class="phase-card mvp"><div class="phase-num">6</div><div class="phase-name">Platform Foundation</div><div class="phase-spec">&sect;18,24,25,26</div></div>
+      <div class="phase-card mvp"><div class="phase-num">7</div><div class="phase-name">State Exploration</div><div class="phase-spec">&sect;20</div></div>
+      <div class="phase-card"><div class="phase-num">8</div><div class="phase-name">Discovery</div><div class="phase-spec">&sect;19</div></div>
+      <div class="phase-card"><div class="phase-num">9</div><div class="phase-name">Workflow + Rollups</div><div class="phase-spec">&sect;21,23</div></div>
+      <div class="phase-card"><div class="phase-num">10</div><div class="phase-name">Client Delivery</div><div class="phase-spec">&sect;14 ext</div></div>
+      <div class="phase-card"><div class="phase-num">11</div><div class="phase-name">Consultant Tools</div><div class="phase-spec">&sect;14 ext</div></div>
+      <div class="phase-card"><div class="phase-num">12</div><div class="phase-name">Learning Service</div><div class="phase-spec">&sect;28</div></div>
+      <div class="phase-card"><div class="phase-num">13</div><div class="phase-name">Production</div><div class="phase-spec">&sect;27 ext</div></div>
+      <div class="phase-card"><div class="phase-num">14</div><div class="phase-name">Hypothesis Pipeline</div><div class="phase-spec">&sect;29</div></div>
+      <div class="phase-card"><div class="phase-num">15</div><div class="phase-name">Analytics Bindings</div><div class="phase-spec">&sect;30</div></div>
+      <div class="phase-card"><div class="phase-num">16</div><div class="phase-name">Heuristic KB 3-4</div><div class="phase-spec">&sect;22 ext</div></div>
+    </div>
+    <div style="margin-top: 16px; font-size: 11px; color: var(--text-muted); text-align: center;">
+      <span style="color: var(--tier-1);">&#9632;</span> Green border = included in MVP v2.0 (192 tasks)
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

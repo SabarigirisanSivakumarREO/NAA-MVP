@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVP v2.0 — Phase Dependency Map</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #12121c; --surface-2: #1a1a26; --border: #2a2a3e; --text: #e8e8f0; --text-dim: #9090a8; --text-muted: #606078; --accent: #10b981; --browse: #4e82ff; --analyze: #ff824e; --explore: #14b8a6; --foundation: #8b5cf6; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px 20px; line-height: 1.6; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 40px; padding: 30px; background: linear-gradient(180deg, rgba(16,185,129,0.08), transparent); border-radius: 16px; border: 1px solid var(--border); }
+  .header h1 { font-size: 28px; font-weight: 800; color: #fff; }
+  .header h1 span { color: var(--accent); }
+  .header .subtitle { font-size: 13px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; }
+
+  .phase-list { display: flex; flex-direction: column; gap: 12px; }
+  .phase { display: grid; grid-template-columns: 80px 1fr 100px; gap: 16px; align-items: center; padding: 18px 20px; border-radius: 12px; border: 1px solid; transition: all 0.2s; }
+  .phase:hover { transform: translateX(4px); }
+  .phase-num { font-size: 28px; font-weight: 800; text-align: center; }
+  .phase-info {}
+  .phase-name { font-size: 15px; font-weight: 700; color: #fff; }
+  .phase-desc { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .phase-deps { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+  .phase-tasks { text-align: center; }
+  .phase-task-count { font-size: 20px; font-weight: 800; color: #fff; }
+  .phase-task-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; }
+
+  .p-setup { background: rgba(100,100,120,0.06); border-color: rgba(100,100,120,0.3); }
+  .p-setup .phase-num { color: #9ca3af; }
+  .p-percept { background: rgba(78,130,255,0.06); border-color: rgba(78,130,255,0.3); }
+  .p-percept .phase-num { color: #93c5fd; }
+  .p-tools { background: rgba(78,130,255,0.06); border-color: rgba(78,130,255,0.3); }
+  .p-tools .phase-num { color: #93c5fd; }
+  .p-verify { background: rgba(78,130,255,0.06); border-color: rgba(78,130,255,0.3); }
+  .p-verify .phase-num { color: #93c5fd; }
+  .p-safety { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.3); }
+  .p-safety .phase-num { color: #fcd34d; }
+  .p-browse { background: rgba(78,130,255,0.06); border-color: rgba(78,130,255,0.3); }
+  .p-browse .phase-num { color: #93c5fd; }
+  .p-heuristic { background: rgba(255,130,78,0.06); border-color: rgba(255,130,78,0.3); }
+  .p-heuristic .phase-num { color: #fdba74; }
+  .p-analysis { background: rgba(255,130,78,0.06); border-color: rgba(255,130,78,0.3); }
+  .p-analysis .phase-num { color: #fdba74; }
+  .p-orch { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.3); }
+  .p-orch .phase-num { color: #c4b5fd; }
+  .p-foundation { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.3); }
+  .p-foundation .phase-num { color: #c4b5fd; }
+  .p-explore { background: rgba(20,184,166,0.06); border-color: rgba(20,184,166,0.3); }
+  .p-explore .phase-num { color: #5eead4; }
+
+  .gate { text-align: center; padding: 10px; margin: 6px 0; font-size: 11px; font-weight: 700; color: var(--accent); border: 1px dashed rgba(16,185,129,0.3); border-radius: 8px; }
+  .connector { text-align: center; color: var(--text-muted); font-size: 16px; padding: 2px 0; }
+
+  .legend { display: flex; gap: 16px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>MVP <span>Phase Dependency</span></h1>
+    <div class="subtitle">10 PHASES &middot; 192 TASKS &middot; SEQUENTIAL WITH GATES</div>
+  </div>
+
+  <div class="phase-list">
+    <div class="phase p-setup">
+      <div class="phase-num">0</div>
+      <div class="phase-info">
+        <div class="phase-name">Setup</div>
+        <div class="phase-desc">Monorepo, Postgres, Docker, env vars</div>
+        <div class="phase-deps">dep: none</div>
+      </div>
+      <div class="phase-tasks"><div class="phase-task-count">5</div><div class="phase-task-label">tasks</div></div>
+    </div>
+
+    <div class="connector">&darr;</div>
+
+    <div class="phase p-percept">
+      <div class="phase-num">1</div>
+      <div class="phase-info">
+        <div class="phase-name">Perception Foundation</div>
+        <div class="phase-desc">BrowserManager, stealth, AX-tree, filters, mutations, screenshots, ContextAssembler</div>
+        <div class="phase-deps">dep: Phase 0</div>
+      </div>
+      <div class="phase-tasks"><div class="phase-task-count">10</div><div class="phase-task-label">tasks</div></div>
+    </div>
+
+    <div class="connector">&darr;</div>
+
+    <div class="phase p-tools">
+      <div class="phase-num">2</div>
+      <div class="phase-info">
+        <div class="phase-name">MCP Tools + Human Behavior</div>
+        <div class="phase-desc">28 MCP tools, ghost-cursor, Gaussian typing, scroll, rate limiter, JS sandbox</div>
+        <div class="phase-deps">dep: Phase 1</div>
+      </div>
+      <div class="phase-tasks"><div class="phase-task-count">35</div><div class="phase-task-label">tasks</div></div>
+    </div>
+
+    <div class="connector">&darr;</div>
+
+    <div class="phase p-verify">
+      <div class="phase-num">3</div>
+      <div class="phase-info">
+        <div class="phase-name">Verification & Confidence</div>
+        <div class="phase-desc">9 verify strategies, failure taxonomy, action contracts, multiplicative confidence</div>
+        <div class="phase-deps">dep: Phase 2</div>
+      </div>
+      <div class="phase-tasks"><div class="phase-task-count">15</div><div class="phase-task-label">tasks</div></div>
+    </div>
+
+    <div class="connector">&darr;</div>
+
+    <div class="phase p-safety">
+      <div class="phase-num">4</div>
+      <div class="phase-info">
+        <div class="phase-name">Safety + Infrastructure</div>
+        <div class="phase-desc">Action classifier, domain policy, circuit breaker, Postgres schema (extended), LLM adapters, streaming</div>
+        <div class="phase-deps">dep: Phase 3 &middot; <strong style="color: #fca5a5;">T070 MODIFIED: +5 new tables, ALTER findings, published_findings view</strong></div>
+      </div>
+      <div class="phase-tasks"><div class="phase-task-count">15</div><div class="phase-task-label">tasks</div></div>
+    </div>
+
+    <div class="connector">&darr;</div>
+
+    <div class="phase p-browse">
+      <div class="phase-num">5</div>
+      <div class="phase-info">
+        <div class="phase-name">Browse Mode MVP</div>
+        <div class="phase-desc">5-node LangGraph (perceive&rarr;reason&rarr;act&rarr;verify&rarr;output), integration tests on BBC/Amazon</div>
+        <div class="phase-deps">dep: Phase 4</div>
+      </div>
+      <div class="phase-tasks"><div class="phase-task-count">20</div><div class="phase-task-label">tasks</div></div>
+    </div>
+
+    <div class="gate">&#9733; BROWSE MODE EXIT GATE &mdash; BBC &lt;30s, Amazon &lt;90s, multi-page works, error recovery, budget enforced</div>
+
+    <div class="phase p-heuristic">
+      <div class="phase-num">6</div>
+      <div class="phase-info">
+        <div class="phase-name">Heuristic Knowledge Base</div>
+        <div class="phase-desc">100 heuristics (50 Baymard + 35 Nielsen + 15 Cialdini), filtering, encryption, tier validation</div>
+        <div class="phase-deps">dep: Phase 5 &middot; <strong style="color: #fca5a5;">T101 MODIFIED: forward-compat schema. T103-105 MODIFIED: preferred_states + rule_vs_guidance</strong></div>
+      </div>
+      <div class="phase-tasks"><div class="phase-task-count">12</div><div class="phase-task-label">tasks</div></div>
+    </div>
+
+    <div class="connector">&darr;</div>
+
+    <div class="phase p-analysis">
+      <div class="phase-num">7</div>
+      <div class="phase-info">
+        <div class="phase-name">Analysis Pipeline</div>
+        <div class="phase-desc">5-step: deep_perceive &rarr; evaluate(CoT) &rarr; self_critique &rarr; ground(8 rules) &rarr; annotate+store</div>
+        <div class="phase-deps">dep: Phase 6</div>
+      </div>
+      <div class="phase-tasks"><div class="phase-task-count">22</div><div class="phase-task-label">tasks</div></div>
+    </div>
+
+    <div class="connector">&darr;</div>
+
+    <div class="phase p-orch">
+      <div class="phase-num">8</div>
+      <div class="phase-info">
+        <div class="phase-name">Audit Orchestrator</div>
+        <div class="phase-desc">AuditState, audit_setup, page_router, audit_complete, browse+analyze subgraphs, checkpointer, CLI</div>
+        <div class="phase-deps">dep: Phase 7 &middot; <strong style="color: #fca5a5;">T135/T137/T145/T148-150 MODIFIED: reproducibility, AuditRequest, scoring verification</strong></div>
+      </div>
+      <div class="phase-tasks"><div class="phase-task-count">21</div><div class="phase-task-label">tasks</div></div>
+    </div>
+
+    <div class="gate">&#9733; AUDIT ORCHESTRATOR EXIT GATE &mdash; 3-page audit works, findings grounded, cost &lt;$5, &lt;15 min</div>
+
+    <div class="phase p-foundation">
+      <div class="phase-num">9</div>
+      <div class="phase-info">
+        <div class="phase-name">Master Foundations <span style="color: #fca5a5; font-size: 10px;">[NEW]</span></div>
+        <div class="phase-desc">AuditRequest contract, gateway, reproducibility snapshots, temperature guard, two-store pattern, warm-up mode, 4D scoring pipeline, suppression, consultant dashboard (review + audit trigger + auth)</div>
+        <div class="phase-deps">dep: Phase 8</div>
+      </div>
+      <div class="phase-tasks"><div class="phase-task-count">20</div><div class="phase-task-label">tasks</div></div>
+    </div>
+
+    <div class="gate">&#9733; FOUNDATIONS EXIT GATE &mdash; 4D scoring, two-store enforced, reproducibility, warm-up, consultant dashboard working</div>
+
+    <div class="phase p-explore">
+      <div class="phase-num">10</div>
+      <div class="phase-info">
+        <div class="phase-name">State Exploration <span style="color: #fca5a5; font-size: 10px;">[NEW]</span></div>
+        <div class="phase-desc">StateNode/StateGraph types, 12-rule disclosure library, meaningful-state detection, Pass 1 heuristic-primed, Pass 2 bounded-exhaustive, auto-escalation, MultiStatePerception synthesis, GR-009, self-critique escalation loop, extended BrowseGraph</div>
+        <div class="phase-deps">dep: Phase 9</div>
+      </div>
+      <div class="phase-tasks"><div class="phase-task-count">17</div><div class="phase-task-label">tasks</div></div>
+    </div>
+
+    <div class="gate" style="border-color: rgba(16,185,129,0.6); color: #10b981; font-size: 13px;">
+      &#9733;&#9733; MVP v2.0 COMPLETE &#9733;&#9733;<br>
+      <span style="font-size: 10px; font-weight: 400; color: var(--text-dim);">T148-T150 (Phase 8) + T175 (Phase 9) + T192 (Phase 10) all pass</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background: #93c5fd;"></div>Browse Agent (P1-5)</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #fdba74;"></div>Analysis Engine (P6-7)</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #c4b5fd;"></div>Orchestration (P8-9)</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #5eead4;"></div>State Exploration (P10)</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #fca5a5;"></div>Modified / New in v2.0</div>
+  </div>
+
+</div>
+</body>
+</html>

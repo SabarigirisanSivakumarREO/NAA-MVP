@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVP v2.0 — Page Execution Loop</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #12121c; --surface-2: #1a1a26; --border: #2a2a3e; --text: #e8e8f0; --text-dim: #9090a8; --text-muted: #606078; --accent: #10b981; --browse: #4e82ff; --analyze: #ff824e; --explore: #14b8a6; --score: #6366f1; --review: #ec4899; --reject: #ef4444; --pass: #10b981; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px 20px; line-height: 1.6; }
+  .container { max-width: 1000px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 40px; padding: 30px; background: linear-gradient(180deg, rgba(16,185,129,0.08), transparent); border-radius: 16px; border: 1px solid var(--border); }
+  .header h1 { font-size: 28px; font-weight: 800; color: #fff; }
+  .header h1 span { color: var(--accent); }
+  .header .subtitle { font-size: 13px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; }
+
+  .section { margin-bottom: 32px; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+  .section-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .section-badge { padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+  .nodes { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .node-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .node { padding: 14px 18px; border-radius: 10px; font-size: 12px; font-weight: 600; border: 2px solid; text-align: center; min-width: 120px; transition: all 0.2s; position: relative; }
+  .node:hover { transform: scale(1.05); z-index: 1; }
+  .node small { display: block; font-size: 9px; font-weight: 400; margin-top: 3px; opacity: 0.7; }
+  .arr { color: var(--text-muted); font-size: 16px; }
+  .arr-label { font-size: 9px; color: var(--text-muted); text-align: center; display: block; }
+
+  .n-browse { background: rgba(78,130,255,0.1); border-color: rgba(78,130,255,0.5); color: #93c5fd; }
+  .n-explore { background: rgba(20,184,166,0.1); border-color: rgba(20,184,166,0.5); color: #5eead4; }
+  .n-analyze { background: rgba(255,130,78,0.1); border-color: rgba(255,130,78,0.5); color: #fdba74; }
+  .n-score { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.5); color: #a5b4fc; }
+  .n-review { background: rgba(236,72,153,0.1); border-color: rgba(236,72,153,0.5); color: #f9a8d4; }
+  .n-reject { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+  .n-pass { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.4); color: #6ee7b7; }
+  .n-data { background: rgba(251,191,36,0.08); border-color: rgba(251,191,36,0.4); color: #fcd34d; }
+
+  .loop-box { padding: 10px 16px; border-radius: 8px; border: 1px dashed; font-size: 10px; text-align: center; margin: 6px 0; }
+  .loop-browse { border-color: rgba(78,130,255,0.4); color: #93c5fd; }
+  .loop-explore { border-color: rgba(20,184,166,0.4); color: #5eead4; }
+  .loop-escalate { border-color: rgba(255,130,78,0.4); color: #fdba74; }
+
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .detail-box { padding: 14px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); }
+  .detail-title { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .detail-list { font-size: 10px; color: var(--text-dim); line-height: 1.7; }
+
+  .cost-bar { display: flex; gap: 2px; margin-top: 12px; height: 24px; border-radius: 6px; overflow: hidden; }
+  .cost-segment { display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #fff; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Page <span>Execution Loop</span></h1>
+    <div class="subtitle">BROWSE &rarr; EXPLORE &rarr; PERCEIVE &rarr; ANALYZE &rarr; SCORE &rarr; STORE</div>
+  </div>
+
+  <!-- Browse subgraph -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-badge" style="background: rgba(78,130,255,0.2); color: #93c5fd;">BROWSE</span>
+      Navigate + Stabilise (ReAct Loop)
+    </div>
+    <div class="nodes">
+      <div class="node-row">
+        <div class="node n-browse">perceive<small>AX-tree + filtered DOM</small></div>
+        <span class="arr">&rarr;</span>
+        <div class="node n-browse">reason<small>LLM selects action + verify strategy</small></div>
+        <span class="arr">&rarr;</span>
+        <div class="node n-browse">act<small>execute via MCP tool</small></div>
+        <span class="arr">&rarr;</span>
+        <div class="node n-browse">verify<small>mutation-aware check</small></div>
+      </div>
+      <div class="loop-box loop-browse">&uarr; loop until page stable (confidence &ge; 0.7 or max_steps) &uarr;</div>
+    </div>
+  </div>
+
+  <!-- State Exploration -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-badge" style="background: rgba(20,184,166,0.2); color: #5eead4;">EXPLORE</span>
+      State Exploration (2-Pass Model)
+    </div>
+    <div class="nodes">
+      <div class="node-row">
+        <div class="node n-explore">Pass 1: Heuristic-Primed<small>click disclosures heuristics demand</small></div>
+        <span class="arr">&rarr;</span>
+        <div class="node n-explore">meaningful?<small>text &Delta; &gt; 15%?<br>new CTAs?</small></div>
+        <span class="arr">&rarr;</span>
+        <div class="node n-explore">escalation check<small>unexplored ratio?<br>thorough mode?</small></div>
+      </div>
+      <div class="loop-box loop-explore">if escalation triggers &darr;</div>
+      <div class="node-row">
+        <div class="node n-explore">Pass 2: Bounded-Exhaustive<small>12-rule disclosure library<br>(tabs, accordions, modals, filters)</small></div>
+        <span class="arr">&rarr;</span>
+        <div class="node n-explore">LLM fallback?<small>max 1 call if &lt;3 states<br>on interactive page</small></div>
+        <span class="arr">&rarr;</span>
+        <div class="node n-data">StateGraph<small>N meaningful states<br>max 15 per page</small></div>
+      </div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-box">
+        <div class="detail-title">Self-Restoring (no reload)</div>
+        <div class="detail-list">Tab clicks, dropdown selects, accordion toggles, hover states &mdash; proceed sequentially without restoration</div>
+      </div>
+      <div class="detail-box">
+        <div class="detail-title">Destructive (reload after)</div>
+        <div class="detail-list">Form submissions, navigation clicks &mdash; scheduled LAST, browser_reload() fallback after each</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analysis -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-badge" style="background: rgba(255,130,78,0.2); color: #fdba74;">ANALYZE</span>
+      5-Step Analysis Pipeline
+    </div>
+    <div class="nodes">
+      <div class="node-row">
+        <div class="node n-analyze">deep_perceive<small>MultiStatePerception<br>merged_view + provenance</small></div>
+        <span class="arr">&rarr;</span>
+        <div class="node n-analyze">evaluate<small>LLM + CoT (temp=0)<br>heuristics in user msg</small></div>
+        <span class="arr">&rarr;</span>
+        <div class="node n-analyze">self_critique<small>separate LLM call<br>KEEP/REVISE/DOWNGRADE/REJECT</small></div>
+      </div>
+      <div style="height: 8px;"></div>
+      <div class="node-row">
+        <div class="node n-analyze">ground<small>10 deterministic rules<br>GR-001..GR-010</small></div>
+        <span class="arr">&rarr;</span>
+        <div class="node n-score">score<small>severity + confidence +<br>business_impact + effort<br>&rarr; priority</small></div>
+        <span class="arr">&rarr;</span>
+        <div class="node n-analyze">annotate + store<small>Sharp pins on screenshots<br>persist to DB + R2</small></div>
+      </div>
+      <div class="loop-box loop-escalate">if critique flags hidden_content_suspected &rarr; escalate back to explore_states (max 1 cycle)</div>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-box">
+        <div class="detail-title">Three-Layer Hallucination Filter</div>
+        <div class="detail-list">
+          Layer 1: CoT prompting (~50% caught at generation)<br>
+          Layer 2: Self-critique (~30% of remaining)<br>
+          Layer 3: Evidence grounding (~95% of remaining)
+        </div>
+      </div>
+      <div class="detail-box">
+        <div class="detail-title">10 Grounding Rules</div>
+        <div class="detail-list">
+          GR-001: Element exists &middot; GR-002: Fold claims match &middot; GR-003: Field count match<br>
+          GR-004: Contrast verifiable &middot; GR-005: Valid heuristic ID &middot; GR-006: Severity proportional<br>
+          GR-007: No conversion prediction &middot; GR-008: Valid data_point &middot; GR-009: State provenance<br>
+          GR-010: Workflow &ge;2 steps (Phase 9+)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Gate -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-badge" style="background: rgba(236,72,153,0.2); color: #f9a8d4;">REVIEW</span>
+      Two-Store Review Gate
+    </div>
+    <div class="nodes">
+      <div class="node-row">
+        <div class="node n-score">grounded finding<small>with 4D scores</small></div>
+        <span class="arr">&rarr;</span>
+        <div class="node n-review">warm-up<br>active?</div>
+      </div>
+      <div style="height: 8px;"></div>
+      <div class="node-row">
+        <div class="node n-review" style="min-width: 80px;">YES<small>all held</small></div>
+        <span class="arr" style="margin: 0 20px;">|</span>
+        <div class="node n-pass">NO &rarr; Tier 1<small>auto-publish</small></div>
+        <div class="node n-review">NO &rarr; Tier 2<small>24hr delay</small></div>
+        <div class="node n-review">NO &rarr; Tier 3<small>consultant held</small></div>
+      </div>
+      <div style="height: 8px;"></div>
+      <div class="node-row">
+        <div class="node n-data">Internal Store<small>ALL findings<br>consultant reads</small></div>
+        <span class="arr">&rarr; consultant approve &rarr;</span>
+        <div class="node n-pass">Published Store<small>client-safe subset<br>client reads</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-page cost -->
+  <div class="section">
+    <div class="section-title">
+      <span class="section-badge" style="background: rgba(251,191,36,0.2); color: #fcd34d;">COST</span>
+      Per-Page Cost Breakdown (estimated)
+    </div>
+    <div class="cost-bar">
+      <div class="cost-segment" style="background: #4e82ff; flex: 10;">Browse $0.10</div>
+      <div class="cost-segment" style="background: #14b8a6; flex: 15;">Explore $0.15</div>
+      <div class="cost-segment" style="background: #ff824e; flex: 5;">Perceive $0.05</div>
+      <div class="cost-segment" style="background: #ff824e; flex: 15;">Evaluate $0.15</div>
+      <div class="cost-segment" style="background: #ff824e; flex: 5;">Critique $0.05</div>
+      <div class="cost-segment" style="background: #6366f1; flex: 0;">Ground $0</div>
+      <div class="cost-segment" style="background: #6366f1; flex: 0;">Score $0</div>
+      <div class="cost-segment" style="background: #fbbf24; flex: 0;">Annotate $0</div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 6px;">
+      <span>Total: ~$0.50/page (with exploration)</span>
+      <span>~$0.35/page (without exploration)</span>
+      <span>5-page audit: ~$2.50-3.50</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

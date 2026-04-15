@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Architecture — Data & Evidence Flow</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #12121c; --surface-2: #1a1a26; --border: #2a2a3e; --text: #e8e8f0; --text-dim: #9090a8; --text-muted: #606078; --accent: #6366f1; --browse: #4e82ff; --analyze: #ff824e; --explore: #14b8a6; --data: #fbbf24; --delivery: #ec4899; --tier-1: #10b981; --tier-2: #f59e0b; --tier-3: #ef4444; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px 20px; line-height: 1.6; }
+  .container { max-width: 1200px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 40px; padding: 30px; background: linear-gradient(180deg, rgba(251,191,36,0.08), transparent); border-radius: 16px; border: 1px solid var(--border); }
+  .header h1 { font-size: 28px; font-weight: 800; color: #fff; }
+  .header h1 span { color: var(--data); }
+  .header .subtitle { font-size: 13px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; }
+
+  .section { margin-bottom: 36px; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+  .section-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+  .flow-vertical { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .flow-h { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 8px 0; }
+  .box { padding: 12px 16px; border-radius: 8px; font-size: 11px; font-weight: 600; border: 1px solid; text-align: center; min-width: 140px; }
+  .box-browse { background: rgba(78,130,255,0.08); border-color: rgba(78,130,255,0.3); color: #93c5fd; }
+  .box-explore { background: rgba(20,184,166,0.08); border-color: rgba(20,184,166,0.3); color: #5eead4; }
+  .box-analyze { background: rgba(255,130,78,0.08); border-color: rgba(255,130,78,0.3); color: #fdba74; }
+  .box-data { background: rgba(251,191,36,0.08); border-color: rgba(251,191,36,0.3); color: #fcd34d; }
+  .box-delivery { background: rgba(236,72,153,0.08); border-color: rgba(236,72,153,0.3); color: #f9a8d4; }
+  .box-score { background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.3); color: #a5b4fc; }
+  .box-reject { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+  .box-store { background: rgba(251,191,36,0.08); border-color: rgba(251,191,36,0.3); color: #fcd34d; }
+  .arr-d { color: var(--text-muted); font-size: 18px; }
+  .arr-r { color: var(--text-muted); font-size: 14px; }
+  .label { font-size: 10px; color: var(--text-muted); text-align: center; }
+
+  .two-store { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .store-box { padding: 16px; border-radius: 10px; border: 1px solid; }
+  .store-internal { background: rgba(255,130,78,0.06); border-color: rgba(255,130,78,0.3); }
+  .store-published { background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.3); }
+  .store-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .store-internal .store-title { color: #fdba74; }
+  .store-published .store-title { color: #6ee7b7; }
+  .store-list { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+
+  .table-db { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .table-db th { text-align: left; padding: 6px 10px; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+  .table-db td { padding: 6px 10px; font-size: 11px; color: var(--text-dim); border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .table-db .new { color: #fca5a5; }
+
+  .scoring-box { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px; }
+  .score-dim { padding: 14px 8px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); text-align: center; }
+  .score-dim-name { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+  .score-dim-source { font-size: 11px; color: var(--text); font-weight: 600; margin-top: 4px; }
+  .score-dim-method { font-size: 10px; color: var(--tier-1); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Data & <span>Evidence</span> Flow</h1>
+    <div class="subtitle">EVIDENCE &rarr; FINDINGS &rarr; SCORING &rarr; REVIEW &rarr; PUBLISH</div>
+  </div>
+
+  <!-- Evidence capture -->
+  <div class="section">
+    <div class="section-title">Evidence Capture Pipeline</div>
+    <div class="flow-vertical">
+      <div class="flow-h">
+        <div class="box box-browse">Browse Agent<br><small>navigate + stabilise</small></div>
+        <span class="arr-r">&rarr;</span>
+        <div class="box box-explore">State Exploration<br><small>Pass 1 + 2</small></div>
+        <span class="arr-r">&rarr;</span>
+        <div class="box box-analyze">deep_perceive<br><small>page_analyze()</small></div>
+      </div>
+      <div class="label">&darr; produces</div>
+      <div class="flow-h">
+        <div class="box box-data">PageStateModel<br><small>AX-tree + DOM</small></div>
+        <div class="box box-data">StateGraph<br><small>N meaningful states</small></div>
+        <div class="box box-data">MultiStatePerception<br><small>merged + provenance</small></div>
+        <div class="box box-data">Screenshots<br><small>viewport + fullpage &times; N states</small></div>
+      </div>
+      <div class="label">&darr; stored in</div>
+      <div class="flow-h">
+        <div class="box box-store">Postgres: page_states</div>
+        <div class="box box-store">Postgres: state_interactions</div>
+        <div class="box box-store">Postgres: evidence</div>
+        <div class="box box-store">R2: screenshots/</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Finding production -->
+  <div class="section">
+    <div class="section-title">Finding Production &mdash; Three-Layer Hallucination Filter</div>
+    <div class="flow-vertical">
+      <div class="box box-analyze" style="width: 300px;">evaluate (LLM + CoT)<br><small>~50% hallucinations caught at generation</small></div>
+      <div class="arr-d">&darr;</div>
+      <div class="box box-analyze" style="width: 300px;">self_critique (separate LLM)<br><small>~30% of remaining caught</small></div>
+      <div class="arr-d">&darr;</div>
+      <div class="flow-h">
+        <div class="box box-analyze" style="width: 200px;">KEEP / REVISE / DOWNGRADE</div>
+        <div class="box box-reject" style="width: 160px;">REJECT<br><small>&rarr; rejected_findings</small></div>
+      </div>
+      <div class="arr-d">&darr;</div>
+      <div class="box box-score" style="width: 300px;">evidence_ground (10 deterministic rules)<br><small>~95% of remaining hallucinations caught</small></div>
+      <div class="arr-d">&darr;</div>
+      <div class="flow-h">
+        <div class="box box-analyze" style="width: 200px;">GROUNDED FINDINGS</div>
+        <div class="box box-reject" style="width: 160px;">REJECTED<br><small>&rarr; rejected_findings</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4D Scoring -->
+  <div class="section">
+    <div class="section-title">4-Dimensional Deterministic Scoring</div>
+    <div class="scoring-box">
+      <div class="score-dim">
+        <div class="score-dim-name">Severity</div>
+        <div class="score-dim-source">1-4</div>
+        <div class="score-dim-method">From heuristic</div>
+      </div>
+      <div class="score-dim">
+        <div class="score-dim-name">Confidence</div>
+        <div class="score-dim-source">0-1</div>
+        <div class="score-dim-method">Tier &times; grounding &times; evidence</div>
+      </div>
+      <div class="score-dim">
+        <div class="score-dim-name">Business Impact</div>
+        <div class="score-dim-source">0-10</div>
+        <div class="score-dim-method">IMPACT_MATRIX lookup</div>
+      </div>
+      <div class="score-dim">
+        <div class="score-dim-name">Effort</div>
+        <div class="score-dim-source">0-10</div>
+        <div class="score-dim-method">EFFORT_MAP lookup</div>
+      </div>
+      <div class="score-dim">
+        <div class="score-dim-name">Priority</div>
+        <div class="score-dim-source">-3 to 24</div>
+        <div class="score-dim-method">(sev&times;2)+(impact&times;1.5)+(conf)-(effort&times;0.5)</div>
+      </div>
+    </div>
+    <div style="margin-top: 10px; font-size: 11px; color: var(--tier-1); text-align: center; font-weight: 600;">ALL DETERMINISTIC &mdash; NO LLM INVOLVED IN SCORING</div>
+  </div>
+
+  <!-- Two-store -->
+  <div class="section">
+    <div class="section-title">Two-Store Pattern + Warm-Up Mode</div>
+    <div class="two-store">
+      <div class="store-box store-internal">
+        <div class="store-title">INTERNAL STORE (findings table)</div>
+        <div class="store-list">
+          &bull; All findings, all statuses, all scopes<br>
+          &bull; Rejected findings visible<br>
+          &bull; Grounding metadata visible<br>
+          &bull; LLM trace refs visible<br>
+          &bull; <strong>WHO READS:</strong> Consultant dashboard, admin, Learning Service<br>
+          &bull; <strong>ACCESS:</strong> app.access_mode = 'internal'
+        </div>
+      </div>
+      <div class="store-box store-published">
+        <div class="store-title">PUBLISHED STORE (published_findings view)</div>
+        <div class="store-list">
+          &bull; Only approved/auto-published findings<br>
+          &bull; No rejected, no held, no grounding details<br>
+          &bull; Heuristic ID stripped (IP protection)<br>
+          &bull; <strong>WHO READS:</strong> Client dashboard, MCP server, PDF export<br>
+          &bull; <strong>ACCESS:</strong> app.access_mode = 'published_only'<br>
+          &bull; <strong>ENFORCED:</strong> RLS at database layer
+        </div>
+      </div>
+    </div>
+    <div style="margin-top: 16px; padding: 12px; border-radius: 8px; background: rgba(251,191,36,0.06); border: 1px solid rgba(251,191,36,0.2); font-size: 11px; color: #fcd34d; text-align: center;">
+      <strong>WARM-UP MODE:</strong> New clients &rarr; ALL findings held for consultant review. Auto-publish disabled until: audits &ge; 3 AND rejection rate &lt; 25%.
+    </div>
+  </div>
+
+  <!-- Finding scope hierarchy -->
+  <div class="section">
+    <div class="section-title">Finding Scope Hierarchy</div>
+    <div class="flow-vertical">
+      <div class="box box-analyze" style="width: 280px;">ATOMIC<br><small>1 state, 1 page, 1 heuristic</small></div>
+      <div class="label">&darr; dedup + merge across states</div>
+      <div class="box box-analyze" style="width: 280px;">PAGE<br><small>1 page, possibly multi-state</small></div>
+      <div class="label">&darr; dedup + merge across pages (&ge;60% of template)</div>
+      <div class="box box-score" style="width: 280px;">TEMPLATE<br><small>1 template, 1-3 representative pages</small></div>
+      <div class="label">&darr; workflow-level (synthesised independently)</div>
+      <div class="box box-delivery" style="width: 280px;">WORKFLOW<br><small>cross-step funnel findings (GR-010)</small></div>
+      <div class="label">&darr; audit summary</div>
+      <div class="box box-delivery" style="width: 280px;">AUDIT<br><small>statistics, not a "finding"</small></div>
+    </div>
+  </div>
+
+  <!-- Database tables -->
+  <div class="section">
+    <div class="section-title">Data Layer &mdash; 22+ Tables</div>
+    <table class="table-db">
+      <tr><th>Table</th><th>Purpose</th><th>Status</th></tr>
+      <tr><td>clients</td><td>Tenant profiles, business type, config</td><td>Original</td></tr>
+      <tr><td>audit_runs</td><td>Versioned audit runs per client</td><td>Original</td></tr>
+      <tr><td>findings</td><td>CRO findings with extended scoring columns</td><td>Extended</td></tr>
+      <tr><td>screenshots</td><td>Clean + annotated screenshot refs</td><td>Original</td></tr>
+      <tr><td>sessions</td><td>Browser agent session tracking</td><td>Original</td></tr>
+      <tr><td>audit_log</td><td>Safety audit trail</td><td>Original</td></tr>
+      <tr><td>rejected_findings</td><td>System improvement tracking</td><td>Original</td></tr>
+      <tr><td class="new">audit_requests</td><td>Trigger gateway request log</td><td class="new">NEW</td></tr>
+      <tr><td class="new">page_states</td><td>Explored state graph nodes</td><td class="new">NEW</td></tr>
+      <tr><td class="new">state_interactions</td><td>State graph edges</td><td class="new">NEW</td></tr>
+      <tr><td class="new">templates</td><td>Discovered template clusters</td><td class="new">NEW</td></tr>
+      <tr><td class="new">template_members</td><td>Page &rarr; template mapping</td><td class="new">NEW</td></tr>
+      <tr><td class="new">workflows</td><td>Funnel definitions</td><td class="new">NEW</td></tr>
+      <tr><td class="new">workflow_steps</td><td>Ordered funnel steps</td><td class="new">NEW</td></tr>
+      <tr><td class="new">evidence</td><td>Typed evidence artifacts</td><td class="new">NEW</td></tr>
+      <tr><td class="new">finding_rollups</td><td>Parent/child rollup relationships</td><td class="new">NEW</td></tr>
+      <tr><td class="new">reproducibility_snapshots</td><td>Per-run version pinning (immutable)</td><td class="new">NEW</td></tr>
+      <tr><td class="new">heuristic_catalog</td><td>Phase 3+ vector-retrievable heuristics</td><td class="new">NEW</td></tr>
+      <tr><td class="new">heuristic_overlays</td><td>Brand/client/learned overlays</td><td class="new">NEW</td></tr>
+      <tr><td class="new">heuristic_calibration</td><td>Learned per-client adjustments</td><td class="new">NEW</td></tr>
+      <tr><td class="new">hypotheses / test_plans / variations</td><td>Phase 14+ hypothesis pipeline</td><td class="new">NEW (reserved)</td></tr>
+      <tr><td class="new">analytics_bindings / analytics_signals</td><td>Phase 15+ DX integrations</td><td class="new">NEW (reserved)</td></tr>
+    </table>
+    <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted);">All client-scoped tables have RLS via app.client_id. published_findings is a VIEW over findings (app.access_mode enforced).</div>
+  </div>
+
+  <!-- Reproducibility -->
+  <div class="section">
+    <div class="section-title">Reproducibility &mdash; Audit Defensibility</div>
+    <div class="flow-h">
+      <div class="box box-data">Temperature = 0<br><small>evaluate + critique</small></div>
+      <span class="arr-r">+</span>
+      <div class="box box-data">Version Snapshot<br><small>prompt/model/heuristic/normalizer</small></div>
+      <span class="arr-r">+</span>
+      <div class="box box-data">LangSmith Traces<br><small>365 day retention</small></div>
+      <span class="arr-r">=</span>
+      <div class="box box-score">&ge;90% Overlap Target<br><small>finding set on repeat runs</small></div>
+    </div>
+    <div style="margin-top: 10px; font-size: 11px; color: var(--text-dim); text-align: center;">
+      Every finding difference between runs is explainable from versioned inputs. Unexplained residual = LLM sampling variance at temperature 0.
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "diagram-server",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "docs/specs", "-l", "3456", "--no-clipboard"],
+      "port": 3456
+    }
+  ]
+}

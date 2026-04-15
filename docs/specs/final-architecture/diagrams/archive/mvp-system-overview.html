@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVP v2.0 — System Overview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0a0f; --surface: #12121c; --surface-2: #1a1a26; --border: #2a2a3e; --text: #e8e8f0; --text-dim: #9090a8; --text-muted: #606078; --accent: #10b981; --browse: #4e82ff; --analyze: #ff824e; --explore: #14b8a6; --data: #fbbf24; --delivery: #ec4899; --deferred: #374151; --tier-1: #10b981; --tier-3: #ef4444; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 40px 20px; line-height: 1.6; }
+  .container { max-width: 1200px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 40px; padding: 30px; background: linear-gradient(180deg, rgba(16,185,129,0.08), transparent); border-radius: 16px; border: 1px solid var(--border); }
+  .header h1 { font-size: 28px; font-weight: 800; color: #fff; }
+  .header h1 span { color: var(--accent); }
+  .header .subtitle { font-size: 13px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; }
+  .header .desc { font-size: 13px; color: var(--text-dim); margin-top: 12px; max-width: 600px; margin-left: auto; margin-right: auto; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 36px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 6px; text-align: center; }
+  .stat-value { font-size: 22px; font-weight: 800; color: #fff; }
+  .stat-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
+
+  .section { margin-bottom: 36px; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+  .section-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+  .scope-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .scope-box { padding: 16px; border-radius: 10px; border: 1px solid; }
+  .scope-in { background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.3); }
+  .scope-out { background: rgba(55,65,81,0.3); border-color: rgba(55,65,81,0.5); }
+  .scope-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .scope-in .scope-title { color: #6ee7b7; }
+  .scope-out .scope-title { color: #9ca3af; }
+  .scope-list { font-size: 11px; line-height: 1.8; }
+  .scope-in .scope-list { color: var(--text-dim); }
+  .scope-out .scope-list { color: #6b7280; }
+
+  .flow { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; margin: 10px 0; }
+  .flow-step { padding: 10px 12px; border-radius: 8px; font-size: 10px; font-weight: 600; border: 1px solid; text-align: center; }
+  .flow-step.browse { border-color: rgba(78,130,255,0.4); color: #93c5fd; }
+  .flow-step.explore { border-color: rgba(20,184,166,0.4); color: #5eead4; }
+  .flow-step.analyze { border-color: rgba(255,130,78,0.4); color: #fdba74; }
+  .flow-step.score { border-color: rgba(99,102,241,0.4); color: #a5b4fc; }
+  .flow-step.review { border-color: rgba(236,72,153,0.4); color: #f9a8d4; }
+  .flow-step.trigger { border-color: rgba(139,92,246,0.4); color: #c4b5fd; }
+  .arr { color: var(--text-muted); font-size: 14px; }
+
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+  .metric { padding: 12px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--border); }
+  .metric-name { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+  .metric-value { font-size: 16px; font-weight: 700; color: var(--accent); margin-top: 4px; }
+
+  .can-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .can-item { padding: 8px 12px; border-radius: 6px; font-size: 11px; display: flex; align-items: center; gap: 6px; }
+  .can-yes { background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); color: #6ee7b7; }
+  .can-no { background: rgba(55,65,81,0.3); border: 1px solid rgba(55,65,81,0.3); color: #6b7280; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>MVP <span>v2.0</span></h1>
+    <div class="subtitle">EXTRACTED FROM MASTER ARCHITECTURE</div>
+    <div class="desc">192 tasks across 10 phases. Includes full state exploration, 4D scoring, two-store pattern, warm-up mode, reproducibility, and CLI + consultant dashboard triggers.</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-value">192</div><div class="stat-label">TASKS</div></div>
+    <div class="stat"><div class="stat-value">10</div><div class="stat-label">PHASES</div></div>
+    <div class="stat"><div class="stat-value">28</div><div class="stat-label">TOOLS</div></div>
+    <div class="stat"><div class="stat-value">100</div><div class="stat-label">HEURISTICS</div></div>
+    <div class="stat"><div class="stat-value">10</div><div class="stat-label">GROUNDING RULES</div></div>
+    <div class="stat"><div class="stat-value">4D</div><div class="stat-label">SCORING</div></div>
+    <div class="stat"><div class="stat-value">2</div><div class="stat-label">TRIGGERS</div></div>
+    <div class="stat"><div class="stat-value">2</div><div class="stat-label">PASSES</div></div>
+  </div>
+
+  <!-- Scope -->
+  <div class="section">
+    <div class="section-title">MVP Scope</div>
+    <div class="scope-grid">
+      <div class="scope-box scope-in">
+        <div class="scope-title">INCLUDED IN MVP</div>
+        <div class="scope-list">
+          &#10003; Full browse agent (stealth, 3 modes, 23 tools)<br>
+          &#10003; Full analysis pipeline (5 steps, 8+2 grounding rules)<br>
+          &#10003; 100 heuristics (Baymard + Nielsen + Cialdini)<br>
+          &#10003; State exploration (Pass 1 + Pass 2, rule library)<br>
+          &#10003; MultiStatePerception (merged cross-state evidence)<br>
+          &#10003; 4-dimensional scoring (severity + confidence + impact + effort)<br>
+          &#10003; Two-store pattern (internal vs published)<br>
+          &#10003; Warm-up mode (no auto-publish for new clients)<br>
+          &#10003; Reproducibility snapshots (temp 0, version pinning)<br>
+          &#10003; AuditRequest contract (single entry point)<br>
+          &#10003; CLI trigger + Consultant dashboard trigger<br>
+          &#10003; Basic consultant review UI (approve/reject/edit)<br>
+          &#10003; Multi-page audits (explicit URLs)<br>
+          &#10003; Annotated screenshots with finding pins<br>
+          &#10003; LangGraph orchestrator with Postgres checkpoint
+        </div>
+      </div>
+      <div class="scope-box scope-out">
+        <div class="scope-title">DEFERRED (POST-MVP)</div>
+        <div class="scope-list">
+          &#10007; Template-first discovery (Phase 8)<br>
+          &#10007; Workflow orchestration (Phase 9)<br>
+          &#10007; Temporal durable orchestration (Phase 13)<br>
+          &#10007; Client dashboard (Phase 10)<br>
+          &#10007; MCP server (Phase 10)<br>
+          &#10007; Learning service / calibration (Phase 12)<br>
+          &#10007; Hypothesis pipeline (Phase 14)<br>
+          &#10007; Analytics bindings (Phase 15)<br>
+          &#10007; Heuristic vector retrieval (Phase 16)<br>
+          &#10007; Competitor audit mode (Phase 10)<br>
+          &#10007; Scheduler / recurring audits (Phase 13)<br>
+          &#10007; Template/workflow finding rollups (Phase 9)<br>
+          &#10007; Advanced consultant tools (Phase 11)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MVP Lifecycle -->
+  <div class="section">
+    <div class="section-title">MVP Audit Lifecycle</div>
+    <div class="flow">
+      <div class="flow-step trigger">CLI / Dashboard Trigger</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step trigger">AuditRequest + Reproducibility Snapshot</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step trigger">Audit Setup (client + heuristics + page queue)</div>
+    </div>
+    <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin: 4px 0;">&darr; per page (explicit URLs)</div>
+    <div class="flow">
+      <div class="flow-step browse">Browse: Navigate + Stabilise</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step explore">State Exploration (Pass 1 + 2)</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step analyze">Deep Perceive (MultiState)</div>
+    </div>
+    <div class="flow">
+      <div class="flow-step analyze">Evaluate (CoT, temp=0)</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step analyze">Self-Critique (separate call)</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step analyze">Ground (10 rules incl GR-009)</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step score">4D Score + Suppress</div>
+    </div>
+    <div class="flow">
+      <div class="flow-step analyze">Annotate Screenshots</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step review">Two-Store: Warm-Up Gate</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step review">Consultant Review</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step review">Published Store</div>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="section">
+    <div class="section-title">MVP Success Metrics</div>
+    <div class="metric-grid">
+      <div class="metric"><div class="metric-name">Time to First Finding</div><div class="metric-value">&lt; 2 min</div></div>
+      <div class="metric"><div class="metric-name">E2E Audit (5 pages)</div><div class="metric-value">&lt; 15 min</div></div>
+      <div class="metric"><div class="metric-name">Cost per Audit</div><div class="metric-value">&lt; $5</div></div>
+      <div class="metric"><div class="metric-name">Critique Rejection Rate</div><div class="metric-value">&ge; 1 per audit</div></div>
+      <div class="metric"><div class="metric-name">Grounding Rejection Rate</div><div class="metric-value">&ge; 1 per audit</div></div>
+      <div class="metric"><div class="metric-name">Consultant Approval Rate</div><div class="metric-value">&gt; 60%</div></div>
+      <div class="metric"><div class="metric-name">False Positive Rate</div><div class="metric-value">&lt; 25%</div></div>
+      <div class="metric"><div class="metric-name">Time Saved vs Manual</div><div class="metric-value">&gt; 12 hrs</div></div>
+      <div class="metric"><div class="metric-name">Reproducibility Overlap</div><div class="metric-value">&ge; 90%</div></div>
+      <div class="metric"><div class="metric-name">Consultant NPS</div><div class="metric-value">&gt; 7/10</div></div>
+    </div>
+  </div>
+
+  <!-- v1 vs v2 -->
+  <div class="section">
+    <div class="section-title">v1.0 &rarr; v2.0 Delta</div>
+    <div class="can-list">
+      <div class="can-item can-yes">&#10003; State exploration (tabs, accordions, modals)</div>
+      <div class="can-item can-yes">&#10003; MultiStatePerception (merged evidence)</div>
+      <div class="can-item can-yes">&#10003; 4D deterministic scoring</div>
+      <div class="can-item can-yes">&#10003; Two-store pattern (published isolation)</div>
+      <div class="can-item can-yes">&#10003; Warm-up mode (new client safety)</div>
+      <div class="can-item can-yes">&#10003; Reproducibility snapshots (temp 0)</div>
+      <div class="can-item can-yes">&#10003; AuditRequest contract</div>
+      <div class="can-item can-yes">&#10003; GR-009 (state provenance)</div>
+      <div class="can-item can-yes">&#10003; Consultant dashboard (basic review)</div>
+      <div class="can-item can-yes">&#10003; Forward-compat heuristic schema</div>
+      <div class="can-item can-no">v1.0: 155 tasks</div>
+      <div class="can-item can-yes">v2.0: 192 tasks (+37 new, 10 modified)</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

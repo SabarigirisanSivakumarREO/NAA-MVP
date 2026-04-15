@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pandoc \"C:/Sabari/Neural/NBA/AI_Browser_Agent_Architecture_v2-updated.docx\" -o \"C:/Sabari/Neural/NBA/AI_Browser_Agent_Architecture_v2-updated.md\" --wrap=none)",
+      "Bash(python -c \":*)",
+      "Bash(python3 -c \":*)",
+      "Bash(where python:*)",
+      "Bash(where python3:*)",
+      "Bash(where py:*)",
+      "Bash(where node:*)",
+      "WebSearch",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(python -c \"from docx import Document; doc = Document\\(r''''C:\\\\Sabari\\\\Neural\\\\NBA\\\\AI_Browser_Agent_Architecture_v2-updated.docx''''\\); [print\\(p.text\\) for p in doc.paragraphs]\")",
+      "Bash(where pip:*)",
+      "Bash(ls /c/Python*/python.exe)",
+      "Read(//c/Users/HP/AppData/Local/Programs/**)",
+      "Bash(pip install:*)",
+      "Bash(python3 -m pip install pdfplumber)",
+      "Bash(ls -la \"/c/Python\"*)",
+      "Read(//c/Users/HP/**)",
+      "Read(//c/tmp/**)",
+      "Bash(npm install:*)",
+      "Bash(node -e \":*)",
+      "Bash(ls \"C:\\\\Sabari\\\\Neural\\\\NBA\\\\docs\\\\specs\\\\final-architecture\\\\0\"*.md)",
+      "Bash(ls \"C:/Sabari/Neural/NBA/docs/specs/final-architecture/\"*.md)",
+      "Bash(node merge_tabs.js)"
+    ]
+  }
+}

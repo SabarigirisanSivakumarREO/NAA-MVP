@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REO Digital — AI CRO Audit Platform Demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0a0a0f; --surface: #12121c; --surface-2: #1a1a26; --border: #2a2a3e;
+    --text: #e8e8f0; --text-dim: #9090a8; --text-muted: #606078;
+    --accent: #6366f1; --browse: #4e82ff; --analyze: #ff824e; --explore: #14b8a6;
+    --score: #a78bfa; --delivery: #ec4899; --data: #fbbf24;
+    --green: #10b981; --red: #ef4444; --orange: #f59e0b;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; line-height: 1.6; }
+  .slide { padding: 24px 40px; max-width: 1200px; margin: 0 auto; }
+  .slide-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 8px 40px; }
+
+  /* Typography */
+  h1 { font-size: 48px; font-weight: 800; letter-spacing: -1px; line-height: 1.1; }
+  h2 { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 24px; }
+  h3 { font-size: 22px; font-weight: 700; margin-bottom: 16px; }
+  .accent { color: var(--accent); }
+  .browse-c { color: #93c5fd; }
+  .analyze-c { color: #fdba74; }
+  .explore-c { color: #5eead4; }
+  .green-c { color: #6ee7b7; }
+  .red-c { color: #fca5a5; }
+  .dim { color: var(--text-dim); }
+  .muted { color: var(--text-muted); }
+  .small { font-size: 14px; }
+  .tiny { font-size: 12px; }
+  .tag { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* Hero */
+  .hero-badge { display: inline-block; padding: 6px 16px; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); border-radius: 20px; font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 24px; }
+  .hero-sub { font-size: 20px; color: var(--text-dim); margin-top: 20px; max-width: 700px; line-height: 1.5; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 16px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .card-sm { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin: 24px 0; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 8px; text-align: center; }
+  .stat-val { font-size: 28px; font-weight: 800; color: #fff; }
+  .stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+  /* Flow */
+  .flow { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; margin: 16px 0; }
+  .flow-step { padding: 12px 16px; border-radius: 10px; font-size: 12px; font-weight: 600; border: 1px solid; text-align: center; min-width: 100px; transition: all 0.3s; }
+  .flow-step:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+  .f-trigger { border-color: rgba(139,92,246,0.4); color: #c4b5fd; }
+  .f-browse { border-color: rgba(78,130,255,0.4); color: #93c5fd; }
+  .f-explore { border-color: rgba(20,184,166,0.4); color: #5eead4; }
+  .f-analyze { border-color: rgba(255,130,78,0.4); color: #fdba74; }
+  .f-score { border-color: rgba(167,139,250,0.4); color: #c4b5fd; }
+  .f-review { border-color: rgba(236,72,153,0.4); color: #f9a8d4; }
+  .f-learn { border-color: rgba(52,211,153,0.4); color: #6ee7b7; }
+  .arr { color: var(--text-muted); font-size: 16px; }
+
+  /* Problem/Solution */
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+  .vs-bad { background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; padding: 20px; }
+  .vs-good { background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.2); border-radius: 12px; padding: 20px; }
+  .vs-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+  .vs-bad .vs-title { color: #fca5a5; }
+  .vs-good .vs-title { color: #6ee7b7; }
+  .vs-list { font-size: 13px; color: var(--text-dim); line-height: 2; }
+
+  /* Layers */
+  .layer { border-radius: 12px; padding: 16px 20px; border: 1px solid; margin-bottom: 8px; position: relative; }
+  .layer-tag { position: absolute; top: -10px; left: 16px; padding: 3px 10px; border-radius: 5px; font-size: 9px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+  .layer-name { font-size: 15px; font-weight: 700; color: #fff; }
+  .layer-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip { padding: 4px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; font-size: 10px; color: var(--text-dim); }
+  .chip-new { border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+
+  .l5 { background: rgba(236,72,153,0.05); border-color: rgba(236,72,153,0.25); }
+  .l5 .layer-tag { background: rgba(236,72,153,0.2); color: #f9a8d4; }
+  .l4 { background: rgba(251,191,36,0.05); border-color: rgba(251,191,36,0.25); }
+  .l4 .layer-tag { background: rgba(251,191,36,0.2); color: #fcd34d; }
+  .l3 { background: rgba(255,130,78,0.05); border-color: rgba(255,130,78,0.25); }
+  .l3 .layer-tag { background: rgba(255,130,78,0.2); color: #fdba74; }
+  .l2 { background: rgba(78,130,255,0.05); border-color: rgba(78,130,255,0.25); }
+  .l2 .layer-tag { background: rgba(78,130,255,0.2); color: #93c5fd; }
+  .l1 { background: rgba(139,92,246,0.05); border-color: rgba(139,92,246,0.25); }
+  .l1 .layer-tag { background: rgba(139,92,246,0.2); color: #c4b5fd; }
+
+  /* Table */
+  .det-table { width: 100%; border-collapse: collapse; }
+  .det-table th { text-align: left; padding: 8px 12px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+  .det-table td { padding: 8px 12px; font-size: 12px; color: var(--text-dim); border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .det { color: var(--green); font-weight: 600; }
+  .llm { color: var(--orange); font-weight: 600; }
+
+  /* Metrics */
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .metric { padding: 14px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); text-align: center; }
+  .metric-val { font-size: 20px; font-weight: 800; color: var(--green); }
+  .metric-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+  /* Scope */
+  .scope-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .scope-in { padding: 20px; border-radius: 12px; background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.2); }
+  .scope-out { padding: 20px; border-radius: 12px; background: rgba(55,65,81,0.2); border: 1px solid rgba(55,65,81,0.3); }
+  .scope-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+  .scope-in .scope-title { color: #6ee7b7; }
+  .scope-out .scope-title { color: #9ca3af; }
+  .scope-list { font-size: 12px; line-height: 2; }
+  .scope-in .scope-list { color: var(--text-dim); }
+  .scope-out .scope-list { color: #6b7280; }
+
+  /* Cost bar */
+  .cost-bar { display: flex; gap: 2px; height: 28px; border-radius: 8px; overflow: hidden; margin: 16px 0; }
+  .cost-seg { display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; }
+
+  /* Speaking notes */
+  .notes { margin-top: 20px; padding: 16px; background: rgba(99,102,241,0.04); border: 1px dashed rgba(99,102,241,0.2); border-radius: 10px; }
+  .notes-title { font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+  .notes-text { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
+
+  /* Phase timeline */
+  .timeline { display: flex; flex-direction: column; gap: 6px; }
+  .tl-item { display: grid; grid-template-columns: 60px 1fr 80px; gap: 12px; align-items: center; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); }
+  .tl-num { font-size: 22px; font-weight: 800; text-align: center; }
+  .tl-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .tl-desc { font-size: 10px; color: var(--text-dim); }
+  .tl-tasks { font-size: 14px; font-weight: 700; color: var(--text-dim); text-align: center; }
+  .tl-mvp { border-color: rgba(16,185,129,0.3); }
+  .tl-mvp .tl-num { color: var(--green); }
+  .tl-future { opacity: 0.5; }
+
+  @media (max-width: 768px) {
+    .slide { padding: 40px 20px; }
+    h1 { font-size: 32px; }
+    h2 { font-size: 24px; }
+    .vs, .scope-grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(4, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== SLIDE 1: TITLE ===== -->
+<div class="slide">
+  <div class="hero-badge">REO Digital &middot; Neural Product</div>
+  <h1>AI-Powered <span class="accent">CRO Audit</span> Platform</h1>
+  <div class="hero-sub">A production-grade intelligence engine that crawls client websites, evaluates pages against 100 CRO heuristics, validates every finding through a 3-layer anti-hallucination filter, and delivers evidence-grounded, consultant-curated insights.</div>
+  <div class="stats" style="margin-top: 40px;">
+    <div class="stat"><div class="stat-val">30</div><div class="stat-label">SPEC SECTIONS</div></div>
+    <div class="stat"><div class="stat-val">20</div><div class="stat-label">MODULES</div></div>
+    <div class="stat"><div class="stat-val">28</div><div class="stat-label">TOOLS</div></div>
+    <div class="stat"><div class="stat-val">100</div><div class="stat-label">HEURISTICS</div></div>
+    <div class="stat"><div class="stat-val">10</div><div class="stat-label">GROUNDING RULES</div></div>
+    <div class="stat"><div class="stat-val">94</div><div class="stat-label">FAILURE MODES</div></div>
+    <div class="stat"><div class="stat-val">16</div><div class="stat-label">PHASES</div></div>
+    <div class="stat"><div class="stat-val">192</div><div class="stat-label">MVP TASKS</div></div>
+  </div>
+  <div class="notes">
+    <div class="notes-title">Speaking notes</div>
+    <div class="notes-text">Open with: "This is not a chatbot that browses websites. This is a controlled intelligence engine — deterministic where possible, LLM-assisted where necessary, evidence-first always. Every finding is a hypothesis that must survive three filters before any client sees it."</div>
+  </div>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 2: THE PROBLEM ===== -->
+<div class="slide">
+  <h2>The Problem We're <span class="red-c">Solving</span></h2>
+  <div class="vs">
+    <div class="vs-bad">
+      <div class="vs-title">Manual CRO Audit Today</div>
+      <div class="vs-list">
+        &#10007; 12-20 hours per site, per consultant<br>
+        &#10007; Subjective — findings vary by consultant<br>
+        &#10007; No evidence trail — "trust me, the CTA is bad"<br>
+        &#10007; No versioning — can't prove what improved<br>
+        &#10007; No scalability — 2-3 audits per consultant per week<br>
+        &#10007; Expensive — $3,000-8,000 per audit
+      </div>
+    </div>
+    <div class="vs-good">
+      <div class="vs-title">Our Platform</div>
+      <div class="vs-list">
+        &#10003; &lt;15 minutes for a 5-page audit<br>
+        &#10003; Evidence-grounded — every finding has page data proof<br>
+        &#10003; 3-layer validation — hallucinations rejected by code<br>
+        &#10003; Version tracking — before/after comparison built in<br>
+        &#10003; 20+ audits per week at scale<br>
+        &#10003; &lt;$5 per audit (LLM + infrastructure)
+      </div>
+    </div>
+  </div>
+  <div class="notes">
+    <div class="notes-title">Speaking notes</div>
+    <div class="notes-text">Key point: "We're not replacing consultants. We're giving them a 10x amplifier. The system produces <em>hypotheses</em>, not verdicts. The consultant reviews, approves, and publishes. The human is always in the loop for client-facing output."</div>
+  </div>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 3: CORE THESIS ===== -->
+<div class="slide">
+  <h2>Core <span class="accent">Design Philosophy</span></h2>
+  <div class="card-grid">
+    <div class="card-sm">
+      <h3 style="font-size: 16px; color: var(--green);">Controlled Intelligence</h3>
+      <p class="small dim">Not an autonomous agent set loose with a browser. A <strong>deterministic state machine</strong> with LLM-assisted reasoning at specific, bounded decision points.</p>
+    </div>
+    <div class="card-sm">
+      <h3 style="font-size: 16px; color: var(--green);">Evidence-First</h3>
+      <p class="small dim">Every finding links to evidence: DOM elements, bounding boxes, computed styles, screenshots. No evidence = no finding. Period.</p>
+    </div>
+    <div class="card-sm">
+      <h3 style="font-size: 16px; color: var(--green);">Three-Layer Hallucination Filter</h3>
+      <p class="small dim">CoT generation (~50% caught) &rarr; Self-critique review (~30% more) &rarr; Deterministic evidence grounding (~95% of remaining). What survives is real.</p>
+    </div>
+    <div class="card-sm">
+      <h3 style="font-size: 16px; color: var(--green);">Deterministic Scoring</h3>
+      <p class="small dim">Severity, confidence, business impact, effort — all computed from data, never from LLM opinion. The LLM writes text; the code assigns numbers.</p>
+    </div>
+    <div class="card-sm">
+      <h3 style="font-size: 16px; color: var(--green);">Consultant is Source of Truth</h3>
+      <p class="small dim">Raw AI output never reaches a client. Two-store pattern: internal store (everything) vs published store (consultant-approved only). Warm-up mode for new clients.</p>
+    </div>
+    <div class="card-sm">
+      <h3 style="font-size: 16px; color: var(--green);">Reproducibility</h3>
+      <p class="small dim">Every audit run pins: prompt versions, model versions, heuristic versions, temperature (forced to 0). A finding that changed between runs is explainable, not mysterious.</p>
+    </div>
+  </div>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 4: END-TO-END LIFECYCLE ===== -->
+<div class="slide">
+  <h2>End-to-End <span class="accent">Audit Lifecycle</span></h2>
+  <p class="dim small" style="margin-bottom: 16px;">From trigger to client delivery — every step shown.</p>
+
+  <div class="card" style="background: transparent; border: none; padding: 0;">
+
+    <!-- TRIGGER & INIT (linear) -->
+    <p class="tiny muted" style="text-align: center; margin-bottom: 8px;">TRIGGER &amp; INIT</p>
+    <div class="flow">
+      <div class="flow-step f-trigger">CLI / Dashboard</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step f-trigger">AuditRequest Contract</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step f-trigger">Reproducibility Snapshot</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step f-trigger">Load Client + Heuristics</div>
+    </div>
+
+    <!-- PAGE LOOP (outer loop) -->
+    <div style="margin: 16px 0 0; border: 2px dashed rgba(78,130,255,0.3); border-radius: 14px; padding: 16px; position: relative;">
+      <div style="position: absolute; top: -11px; left: 24px; background: var(--bg); padding: 0 10px; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: #93c5fd;">&#x21bb; PAGE LOOP &mdash; repeats for each page in queue</div>
+
+      <!-- BROWSE ReAct LOOP (inner loop 1) -->
+      <div style="margin: 8px 0; border: 1px dashed rgba(78,130,255,0.25); border-radius: 10px; padding: 12px; position: relative;">
+        <div style="position: absolute; top: -9px; left: 16px; background: var(--bg); padding: 0 8px; font-size: 9px; font-weight: 700; color: #60a5fa;">&#x21bb; BROWSE ReAct LOOP &mdash; perceive&rarr;reason&rarr;act&rarr;verify until stable</div>
+        <div class="flow" style="margin: 8px 0 4px;">
+          <div class="flow-step f-browse">perceive<br><span class="tiny">AX-tree</span></div>
+          <span class="arr">&rarr;</span>
+          <div class="flow-step f-browse">reason<br><span class="tiny">LLM selects action</span></div>
+          <span class="arr">&rarr;</span>
+          <div class="flow-step f-browse">act<br><span class="tiny">MCP tool</span></div>
+          <span class="arr">&rarr;</span>
+          <div class="flow-step f-browse">verify<br><span class="tiny">mutation-aware</span></div>
+          <span class="arr" style="color: #60a5fa;">&#x21ba;</span>
+        </div>
+        <div style="text-align: center; font-size: 9px; color: #60a5fa;">loop until page stable (confidence &ge; 0.7 or max_steps)</div>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin: 6px 0;">&darr; page stable</div>
+
+      <!-- ESCALATION LOOP (inner loop 2) -->
+      <div style="margin: 4px 0; border: 1px dashed rgba(20,184,166,0.25); border-radius: 10px; padding: 12px; position: relative;">
+        <div style="position: absolute; top: -9px; left: 16px; background: var(--bg); padding: 0 8px; font-size: 9px; font-weight: 700; color: #5eead4;">&#x21bb; ESCALATION LOOP &mdash; max 1 cycle: if critique flags hidden content &rarr; re-explore</div>
+
+        <div class="flow" style="margin: 8px 0 4px;">
+          <div class="flow-step f-explore">Explore States<br><span class="tiny">Pass 1 + Pass 2</span></div>
+          <span class="arr">&rarr;</span>
+          <div class="flow-step f-analyze">Deep Perceive<br><span class="tiny">MultiState</span></div>
+          <span class="arr">&rarr;</span>
+          <div class="flow-step f-analyze">Evaluate (CoT)<br><span class="tiny">temp=0</span></div>
+          <span class="arr">&rarr;</span>
+          <div class="flow-step f-analyze">Self-Critique<br><span class="tiny">separate LLM</span></div>
+          <span class="arr" style="color: #5eead4;">&#x21ba;</span>
+        </div>
+        <div style="text-align: center; font-size: 9px; color: #5eead4;">if critique returns <em>insufficient_evidence: hidden_content_suspected</em> &rarr; loop back to Explore (max once)</div>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin: 6px 0;">&darr; findings validated</div>
+
+      <!-- LINEAR: ground → score → annotate (no loop) -->
+      <div class="flow">
+        <div class="flow-step f-analyze">Evidence Ground<br><span class="tiny">10 deterministic rules</span></div>
+        <span class="arr">&rarr;</span>
+        <div class="flow-step f-score">4D Score<br><span class="tiny">sev+conf+impact+effort</span></div>
+        <span class="arr">&rarr;</span>
+        <div class="flow-step f-analyze">Annotate + Store</div>
+      </div>
+
+      <div style="text-align: right; font-size: 9px; color: #93c5fd; margin-top: 6px;">&#x21bb; next page in queue &rarr; page_router decides: more pages or audit_complete</div>
+    </div>
+
+    <!-- POST-AUDIT (linear + learning feedback loop) -->
+    <p class="tiny muted" style="text-align: center; margin: 14px 0 8px;">&darr; ALL PAGES COMPLETE</p>
+    <div class="flow">
+      <div class="flow-step f-review">Two-Store Gate</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step f-review">Warm-Up Check</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step f-review">Consultant Review<br><span class="tiny">approve / edit / reject</span></div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step f-review">Published Store</div>
+      <span class="arr">&rarr;</span>
+      <div class="flow-step f-learn">Client Dashboard / MCP</div>
+    </div>
+
+    <!-- LEARNING FEEDBACK LOOP -->
+    <div style="margin: 12px 0 0; border: 1px dashed rgba(52,211,153,0.3); border-radius: 10px; padding: 10px 16px; position: relative;">
+      <div style="position: absolute; top: -9px; left: 16px; background: var(--bg); padding: 0 8px; font-size: 9px; font-weight: 700; color: #6ee7b7;">&#x21bb; LEARNING FEEDBACK LOOP &mdash; future audits improve from past decisions</div>
+      <div class="flow" style="margin: 8px 0 4px;">
+        <div class="flow-step f-learn" style="font-size: 10px;">Consultant decisions<br><span class="tiny">approve/reject/edit</span></div>
+        <span class="arr">&rarr;</span>
+        <div class="flow-step f-learn" style="font-size: 10px;">Learning Service<br><span class="tiny">calibration per client</span></div>
+        <span class="arr">&rarr;</span>
+        <div class="flow-step f-learn" style="font-size: 10px;">Heuristic adjustments<br><span class="tiny">reliability &Delta;, suppress, boost</span></div>
+        <span class="arr" style="color: #6ee7b7;">&#x21ba;</span>
+        <span style="font-size: 9px; color: #6ee7b7;">feeds next audit</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loop summary legend -->
+  <div style="margin-top: 16px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+    <div style="font-size: 10px; display: flex; align-items: center; gap: 6px;">
+      <span style="width: 12px; height: 12px; border: 2px dashed rgba(78,130,255,0.5); border-radius: 3px; display: inline-block;"></span>
+      <span style="color: #93c5fd;">Page Loop (outer)</span>
+    </div>
+    <div style="font-size: 10px; display: flex; align-items: center; gap: 6px;">
+      <span style="width: 12px; height: 12px; border: 1px dashed rgba(78,130,255,0.4); border-radius: 3px; display: inline-block;"></span>
+      <span style="color: #60a5fa;">Browse ReAct Loop</span>
+    </div>
+    <div style="font-size: 10px; display: flex; align-items: center; gap: 6px;">
+      <span style="width: 12px; height: 12px; border: 1px dashed rgba(20,184,166,0.4); border-radius: 3px; display: inline-block;"></span>
+      <span style="color: #5eead4;">Escalation Loop (max 1)</span>
+    </div>
+    <div style="font-size: 10px; display: flex; align-items: center; gap: 6px;">
+      <span style="width: 12px; height: 12px; border: 1px dashed rgba(52,211,153,0.4); border-radius: 3px; display: inline-block;"></span>
+      <span style="color: #6ee7b7;">Learning Feedback Loop</span>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="notes-title">Speaking notes</div>
+    <div class="notes-text">
+      "There are <strong>4 loops</strong> in the system — none unbounded:<br><br>
+      <strong>1. Browse ReAct loop</strong> — perceive&rarr;reason&rarr;act&rarr;verify repeats until the page is stable. Confidence decays multiplicatively each step. Exits at confidence &ge;0.7 or max_steps.<br><br>
+      <strong>2. Escalation loop</strong> — if the self-critique says 'I think content is hidden behind a tab I couldn't see,' the system loops ONCE back to state exploration, re-explores, re-perceives, and re-analyzes. Maximum 1 cycle per page. Prevents unbounded re-exploration.<br><br>
+      <strong>3. Page loop</strong> — the audit orchestrator's page_router loops through all pages in the queue. After each page's analysis is complete, it routes to the next page or signals audit_complete.<br><br>
+      <strong>4. Learning feedback loop</strong> — consultant approve/reject/edit decisions feed the Learning Service, which adjusts heuristic reliability per client. Future audits for this client produce better-calibrated findings. This loop closes across audit runs, not within a single run."
+    </div>
+  </div>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 5: 5-LAYER ARCHITECTURE ===== -->
+<div class="slide">
+  <h2>5-Layer <span class="accent">System Architecture</span></h2>
+  <p class="dim small" style="margin-bottom: 20px;">Each layer has one job. Layers only talk to adjacent layers via typed interfaces.</p>
+
+  <div class="layer l5">
+    <div class="layer-tag">LAYER 5 &mdash; DELIVERY</div>
+    <div class="layer-name">CRO Audit MCP Server &middot; Client Dashboard &middot; Consultant Dashboard</div>
+    <div class="layer-chips">
+      <div class="chip">Hono REST API</div>
+      <div class="chip">Next.js + shadcn/ui</div>
+      <div class="chip">Clerk Auth</div>
+      <div class="chip chip-new">Trigger Gateway</div>
+      <div class="chip chip-new">Two-Store Pattern</div>
+    </div>
+  </div>
+  <div class="layer l4">
+    <div class="layer-tag">LAYER 4 &mdash; DATA</div>
+    <div class="layer-name">PostgreSQL + pgvector &middot; Cloudflare R2 &middot; Heuristic Repo</div>
+    <div class="layer-chips">
+      <div class="chip">Drizzle ORM</div>
+      <div class="chip">Row-Level Security</div>
+      <div class="chip chip-new">Reproducibility Snapshots</div>
+      <div class="chip chip-new">State Graph Tables</div>
+      <div class="chip chip-new">Evidence Table</div>
+    </div>
+  </div>
+  <div class="layer l3">
+    <div class="layer-tag">LAYER 3 &mdash; ANALYSIS ENGINE</div>
+    <div class="layer-name">5-Step Pipeline &middot; 10 Grounding Rules &middot; 100 Heuristics (3 Tiers)</div>
+    <div class="layer-chips">
+      <div class="chip">CoT Evaluation</div>
+      <div class="chip">Self-Critique (separate LLM)</div>
+      <div class="chip">Screenshot Annotator (Sharp)</div>
+      <div class="chip chip-new">4D Scoring Pipeline</div>
+      <div class="chip chip-new">Findings Dedup + Rollup</div>
+    </div>
+  </div>
+  <div class="layer l2">
+    <div class="layer-tag">LAYER 2 &mdash; BROWSER AGENT (v3.1)</div>
+    <div class="layer-name">8 Internal Layers &middot; 23 MCP Tools &middot; 3 Execution Modes</div>
+    <div class="layer-chips">
+      <div class="chip">Playwright + stealth</div>
+      <div class="chip">ghost-cursor + Gaussian typing</div>
+      <div class="chip">9 Verify Strategies</div>
+      <div class="chip">Multiplicative Confidence</div>
+      <div class="chip chip-new">State Exploration Engine</div>
+      <div class="chip chip-new">12-Rule Disclosure Library</div>
+    </div>
+  </div>
+  <div class="layer l1">
+    <div class="layer-tag">LAYER 1 &mdash; ORCHESTRATION</div>
+    <div class="layer-name">Audit Orchestrator &middot; Page Queue &middot; Client Manager</div>
+    <div class="layer-chips">
+      <div class="chip">LangGraph.js</div>
+      <div class="chip">Postgres Checkpointing</div>
+      <div class="chip">SSE Streaming</div>
+      <div class="chip chip-new">Cost &amp; Budget Gates</div>
+      <div class="chip chip-new">AuditRequest Contract</div>
+    </div>
+  </div>
+  <p class="tiny muted" style="text-align: center; margin-top: 12px;"><span style="color: #fca5a5;">&#9632;</span> Red border = new in master architecture</p>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 6: DUAL AGENT MODEL ===== -->
+<div class="slide">
+  <h2>Dual-Agent Model: <span class="browse-c">Browse</span> + <span class="analyze-c">Analyze</span></h2>
+
+  <div class="vs" style="gap: 16px;">
+    <div class="card-sm" style="border-color: rgba(78,130,255,0.3);">
+      <h3 style="font-size: 15px; color: #93c5fd;">Browser Agent</h3>
+      <p class="tiny dim" style="margin-bottom: 8px;">Navigates, interacts, gathers evidence. Bounded autonomy.</p>
+      <table class="det-table">
+        <tr><td class="det">Tier A: Deterministic</td><td>$0/step &middot; 90% of actions</td></tr>
+        <tr><td class="llm">Tier B: Guided (ReAct)</td><td>$0.10/step &middot; when rules fail</td></tr>
+        <tr><td style="color: var(--red);">Tier C: Vision</td><td>$0.30/step &middot; last resort, max 5</td></tr>
+      </table>
+      <p class="tiny muted" style="margin-top: 8px;">Every action has a verify strategy. Confidence decays multiplicatively. HITL escalation at &lt;0.3.</p>
+    </div>
+    <div class="card-sm" style="border-color: rgba(255,130,78,0.3);">
+      <h3 style="font-size: 15px; color: #fdba74;">Analysis Agent</h3>
+      <p class="tiny dim" style="margin-bottom: 8px;">Evaluates pages against heuristics. Never touches the browser.</p>
+      <table class="det-table">
+        <tr><td>deep_perceive</td><td>Full page scan + multi-state</td></tr>
+        <tr><td class="llm">evaluate (CoT)</td><td>LLM + chain-of-thought, temp=0</td></tr>
+        <tr><td class="llm">self_critique</td><td>Separate LLM call, adversarial</td></tr>
+        <tr><td class="det">evidence_ground</td><td>10 deterministic rules</td></tr>
+        <tr><td class="det">score</td><td>4D deterministic scoring</td></tr>
+      </table>
+      <p class="tiny muted" style="margin-top: 8px;">Analysis NEVER calls Playwright. Browse NEVER applies heuristics. Clean boundary.</p>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="notes-title">Speaking notes</div>
+    <div class="notes-text">"The browser agent is not an LLM with browser tools. It is a deterministic state machine with LLM-assisted reasoning. 90% of browser actions use no LLM at all. The analysis agent only sees the perception data the browser produced — it never touches the browser directly. This separation is enforced at the code level, not by convention."</div>
+  </div>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 7: STATE EXPLORATION ===== -->
+<div class="slide">
+  <h2><span class="explore-c">State Exploration</span> — Seeing Hidden Content</h2>
+  <p class="dim small" style="margin-bottom: 20px;">Modern web pages hide 30-50% of CRO-relevant content behind tabs, accordions, modals, and variant selectors. We find it.</p>
+
+  <div class="card-grid">
+    <div class="card-sm" style="border-color: rgba(20,184,166,0.3);">
+      <h3 style="font-size: 14px; color: #5eead4;">Pass 1: Heuristic-Primed</h3>
+      <p class="tiny dim">Each heuristic declares what UI states it needs. The exploration engine clicks only what's needed. Deterministic, cheap, targeted.</p>
+      <p class="tiny muted" style="margin-top: 6px;">Example: Cialdini "social proof" heuristic says "look behind the Reviews tab." System clicks it.</p>
+    </div>
+    <div class="card-sm" style="border-color: rgba(20,184,166,0.3);">
+      <h3 style="font-size: 14px; color: #5eead4;">Pass 2: Bounded-Exhaustive</h3>
+      <p class="tiny dim">If Pass 1 didn't find enough, auto-escalate: apply a 12-rule disclosure library (tabs, accordions, details, modals, variant selectors, filters, form validation). Max 15 states per page.</p>
+      <p class="tiny muted" style="margin-top: 6px;">LLM fallback: 1 call max if &lt;3 states found on an interactive page.</p>
+    </div>
+    <div class="card-sm" style="border-color: rgba(20,184,166,0.3);">
+      <h3 style="font-size: 14px; color: #5eead4;">Meaningful-State Detection</h3>
+      <p class="tiny dim">Not every click reveals something new. We measure: text change &gt;15%, new interactive elements &gt;3, above-fold content change &gt;10%, or CTA set changed. Non-meaningful states are discarded.</p>
+    </div>
+    <div class="card-sm" style="border-color: rgba(20,184,166,0.3);">
+      <h3 style="font-size: 14px; color: #5eead4;">MultiStatePerception</h3>
+      <p class="tiny dim">All meaningful states are merged into a single perception view for heuristic evaluation. Every element tracked to its source state. GR-009 validates state provenance in findings.</p>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="notes-title">Speaking notes</div>
+    <div class="notes-text">"Without state exploration, an audit of a product page misses the reviews tab, the size guide modal, the shipping accordion. That's 30-50% of the CRO-relevant content invisible to the analysis. Our two-pass model is rules-first — no LLM needed for 90% of exploration. The LLM is only a fallback when rules can't figure out what to click."</div>
+  </div>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 8: HALLUCINATION FILTER + SCORING ===== -->
+<div class="slide">
+  <h2>Three-Layer <span class="red-c">Hallucination Filter</span> + <span class="accent">4D Scoring</span></h2>
+
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 20px 0;">
+    <div class="flow-step f-analyze" style="width: 360px; padding: 16px;">
+      <strong>Layer 1: CoT Generation</strong><br>
+      <span class="tiny">Structured reasoning reduces hallucination at generation time. ~50% caught.</span>
+    </div>
+    <span class="arr" style="font-size: 20px;">&darr;</span>
+    <div class="flow-step f-analyze" style="width: 360px; padding: 16px;">
+      <strong>Layer 2: Self-Critique (separate LLM call)</strong><br>
+      <span class="tiny">LLM reviews its own output adversarially. KEEP / REVISE / DOWNGRADE / REJECT. ~30% of remaining caught.</span>
+    </div>
+    <span class="arr" style="font-size: 20px;">&darr;</span>
+    <div class="flow-step f-score" style="width: 360px; padding: 16px;">
+      <strong>Layer 3: Evidence Grounding (deterministic code)</strong><br>
+      <span class="tiny">10 rules. Element exists? Fold claim matches? Field count matches? No conversion prediction? ~95% of remaining caught.</span>
+    </div>
+    <span class="arr" style="font-size: 20px;">&darr;</span>
+    <div class="flow-step" style="width: 360px; padding: 16px; border-color: rgba(16,185,129,0.4); color: #6ee7b7;">
+      <strong>GROUNDED FINDING</strong> &rarr; 4D Deterministic Score
+    </div>
+  </div>
+
+  <div class="stats" style="max-width: 700px; margin: 20px auto;">
+    <div class="stat"><div class="stat-val" style="color: var(--green);">Severity</div><div class="stat-label">from heuristic</div></div>
+    <div class="stat"><div class="stat-val" style="color: var(--green);">Confidence</div><div class="stat-label">tier &times; grounding &times; evidence</div></div>
+    <div class="stat"><div class="stat-val" style="color: var(--green);">Impact</div><div class="stat-label">MATRIX[page][funnel]</div></div>
+    <div class="stat"><div class="stat-val" style="color: var(--green);">Effort</div><div class="stat-label">category lookup</div></div>
+    <div class="stat"><div class="stat-val" style="color: var(--accent);">Priority</div><div class="stat-label">deterministic formula</div></div>
+  </div>
+  <p class="tiny" style="text-align: center; color: var(--green); font-weight: 600;">ALL SCORING IS DETERMINISTIC &mdash; NO LLM INVOLVED IN NUMBERS</p>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 9: DETERMINISTIC vs LLM SPLIT ===== -->
+<div class="slide">
+  <h2><span class="green-c">Deterministic</span> vs <span style="color: var(--orange);">LLM-Driven</span> Split</h2>
+  <p class="dim small" style="margin-bottom: 16px;">Ruthlessly explicit. Every decision classified.</p>
+
+  <div class="card" style="padding: 16px;">
+    <table class="det-table">
+      <tr><th>Concern</th><th>Type</th></tr>
+      <tr><td>Trigger routing, auth, validation</td><td class="det">DETERMINISTIC</td></tr>
+      <tr><td>Template clustering (HDBSCAN)</td><td class="det">DETERMINISTIC</td></tr>
+      <tr><td>State exploration Pass 1 (heuristic-primed)</td><td class="det">DETERMINISTIC</td></tr>
+      <tr><td>Meaningful-state detection</td><td class="det">DETERMINISTIC</td></tr>
+      <tr><td>Evidence grounding (GR-001..GR-010)</td><td class="det">DETERMINISTIC</td></tr>
+      <tr><td>Severity, confidence, impact, effort, priority</td><td class="det">DETERMINISTIC</td></tr>
+      <tr><td>Publish gate (warm-up, tier routing)</td><td class="det">DETERMINISTIC</td></tr>
+      <tr><td style="border-top: 1px solid var(--border);">Heuristic evaluation (CoT)</td><td class="llm" style="border-top: 1px solid var(--border);">LLM-DRIVEN (temp=0)</td></tr>
+      <tr><td>Self-critique</td><td class="llm">LLM-DRIVEN (separate call)</td></tr>
+      <tr><td>Finding narrative + recommendation text</td><td class="llm">LLM-DRIVEN</td></tr>
+      <tr><td>Template classification fallback</td><td class="llm">LLM-DRIVEN (fallback only)</td></tr>
+      <tr><td>State exploration LLM fallback</td><td class="llm">LLM-DRIVEN (max 1 call/page)</td></tr>
+    </table>
+  </div>
+  <div class="notes">
+    <div class="notes-title">Speaking notes</div>
+    <div class="notes-text">"The LLM writes text and interprets pages. The code assigns numbers, validates facts, and controls flow. Any LLM output that becomes a user-visible artifact must pass through a deterministic validator that can reject it. No exceptions."</div>
+  </div>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 10: TWO-STORE + WARM-UP ===== -->
+<div class="slide">
+  <h2>Two-Store Pattern + <span class="accent">Warm-Up Mode</span></h2>
+  <p class="dim small" style="margin-bottom: 20px;">Raw AI output never reaches a client.</p>
+
+  <div class="scope-grid">
+    <div class="card-sm" style="border-color: rgba(255,130,78,0.3);">
+      <h3 style="font-size: 14px; color: #fdba74;">Internal Store</h3>
+      <p class="tiny dim" style="line-height: 1.8;">
+        All findings, all statuses<br>
+        Rejected findings visible<br>
+        Grounding metadata, LLM traces<br>
+        <strong>WHO:</strong> Consultant dashboard, admin<br>
+        <strong>ACCESS:</strong> app.access_mode = 'internal'
+      </p>
+    </div>
+    <div class="card-sm" style="border-color: rgba(16,185,129,0.3);">
+      <h3 style="font-size: 14px; color: #6ee7b7;">Published Store</h3>
+      <p class="tiny dim" style="line-height: 1.8;">
+        Only approved/auto-published<br>
+        Heuristic ID stripped (IP protection)<br>
+        No grounding details, no traces<br>
+        <strong>WHO:</strong> Client dashboard, MCP server<br>
+        <strong>ACCESS:</strong> app.access_mode = 'published_only'
+      </p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 16px; background: rgba(251,191,36,0.04); border-color: rgba(251,191,36,0.2);">
+    <h3 style="font-size: 14px; color: #fcd34d;">Warm-Up Mode</h3>
+    <p class="small dim">New clients start with auto-publish DISABLED. ALL findings go to consultant review. After 3 audits AND rejection rate &lt;25%, auto-publish activates. Consultant can override at any time.</p>
+    <p class="tiny muted" style="margin-top: 8px;">Why: if the first 20 findings include 3 hallucinations, consultants lose trust forever. Warm-up earns trust first.</p>
+  </div>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 11: COST MODEL ===== -->
+<div class="slide">
+  <h2>Cost <span class="accent">Architecture</span></h2>
+
+  <div class="card-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="card-sm" style="text-align: center;">
+      <div style="font-size: 32px; font-weight: 800; color: var(--green);">~$0.50</div>
+      <div class="tiny muted">per page (with exploration)</div>
+    </div>
+    <div class="card-sm" style="text-align: center;">
+      <div style="font-size: 32px; font-weight: 800; color: var(--green);">~$3.50</div>
+      <div class="tiny muted">per 5-page audit</div>
+    </div>
+    <div class="card-sm" style="text-align: center;">
+      <div style="font-size: 32px; font-weight: 800; color: var(--green);">~$350-600</div>
+      <div class="tiny muted">per month at 20 audits/week</div>
+    </div>
+  </div>
+
+  <div class="cost-bar" style="margin-top: 24px;">
+    <div class="cost-seg" style="background: #4e82ff; flex: 10;">Browse $0.10</div>
+    <div class="cost-seg" style="background: #14b8a6; flex: 15;">Explore $0.15</div>
+    <div class="cost-seg" style="background: #ff824e; flex: 5;">Perceive $0.05</div>
+    <div class="cost-seg" style="background: #ff824e; flex: 15;">Evaluate $0.15</div>
+    <div class="cost-seg" style="background: #ff824e; flex: 5;">Critique $0.05</div>
+    <div class="cost-seg" style="background: #6366f1; flex: 1;">Ground $0</div>
+  </div>
+  <p class="tiny muted" style="text-align: center; margin-top: 8px;">Per-page cost breakdown &mdash; grounding and scoring are free (deterministic code)</p>
+
+  <div class="card" style="margin-top: 20px;">
+    <h3 style="font-size: 14px;">Layered Budget Gates</h3>
+    <table class="det-table">
+      <tr><td>Audit total</td><td>$15 default, $100 max</td></tr>
+      <tr><td>Per page</td><td>$2 default, $10 max</td></tr>
+      <tr><td>State exploration (per page)</td><td>$0.50 default</td></tr>
+      <tr><td>Max runtime</td><td>120 minutes</td></tr>
+      <tr><td>Max pages</td><td>50</td></tr>
+      <tr><td>On budget exhaustion</td><td>Graceful stop, partial results</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 12: MVP SCOPE ===== -->
+<div class="slide">
+  <h2>MVP <span class="green-c">v2.0</span> Scope</h2>
+  <p class="dim small" style="margin-bottom: 20px;">192 tasks across 10 phases. Extracted from the master architecture.</p>
+
+  <div class="scope-grid">
+    <div class="scope-in">
+      <div class="scope-title">SHIPS IN MVP</div>
+      <div class="scope-list">
+        &#10003; Full browse agent (stealth, 23 tools, 3 modes)<br>
+        &#10003; Full analysis pipeline (5 steps, 10 grounding rules)<br>
+        &#10003; 100 heuristics (Baymard + Nielsen + Cialdini)<br>
+        &#10003; State exploration (Pass 1 + Pass 2)<br>
+        &#10003; 4-dimensional deterministic scoring<br>
+        &#10003; Two-store pattern + warm-up mode<br>
+        &#10003; Reproducibility snapshots (temp 0)<br>
+        &#10003; CLI + consultant dashboard triggers<br>
+        &#10003; Basic consultant review UI<br>
+        &#10003; Annotated screenshots with finding pins
+      </div>
+    </div>
+    <div class="scope-out">
+      <div class="scope-title">DEFERRED TO POST-MVP</div>
+      <div class="scope-list">
+        &#10007; Template-first discovery (Phase 8)<br>
+        &#10007; Workflow funnel orchestration (Phase 9)<br>
+        &#10007; Client dashboard (Phase 10)<br>
+        &#10007; MCP server (Phase 10)<br>
+        &#10007; Learning service / calibration (Phase 12)<br>
+        &#10007; Temporal durable orchestration (Phase 13)<br>
+        &#10007; Hypothesis pipeline (Phase 14)<br>
+        &#10007; Analytics integrations (Phase 15)<br>
+        &#10007; Vector heuristic retrieval (Phase 16)
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 13: ROADMAP ===== -->
+<div class="slide">
+  <h2>16-Phase <span class="accent">Roadmap</span></h2>
+
+  <div class="timeline">
+    <div class="tl-item tl-mvp"><div class="tl-num">0-5</div><div><div class="tl-name">Agent Internals</div><div class="tl-desc">Perception, tools, verification, safety, browse MVP</div></div><div class="tl-tasks">100 tasks</div></div>
+    <div class="tl-item tl-mvp"><div class="tl-num">6</div><div><div class="tl-name">Heuristic KB</div><div class="tl-desc">100 heuristics, filtering, encryption, tiers</div></div><div class="tl-tasks">12 tasks</div></div>
+    <div class="tl-item tl-mvp"><div class="tl-num">7</div><div><div class="tl-name">Analysis Pipeline</div><div class="tl-desc">5-step pipeline, 8 grounding rules, annotator</div></div><div class="tl-tasks">22 tasks</div></div>
+    <div class="tl-item tl-mvp"><div class="tl-num">8</div><div><div class="tl-name">Audit Orchestrator</div><div class="tl-desc">Dual-mode graph, page queue, checkpointing</div></div><div class="tl-tasks">21 tasks</div></div>
+    <div class="tl-item tl-mvp"><div class="tl-num">9</div><div><div class="tl-name">Master Foundations</div><div class="tl-desc">Gateway, scoring, two-store, reproducibility, dashboard</div></div><div class="tl-tasks">20 tasks</div></div>
+    <div class="tl-item tl-mvp"><div class="tl-num">10</div><div><div class="tl-name">State Exploration</div><div class="tl-desc">2-pass model, disclosure rules, MultiStatePerception</div></div><div class="tl-tasks">17 tasks</div></div>
+    <div class="tl-item tl-future"><div class="tl-num" style="color: var(--text-muted);">8</div><div><div class="tl-name">Discovery &amp; Templates</div><div class="tl-desc">Template clustering, classification, queue synthesis</div></div><div class="tl-tasks">&mdash;</div></div>
+    <div class="tl-item tl-future"><div class="tl-num" style="color: var(--text-muted);">9</div><div><div class="tl-name">Workflow + Rollups</div><div class="tl-desc">Funnel traversal, cross-step analysis</div></div><div class="tl-tasks">&mdash;</div></div>
+    <div class="tl-item tl-future"><div class="tl-num" style="color: var(--text-muted);">10-16</div><div><div class="tl-name">Client, Learning, Production, Hypothesis, Analytics, KB v3-4</div><div class="tl-desc">Full platform evolution</div></div><div class="tl-tasks">&mdash;</div></div>
+  </div>
+  <p class="tiny muted" style="text-align: center; margin-top: 12px;"><span style="color: var(--green);">&#9632;</span> = MVP scope (192 tasks) &nbsp;&nbsp; <span style="color: var(--text-muted);">&#9632;</span> = post-MVP</p>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 14: SUCCESS METRICS ===== -->
+<div class="slide">
+  <h2>MVP <span class="green-c">Success Metrics</span></h2>
+
+  <div class="metric-grid">
+    <div class="metric"><div class="metric-val">&lt; 2 min</div><div class="metric-label">time to first finding</div></div>
+    <div class="metric"><div class="metric-val">&lt; 15 min</div><div class="metric-label">5-page audit</div></div>
+    <div class="metric"><div class="metric-val">&lt; $5</div><div class="metric-label">cost per audit</div></div>
+    <div class="metric"><div class="metric-val">&ge; 1</div><div class="metric-label">critique rejections/audit</div></div>
+    <div class="metric"><div class="metric-val">&ge; 1</div><div class="metric-label">grounding rejections/audit</div></div>
+    <div class="metric"><div class="metric-val">&gt; 60%</div><div class="metric-label">consultant approval rate</div></div>
+    <div class="metric"><div class="metric-val">&lt; 25%</div><div class="metric-label">false positive rate</div></div>
+    <div class="metric"><div class="metric-val">&gt; 12 hrs</div><div class="metric-label">time saved vs manual</div></div>
+    <div class="metric"><div class="metric-val">&ge; 90%</div><div class="metric-label">reproducibility overlap</div></div>
+    <div class="metric"><div class="metric-val">&gt; 7/10</div><div class="metric-label">consultant NPS</div></div>
+  </div>
+
+  <div class="notes" style="margin-top: 24px;">
+    <div class="notes-title">Speaking notes</div>
+    <div class="notes-text">"These aren't aspirational. They're exit gates. The MVP doesn't ship until these are measured and met. The critique and grounding rejection rates are especially important — they prove the hallucination filter is working. If the system never rejects anything, it's rubber-stamping, not validating."</div>
+  </div>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 15: TECH STACK ===== -->
+<div class="slide">
+  <h2>Tech <span class="accent">Stack</span></h2>
+
+  <div class="card-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="card-sm">
+      <h3 style="font-size: 13px; color: #93c5fd;">Core Runtime</h3>
+      <p class="tiny dim" style="line-height: 2;">TypeScript 5.x<br>Node.js 22 LTS<br>Turborepo + pnpm<br>Zod (runtime validation)</p>
+    </div>
+    <div class="card-sm">
+      <h3 style="font-size: 13px; color: #93c5fd;">Browser Agent</h3>
+      <p class="tiny dim" style="line-height: 2;">Playwright + stealth plugin<br>ghost-cursor (Bezier mouse)<br>LangGraph.js (state graph)<br>MCP SDK (tool protocol)</p>
+    </div>
+    <div class="card-sm">
+      <h3 style="font-size: 13px; color: #fdba74;">LLM</h3>
+      <p class="tiny dim" style="line-height: 2;">Claude Sonnet 4 (primary)<br>GPT-4o (fallback)<br>Custom LLMAdapter<br>LangSmith (tracing)</p>
+    </div>
+    <div class="card-sm">
+      <h3 style="font-size: 13px; color: #fcd34d;">Data</h3>
+      <p class="tiny dim" style="line-height: 2;">PostgreSQL 16 + pgvector<br>Drizzle ORM + RLS<br>Redis (Upstash prod)<br>Cloudflare R2 (screenshots)</p>
+    </div>
+    <div class="card-sm">
+      <h3 style="font-size: 13px; color: #f9a8d4;">Frontend</h3>
+      <p class="tiny dim" style="line-height: 2;">Next.js 15 (App Router)<br>shadcn/ui + Tailwind<br>Clerk (auth)</p>
+    </div>
+    <div class="card-sm">
+      <h3 style="font-size: 13px; color: #6ee7b7;">Ops</h3>
+      <p class="tiny dim" style="line-height: 2;">Docker Compose (dev)<br>Fly.io (API + workers)<br>Vercel (dashboard)<br>Sentry (errors)</p>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin-top: 24px;">
+    <p class="small dim">Monthly cost at scale: <strong style="color: #fff;">~$350-600/mo</strong> for 20 audits/week</p>
+  </div>
+</div>
+
+<div class="slide-divider"></div>
+
+<!-- ===== SLIDE 16: CLOSE ===== -->
+<div class="slide" style="text-align: center;">
+  <div class="hero-badge">REO Digital &middot; Neural Product</div>
+  <h1 style="margin-top: 16px;">Ready to <span class="accent">Build</span></h1>
+  <div class="hero-sub" style="margin: 20px auto;">
+    30 spec sections locked. 84 self-review issues found and fixed. 100% coverage verified against source-of-truth specs. 6 architecture diagrams. 192 MVP tasks extracted. Two source-of-truth files untouched.
+  </div>
+  <div class="stats" style="max-width: 600px; margin: 30px auto;">
+    <div class="stat"><div class="stat-val">T001</div><div class="stat-label">NEXT TASK</div></div>
+    <div class="stat"><div class="stat-val">192</div><div class="stat-label">TOTAL TASKS</div></div>
+    <div class="stat"><div class="stat-val">10</div><div class="stat-label">PHASES</div></div>
+  </div>
+  <p class="dim small" style="margin-top: 20px;">First task: <code style="background: var(--surface-2); padding: 4px 8px; border-radius: 4px;">T001: Initialize monorepo</code></p>
+</div>
+
+</body>
+</html>
