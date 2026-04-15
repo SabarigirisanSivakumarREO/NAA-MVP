@@ -1,20 +1,21 @@
 # AI CRO Audit Platform — Complete Project Brief
 
 > **Purpose:** Self-contained document for LLM analysis. Contains every architectural decision, data flow, interface contract, and implementation constraint. Nothing omitted.
-> **Status:** 0% implemented. 35 specs locked. 213 tasks across 11 phases. ~17 weeks estimated.
+> **Status:** 0% implemented. 38 specs locked (§01-§36 + §33a). 255 tasks across 12 phases. ~21 weeks estimated.
+> **Version:** v2.2 — Refined from 4 independent LLM gap analyses (GPT, Claude, Deepseek, Kimi).
 > **Owner:** REO Digital (Indian digital agency). Product name: Neural.
 
 ---
 
 ## 1. WHAT THIS IS
 
-An AI-powered Conversion Rate Optimization audit platform. It crawls client websites with a browser agent, evaluates every page against 100 curated heuristics (Baymard, Nielsen, Cialdini), validates findings through a 3-layer anti-hallucination filter, annotates screenshots, and exposes results through dashboards and an MCP server.
+An AI-powered Conversion Rate Optimization audit platform. It crawls client websites with a browser agent, evaluates every page against 100 benchmark-backed heuristics (Baymard, Nielsen, Cialdini), validates findings through a 3-layer anti-hallucination filter (12 grounding rules), detects cross-page patterns and funnel issues, generates executive summaries and PDF reports, annotates screenshots, and exposes results through dashboards and an MCP server. Token-level cost accounting, LLM failover, perception quality gating, and operational observability ensure production reliability.
 
 **Users:** CRO Consultants (run audits, review findings), Clients (view published findings), LLM Agents (query via MCP server).
 
-**Scale target:** 20+ audits/week. Max 50 pages/audit. Cost: $0.35/page static, $1.80/page interactive.
+**Scale target:** 20+ audits/week. Max 50 pages/audit. Cost: $0.35/page static, $1.80/page interactive. Mobile viewport auditing supported (master plan, post-MVP).
 
-**Core thesis:** Findings are HYPOTHESES, not VERDICTS. Every finding must survive CoT generation → self-critique → evidence grounding before reaching a client. The system surfaces probable issues for human experts to validate.
+**Core thesis:** Findings are HYPOTHESES, not VERDICTS. Every finding must survive CoT generation → self-critique → evidence grounding (12 deterministic rules) before reaching a client. The system surfaces probable issues for human experts to validate.
 
 ---
 
@@ -114,7 +115,7 @@ Layer 1: ORCHESTRATION — Audit lifecycle (LangGraph.js), job scheduling (BullM
   - Layer 1 (CoT, Step 2): Catches ~50% — unfounded claims during generation
   - Layer 2 (Self-Critique, Step 3): Catches ~30% of remaining — SEPARATE LLM call with DIFFERENT persona
   - Layer 3 (Evidence Grounding, Step 4): Catches ~95% of remaining — deterministic code, NO LLM
-- **11 Grounding Rules (deterministic code):**
+- **12 Grounding Rules (deterministic code):**
   - GR-001: Referenced element must exist in page data
   - GR-002: Above/below fold claims must match bounding box
   - GR-003: Form field count claims must match actual data
@@ -126,10 +127,11 @@ Layer 1: ORCHESTRATION — Audit lifecycle (LangGraph.js), job scheduling (BullM
   - GR-009: State provenance integrity (Phase 10, §20)
   - GR-010: Workflow finding cross-step requirement (Phase 11, §21)
   - GR-011: Per-state data correctness (Phase 11, §33)
+  - GR-012: Benchmark claims must match heuristic benchmark data (±20% for quantitative; standard reference for qualitative) (v2.2)
 
 ---
 
-## 6. 28 MCP TOOLS
+## 6. 31 MCP TOOLS
 
 ### 23 Browse Tools
 | # | Tool | Safety | Description |
@@ -178,7 +180,13 @@ Layer 1: ORCHESTRATION — Audit lifecycle (LangGraph.js), job scheduling (BullM
 
 **Heuristics injected into LLM USER MESSAGE, not system prompt.**
 
-**Extended schema (§9.10):** version, rule_vs_guidance, business_impact_weight, effort_category, preferred_states (for state exploration), status.
+**Extended schema (§9.10):** version, rule_vs_guidance, business_impact_weight, effort_category, preferred_states (for state exploration), status, viewport_applicability (desktop/mobile/both).
+
+**Benchmark schema (REQUIRED on all 100 heuristics, v2.2 addition):**
+- **Quantitative** (~40-50 heuristics): value, source, unit, comparison operator, threshold_warning, threshold_critical. Example: "6-8 fields (Baymard), warning at 10, critical at 15"
+- **Qualitative** (~50-60 heuristics): standard, source, positive_exemplar, negative_exemplar. Example: "Primary CTA visible above fold (NNG). Good: CTA in top 30%. Bad: CTA below 3 scrolls."
+- Benchmark data injected alongside each heuristic in the evaluate prompt
+- GR-012 validates benchmark claims against actual page data
 
 ---
 
@@ -198,6 +206,13 @@ analyze_perception (AnalyzePerception), viewport_screenshot, fullpage_screenshot
 ### Extension Fields (Phase 6+)
 trigger_source, audit_request_id, state_graph (StateGraph), multi_state_perception, exploration_cost_usd, reproducibility_snapshot, published_finding_ids, warmup_mode_active, workflow_context, finding_rollups, browser_session_id
 
+### v2.2 Addition Fields
+- `page_perceptions: Record<string, AnalyzePerception>` — accumulated per-page perceptions for cross-page analysis
+- `funnel_definition: FunnelStage[] | null` — optional client-provided funnel
+- `pattern_findings, consistency_findings, funnel_findings` — cross-page analysis outputs
+- `perception_quality: PerceptionQualityScore | null` — quality gate score
+- `analysis_status: "complete" | "partial" | "perception_insufficient" | "failed" | "budget_exceeded" | "llm_failed" | "grounding_rejected_all"`
+
 ### Critical Invariants
 - current_step SHALL NEVER exceed max_steps
 - confidence_score ∈ [0.0, 1.0]
@@ -214,7 +229,8 @@ trigger_source, audit_request_id, state_graph (StateGraph), multi_state_percepti
 ### Graph Topology
 ```
 audit_setup → page_router → [browse subgraph] → [analyze subgraph] → page_router (loop)
-                          → audit_complete (when queue empty or budget exhausted)
+                          ↓ (queue empty)
+                    cross_page_analyze → audit_complete → report_generate
 ```
 
 ### Node: audit_setup
@@ -239,6 +255,13 @@ Browse and analyze compiled as independent subgraphs, nested inside audit orches
 Single page.evaluate() call. Returns AnalyzePerception with: headingHierarchy, landmarks, semanticHTML, textContent (word count, readability, paragraphs), ctas (with bounding boxes, computed styles, contrast ratio), forms (field count, labels, validation), trustSignals, layout (fold position, visual hierarchy, whitespace), images (alt text, lazy load), navigation, performance (DOMContentLoaded, LCP).
 
 Auto-detects page type from perception data.
+
+### Step 1b: Perception Quality Gate (v2.2 addition)
+Scores perception data quality before sending to LLM. 7 signals weighted: has_meaningful_content (0.25), has_interactive_elements (0.20), has_navigation (0.10), has_heading_structure (0.10), no_overlay_detected (0.15), no_error_state (0.15), page_loaded (0.05).
+- Score ≥ 0.6 → proceed to evaluate normally
+- Score 0.3-0.59 → partial analysis (Tier 1 quantitative heuristics only, skip LLM)
+- Score < 0.3 → skip page (analysis_status: "perception_insufficient"), no LLM cost
+Overlay detection: position fixed/sticky, z-index > 999, covering > 30% viewport, common class patterns (cookie, consent, modal, popup).
 
 ### Step 2: evaluate
 LLM call with chain-of-thought. System prompt: CRO analyst role with strict methodology (OBSERVE → ASSESS → EVIDENCE → SEVERITY). Heuristics injected in user message (NOT system prompt). Output: RawFinding[] with heuristic_id, status (violation/pass/needs_review), observation, assessment, evidence (element_ref, selector, data_point, measurement), severity, recommendation.
@@ -374,6 +397,10 @@ clients, audit_runs (versioned per client), findings (RLS, 12+ extension columns
 ### Extension Tables
 page_states, state_interactions, finding_rollups, reproducibility_snapshots (immutability trigger), audit_requests, templates, workflows, domain_patterns (pgvector)
 
+### v2.2 Addition Tables
+- `llm_call_log` — append-only, per-call: audit_run_id, node_name, model, input_tokens, output_tokens, cost_usd, duration_ms, cache_hit
+- `audit_events` — 22 event types: audit_started through cross_page_analysis_completed, powers SSE + observability
+
 ### Key Views
 published_findings (WHERE publish_status = 'published' AND published_at <= NOW())
 
@@ -410,9 +437,20 @@ ALL external dependencies via adapters. No direct imports outside adapter module
 
 ### Platform (72): Discovery, state exploration, workflow, scoring, two-store, reproducibility, delivery failures — each with specific detection + response.
 
+### Analysis Error Recovery (v2.2 addition)
+Per-page `analysis_status` enum: complete, partial, perception_insufficient, budget_exceeded, llm_failed, grounding_rejected_all, failed. Recovery matrix:
+- LLM timeout → split heuristic batch (20→2×10), retry
+- Semantically garbage output → retry once with explicit instruction
+- Self-critique rejects ALL → skip critique, send raw to grounding
+- Grounding rejects 100% → flag for consultant review, raw findings in internal store
+- Zero findings (clean page) → accept, log suspiciously_clean if page has CTAs+forms
+- Annotation failure → store findings without annotations, non-fatal
+- Audit never silently drops a page. Every page gets a status and reason.
+
 ### Response hierarchy
 - Browse: transient→retry(3x), structural→reflect/replan, blocked→HITL, bot→pause+rotate+retry→HITL
-- Analysis: hallucination→grounding rejects, malformed→retry(2x), budget→graceful stop
+- Analysis: perception gate→skip or partial, hallucination→grounding rejects, malformed→retry+split, budget→graceful stop, all-rejected→consultant review
+- LLM failover: primary 3 retries → fallback 2 retries → pause audit → BullMQ resume in 5min
 - Audit: all pages fail→HITL, budget exceeded→partial results, crash→checkpoint recovery
 
 ---
@@ -434,6 +472,19 @@ Browse ~$0.10 + Analyze ~$0.05 + Evaluate ~$0.15 + Critique ~$0.05 + Ground $0 +
 - Exploration: $0.50/page cap
 - Kill-switch: budget_remaining_usd ≤ 0 → terminate
 
+### Token-Level Cost Accounting (v2.2 addition)
+- Every LLM call logged atomically: model, input_tokens, output_tokens, cost_usd, duration_ms, cache_hit
+- Pre-call budget gate: estimate from prompt token count, skip if estimated > remaining
+- Post-audit cost summary: actual_cost_usd, cost_breakdown by node, cost_per_page_avg, cache_hit_rate
+- Per-client attribution via llm_call_log JOIN audit_runs GROUP BY client_id
+
+### LLM Rate Limiting & Failover (v2.2 addition)
+- Sliding window rate limiter per provider in Redis (Anthropic: 50 RPM/80K TPM, OpenAI: 60 RPM/150K TPM)
+- Exponential backoff with ±20% jitter
+- Per-call failover: primary 3 retries → fallback 2 retries → LLMUnavailableError
+- 3+ consecutive page failures → audit pauses, BullMQ schedules resume in 5min (3 attempts)
+- Failover findings tagged with model_mismatch = true
+
 ---
 
 ## 20. DELIVERY LAYER
@@ -445,10 +496,16 @@ Browse ~$0.10 + Analyze ~$0.05 + Evaluate ~$0.15 + Critique ~$0.05 + Ground $0 +
 Published findings, annotated screenshots, version compare, competitor view.
 
 ### Consultant Dashboard (Next.js 15 + shadcn/ui)
-Review gate management (approve/reject/edit), client management, audit scheduling, progress monitoring, warm-up status, finding detail with annotated screenshots.
+Review gate management (approve/reject/edit), client management, audit scheduling, progress monitoring, warm-up status, finding detail with annotated screenshots. Operational admin dashboard (/console/admin/operations) for audit health, heuristic performance, cost trends, and alerts (§34).
+
+### PDF Report Generation (v2.2 addition, §35)
+- Executive summary: overall score (0-100), grade (A-F), top 5 findings, strengths, category breakdown, recommended next steps
+- Action plan: 4 quadrants — quick wins (high impact + low effort), strategic (high impact + high effort), incremental (low impact + low effort), deprioritized (low impact + high effort)
+- Full PDF report: cover → exec summary → action plan → findings by category → cross-page patterns → funnel analysis → methodology note → appendix
+- Tech: Next.js HTML template → Playwright page.pdf(). Branded per client. <5MB. Stored in R2.
 
 ### Streaming
-SSE events for: session_started, node_entered, action_taken, verification_result, confidence_update, hitl_required, session_completed.
+SSE events for: 22 event types including audit_started, page_browsing, page_analyzing, findings_produced, finding_published, page_complete, page_failed, audit_progress, audit_complete, audit_error, perception_quality_low, llm_provider_fallback, cross_page_analysis_completed.
 
 ---
 
@@ -456,11 +513,13 @@ SSE events for: session_started, node_entered, action_taken, verification_result
 
 **Phase 1: Trigger & Init** — Gateway validates → reproducibility snapshot (temp=0) → load client+heuristics (AES-256-GCM) → Stage 1 filter (business type) → discover pages → build queue → budget $15 total
 
-**Phase 2: Page Loop (per page, max 50)** — page_router → browse (navigate+stabilize+HITL if needed) → [explore_states: Pass 1 heuristic-primed + Pass 2 bounded-exhaustive → StateGraph] → deep_perceive (page_analyze+screenshots+per-state screenshots) → evaluate (interactive CoT or static, scope split) → Pass 2 open observation (static, max 5, Tier 3) → self_critique (SEPARATE call, 5 checks, KEEP/REVISE/DOWNGRADE/REJECT) → evidence ground (11 rules, deterministic, NO LLM) → annotate+store → review gate (Tier 1 auto / Tier 2 24hr / Tier 3 held) → restore_state → back to page_router
+**Phase 2: Page Loop (per page, max 50)** — page_router → browse (navigate+stabilize+HITL if needed) → [explore_states: Pass 1 heuristic-primed + Pass 2 bounded-exhaustive → StateGraph] → deep_perceive (page_analyze+screenshots+per-state screenshots) → **perception quality gate** (≥0.6 proceed / 0.3-0.59 partial / <0.3 skip) → evaluate (interactive CoT or static, scope split, **benchmarks injected**) → Pass 2 open observation (static, max 5, Tier 3) → self_critique (SEPARATE call, 5 checks, KEEP/REVISE/DOWNGRADE/REJECT) → evidence ground (**12 rules** including GR-012 benchmark validation, deterministic, NO LLM) → annotate+store → review gate (Tier 1 auto / Tier 2 24hr / Tier 3 held) → restore_state → back to page_router
 
 **Phase 3: Workflow** — Continuous session → per-step browse+analysis → cross-step synthesis
 
-**Phase 4: Completion** — Summary → cross-page consistency → competitor comparison (pairwise) → version diff
+**Phase 3b: Cross-Page Analysis (v2.2)** — After all pages analyzed: (1) Pattern detection — group findings by heuristic across pages, 3+ violations → PatternFinding. (2) Consistency check — compare CTA styles, nav, trust signals across pages. (3) Funnel analysis — single LLM call ($1 cap, temp=0) for promise/delivery mismatches, missing steps, journey friction. New finding scopes: cross_page_pattern, cross_page_consistency, funnel.
+
+**Phase 4: Completion** — **Executive summary** (overall score 0-100, grade A-F, top 5, strengths, category breakdown) → **action plan** (effort/impact quadrant bucketing) → competitor comparison (pairwise) → version diff → **PDF report generation** (branded, <5MB, stored R2)
 
 **Phase 5: Review Gate + Two-Store** — Internal store (all) → tier routing → warm-up override → consultant review → published store (client-visible)
 
@@ -470,22 +529,23 @@ SSE events for: session_started, node_entered, action_taken, verification_result
 
 ---
 
-## 22. IMPLEMENTATION PLAN (213 TASKS, 11 PHASES)
+## 22. IMPLEMENTATION PLAN (255 TASKS, 12 PHASES)
 
 | Phase | Tasks | IDs | What |
 |-------|-------|-----|------|
-| 0: Setup | 5 | T001-T005 | Monorepo, packages, CLI, Docker, env |
-| 1: Perception | 10 | T006-T015 | BrowserManager, stealth, AX-tree, filters, mutation, screenshots, PageStateModel |
+| 0: Setup + Golden Test Infra | 7 | T001-T005, T252-T253 | Monorepo, packages, CLI, Docker, env, **offline mock mode, MockBrowserEngine, MockLLMAdapter** |
+| 1: Perception | 11 | T006-T015, T254 | BrowserManager, stealth, AX-tree, filters, mutation, screenshots, PageStateModel, **fixture capture CLI** |
 | 2: Tools + Behavior | 35 | T016-T050 | 23 browse tools, mouse/typing/scroll behavior, MCP server, **ToolRegistry (§33a)** |
 | 3: Verification | 15 | T051-T065 | ActionContract, 9 verify strategies, VerifyEngine, FailureClassifier, ConfidenceScorer |
-| 4: Safety + Infra | 15 | T066-T080 | **BrowserSessionManager (§33a)**, **SafetyContext (§33a)**, DB schema (25+ tables), adapters |
+| 4: Safety + Infra + Cost | 21 | T066-T080, T224-T226, T236-T238 | **BrowserSessionManager (§33a)**, **SafetyContext (§33a)**, DB schema (25+ tables), adapters, **token-level cost accounting, LLM rate limiting, LLM failover** |
 | 5: Browse MVP | 20 | T081-T100 | Browse graph (**external session §33a**), system prompt, integration tests on BBC/Amazon |
-| 6: Heuristic KB | 12 | T101-T112 | Schemas, 100 heuristics authored, loader, two-stage filtering, encryption, tier validation |
-| 7: Analysis Pipeline | 22 | T113-T134 | AnalysisState, deep_perceive, evaluate (**EvaluateStrategy §33a**), self_critique, 8 grounding rules, evidence grounder, annotate, store, AnalysisGraph |
-| 8: Orchestrator | 21 | T135-T155 | AuditState, audit_setup, page_router, audit_complete, routing, AuditGraph (**session passing + restore_state §33a**), CLI command, acceptance tests |
-| 9: Foundations | 20 | T156-T175 | AuditRequest contract, gateway, reproducibility, two-store, warm-up, scoring pipeline, consultant dashboard |
+| 6: Heuristic KB + Benchmarks | 16 | T101-T112, T213-T216 | Schemas, 100 heuristics authored **with required benchmarks (quantitative + qualitative)**, loader, two-stage filtering, encryption, tier validation, **GR-012** |
+| 7: Analysis Pipeline + Quality | 26 | T113-T134, T232-T235, T250-T251 | AnalysisState, deep_perceive, **perception quality gate**, evaluate (**EvaluateStrategy §33a**, benchmarks in prompt), self_critique, 8 grounding rules, evidence grounder, annotate, store, AnalysisGraph, **error recovery paths, golden test expansion** |
+| 8: Orchestrator + Cross-Page | 28 | T135-T155, T217-T223 | AuditState, audit_setup, page_router, audit_complete, routing, AuditGraph (**session passing + restore_state §33a**), CLI command, **cross-page pattern detection, consistency check, funnel analysis**, acceptance tests |
+| 9: Foundations + Observability + Reports | 33 | T156-T175, T239-T249 | AuditRequest contract, gateway, reproducibility, two-store, warm-up, scoring pipeline, consultant dashboard, **§34 structured logging + audit events + heuristic health + alerting + ops dashboard**, **§35 executive summary + action plan + PDF report** |
 | 10: State Exploration | 18 | T176-T192 | StateGraph types, disclosure rules, meaningful-state detection, Pass 1/2 explorers, multi-state synthesis, GR-009, extended browse graph |
 | 11: Composition | 20 | T193-T212 | InteractiveEvaluateStrategy (ReAct), tool injection, navigation guard, Pass 2 open observation, GR-010/GR-011, workflow restore, context management, cost model, activate interactive default |
+| 12: Mobile Viewport | 5 | T227-T231 | Dual-viewport pipeline (1440px + 390px), mobile heuristics (10-15), viewport-tagged findings, Stage 3 filtering by viewport **(master plan only, not MVP)** |
 
 ### §33a Interface Modifications (built into earlier phases)
 | Task | Phase | Interface Added |
@@ -499,9 +559,11 @@ SSE events for: session_started, node_entered, action_taken, verification_result
 
 ### Milestones
 - **Phase 5:** ★ BROWSE WORKS — agent navigates real sites
-- **Phase 8:** ★ MVP AUDIT — single-site audit end-to-end
+- **Phase 8:** ★ MVP AUDIT — single-site audit end-to-end with cross-page analysis
+- **Phase 9:** ★ PLATFORM READY — observability, PDF reports, executive summary, action plan
 - **Phase 10:** ★ MVP v2.0 COMPLETE — state exploration, scoring, two-store, reproducibility
 - **Phase 11:** ★ FULL PRODUCT — interactive composition, the competitive moat
+- **Phase 12:** ★ MOBILE COMPLETE — dual-viewport audits with mobile-specific heuristics
 
 ---
 
@@ -573,17 +635,39 @@ normalizer_version, grounding_rule_set_version, scoring_version
 
 ---
 
-## 25. WHAT COULD GO WRONG (HONEST ASSESSMENT)
+## 25. OBSERVABILITY & OPERATIONAL MONITORING (§34, v2.2)
+
+**Three layers:**
+1. **Structured logging** — Pino, JSON, mandatory correlation fields (audit_run_id, page_url, node_name, heuristic_id, trace_id). No console.log in production.
+2. **Audit events** — 22 event types logged to `audit_events` table in real-time. Powers SSE streaming and post-hoc analysis.
+3. **Derived metrics & alerting** — Heuristic health scores (per heuristic: total_evaluations, findings_produced, grounding_rejections, consultant_overrides → health_score). Audit-level: duration, actual cost, cost vs estimate, completion rate. Alerting: audit stuck >45min, grounding >80% rejection, cost >2x estimate, LLM 5+ errors in 10min.
+
+**Operational dashboard:** `/console/admin/operations` — active audits with progress/ETA, 24h stats, heuristic health table (sortable by health_score), alert feed, 30-day cost trend. Admin role only.
+
+---
+
+## 26. GOLDEN TEST SUITE & QUALITY ASSURANCE (§36, v2.2)
+
+**Golden test cases:** 20 saved page snapshots (AnalyzePerception + validated findings) with expected_findings and expected_false_positives per test.
+**CI fast mode (every PR):** MockLLMAdapter with cached responses. Tests grounding, filtering, scoring. Zero API cost.
+**CI nightly (scheduled):** Real LLM calls. ~$1-2/run. Catches prompt quality regressions.
+**Pass criteria:** True positive rate ≥ 80%, false positive rate ≤ 20%, no individual test below 60% TP.
+**Regression alerting:** Nightly scores drop >10% vs 7-day rolling average → P1 alert, blocks deployment.
+**Offline mock mode:** `NEURAL_MODE=offline` — MockBrowserEngine + MockLLMAdapter from fixtures. Zero network, zero API cost for development.
+
+---
+
+## 27. WHAT COULD GO WRONG (HONEST ASSESSMENT)
 
 1. **LLM reliability ceiling is ~80-86%.** WebArena best: ~62%. Our target is realistic for known sites only. Arbitrary sites will be lower. We mitigate with 3-layer filtering but cannot guarantee zero false positives.
 
 2. **21.2% overlap with human experts.** The system will find things experts wouldn't, and miss things experts would find. This is the fundamental limitation — we can't fix it, only manage it through transparency (findings are hypotheses).
 
-3. **Cost can spiral.** Interactive mode is 3-7x more expensive. Budget enforcement is critical. A bug in budget tracking could burn through API credits rapidly.
+3. **Cost can spiral.** Interactive mode is 3-7x more expensive. Token-level cost accounting (v2.2) and pre-call budget gates mitigate this, but a bug in the CostTracker could still burn API credits. Kimi's gap analysis estimated real costs at $0.80/page static (2.3x our $0.35 estimate) — actual costs must be validated during development.
 
 4. **Anti-bot arms race.** Stealth plugins work today but detection evolves. Amazon, Cloudflare, etc. constantly update. We need ongoing fingerprint rotation and fallback to HITL.
 
-5. **Heuristic quality is the bottleneck.** The system is only as good as the 100 heuristics. Badly written heuristics produce bad findings even with perfect grounding. The CRO team's heuristic authoring quality determines product quality.
+5. **Heuristic quality is the bottleneck.** The system is only as good as the 100 heuristics. Benchmark data (v2.2) improves finding quality, but authoring 100 heuristics with benchmarks is ~200+ hours of expert time. Golden test suite (§36) provides the quality gate, but only after sufficient golden tests are captured.
 
 6. **State exploration complexity.** Two-pass exploration on dynamic SPAs is fragile. Elements may be non-deterministic (A/B tests, personalization). Meaningful-state detection heuristics may false-positive.
 
@@ -591,9 +675,13 @@ normalizer_version, grounding_rule_set_version, scoring_version
 
 8. **Single-threaded page analysis.** 50 pages at $0.35/page sequential = ~30 minutes per audit. Parallel analysis is deferred (DD-01). This limits throughput.
 
+9. **Cross-page analysis quality (v2.2).** Funnel analysis uses a single LLM call — medium reliability. Pattern detection and consistency checks are deterministic and reliable, but funnel findings may produce false positives on non-standard site architectures.
+
+10. **Perception quality false negatives.** The quality gate may incorrectly skip pages that are actually auditable (e.g., a legitimate minimal landing page). Threshold tuning (0.6/0.3) needs validation against real sites during development.
+
 ---
 
-## 26. REPO STRUCTURE
+## 28. REPO STRUCTURE
 
 ```
 neural-nba/
@@ -635,4 +723,4 @@ neural-nba/
 
 ---
 
-*Document generated from 35 architectural specs, 213 implementation tasks, and supporting materials. Every claim traces to a REQ-ID in the specification corpus.*
+*Document generated from 38 architectural specs (§01-§36 + §33a), 255 implementation tasks across 12 phases, and supporting materials. v2.2 refined from 4 independent LLM gap analyses. Every claim traces to a REQ-ID in the specification corpus.*
