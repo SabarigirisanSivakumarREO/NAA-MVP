@@ -23,7 +23,11 @@
       "Bash(node -e \":*)",
       "Bash(ls \"C:\\\\Sabari\\\\Neural\\\\NBA\\\\docs\\\\specs\\\\final-architecture\\\\0\"*.md)",
       "Bash(ls \"C:/Sabari/Neural/NBA/docs/specs/final-architecture/\"*.md)",
-      "Bash(node merge_tabs.js)"
+      "Bash(node merge_tabs.js)",
+      "Bash(find /c/Sabari/Neural/NBA -type f -exec ls -la {} \\\\;)",
+      "Bash(find /c/Sabari/Neural/NBA -type f -not -path '*/.git/*' -exec ls -la {} \\\\;)",
+      "Bash(sort -k5 -rn)",
+      "Bash(find /c/Sabari/Neural/NBA -type f -not -path '*/.git/*' -exec du -ch {} +)"
     ]
   }
 }

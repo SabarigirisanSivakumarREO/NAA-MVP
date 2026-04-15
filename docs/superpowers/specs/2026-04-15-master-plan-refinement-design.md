@@ -3,7 +3,7 @@
 > **Status:** Approved design. Ready for implementation planning.
 > **Date:** 2026-04-15
 > **Context:** Four independent LLM gap analyses (GPT, Claude, Deepseek, Kimi) identified ~50 unique gaps in the master architecture. This design addresses the gaps the user chose to promote into the master plan.
-> **Scope:** 7 spec modifications + 3 new specs + ~42 new tasks (T213-T254). Revised total: ~255 tasks across 12 phases. Task IDs are preliminary — finalized in tasks-v2.2.
+> **Scope:** 7 spec modifications + 3 new specs + ~50 new tasks (T213-T262). Revised total: ~263 tasks across 12 phases. Task IDs are preliminary — finalized in tasks-v2.2. v2.2a patch adds 8 tasks from external review feedback (overlay dismissal, discovery, personas, notifications, progressive funnel).
 
 ---
 
@@ -150,23 +150,92 @@ interface FunnelFinding {
 
 **New FindingScope values:** `"cross_page_pattern"`, `"cross_page_consistency"`, `"funnel"` added to the existing FindingScope union.
 
+**Lightweight PageSignals (v2.2a fix):** Instead of accumulating full AnalyzePerception objects (50-100KB each, 50 pages = 2.5-5MB state bloat), extract a lightweight summary after each page analysis:
+
+```typescript
+interface PageSignals {
+  page_url: string;
+  page_type: PageType;
+  cta_count: number;
+  cta_texts: string[];               // truncated to 50 chars each
+  form_field_counts: number[];        // per form
+  trust_signal_types: string[];       // "review", "badge", "testimonial", etc.
+  nav_link_count: number;
+  heading_texts: string[];            // h1/h2 only
+  key_metric_violations: string[];    // "14 form fields vs 6-8 benchmark"
+  finding_heuristic_ids: string[];    // which heuristics were violated
+  finding_count: number;
+  perception_quality_score: number;
+}
+```
+
 **State additions:**
 
 ```typescript
-// Accumulated across page loop for cross-page analysis
-page_perceptions: Annotation<Record<string, AnalyzePerception>>({
-  reducer: (existing, incoming) => ({ ...existing, ...incoming }),
-  default: () => ({})
+// Lightweight signals accumulated across page loop (v2.2a: NOT full perceptions)
+page_signals: Annotation<PageSignals[]>({
+  reducer: (existing, incoming) => [...existing, ...incoming],
+  default: () => []
 }),
 
 // Optional client-provided funnel definition
 funnel_definition: Annotation<FunnelStage[] | null>({ default: () => null }),
+
+// Optional client-provided personas (v2.2a)
+personas: Annotation<PersonaContext[] | null>({ default: () => null }),
 
 // Cross-page outputs
 pattern_findings: Annotation<PatternFinding[]>({ default: () => [] }),
 consistency_findings: Annotation<ConsistencyFinding[]>({ default: () => [] }),
 funnel_findings: Annotation<FunnelFinding[]>({ default: () => [] }),
 ```
+
+**PersonaContext (v2.2a addition):**
+
+```typescript
+interface PersonaContext {
+  id: string;                          // "first-time-visitor"
+  name: string;                        // "First-time visitor"
+  description: string;                 // "Never visited this site before, comparing options"
+  goals: string[];                     // ["find the right product", "compare prices", "trust the brand"]
+  frustrations: string[];              // ["too many options", "hidden costs", "unclear returns policy"]
+  business_type_applicability: BusinessType[];  // ["ecommerce", "saas"]
+}
+```
+
+Default 2-3 personas per business type (e.g., ecommerce: first-time visitor, returning customer, price-sensitive shopper). Injected into evaluate prompt. Findings get `persona: string | null` field. The LLM evaluates heuristics from each persona's perspective, producing more consultant-like insights vs mechanical checklist output.
+
+**DiscoveryStrategy (v2.2a addition):**
+
+```typescript
+interface DiscoveryStrategy {
+  discover(rootUrl: string, config: DiscoveryConfig): Promise<AuditPage[]>;
+}
+
+// Three implementations:
+// SitemapDiscovery: parse sitemap.xml (current default)
+// NavigationCrawlDiscovery: BFS from homepage, depth 3, max 200 URLs, classify page types
+// ManualDiscovery: accept URL list from client/consultant
+```
+
+audit_setup node accepts `discovery_strategy` parameter. MVP: SitemapDiscovery + ManualDiscovery. NavigationCrawlDiscovery added post-MVP.
+
+**NotificationAdapter (v2.2a addition):**
+
+```typescript
+interface NotificationAdapter {
+  notify(event: NotificationEvent): Promise<void>;
+}
+
+type NotificationEvent =
+  | { type: "audit_completed"; audit_run_id: string; summary: AuditCompletionReport }
+  | { type: "audit_failed"; audit_run_id: string; reason: string }
+  | { type: "findings_ready_for_review"; audit_run_id: string; finding_count: number };
+```
+
+MVP implementation: email via Resend or Postmark (single API call per notification). Webhook implementation added post-MVP. Notification preferences stored per client/consultant profile.
+
+**Progressive funnel context (v2.2a, master plan Phase 8 enhancement):** For subsequent pages in the audit, inject accumulated `PageSignals` from previous pages into the evaluate prompt. This enables inline funnel-aware findings like "the homepage promises free shipping but this product page doesn't mention it." This is a prompt enrichment change — no new infrastructure. For MVP, the post-hoc cross-page analysis is sufficient.
 
 **FunnelStage type:**
 
@@ -246,7 +315,7 @@ const MODEL_PRICING: Record<string, { input_per_m: number; output_per_m: number 
 // On AuditPage (§5)
 viewport_strategy: "desktop_only" | "mobile_only" | "both";  // default: "desktop_only"
 
-// On AnalyzePerception (§7.9) — new top-level field
+// On AnalyzePerception (§7.9) — new field in metadata block (populated as desktop in MVP)
 viewport_context: {
   width: number;            // 1440 or 390
   height: number;           // 900 or 844
@@ -348,6 +417,15 @@ interface PerceptionQualityScore {
 | < 0.3 | Skip page — mark `analysis_status: "perception_insufficient"`, log `blocking_issue`, move to next | Page not auditable. No LLM cost incurred. |
 
 **Overlay detection:** Checks in `page_analyze` for elements with `position: fixed/sticky`, `z-index > 999`, bounding box covering >30% viewport area, common class patterns (`cookie`, `consent`, `modal`, `popup`, `overlay`, `chat-widget`).
+
+**Overlay dismissal (v2.2a fix):** Before perception capture, an `overlay_dismissal` step in the browse subgraph attempts to clear detected overlays:
+
+1. Detect overlay elements (same heuristics as quality gate)
+2. Attempt to click accept/close/dismiss button using common selector patterns: `[class*="accept"]`, `[class*="close"]`, `[aria-label*="close"]`, `button:has-text("Accept")`, `button:has-text("Got it")`, `button:has-text("OK")`, `.cookie-consent button`, `.modal-close`
+3. Wait for DOM stability (MutationObserver settles)
+4. If dismissal fails (no matching button, click didn't work), proceed with overlay present — the quality gate handles degraded perception
+
+This is a browser agent concern (pre-perception cleanup in the browse subgraph), not an analysis concern. Runs between page stabilization and `deep_perceive`.
 
 **State additions:**
 
@@ -745,9 +823,43 @@ test/
 | §36 Golden test infrastructure | 2 | Phase 0 + Phase 7 | T250-T251 |
 | §36 Offline mock mode | 2 | Phase 0 | T252-T253 |
 | §36 Fixture capture CLI | 1 | Phase 1 | T254 |
-| **Total** | **~42** | | **T213-T254** |
+| **v2.2a additions (from external review):** | | | |
+| Overlay dismissal step | 1 | Phase 1/5 | T255 |
+| DiscoveryStrategy adapter interface | 2 | Phase 9 | T256-T257 |
+| Persona-based evaluation (PersonaContext + prompt) | 2 | Phase 7 (can be MVP) | T258-T259 |
+| NotificationAdapter + email implementation | 2 | Phase 9 | T260-T261 |
+| Progressive funnel context injection | 1 | Phase 8 | T262 |
+| **Total** | **~50** | | **T213-T262** |
 
-**Revised master plan total: ~255 tasks across 12 phases.**
+**Revised master plan total: ~263 tasks across 12 phases.**
+
+---
+
+## Part 3b: Parallel Workstreams
+
+**Phase 0b: Heuristic Authoring Kickoff (PARALLEL with engineering)**
+
+Starts Day 1 alongside engineering Phase 0. CRO team authors heuristics while engineering builds infrastructure. Convergence at Phase 6.
+
+| Milestone | When | Output |
+|-----------|------|--------|
+| Top 15 heuristics drafted (structural, Tier 1) | Week 2 | MVP heuristics for development testing |
+| Top 15 benchmarks added (quantitative) | Week 3 | Benchmark data for GR-012 validation |
+| First 5 golden test cases hand-crafted | Week 4 | Manual audit → validated perception + findings |
+| 50 heuristics complete (all Baymard) | Week 6 | Half the KB ready |
+| 100 heuristics complete with benchmarks | Week 9 | Full KB ready for Phase 6 integration |
+
+**Critical dependency:** If heuristic authoring doesn't start until Phase 6 (Week 8-9), engineering will have an engine with no fuel. The CRO team must start authoring NOW.
+
+## Part 3c: MVP Extraction Notes
+
+When extracting MVP from this master plan:
+- **Cross-page analysis:** Pattern detection only (deterministic). Defer consistency + funnel.
+- **Golden tests:** First 5 hand-crafted during development, not via automated pipeline.
+- **Ops dashboard:** Build last in Phase 9. Use SQL queries against audit_events in interim.
+- **Phase 9 UI priority:** Consultant dashboard → client dashboard → PDF report → ops dashboard (last).
+- **Persona evaluation:** Low effort (prompt change), can be in MVP.
+- **Notifications:** Email on audit_completed — can be in MVP.
 
 ---
 
@@ -757,7 +869,7 @@ test/
 |---------------------|--------------|
 | Revenue impact calculator | GR-007 bans conversion predictions. Contradicts core design principle. Benchmarks + severity + evidence is the honest alternative. |
 | GA4/analytics integration | External data dependency. System audits page content, not traffic. Client provides context separately. |
-| Persona simulation engine | Speculative. Prompt engineering can add persona context without new engine. Guidance added to heuristic authoring instead. |
+| Persona simulation engine (full engine) | Overkill. Persona-based evaluation via prompt enrichment achieves 80% of the value (added in v2.2a). Full PSE deferred. |
 | A/B test design generator | Post-audit deliverable, not audit pipeline. Phase 13+ feature. |
 | PII redaction on screenshots | Screenshots are of public web pages. System does not fill forms with real PII. Low real risk. |
 | Cut Mode B / ghost-cursor / stealth | User decision: keep for SEO/accessibility expansion. |

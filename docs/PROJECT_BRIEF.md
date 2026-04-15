@@ -1,8 +1,8 @@
 # AI CRO Audit Platform — Complete Project Brief
 
 > **Purpose:** Self-contained document for LLM analysis. Contains every architectural decision, data flow, interface contract, and implementation constraint. Nothing omitted.
-> **Status:** 0% implemented. 38 specs locked (§01-§36 + §33a). 255 tasks across 12 phases. ~21 weeks estimated.
-> **Version:** v2.2 — Refined from 4 independent LLM gap analyses (GPT, Claude, Deepseek, Kimi).
+> **Status:** 0% implemented. 38 specs locked (§01-§36 + §33a). 263 tasks across 12 phases. ~21 weeks estimated.
+> **Version:** v2.2a — Refined from 4 independent LLM gap analyses + external architecture review.
 > **Owner:** REO Digital (Indian digital agency). Product name: Neural.
 
 ---
@@ -207,8 +207,9 @@ analyze_perception (AnalyzePerception), viewport_screenshot, fullpage_screenshot
 trigger_source, audit_request_id, state_graph (StateGraph), multi_state_perception, exploration_cost_usd, reproducibility_snapshot, published_finding_ids, warmup_mode_active, workflow_context, finding_rollups, browser_session_id
 
 ### v2.2 Addition Fields
-- `page_perceptions: Record<string, AnalyzePerception>` — accumulated per-page perceptions for cross-page analysis
+- `page_signals: PageSignals[]` — lightweight per-page summaries (url, page_type, cta_texts, form_field_counts, trust_signal_types, finding_heuristic_ids) accumulated for cross-page analysis. NOT full perceptions (avoids 2.5-5MB state bloat on 50-page audits).
 - `funnel_definition: FunnelStage[] | null` — optional client-provided funnel
+- `personas: PersonaContext[] | null` — optional personas for persona-based evaluation (v2.2a)
 - `pattern_findings, consistency_findings, funnel_findings` — cross-page analysis outputs
 - `perception_quality: PerceptionQualityScore | null` — quality gate score
 - `analysis_status: "complete" | "partial" | "perception_insufficient" | "failed" | "budget_exceeded" | "llm_failed" | "grounding_rejected_all"`
@@ -262,9 +263,11 @@ Scores perception data quality before sending to LLM. 7 signals weighted: has_me
 - Score 0.3-0.59 → partial analysis (Tier 1 quantitative heuristics only, skip LLM)
 - Score < 0.3 → skip page (analysis_status: "perception_insufficient"), no LLM cost
 Overlay detection: position fixed/sticky, z-index > 999, covering > 30% viewport, common class patterns (cookie, consent, modal, popup).
+**Overlay dismissal (v2.2a):** Before perception, browse subgraph attempts to dismiss detected overlays by clicking accept/close/dismiss buttons using common selectors. If dismissal fails, proceeds with overlay present and lets quality gate handle degraded perception.
 
 ### Step 2: evaluate
-LLM call with chain-of-thought. System prompt: CRO analyst role with strict methodology (OBSERVE → ASSESS → EVIDENCE → SEVERITY). Heuristics injected in user message (NOT system prompt). Output: RawFinding[] with heuristic_id, status (violation/pass/needs_review), observation, assessment, evidence (element_ref, selector, data_point, measurement), severity, recommendation.
+LLM call with chain-of-thought. System prompt: CRO analyst role with strict methodology (OBSERVE → ASSESS → EVIDENCE → SEVERITY). Heuristics with benchmarks injected in user message (NOT system prompt). **Persona context (v2.2a):** 2-3 personas per business type injected into evaluate prompt (e.g., first-time visitor, returning customer, price-sensitive shopper). LLM evaluates from each persona's perspective. Findings get `persona: string | null` tag. Output: RawFinding[] with heuristic_id, status (violation/pass/needs_review), observation, assessment, evidence (element_ref, selector, data_point, measurement), severity, recommendation, persona.
+**Progressive funnel context (v2.2a, master plan):** For subsequent pages, accumulated PageSignals from previous pages injected into evaluate prompt, enabling inline funnel-aware findings.
 
 **Temperature = 0 (enforced at adapter boundary).**
 
@@ -421,6 +424,8 @@ ALL external dependencies via adapters. No direct imports outside adapter module
 - **BrowserSessionManager** (§33a) — create/get/close sessions (shared between browse and analyze)
 - **ToolRegistry** (§33a) — registerToolSet, getToolsForContext (dynamic per mode)
 - **HeuristicLoader** — loadAll, filterByBusinessType, filterByPageType
+- **DiscoveryStrategy** (v2.2a) — discover(rootUrl, config) → AuditPage[]. Implementations: SitemapDiscovery, NavigationCrawlDiscovery, ManualDiscovery
+- **NotificationAdapter** (v2.2a) — notify(event). Email implementation (Resend/Postmark). Events: audit_completed, audit_failed, findings_ready_for_review
 - **JobScheduler** — BullMQ wrapper
 - **EventBus** — SSE event streaming
 - **AuthProvider** — Clerk wrapper
@@ -534,15 +539,16 @@ SSE events for: 22 event types including audit_started, page_browsing, page_anal
 | Phase | Tasks | IDs | What |
 |-------|-------|-----|------|
 | 0: Setup + Golden Test Infra | 7 | T001-T005, T252-T253 | Monorepo, packages, CLI, Docker, env, **offline mock mode, MockBrowserEngine, MockLLMAdapter** |
-| 1: Perception | 11 | T006-T015, T254 | BrowserManager, stealth, AX-tree, filters, mutation, screenshots, PageStateModel, **fixture capture CLI** |
+| 0b: Heuristic Authoring (PARALLEL) | — | — | CRO team authors heuristics in parallel with engineering. Week 2: top 15 heuristics. Week 3: benchmarks. Week 4: first 5 golden tests. Week 9: all 100 complete. |
+| 1: Perception | 12 | T006-T015, T254, T255 | BrowserManager, stealth, AX-tree, filters, mutation, screenshots, PageStateModel, **fixture capture CLI**, **overlay dismissal step** |
 | 2: Tools + Behavior | 35 | T016-T050 | 23 browse tools, mouse/typing/scroll behavior, MCP server, **ToolRegistry (§33a)** |
 | 3: Verification | 15 | T051-T065 | ActionContract, 9 verify strategies, VerifyEngine, FailureClassifier, ConfidenceScorer |
 | 4: Safety + Infra + Cost | 21 | T066-T080, T224-T226, T236-T238 | **BrowserSessionManager (§33a)**, **SafetyContext (§33a)**, DB schema (25+ tables), adapters, **token-level cost accounting, LLM rate limiting, LLM failover** |
 | 5: Browse MVP | 20 | T081-T100 | Browse graph (**external session §33a**), system prompt, integration tests on BBC/Amazon |
 | 6: Heuristic KB + Benchmarks | 16 | T101-T112, T213-T216 | Schemas, 100 heuristics authored **with required benchmarks (quantitative + qualitative)**, loader, two-stage filtering, encryption, tier validation, **GR-012** |
-| 7: Analysis Pipeline + Quality | 26 | T113-T134, T232-T235, T250-T251 | AnalysisState, deep_perceive, **perception quality gate**, evaluate (**EvaluateStrategy §33a**, benchmarks in prompt), self_critique, 8 grounding rules, evidence grounder, annotate, store, AnalysisGraph, **error recovery paths, golden test expansion** |
-| 8: Orchestrator + Cross-Page | 28 | T135-T155, T217-T223 | AuditState, audit_setup, page_router, audit_complete, routing, AuditGraph (**session passing + restore_state §33a**), CLI command, **cross-page pattern detection, consistency check, funnel analysis**, acceptance tests |
-| 9: Foundations + Observability + Reports | 33 | T156-T175, T239-T249 | AuditRequest contract, gateway, reproducibility, two-store, warm-up, scoring pipeline, consultant dashboard, **§34 structured logging + audit events + heuristic health + alerting + ops dashboard**, **§35 executive summary + action plan + PDF report** |
+| 7: Analysis Pipeline + Quality | 28 | T113-T134, T232-T235, T250-T251, T258-T259 | AnalysisState, deep_perceive, **perception quality gate**, evaluate (**EvaluateStrategy §33a**, benchmarks in prompt, **persona context**), self_critique, 8 grounding rules, evidence grounder, annotate, store, AnalysisGraph, **error recovery paths, golden test expansion, PersonaContext types + prompt injection** |
+| 8: Orchestrator + Cross-Page | 29 | T135-T155, T217-T223, T262 | AuditState, audit_setup, page_router, audit_complete, routing, AuditGraph (**session passing + restore_state §33a**), CLI command, **cross-page pattern detection, consistency check, funnel analysis, progressive funnel context injection**, acceptance tests |
+| 9: Foundations + Observability + Reports | 37 | T156-T175, T239-T249, T256-T257, T260-T261 | AuditRequest contract, gateway, reproducibility, two-store, warm-up, scoring pipeline, consultant dashboard, **§34 structured logging + audit events + heuristic health + alerting + ops dashboard (last priority)**, **§35 executive summary + action plan + PDF report**, **DiscoveryStrategy adapter (Sitemap + Manual + NavCrawl)**, **NotificationAdapter (email on complete/fail/review)** |
 | 10: State Exploration | 18 | T176-T192 | StateGraph types, disclosure rules, meaningful-state detection, Pass 1/2 explorers, multi-state synthesis, GR-009, extended browse graph |
 | 11: Composition | 20 | T193-T212 | InteractiveEvaluateStrategy (ReAct), tool injection, navigation guard, Pass 2 open observation, GR-010/GR-011, workflow restore, context management, cost model, activate interactive default |
 | 12: Mobile Viewport | 5 | T227-T231 | Dual-viewport pipeline (1440px + 390px), mobile heuristics (10-15), viewport-tagged findings, Stage 3 filtering by viewport **(master plan only, not MVP)** |
@@ -698,7 +704,7 @@ neural-nba/
 │           ├── verification/     # 9 verify strategies, VerifyEngine
 │           ├── analysis/         # Pipeline nodes, grounding rules, scoring
 │           │   ├── nodes/        # DeepPerceive, Evaluate, SelfCritique, Ground, Annotate, Store
-│           │   ├── grounding/    # GR-001 through GR-011
+│           │   ├── grounding/    # GR-001 through GR-012
 │           │   ├── scoring/      # ScoringPipeline, IMPACT_MATRIX, EFFORT_MAP
 │           │   ├── strategies/   # StaticEvaluateStrategy, InteractiveEvaluateStrategy
 │           │   └── heuristics/   # Schema, loader, filters, encryption
@@ -723,4 +729,4 @@ neural-nba/
 
 ---
 
-*Document generated from 38 architectural specs (§01-§36 + §33a), 255 implementation tasks across 12 phases, and supporting materials. v2.2 refined from 4 independent LLM gap analyses. Every claim traces to a REQ-ID in the specification corpus.*
+*Document generated from 38 architectural specs (§01-§36 + §33a), 263 implementation tasks across 12 phases, and supporting materials. v2.2a refined from 4 independent LLM gap analyses + external architecture review. Every claim traces to a REQ-ID in the specification corpus.*

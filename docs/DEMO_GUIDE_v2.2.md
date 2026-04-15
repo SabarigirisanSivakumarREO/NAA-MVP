@@ -24,7 +24,7 @@ Neural solves this. It's an AI system that does 80% of the audit work — the br
 The AI doesn't replace the consultant. It makes the consultant 5x more productive. Instead of one audit per week, they can review and deliver five."
 
 ## Show This
-- Open the `master-architecture.html` diagram in browser — show the hero section with the stats bar (255 tasks, 12 phases, 100 heuristics, 12 grounding rules)
+- Open the `master-architecture.html` diagram in browser — show the hero section with the stats bar (263 tasks, 12 phases, 100 heuristics, 12 grounding rules)
 - Point at the lifecycle flow chips
 
 ## They'll Ask

@@ -728,8 +728,8 @@
   <div class="hero-header">
     <h1>AI CRO Audit System <span class="accent">Architecture</span></h1>
     <div class="hero-subtitle">COMPLETE SYSTEM ARCHITECTURE &middot; REO DIGITAL</div>
-    <div class="hero-version">v2.2 &middot; April 2026 &middot; 36 Sections &middot; 255 Tasks &middot; 12 Phases</div>
-    <p class="hero-desc">AI-powered CRO audit platform. Browser agent navigates sites with human-like behavior. Analysis agent evaluates against 100 benchmark-backed heuristics using a 5-step pipeline with 3-layer hallucination filtering. Cross-page pattern detection, funnel analysis, and perception quality gating. Token-level cost accounting, LLM failover, and operational observability. Produces evidence-grounded findings with annotated screenshots, executive summary, action plan, and PDF reports. Consultant review gate ensures quality before client delivery.</p>
+    <div class="hero-version">v2.2a &middot; April 2026 &middot; 38 Sections &middot; 263 Tasks &middot; 12 Phases</div>
+    <p class="hero-desc">AI-powered CRO audit platform. Browser agent navigates sites with human-like behavior, dismisses overlays, and explores hidden states. Analysis agent evaluates against 100 benchmark-backed heuristics with persona-based context using a 5-step pipeline with 3-layer hallucination filtering. Cross-page pattern detection, funnel analysis with progressive context, and perception quality gating. Token-level cost accounting, LLM failover, site discovery strategies, and operational observability. Produces evidence-grounded findings with annotated screenshots, executive summary, action plan, and branded PDF reports with email notifications. Consultant review gate ensures quality before client delivery.</p>
   </div>
 
   <!-- PART 2: STATS BAR -->
@@ -740,7 +740,7 @@
     <div class="hero-stat"><div class="hero-stat-value">12</div><div class="hero-stat-label">Grounding Rules</div></div>
     <div class="hero-stat"><div class="hero-stat-value">3</div><div class="hero-stat-label">Reliability Tiers</div></div>
     <div class="hero-stat"><div class="hero-stat-value">110+</div><div class="hero-stat-label">Failure Modes</div></div>
-    <div class="hero-stat"><div class="hero-stat-value">12</div><div class="hero-stat-label">Phases (255)</div></div>
+    <div class="hero-stat"><div class="hero-stat-value">12</div><div class="hero-stat-label">Phases (263)</div></div>
     <div class="hero-stat"><div class="hero-stat-value">~$0.35</div><div class="hero-stat-label">-1.80 Cost/Page</div></div>
   </div>
 
@@ -760,6 +760,8 @@
         <div class="hero-flow-chip fc-orch">Build Queue</div>
         <div class="hero-flow-arrow">&#8594;</div>
         <div class="hero-flow-chip fc-browse">Navigate</div>
+        <div class="hero-flow-arrow">&#8594;</div>
+        <div class="hero-flow-chip fc-browse">Dismiss Overlays</div>
         <div class="hero-flow-arrow">&#8594;</div>
         <div class="hero-flow-chip fc-explore">Explore States</div>
         <div class="hero-flow-arrow">&#8594;</div>
@@ -847,7 +849,7 @@
 &#9474;     &#9474;                                                                                      &#9474;
 &#9474;  <span class="hl-cyan">&#9484;&#9472; BROWSE SUBGRAPH (v3.1) &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>    &#9474;
 &#9474;  <span class="hl-cyan">&#9474;  perceive &#8594; reason &#8594; act &#8594; verify  (loop until stable)                           &#9474;</span>    &#9474;
-&#9474;  <span class="hl-cyan">&#9474;  Navigate, handle popups/cookies, wait for stability                              &#9474;</span>    &#9474;
+&#9474;  <span class="hl-cyan">&#9474;  Navigate, <span class="hl-green">dismiss overlays</span>, wait for stability                                   &#9474;</span>    &#9474;
 &#9474;  <span class="hl-cyan">&#9474;  HITL pause if login required                                                    &#9474;</span>    &#9474;
 &#9474;  <span class="hl-cyan">&#9474;  Cost: ~$0.10/page  |  Time: 5-15s                                               &#9474;</span>    &#9474;
 &#9474;  <span class="hl-cyan">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span>    &#9474;
@@ -3635,6 +3637,15 @@ Reproducibility:
           <strong>Tech:</strong> Next.js HTML template &rarr; Playwright page.pdf() &mdash; branded per client, &lt;5MB
         </div>
       </div>
+      <div class="iface-card" style="border-left:4px solid var(--cyan)">
+        <div class="iface-card-title"><span class="req-id">v2.2a</span> Persona Evaluation + Discovery + Notifications</div>
+        <div class="iface-card-items">
+          <strong>Personas:</strong> 2-3 PersonaContext per business type injected into evaluate prompt. Findings tagged with persona.<br>
+          <strong>Discovery:</strong> DiscoveryStrategy adapter &mdash; SitemapDiscovery, NavigationCrawlDiscovery, ManualDiscovery<br>
+          <strong>Notifications:</strong> NotificationAdapter &mdash; email on audit_completed / failed / ready_for_review (Resend/Postmark)<br>
+          <strong>Overlay Dismissal:</strong> Pre-perception cleanup in browse subgraph. Click accept/close using common selectors.
+        </div>
+      </div>
       <div class="iface-card" style="border-left:4px solid var(--purple)">
         <div class="iface-card-title"><span class="req-id">&sect;36</span> Golden Test Suite &amp; Quality Assurance</div>
         <div class="iface-card-items">
@@ -3694,8 +3705,8 @@ Reproducibility:
   </div>
 </div>
 <div class="tab-pane" id="tab-9">
-  <h1 class="page-title">12-Phase Implementation Plan &mdash; 255 Tasks</h1>
-  <p class="page-subtitle">Phased delivery from monorepo setup through interactive audit composition + mobile viewport, with cross-page analysis, observability, report generation, golden tests, and interface-first bake-in.</p>
+  <h1 class="page-title">12-Phase Implementation Plan &mdash; 263 Tasks</h1>
+  <p class="page-subtitle">Phased delivery from monorepo setup through interactive audit composition + mobile viewport. Includes: overlay dismissal, perception quality gate, persona evaluation, cross-page analysis with progressive funnel context, observability, PDF reports with notifications, golden tests, site discovery strategies, and interface-first bake-in. Heuristic authoring runs in parallel (Phase 0b).</p>
 
   <!-- Section 1: Phase Overview Table -->
   <div class="diagram-section">
@@ -3713,15 +3724,16 @@ Reproducibility:
       </thead>
       <tbody>
         <tr><td class="phase-num">0</td><td>Setup + Golden Test Infra</td><td>7</td><td>0&ndash;1</td><td>Monorepo + offline mock mode ready</td></tr>
-        <tr><td class="phase-num">1</td><td>Perception</td><td>11</td><td>1&ndash;2</td><td>Agent can see + fixture capture</td></tr>
+        <tr style="background:rgba(168,85,247,.03)"><td class="phase-num">0b</td><td>Heuristic Authoring (PARALLEL)</td><td>&mdash;</td><td>0&ndash;9</td><td>CRO team authors 100 heuristics + benchmarks in parallel with engineering</td></tr>
+        <tr><td class="phase-num">1</td><td>Perception + Overlay Dismissal</td><td>12</td><td>1&ndash;2</td><td>Agent can see + fixture capture + dismiss cookie/popup overlays</td></tr>
         <tr><td class="phase-num">2</td><td>Tools + Behavior</td><td>35</td><td>2&ndash;4</td><td>Agent can act</td></tr>
         <tr><td class="phase-num">3</td><td>Verification</td><td>15</td><td>4&ndash;5</td><td>Agent verifies</td></tr>
         <tr><td class="phase-num">4</td><td>Safety + Infra + Cost</td><td>21</td><td>5&ndash;7</td><td>Foundation + token-level cost + LLM failover</td></tr>
         <tr style="background:rgba(34,197,94,.04)"><td class="phase-num">5</td><td class="milestone-cell">Browse MVP</td><td>20</td><td>7&ndash;8</td><td class="milestone-cell">Browse works</td></tr>
         <tr><td class="phase-num">6</td><td>Heuristic KB + Benchmarks</td><td>16</td><td>8&ndash;9</td><td>100 heuristics with benchmarks + GR-012</td></tr>
-        <tr><td class="phase-num">7</td><td>Analysis Pipeline + Quality</td><td>26</td><td>9&ndash;11</td><td>Analysis + perception gate + error recovery</td></tr>
-        <tr style="background:rgba(34,197,94,.04)"><td class="phase-num">8</td><td class="milestone-cell">Orchestrator + Cross-Page</td><td>28</td><td>11&ndash;13</td><td class="milestone-cell">Full audit + cross-page analysis</td></tr>
-        <tr><td class="phase-num">9</td><td>Foundations + Observability + Reports</td><td>33</td><td>13&ndash;16</td><td>Platform + &sect;34/&sect;35 + PDF export</td></tr>
+        <tr><td class="phase-num">7</td><td>Analysis Pipeline + Quality + Personas</td><td>28</td><td>9&ndash;11</td><td>Analysis + perception gate + error recovery + persona-based evaluation</td></tr>
+        <tr style="background:rgba(34,197,94,.04)"><td class="phase-num">8</td><td class="milestone-cell">Orchestrator + Cross-Page</td><td>29</td><td>11&ndash;13</td><td class="milestone-cell">Full audit + cross-page analysis + progressive funnel context</td></tr>
+        <tr><td class="phase-num">9</td><td>Foundations + Observability + Reports</td><td>37</td><td>13&ndash;16</td><td>Platform + &sect;34/&sect;35 + PDF + discovery strategies + email notifications</td></tr>
         <tr><td class="phase-num">10</td><td>State Exploration</td><td>18</td><td>16&ndash;18</td><td>State-aware audit</td></tr>
         <tr style="background:rgba(34,197,94,.04)"><td class="phase-num">11</td><td class="milestone-cell">Agent Composition</td><td>20</td><td>18&ndash;20</td><td class="milestone-cell">Interactive audit (MOAT)</td></tr>
         <tr><td class="phase-num">12</td><td>Mobile Viewport</td><td>5</td><td>20&ndash;21</td><td>Dual-viewport audits + mobile heuristics</td></tr>
@@ -3750,7 +3762,7 @@ Reproducibility:
       <span class="pipe-arrow">&rarr;</span>
       <div class="pipe-step"><div class="pipe-step-name">Phase 6</div><div class="pipe-step-sub">Heuristics + Benchmarks</div></div>
       <span class="pipe-arrow">&rarr;</span>
-      <div class="pipe-step"><div class="pipe-step-name">Phase 7</div><div class="pipe-step-sub">Analysis + Quality</div></div>
+      <div class="pipe-step"><div class="pipe-step-name">Phase 7</div><div class="pipe-step-sub">Analysis + Personas</div></div>
       <span class="pipe-arrow">&rarr;</span>
       <div class="pipe-step milestone"><div class="pipe-step-name">Phase 8</div><div class="pipe-step-sub">MVP + CROSS-PAGE</div></div>
       <span class="pipe-arrow">&rarr;</span>
