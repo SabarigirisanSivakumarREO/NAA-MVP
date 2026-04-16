@@ -18,6 +18,9 @@
        │                                                   │
   (pages remain)                                           │
        │                                                   │
+       │                                                   │
+  (queue empty)──→ cross_page_analyze (v2.2) ──→ audit_complete
+       │                                                   │
        ▼                                                   │
 ┌──────────────────────────────────────────┐               │
 │         BROWSE SUBGRAPH (v3.1)           │               │
@@ -127,26 +130,51 @@ async function buildPageQueue(rootUrl: string, scope: string): Promise<AuditPage
 | **Precondition** | `page_queue` is non-empty. |
 | **Postcondition** | Either next page set OR audit marked complete. |
 
+### Node: `cross_page_analyze` (v2.2 NEW)
+
+**REQ-ORCH-NODE-002b:**
+
+| | |
+|---|---|
+| **Input** | `page_signals[]`, `findings[]`, `funnel_definition?` |
+| **Output** | `pattern_findings[]`, `consistency_findings[]`, `funnel_findings[]` |
+| **Precondition** | Page loop complete (`current_page_index >= page_queue.length` OR budget exhausted) |
+| **Postcondition** | Cross-page findings produced. State updated before `audit_complete`. |
+| **Side effects** | One LLM call for funnel analysis (capped $1). Emits `cross_page_analysis_completed` event. |
+
+Three sub-capabilities executed in order:
+
+1. **Pattern detection** (deterministic) — Group grounded findings by heuristic_id across pages. 3+ violations with similar evidence → PatternFinding.
+2. **Consistency check** (deterministic) — Compare CTA styles, nav structure, trust signals across accumulated page_signals.
+3. **Funnel analysis** (LLM-assisted, 1 call, $1 cap, temp=0) — Detect promise/delivery mismatches, missing funnel steps, journey friction. Assigned Tier 2 (24hr delay).
+
+Details in §7.13 and §35.2.
+
 ### Node: `audit_complete`
 
 **REQ-ORCH-NODE-003:**
 
 | | |
 |---|---|
-| **Input** | `audit_run_id`, `pages_analyzed`, `total_findings`, `findings[]`, `competitor_data` |
-| **Output** | Audit run status updated to "completed". Summary generated. |
-| **Postcondition** | `audit_run.status === "completed"`. `audit_run.completed_at` set. |
-| **Side effects** | Emits `session_completed` SSE event. Triggers competitor comparison if competitor data exists. Triggers cross-page consistency check. |
+| **Input** | `audit_run_id`, `pages_analyzed`, `total_findings`, `findings[]`, `pattern_findings[]`, `consistency_findings[]`, `funnel_findings[]`, `competitor_data` |
+| **Output** | Audit run status updated to "completed". ExecutiveSummary + ActionPlan generated. PDF report produced (§35). |
+| **Postcondition** | `audit_run.status === "completed"`. `audit_run.completed_at` set. PDF URL stored in `audit_runs.report_pdf_url`. |
+| **Side effects** | Emits `session_completed` SSE event. Triggers competitor comparison if competitor data exists. Generates executive summary + action plan + PDF report. Sends email notification (§14 v2.2a). |
 
 ## 4.3 Routing Functions
 
-**REQ-ORCH-EDGE-001:** `routePageRouter`:
+**REQ-ORCH-EDGE-001:** `routePageRouter` (v2.2 — now routes to cross_page_analyze when done):
 ```typescript
-function routePageRouter(state: AuditState): "browse" | "audit_complete" {
-  if (state.current_page_index >= state.page_queue.length) return "audit_complete";
-  if (state.current_page_index >= 50) return "audit_complete";
-  if (state.budget_remaining_usd <= 0) return "audit_complete";
+function routePageRouter(state: AuditState): "browse" | "cross_page_analyze" {
+  if (state.current_page_index >= state.page_queue.length) return "cross_page_analyze";
+  if (state.current_page_index >= 50) return "cross_page_analyze";
+  if (state.budget_remaining_usd <= 0) return "cross_page_analyze";
   return "browse";
+}
+
+// v2.2 NEW: After cross-page analysis, always proceed to audit_complete
+function routeAfterCrossPage(state: AuditState): "audit_complete" {
+  return "audit_complete";
 }
 ```
 
@@ -189,11 +217,13 @@ const browseGraph = buildBrowseGraph();  // from v3.1 spec
 const analyzeGraph = buildAnalyzeGraph();  // from analysis v1.0 spec
 
 // 3. Audit orchestrator (outer graph — uses both as subgraphs)
+// v2.2: cross_page_analyze node added between page loop and audit_complete
 const auditGraph = new StateGraph(AuditState)
   .addNode("audit_setup", auditSetupNode)
   .addNode("page_router", pageRouterNode)
-  .addNode("browse", browseGraph)           // v3.1 as nested subgraph
-  .addNode("analyze", analyzeGraph)          // analysis as nested subgraph
+  .addNode("browse", browseGraph)                     // v3.1 as nested subgraph
+  .addNode("analyze", analyzeGraph)                    // analysis as nested subgraph
+  .addNode("cross_page_analyze", crossPageAnalyzeNode) // v2.2 NEW
   .addNode("audit_complete", auditCompleteNode)
 
   // Edges
@@ -201,7 +231,7 @@ const auditGraph = new StateGraph(AuditState)
   .addEdge("audit_setup", "page_router")
   .addConditionalEdges("page_router", routePageRouter, {
     browse: "browse",
-    audit_complete: "audit_complete",
+    cross_page_analyze: "cross_page_analyze",        // v2.2: was "audit_complete"
   })
   .addConditionalEdges("browse", routeAfterBrowse, {
     analyze: "analyze",
@@ -209,8 +239,9 @@ const auditGraph = new StateGraph(AuditState)
   })
   .addConditionalEdges("analyze", routeAfterAnalyze, {
     page_router: "page_router",
-    audit_complete: "audit_complete",
+    cross_page_analyze: "cross_page_analyze",        // v2.2: was "audit_complete"
   })
+  .addEdge("cross_page_analyze", "audit_complete")   // v2.2 NEW
   .addEdge("audit_complete", END)
 
   .compile({

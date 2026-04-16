@@ -1004,4 +1004,107 @@ export const templates = pgTable("templates", {
 
 ---
 
-**End of §13 — Data Layer (base §13.1-13.5 + master extensions §13.6)**
+## 13.7 v2.2 Additions — Observability Tables
+
+### llm_call_log
+
+**REQ-DATA-V22-001:** Per-LLM-call cost and performance tracking (§11.7). Append-only, one row per LLM call.
+
+```sql
+CREATE TABLE llm_call_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  audit_run_id UUID NOT NULL REFERENCES audit_runs(id) ON DELETE CASCADE,
+  page_url TEXT,                              -- null for cross-page / audit-level calls
+  node_name TEXT NOT NULL,                    -- "evaluate" | "self_critique" | "funnel_analysis" | etc.
+  heuristic_id TEXT,                          -- null unless interactive mode per-heuristic call
+  model TEXT NOT NULL,                        -- "claude-sonnet-4-20260301"
+  input_tokens INTEGER NOT NULL,
+  output_tokens INTEGER NOT NULL,
+  cost_usd NUMERIC(10, 6) NOT NULL,
+  duration_ms INTEGER NOT NULL,
+  cache_hit BOOLEAN DEFAULT false,
+  provider_fallback BOOLEAN DEFAULT false,    -- true if served by fallback provider
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_llm_call_log_audit ON llm_call_log(audit_run_id);
+CREATE INDEX idx_llm_call_log_audit_node ON llm_call_log(audit_run_id, node_name);
+CREATE INDEX idx_llm_call_log_created ON llm_call_log(created_at DESC);
+```
+
+**RLS:** Client isolation via audit_runs join. Consultants see all for their clients; admins see all.
+
+### audit_events
+
+**REQ-DATA-V22-002:** Structured event log powering SSE streams, observability dashboard, and alerting (§34).
+
+```sql
+CREATE TABLE audit_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  audit_run_id UUID NOT NULL REFERENCES audit_runs(id) ON DELETE CASCADE,
+  client_id UUID NOT NULL REFERENCES clients(id),
+  event_type TEXT NOT NULL,                   -- 22 types, see §34.4
+  page_url TEXT,                              -- null for audit-level events
+  metadata JSONB DEFAULT '{}',                -- event-specific payload
+  timestamp TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_audit_events_audit ON audit_events(audit_run_id, timestamp);
+CREATE INDEX idx_audit_events_client_type ON audit_events(client_id, event_type, timestamp DESC);
+CREATE INDEX idx_audit_events_type_time ON audit_events(event_type, timestamp DESC);
+```
+
+**RLS:** Client-scoped via `client_id` column.
+
+**Retention:** 90 days active, then archived.
+
+### heuristic_health_metrics (materialized view)
+
+**REQ-DATA-V22-003:** Pre-computed heuristic performance metrics (§34.5). Refreshed nightly.
+
+```sql
+CREATE MATERIALIZED VIEW heuristic_health_metrics AS
+SELECT
+  f.heuristic_id,
+  COUNT(*) AS total_evaluations,
+  SUM(CASE WHEN f.status = 'violation' THEN 1 ELSE 0 END) AS findings_produced,
+  SUM(CASE WHEN f.status = 'pass' THEN 1 ELSE 0 END) AS passes,
+  SUM(CASE WHEN f.publish_status = 'rejected' AND rf.rejected_by LIKE 'GR-%' THEN 1 ELSE 0 END) AS grounding_rejections,
+  SUM(CASE WHEN f.critique_verdict = 'REJECT' THEN 1 ELSE 0 END) AS critique_rejections,
+  SUM(CASE WHEN f.reviewed_by IS NOT NULL AND f.publish_status = 'published' THEN 1 ELSE 0 END) AS consultant_approvals,
+  SUM(CASE WHEN f.reviewed_by IS NOT NULL AND f.publish_status = 'rejected' THEN 1 ELSE 0 END) AS consultant_rejections,
+  (SUM(CASE WHEN f.status = 'violation' AND f.publish_status != 'rejected' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(*), 0)) AS health_score,
+  NOW() AS last_updated
+FROM findings f
+LEFT JOIN rejected_findings rf ON rf.original_finding_id = f.id
+GROUP BY f.heuristic_id;
+
+CREATE UNIQUE INDEX ON heuristic_health_metrics(heuristic_id);
+
+-- Refresh nightly via BullMQ scheduled job
+-- REFRESH MATERIALIZED VIEW CONCURRENTLY heuristic_health_metrics;
+```
+
+### Migration order update
+
+```
+Migration order (extended with v2.2 tables):
+  1. clients
+  2. audit_runs
+  3. reproducibility_snapshots
+  4. audit_requests
+  5. findings
+  6. rejected_findings
+  7. screenshots
+  8. sessions
+  9. audit_log
+  ... (existing tables) ...
+  18. published_findings VIEW
+  19. llm_call_log                    (v2.2 NEW)
+  20. audit_events                    (v2.2 NEW)
+  21. heuristic_health_metrics VIEW   (v2.2 NEW, last — depends on findings)
+```
+
+---
+
+**End of §13 — Data Layer (base §13.1-13.5 + master extensions §13.6 + v2.2 observability §13.7)**

@@ -154,4 +154,63 @@ type AuditEvent =
   | { type: "audit_progress"; pagesAnalyzed: number; pagesTotal: number; findingsTotal: number }
   | { type: "audit_complete"; summary: AuditSummary }
   | { type: "audit_error"; error: string }
+  // v2.2 additions
+  | { type: "perception_quality_low"; pageUrl: string; score: number; blockingIssue: string }
+  | { type: "llm_provider_fallback"; from: string; to: string }
+  | { type: "cross_page_analysis_completed"; patternCount: number; consistencyCount: number; funnelCount: number }
+  | { type: "overlay_dismissed"; pageUrl: string; overlayType: string };
 ```
+
+See §34.4 for the complete 22-event-type enumeration stored in `audit_events` table.
+
+---
+
+## 14.6 PDF Report Export (v2.2, §35)
+
+**REQ-DELIVERY-REPORT-001:** Every completed audit produces a branded PDF report stored in Cloudflare R2 at `/{client_id}/reports/{audit_run_id}/report.pdf`.
+
+**REQ-DELIVERY-REPORT-002:** Report URL stored in `audit_runs.report_pdf_url`. Available via:
+- Consultant dashboard: download button on audit detail page
+- Client dashboard: download button on published audit page
+- API: `GET /api/audits/:id/report.pdf` (auth-scoped)
+
+**REQ-DELIVERY-REPORT-003:** Report generation: Next.js HTML template → Playwright `page.pdf()`. Branded per client via `ReportTemplate` config (logo, colors, company name). See §35 for full spec.
+
+---
+
+## 14.7 Operational Dashboard (v2.2, §34)
+
+**REQ-DELIVERY-OPS-001:** Admin route `/console/admin/operations` for production visibility:
+- Active audits with progress/ETA
+- 24h stats (completed, failed, avg duration, avg cost)
+- Heuristic health table (sortable by health_score)
+- Alert feed
+- 30-day cost trend
+
+**REQ-DELIVERY-OPS-002:** Access restricted to consultant role with `admin` flag. Not visible to regular consultants or clients.
+
+**REQ-DELIVERY-OPS-003:** Build last in Phase 9 — after consultant dashboard, client dashboard, and PDF reports. Interim: use SQL queries directly against `audit_events` and `llm_call_log`.
+
+---
+
+## 14.8 Notification Adapter (v2.2a)
+
+**REQ-DELIVERY-NOTIFY-001:** Notifications delivered via `NotificationAdapter`. MVP implementation: email via Resend or Postmark. Post-MVP: webhook support.
+
+```typescript
+interface NotificationAdapter {
+  notify(event: NotificationEvent): Promise<void>;
+}
+
+type NotificationEvent =
+  | { type: "audit_completed"; auditRunId: string; clientId: string; summary: AuditCompletionReport; reportUrl: string }
+  | { type: "audit_failed"; auditRunId: string; clientId: string; reason: string }
+  | { type: "findings_ready_for_review"; auditRunId: string; consultantId: string; findingCount: number };
+```
+
+**REQ-DELIVERY-NOTIFY-002:** Recipients determined by event type:
+- `audit_completed` → consultant assigned to audit + optionally client (if client preferences enabled)
+- `audit_failed` → consultant + admin
+- `findings_ready_for_review` → consultant only
+
+**REQ-DELIVERY-NOTIFY-003:** Notification preferences stored per user in `notification_preferences` table. Defaults: all enabled for consultants, opt-in for clients.

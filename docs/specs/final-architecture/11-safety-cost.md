@@ -121,3 +121,111 @@ function canProceed(enforcer: BudgetEnforcer, estimatedCost: number): boolean {
 3. Mark page as `budget_exceeded` in queue
 4. If audit budget exceeded, trigger `audit_complete` with `completion_reason = "budget_exceeded"`
 5. Log budget event for monitoring
+
+---
+
+## 11.7 Token-Level Cost Accounting (v2.2)
+
+**REQ-COST-010:** Every LLM call SHALL be logged atomically to `llm_call_log` table with:
+
+```typescript
+interface LLMCallRecord {
+  id: string;                           // uuid
+  audit_run_id: string;
+  page_url: string | null;              // null for cross-page/audit-level calls
+  node_name: string;                    // "evaluate" | "self_critique" | "funnel_analysis" | etc.
+  heuristic_id: string | null;          // for interactive mode
+  model: string;                        // "claude-sonnet-4-20260301"
+  input_tokens: number;
+  output_tokens: number;
+  cost_usd: number;                     // computed from MODEL_PRICING
+  duration_ms: number;
+  cache_hit: boolean;                   // prompt caching hit
+  timestamp: string;
+}
+```
+
+**REQ-COST-011:** `MODEL_PRICING` config defines per-model costs. Updated when providers change pricing:
+
+```typescript
+const MODEL_PRICING: Record<string, { input_per_m: number; output_per_m: number }> = {
+  "claude-sonnet-4-20260301": { input_per_m: 3.00, output_per_m: 15.00 },
+  "gpt-4o-2025-xx-xx":        { input_per_m: 2.50, output_per_m: 10.00 },
+};
+```
+
+**REQ-COST-012:** Pre-call budget gate — before every LLM call:
+1. Estimate cost from prompt token count via `LLMAdapter.getTokenCount()`
+2. If `estimated_cost > budget_remaining_usd` → skip call, emit `budget_exceeded` event
+3. For evaluate node: if budget tight, split heuristic batch (20 → 2×10) to reduce per-call risk
+
+**REQ-COST-013:** Post-audit cost summary — `audit_complete` computes from `llm_call_log`:
+- `actual_cost_usd` — sum of all call costs
+- `cost_breakdown` by node_name
+- `cost_per_page_avg`
+- `cache_hit_rate`
+
+Written to `audit_runs.cost_summary` (JSONB).
+
+**REQ-COST-014:** Per-client cost attribution:
+```sql
+SELECT client_id, SUM(cost_usd)
+FROM llm_call_log
+JOIN audit_runs ON llm_call_log.audit_run_id = audit_runs.id
+GROUP BY client_id
+```
+
+Enables per-client billing and profitability analysis.
+
+---
+
+## 11.8 LLM Rate Limiting (v2.2)
+
+**REQ-RATE-LLM-001:** Rate limits enforced inside `LLMAdapter` before every call. Sliding window rate limiter in Redis (via Upstash).
+
+**REQ-RATE-LLM-002:** Default configs (adjustable via env vars):
+
+```typescript
+const RATE_LIMITS: Record<string, RateLimitConfig> = {
+  anthropic: { requests_per_minute: 50, tokens_per_minute: 80000, max_concurrent: 5 },
+  openai:    { requests_per_minute: 60, tokens_per_minute: 150000, max_concurrent: 5 },
+};
+```
+
+**REQ-RATE-LLM-003:** Before each call:
+1. Check RPM window — if at limit, wait with backoff
+2. Check TPM window against estimated input tokens — if near limit, queue
+3. Check concurrent count — if at max, queue
+
+**REQ-RATE-LLM-004:** Exponential backoff with jitter: base 1s, multiplier 2×, jitter ±20%, max 30s.
+
+---
+
+## 11.9 LLM Failover (v2.2)
+
+**REQ-FAILOVER-001:** Per-call failover (not per-audit). Each call attempts primary, then fallback, then errors out.
+
+**REQ-FAILOVER-002:** Call attempt flow:
+1. Try primary provider (Claude Sonnet 4) — up to 3 retries with backoff
+2. All 3 fail → switch to fallback provider (GPT-4o) for THIS CALL ONLY
+3. Fallback: up to 2 retries
+4. All fail → throw `LLMUnavailableError`
+5. Next call: try primary again first (no sticky fallback)
+
+**REQ-FAILOVER-003:** Failure classification:
+- HTTP 429 (rate limited), 500/502/503 (server error), 529 (overloaded), timeout, network error → RETRY
+- HTTP 400 (bad request) → DO NOT RETRY, log and fail immediately
+
+**REQ-FAILOVER-004:** When failover occurs:
+- Log `FailoverEvent` to `audit_events` table
+- Finding gets `model_used` field recording which model actually produced it
+- Finding gets `model_mismatch = true` when produced by fallback
+- Consultant sees badge "produced by fallback model" in review UI
+
+**REQ-FAILOVER-005:** Both providers down:
+1. 3+ consecutive pages fail with `llm_failed` → audit pauses (not terminates)
+2. `audit_status = "paused_llm_unavailable"`
+3. BullMQ schedules resume attempt in 5 minutes (max 3 attempts)
+4. After 15 min total, audit marked `failed` with reason `llm_providers_unavailable`
+
+**REQ-FAILOVER-006:** No degraded deterministic-only mode. The evaluate step IS the product. Better to pause and resume than deliver low-quality output.

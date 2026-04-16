@@ -198,7 +198,41 @@ A task is complete only when ALL of these are true:
 
 ---
 
-## 14. When to Stop and Ask
+## 14. Cost Accountability (v2.2)
+
+**RULE 14.1:** Every LLM call SHALL be logged atomically to `llm_call_log` table with model, tokens, cost, duration, and cache_hit. No silent LLM calls.
+
+**RULE 14.2:** Every LLM call SHALL pass a pre-call budget gate. Estimate cost from prompt token count before calling. If `estimated_cost > budget_remaining_usd`, skip the call or split the batch.
+
+**RULE 14.3:** Budget enforcement uses ACTUAL costs from `llm_call_log`, not estimates. `AuditState.analysis_cost_usd` updates from real call records.
+
+**RULE 14.4:** Per-client cost attribution MUST be queryable. Every `llm_call_log` row links to an audit_run which links to a client_id.
+
+**RULE 14.5:** LLM failover is per-call, not per-audit. Primary 3 retries → fallback 2 retries → `LLMUnavailableError`. Next call tries primary again.
+
+**RULE 14.6:** When failover occurs, finding gets `model_mismatch = true`. Consultant UI shows a badge for fallback-generated findings.
+
+---
+
+## 15. Quality Gates (v2.2)
+
+**RULE 15.1:** Perception quality gate runs BEFORE every evaluate call. Score < 0.3 → skip page. Score 0.3-0.59 → partial analysis (Tier 1 only). Score ≥ 0.6 → proceed.
+
+**RULE 15.2:** Every page gets an `analysis_status`. The audit NEVER silently drops a page. Every non-complete page has a documented reason.
+
+**RULE 15.3:** Every heuristic MUST have a benchmark (quantitative or qualitative). Heuristics without benchmarks fail Zod validation and cannot be loaded.
+
+**RULE 15.4:** GR-012 validates benchmark claims. Quantitative: claimed value within ±20% of actual. Qualitative: finding references the standard text.
+
+**RULE 15.5:** Golden test suite runs on every PR touching analysis, heuristics, or prompts. Pass criteria: TP ≥ 80%, FP ≤ 20%, no individual test below 60% TP.
+
+**RULE 15.6:** Golden tests are built INCREMENTALLY from validated audits. First 5 hand-crafted during development. No automated golden test generation.
+
+**RULE 15.7:** Never silently update golden tests to match code output. When a golden test fails, ask: regression (fix code) or improvement (update golden)? Consultant involvement required.
+
+---
+
+## 16. When to Stop and Ask
 
 Stop and ask the user when:
 

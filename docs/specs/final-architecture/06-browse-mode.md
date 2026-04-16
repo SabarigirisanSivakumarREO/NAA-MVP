@@ -686,4 +686,50 @@ Evaluation infrastructure is Phase 8 in v3.1 (post-MVP). In the master architect
 
 ---
 
-**End of §6 — Browse Mode (base §6.0-6.15 + evaluation §6.16)**
+---
+
+## 6.17 Overlay Dismissal (v2.2a)
+
+**REQ-BROWSE-OVERLAY-001:** Between page stabilization and perception capture, an `overlay_dismissal` step attempts to dismiss cookie banners, modals, email popups, and chat widgets that would otherwise corrupt perception data.
+
+**REQ-BROWSE-OVERLAY-002:** Detection heuristics (same as §7.10 quality gate):
+- `position: fixed` or `position: sticky`
+- `z-index > 999`
+- Bounding box covering > 30% of viewport
+- Common class patterns: `cookie`, `consent`, `modal`, `popup`, `overlay`, `chat-widget`, `banner`
+
+**REQ-BROWSE-OVERLAY-003:** Dismissal attempts common selector patterns for accept/close buttons:
+
+```typescript
+const DISMISS_SELECTORS = [
+  '[class*="accept"]',
+  '[class*="close"]',
+  '[aria-label*="close" i]',
+  '[aria-label*="dismiss" i]',
+  'button:has-text("Accept")',
+  'button:has-text("Accept all")',
+  'button:has-text("Got it")',
+  'button:has-text("OK")',
+  'button:has-text("Continue")',
+  '.cookie-consent button',
+  '.modal-close',
+  '[data-testid*="close"]',
+];
+```
+
+**REQ-BROWSE-OVERLAY-004:** Process:
+1. Detect overlay elements
+2. Try each selector in order until one produces a visible, clickable element within the overlay
+3. Click with ghost-cursor (human-like)
+4. Wait for DOM stability (MutationObserver settles, max 2s)
+5. Re-check for overlay presence
+6. Emit `overlay_dismissed` event (§34) with overlay_type and selector_used
+7. If dismissal fails, proceed with overlay present — quality gate (§7.10) handles degraded perception
+
+**REQ-BROWSE-OVERLAY-005:** Overlay dismissal is a **browser agent concern**, NOT an analysis concern. It runs in the browse subgraph. The analysis agent does not know about overlays.
+
+**REQ-BROWSE-OVERLAY-006:** The persistent overlay itself (e.g., page-blocking cookie wall) is evaluated as a CRO finding separately by the analysis agent. The dismissal step is pre-perception cleanup; the finding is post-perception observation.
+
+---
+
+**End of §6 — Browse Mode (base §6.0-6.15 + evaluation §6.16 + overlay dismissal §6.17)**

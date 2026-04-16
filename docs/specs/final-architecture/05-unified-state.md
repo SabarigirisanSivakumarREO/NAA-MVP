@@ -820,4 +820,162 @@ warmup_mode_active: Annotation<boolean>({ default: () => true }),           // p
 
 ---
 
-**End of §5 — Unified State Schema (base §5.1-5.6 + master extensions §5.7)**
+## 5.8 v2.2 State Extensions
+
+**REQ-STATE-V22-001:** The following fields are added for v2.2 + v2.2a additions. All have defaults for backward compatibility.
+
+### 5.8.1 Supporting Types
+
+```typescript
+// Perception quality (v2.2, §7.10)
+export interface PerceptionQualityScore {
+  overall: number;                                     // 0.0 to 1.0
+  signals: {
+    has_meaningful_content: boolean;
+    has_interactive_elements: boolean;
+    has_navigation: boolean;
+    has_heading_structure: boolean;
+    no_overlay_detected: boolean;
+    no_error_state: boolean;
+    page_loaded: boolean;
+  };
+  blocking_issue: string | null;
+}
+
+// Analysis status per page (v2.2, §7.11)
+export type AnalysisStatus =
+  | "complete"
+  | "partial"
+  | "perception_insufficient"
+  | "budget_exceeded"
+  | "llm_failed"
+  | "grounding_rejected_all"
+  | "failed";
+
+// Lightweight page summary for cross-page analysis (v2.2, §7.13)
+// NOT full AnalyzePerception — prevents state bloat
+export interface PageSignals {
+  page_url: string;
+  page_type: PageType;
+  cta_count: number;
+  cta_texts: string[];                                 // truncated to 50 chars each
+  form_field_counts: number[];
+  trust_signal_types: string[];
+  nav_link_count: number;
+  heading_texts: string[];                             // h1/h2 only
+  key_metric_violations: string[];
+  finding_heuristic_ids: string[];
+  finding_count: number;
+  perception_quality_score: number;
+  analysis_status: AnalysisStatus;
+}
+
+// Cross-page findings (v2.2)
+export interface PatternFinding {
+  id: string;
+  type: "pattern";
+  scope: "cross_page_pattern";
+  heuristic_id: string;
+  affected_pages: Array<{ url: string; finding_id: string }>;
+  affected_page_count: number;
+  total_applicable_pages: number;
+  violation_rate: number;
+  representative_finding: GroundedFinding;
+  severity: "critical" | "high" | "medium" | "low";
+  recommendation: string;
+}
+
+export interface ConsistencyFinding {
+  id: string;
+  type: "consistency";
+  scope: "cross_page_consistency";
+  dimension: "cta_style" | "navigation" | "trust_signals" | "branding" | "messaging";
+  description: string;
+  pages_majority: Array<{ url: string; value: string }>;
+  pages_outlier: Array<{ url: string; value: string }>;
+  severity: "medium";
+}
+
+export interface FunnelFinding {
+  id: string;
+  type: "funnel";
+  scope: "funnel";
+  funnel_stage_from: string;
+  funnel_stage_to: string;
+  issue_type: "promise_mismatch" | "missing_step" | "friction_point" | "dead_end" | "messaging_inconsistency";
+  pages_involved: Array<{ url: string; page_type: PageType; role: string }>;
+  observation: string;
+  assessment: string;
+  evidence: { page_refs: string[]; data_points: string[] };
+  severity: "critical" | "high" | "medium" | "low";
+  recommendation: string;
+  confidence_tier: "medium";
+}
+
+export interface FunnelStage {
+  name: string;
+  expected_page_types: PageType[];
+  expected_conversion_element: string;
+  order: number;
+}
+
+// Persona-based evaluation (v2.2a)
+export interface PersonaContext {
+  id: string;
+  name: string;
+  description: string;
+  goals: string[];
+  frustrations: string[];
+  business_type_applicability: BusinessType[];
+}
+```
+
+### 5.8.2 Extended AuditState Fields (v2.2)
+
+```typescript
+// Perception quality (per-page, reset between pages)
+perception_quality: Annotation<PerceptionQualityScore | null>({ default: () => null }),
+
+// Per-page analysis status
+analysis_status: Annotation<AnalysisStatus>({ default: () => "complete" as const }),
+
+// Cross-page accumulation (lightweight, NOT full perceptions)
+page_signals: Annotation<PageSignals[]>({
+  reducer: (existing, incoming) => [...existing, ...incoming],
+  default: () => []
+}),
+
+// Cross-page outputs
+pattern_findings: Annotation<PatternFinding[]>({ default: () => [] }),
+consistency_findings: Annotation<ConsistencyFinding[]>({ default: () => [] }),
+funnel_findings: Annotation<FunnelFinding[]>({ default: () => [] }),
+
+// Optional client-provided funnel definition
+funnel_definition: Annotation<FunnelStage[] | null>({ default: () => null }),
+
+// Optional personas for persona-based evaluation (v2.2a)
+personas: Annotation<PersonaContext[] | null>({ default: () => null }),
+
+// Executive summary + action plan generated at audit_complete
+executive_summary: Annotation<ExecutiveSummary | null>({ default: () => null }),
+action_plan: Annotation<ActionPlan | null>({ default: () => null }),
+
+// PDF report URL after generation
+report_pdf_url: Annotation<string | null>({ default: () => null }),
+```
+
+### 5.8.3 Extended Invariants (v2.2)
+
+**REQ-STATE-V22-INV-001:** `page_signals.length` SHALL equal the number of pages that completed or partially completed analysis. Skipped pages (perception_insufficient) do NOT contribute a PageSignals entry.
+
+**REQ-STATE-V22-INV-002:** If `analysis_status === "complete"`, then `grounded_findings.length >= 0` (may be zero for clean pages).
+
+**REQ-STATE-V22-INV-003:** `pattern_findings`, `consistency_findings`, `funnel_findings` SHALL be populated only after `cross_page_analyze` node runs. Empty arrays before that point.
+
+**REQ-STATE-V22-INV-004:** `executive_summary` and `action_plan` SHALL be non-null when `audit_run.status === "completed"`.
+
+**REQ-STATE-V22-INV-005:** `personas.length` SHALL be ∈ [2, 3] when personas are active. Zero personas = persona evaluation disabled.
+
+---
+
+**End of §5 — Unified State Schema (base §5.1-5.6 + master extensions §5.7 + v2.2 extensions §5.8)**

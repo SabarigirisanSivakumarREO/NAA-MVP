@@ -688,6 +688,53 @@ const GROUNDING_RULES: GroundingRule[] = [
   //   description: "Cross-step finding must reference at least 2 different steps",
   //   check: (finding) => { ... }  // see §21.6
   // },
+
+  // === v2.2 Additions ===
+
+  // GR-012: Benchmark claim validation (v2.2)
+  // REQUIRED on all findings that reference benchmarks.
+  // For quantitative benchmarks: claimed value must be within ±20% of actual page data
+  // For qualitative benchmarks: finding must reference the standard text
+  {
+    id: "GR-012",
+    description: "Benchmark claims must match heuristic benchmark data",
+    check: (finding, pageData, heuristic) => {
+      if (!finding.evidence.measurement || !heuristic.benchmark) {
+        return { pass: true };  // No benchmark claim to validate
+      }
+
+      if (heuristic.benchmark.type === "quantitative") {
+        // Extract claimed value from measurement string
+        const claimedMatch = finding.evidence.measurement.match(/(\d+(?:\.\d+)?)/);
+        if (!claimedMatch) return { pass: true };
+        const claimedValue = parseFloat(claimedMatch[1]);
+
+        // Get actual value from page data (varies by unit type)
+        const actualValue = extractActualValue(pageData, heuristic.benchmark.unit);
+        if (actualValue === null) return { pass: true };
+
+        const deviation = Math.abs(claimedValue - actualValue) / actualValue;
+        if (deviation > 0.20) {
+          return {
+            pass: false,
+            reason: `Claimed ${claimedValue}, actual ${actualValue} (${(deviation * 100).toFixed(0)}% deviation)`
+          };
+        }
+      } else {
+        // Qualitative: finding must reference the standard text or exemplars
+        const text = `${finding.observation} ${finding.assessment}`.toLowerCase();
+        const standardWords = heuristic.benchmark.standard.toLowerCase().split(/\s+/).slice(0, 5);
+        const referencesStandard = standardWords.some(w => w.length > 4 && text.includes(w));
+        if (!referencesStandard) {
+          return {
+            pass: false,
+            reason: `Qualitative benchmark not referenced in finding`
+          };
+        }
+      }
+      return { pass: true };
+    }
+  },
 ];
 ```
 
@@ -986,5 +1033,140 @@ interface AnalyzePerception {
     totalTransferSize: number;
     largestContentfulPaint?: number;
   };
+
+  // v2.2 Addition
+  viewport_context?: {
+    width: number;                       // 1440 (desktop) or 390 (mobile)
+    height: number;
+    device_type: "desktop" | "mobile";
+  };
 }
 ```
+
+---
+
+## 7.10 Perception Quality Gate (v2.2)
+
+**REQ-ANALYZE-QUALITY-001:** A perception quality gate runs between `deep_perceive` and `evaluate`. It scores the perception data and routes to one of three outcomes: proceed / partial / skip. This prevents wasting LLM calls on pages with corrupted or incomplete perception.
+
+**REQ-ANALYZE-QUALITY-002:** Seven weighted signals:
+
+```typescript
+interface PerceptionQualityScore {
+  overall: number;                           // 0.0 to 1.0
+  signals: {
+    has_meaningful_content: boolean;         // textContent.wordCount > 50
+    has_interactive_elements: boolean;        // ctas.length > 0 OR forms.length > 0
+    has_navigation: boolean;                 // navigation.primaryNavItems.length > 2
+    has_heading_structure: boolean;           // headingHierarchy.length > 0
+    no_overlay_detected: boolean;            // no high-z-index fixed el covering >30% viewport
+    no_error_state: boolean;                 // no "access denied", captcha, "please verify" text
+    page_loaded: boolean;                    // DOMContentLoaded < 30000ms AND resourceCount > 5
+  };
+  blocking_issue: string | null;             // human-readable reason if overall < threshold
+}
+```
+
+Signal weights: content 0.25, interactive 0.20, overlay 0.15, error_state 0.15, navigation 0.10, headings 0.10, loaded 0.05. Total: 1.00.
+
+**REQ-ANALYZE-QUALITY-003:** Three outcomes:
+
+| Score | Action | analysis_status |
+|---|---|---|
+| ≥ 0.6 | Proceed to evaluate normally | `complete` (on success) |
+| 0.3 – 0.59 | Partial analysis — Tier 1 quantitative heuristics only, skip LLM | `partial` |
+| < 0.3 | Skip page, log blocking_issue, move to next | `perception_insufficient` |
+
+**REQ-ANALYZE-QUALITY-004:** Overlay detection — flags elements with `position: fixed/sticky`, `z-index > 999`, bounding box > 30% viewport, common class patterns (`cookie`, `consent`, `modal`, `popup`, `overlay`, `chat-widget`). The quality gate flags them; overlay dismissal (§6.17 v2.2) attempts to remove them before perception runs.
+
+---
+
+## 7.11 Analysis Error Recovery (v2.2)
+
+**REQ-ANALYZE-RECOVERY-001:** Every page gets an `analysis_status`. The audit never silently drops a page.
+
+```typescript
+type AnalysisStatus =
+  | "complete"                    // all 5 steps ran, findings produced
+  | "partial"                     // some steps ran, partial findings produced
+  | "perception_insufficient"     // quality gate blocked analysis
+  | "budget_exceeded"             // ran out of budget mid-analysis
+  | "llm_failed"                  // LLM calls failed after retries
+  | "grounding_rejected_all"      // 100% of findings rejected by grounding
+  | "failed";                     // unknown/unrecoverable error
+```
+
+**REQ-ANALYZE-RECOVERY-002:** Recovery matrix:
+
+| Failure | Detection | Recovery | Status |
+|---|---|---|---|
+| LLM timeout on evaluate | No response in 60s | Retry with split batch: 20 heuristics → 2×10. Both timeout = mark. | `partial` or `llm_failed` |
+| Semantically garbage output | Valid JSON but no real heuristic_ids or observations < 20 chars | Retry once with explicit instruction. Still garbage = skip evaluate. | `llm_failed` |
+| Self-critique rejects ALL | `reviewed_findings.length === 0` after critique | Skip critique. Send raw_findings to grounding. Log `critique_override_all_rejected`. | `complete` |
+| Grounding rejects 100% | `grounded_findings.length === 0` AND `rejected_findings.length > 0` | Flag page for consultant review. Raw findings + rejection reasons visible in internal store. | `grounding_rejected_all` |
+| Budget exceeded mid-evaluate | `cost_usd > analysis_budget_usd` during loop | Complete current call. Emit partial findings. Skip remaining heuristics. | `budget_exceeded` |
+| Zero findings (clean page) | Valid JSON, zero findings | Accept as valid. If page has CTAs+forms+content AND zero findings across 15+ heuristics → log `suspiciously_clean` warning. | `complete` |
+| Annotation failure (Sharp) | Image processing exception | Store findings without annotations. Findings still valid. | `complete` |
+| Unexpected exception | Uncaught error | Catch at graph level. Log with stack trace + audit_run_id + page_url. Mark page. Continue. | `failed` |
+
+**REQ-ANALYZE-RECOVERY-003:** `audit_complete` reports page-status breakdown: "47/50 pages fully analyzed, 2 partially analyzed, 1 skipped (perception quality)."
+
+---
+
+## 7.12 Persona-Based Evaluation (v2.2a)
+
+**REQ-ANALYZE-PERSONA-001:** Client profile may include `personas: PersonaContext[]`. Default 2-3 personas per business type.
+
+```typescript
+interface PersonaContext {
+  id: string;                          // "first-time-visitor"
+  name: string;                        // "First-time visitor"
+  description: string;                 // "Never visited this site before"
+  goals: string[];
+  frustrations: string[];
+  business_type_applicability: BusinessType[];
+}
+```
+
+**REQ-ANALYZE-PERSONA-002:** Personas are injected into the evaluate user message. The LLM evaluates heuristics from each persona's perspective.
+
+**REQ-ANALYZE-PERSONA-003:** Each finding gets a `persona: string | null` field. Null when no persona context is active.
+
+**REQ-ANALYZE-PERSONA-004:** Default personas per business type:
+- **ecommerce:** first-time-visitor, returning-customer, price-sensitive-shopper
+- **saas:** evaluator, technical-buyer, existing-customer
+- **leadgen:** researcher, decision-maker, qualified-lead
+- **media:** casual-reader, subscriber, power-user
+
+---
+
+## 7.13 Cross-Page Analysis Integration (v2.2)
+
+**REQ-ANALYZE-CROSSPAGE-001:** After each page's analysis completes, extract and emit a lightweight `PageSignals` object:
+
+```typescript
+interface PageSignals {
+  page_url: string;
+  page_type: PageType;
+  cta_count: number;
+  cta_texts: string[];                   // truncated to 50 chars each
+  form_field_counts: number[];
+  trust_signal_types: string[];
+  nav_link_count: number;
+  heading_texts: string[];               // h1/h2 only
+  key_metric_violations: string[];       // "14 form fields vs 6-8 benchmark"
+  finding_heuristic_ids: string[];
+  finding_count: number;
+  perception_quality_score: number;
+}
+```
+
+**REQ-ANALYZE-CROSSPAGE-002:** PageSignals are accumulated in `state.page_signals` (array). NOT full AnalyzePerception objects — prevents 2.5-5MB state bloat on 50-page audits.
+
+**REQ-ANALYZE-CROSSPAGE-003:** After the page loop completes, `cross_page_analyze` node runs (see §4 orchestration). Produces PatternFinding, ConsistencyFinding, FunnelFinding arrays.
+
+**REQ-ANALYZE-CROSSPAGE-004:** (Master plan, Phase 8 enhancement) Progressive funnel context — for pages beyond the first 2-3, accumulated PageSignals injected into the evaluate prompt. Enables inline funnel-aware findings. MVP uses post-hoc cross-page only.
+
+---
+
+**End of §7 — Analyze Mode (base §7.1-7.9 + v2.2 extensions §7.10-7.13)**

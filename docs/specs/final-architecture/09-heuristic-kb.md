@@ -93,9 +93,42 @@ export const HeuristicSchema = z.object({
     details: z.string(),
     researchBacking: z.string(),
   }),
+
+  // === v2.2 Additions ===
+
+  // Benchmark — REQUIRED on all heuristics (v2.2)
+  // Either quantitative (structural/measurable) or qualitative (content/persuasion)
+  benchmark: z.discriminatedUnion("type", [
+    z.object({
+      type: z.literal("quantitative"),
+      value: z.string(),                            // "6-8" or "4.5:1" or "48px"
+      source: z.string(),                           // "Baymard Institute 2024"
+      unit: z.string(),                             // "fields" | "seconds" | "pixels" | "ratio"
+      comparison: z.enum(["less_than", "greater_than", "between", "equals"]),
+      threshold_warning: z.number(),                // yellow zone boundary
+      threshold_critical: z.number(),               // red zone boundary
+    }),
+    z.object({
+      type: z.literal("qualitative"),
+      standard: z.string(),                         // "Primary CTA visible above fold without scrolling"
+      source: z.string(),                           // "Nielsen Norman Group 2023"
+      positive_exemplar: z.string(),                // "CTA in top 30% of viewport with high-contrast color"
+      negative_exemplar: z.string(),                // "CTA below 3 scrolls, same color as body text"
+    }),
+  ]),
+
+  // Viewport applicability (v2.2, Phase 12 master plan only)
+  viewport_applicability: z.enum(["desktop", "mobile", "both"]).default("both"),
 });
 
 export type Heuristic = z.infer<typeof HeuristicSchema>;
+
+// === v2.2 Benchmark Requirements ===
+// REQ-HK-BENCHMARK-001: Every heuristic MUST have a benchmark. No heuristic loads without one.
+// REQ-HK-BENCHMARK-002: Structural heuristics (Tier 1 mostly) use quantitative benchmarks.
+// REQ-HK-BENCHMARK-003: Content/persuasion heuristics use qualitative benchmarks.
+// REQ-HK-BENCHMARK-004: The evaluate prompt injects benchmark data alongside each heuristic.
+// REQ-HK-BENCHMARK-005: GR-012 validates benchmark claims against actual page data (see §7.7).
 
 // === Knowledge Base Schema ===
 

@@ -1,12 +1,17 @@
-# MVP Tasks v2.1 (T001-T213)
+# MVP Tasks v2.2a (T001-T262)
 
-## Reconciled from Master Architecture + §33 Agent Composition Model
+## Reconciled from Master Architecture + §33 Agent Composition + v2.2 Refinement + v2.2a External Review
 
-> **Version:** 2.1 — Extended with §33 Agent Composition Model + §33a Integration Plan
-> **Prior versions:** v2.0 (T001-T192, §01-§30), v1.0 (T001-T155, original)
-> **Methodology:** Q6-R ruling + §33a interface-first integration
-> **Total:** 211 tasks across 11 phases
-> **Key change in v2.1:** Phase 11 (Agent Composition, T193-T210) added. 6 earlier tasks modified for §33a interfaces (T024, T066, T071, T081, T127, T143).
+> **Version:** 2.2a — Extended with v2.2 refinement (benchmarks, cross-page, cost accounting, observability, reports, golden tests, mobile) + v2.2a patches (overlay dismissal, discovery, personas, notifications, progressive funnel)
+> **Prior versions:** v2.1 (T001-T212, §33), v2.0 (T001-T192, §01-§30), v1.0 (T001-T155, original)
+> **Methodology:** Q6-R ruling + §33a interface-first integration + gap-analysis-driven refinement
+> **Total:** 263 tasks across 12 phases
+> **Key changes in v2.2a:**
+>   - Phase 12 (Mobile Viewport, T227-T231) added — MASTER PLAN ONLY
+>   - Phase 0b (Heuristic Authoring) parallel workstream — CRO team, not engineering
+>   - 50 new tasks T213-T262
+>   - 3 new spec sections: §34 Observability, §35 Report Generation, §36 Golden Test Suite
+>   - 12th grounding rule GR-012 (benchmark validation)
 
 > **Conventions:**
 > - `T###` = task ID
@@ -1004,6 +1009,9 @@ The MVP v2.0 is **DONE** when T148-T150 (Phase 8 acceptance), T175 (Phase 9 foun
 | Phase 9: Master Foundations | 20 | T156-T175 | **20 new** | 175 |
 | Phase 10: State Exploration | 18 | T176-T192 (+T191a) | **18 new** | 193 |
 | Phase 11: Agent Composition | 20 | T193-T212 | **20 new** | **213** |
+| Phase 12: Mobile Viewport (v2.2) | 5 | T227-T231 | **5 new** | 218 |
+| v2.2 spec additions (distributed across Phases 4-9) | 45 | T213-T226, T232-T254 | **45 new** | **263** |
+| v2.2a patches (distributed across Phases 1-9) | includes T255-T262 (8 tasks embedded above) | — | — | 263 |
 
 **v2.0 → v2.1 delta (§33 integration):**
 - Phases 1-10 tasks modified for §33a interfaces: **6** (T024, T066, T071, T081, T127, T143)
@@ -1044,3 +1052,402 @@ For quick reference, every task that differs from v1.0:
 | T165 | Extended (v2.1) | +priority formula parenthesis fix noted |
 | T176-T192 | **New** | State exploration: types, rules, detection, Pass 1/2, graph, multi-state, GR-009 |
 | T193-T212 | **New (§33)** | Agent composition: interactive evaluate, tool injection, dual-mode, nav guard, grounding rules, workflow restore, cost model, activity timeout |
+| T213-T262 | **New (v2.2 + v2.2a)** | See §v2.2 Additions below |
+
+---
+
+## v2.2 Additions (T213-T262) — 50 New Tasks
+
+> **Version:** 2.2 (April 2026) + 2.2a patch (external review)
+> **Spec References:** Design spec `docs/superpowers/specs/2026-04-15-master-plan-refinement-design.md`, new specs §34 / §35 / §36, modifications to §4, §5, §6, §7, §9, §11, §13, §14
+
+### Phase 6: Heuristic KB + Benchmarks (T213-T216)
+
+#### T213: HeuristicSchema benchmark field [NEW v2.2]
+- **dep:** T101
+- **spec:** §9.1 REQ-HK-BENCHMARK-001..005
+- **files:** `packages/agent-core/src/analysis/heuristics/schema.ts` (extend)
+- **smoke test:** Zod validation fails if heuristic missing benchmark field
+- **acceptance:** Benchmark is REQUIRED on HeuristicSchema. Discriminated union: quantitative | qualitative. Both types validated at load time.
+
+#### T214: GR-012 benchmark validation rule [NEW v2.2]
+- **dep:** T213
+- **spec:** §7.7 GR-012
+- **files:** `packages/agent-core/src/analysis/grounding/rules/GR012.ts`
+- **smoke test:** Finding claiming "5 fields" against quantitative benchmark "6-8" within ±20% passes; claim "20 fields" rejects
+- **acceptance:** GR-012 added to grounding rule chain. Handles both quantitative and qualitative benchmarks. Unit tests for both.
+
+#### T215: Evaluate prompt benchmark injection [NEW v2.2]
+- **dep:** T213, T120 (EvaluateNode)
+- **spec:** §7.5 user message template
+- **files:** Extend `packages/agent-core/src/analysis/nodes/EvaluateNode.ts` prompt template
+- **smoke test:** Evaluate prompt for form heuristic includes "Industry standard: 6-8 fields (Baymard)"
+- **acceptance:** Benchmark data injected alongside each heuristic in evaluate user message. Different format for quantitative vs qualitative.
+
+#### T216: Author 100 heuristic benchmarks [NEW v2.2, LARGE]
+- **dep:** T213, T103-T105 (heuristic authoring)
+- **files:** `heuristics-repo/baymard.json`, `heuristics-repo/nielsen.json`, `heuristics-repo/cialdini.json`
+- **acceptance:**
+  - Top 30 structural heuristics get quantitative benchmarks (priority)
+  - Remaining 70 get qualitative benchmarks
+  - All 100 pass HeuristicSchema Zod validation with benchmarks
+  - Each benchmark cites a research source
+- **WORKSTREAM:** This is a CRO team deliverable, not engineering. Runs in parallel with Phase 0-6 engineering work (Phase 0b).
+
+### Phase 8: Cross-Page Analysis (T217-T223)
+
+#### T217: PatternFinding + PatternDetector [NEW v2.2]
+- **dep:** T135 (AuditState), T131 (AnnotateNode)
+- **spec:** §5.8.1 PatternFinding, §7.13 REQ-ANALYZE-CROSSPAGE-003
+- **files:** `packages/agent-core/src/analysis/cross-page/PatternDetector.ts`
+- **smoke test:** 3 pages with same heuristic violation produce 1 PatternFinding referencing all 3
+- **acceptance:** Groups grounded_findings by heuristic_id. Threshold: 3+ pages. Selects representative finding. Deterministic, no LLM.
+
+#### T218: Pattern finding scope in data model [NEW v2.2]
+- **dep:** T070 (DB schema), T217
+- **spec:** §13.6 findings.scope enum
+- **files:** Migration to extend findings.scope enum
+- **acceptance:** `scope` enum includes `cross_page_pattern`. Pattern findings stored with this scope.
+
+#### T219: ConsistencyFinding + ConsistencyChecker [NEW v2.2]
+- **dep:** T135, T217
+- **spec:** §5.8.1 ConsistencyFinding
+- **files:** `packages/agent-core/src/analysis/cross-page/ConsistencyChecker.ts`
+- **smoke test:** Pages with mixed CTA colors produce a ConsistencyFinding listing majority and outlier pages
+- **acceptance:** Checks CTA styles, nav, trust signals, branding across page_signals. Deterministic, no LLM.
+
+#### T220: Consistency finding scope in data model [NEW v2.2]
+- **dep:** T218, T219
+- **files:** Migration to extend findings.scope
+- **acceptance:** `scope` enum includes `cross_page_consistency`.
+
+#### T221: FunnelFinding + FunnelAnalyzer [NEW v2.2]
+- **dep:** T135, T219, T073 (LLMAdapter)
+- **spec:** §5.8.1 FunnelFinding
+- **files:** `packages/agent-core/src/analysis/cross-page/FunnelAnalyzer.ts`
+- **smoke test:** Mock audit with 4 pages (home, PDP, cart, checkout) produces funnel findings for promise mismatches
+- **acceptance:** Single LLM call, temperature=0, $1 budget cap. Uses page_signals + findings as input. All outputs Tier 2 (24hr delay).
+
+#### T222: cross_page_analyze node [NEW v2.2]
+- **dep:** T217, T219, T221
+- **spec:** §4.2 REQ-ORCH-NODE-002b
+- **files:** `packages/agent-core/src/orchestration/nodes/CrossPageAnalyzeNode.ts`
+- **smoke test:** Node runs after page loop, produces pattern_findings, consistency_findings, funnel_findings in state
+- **acceptance:** Orchestrator calls PatternDetector → ConsistencyChecker → FunnelAnalyzer in order. Emits `cross_page_analysis_completed` event.
+
+#### T223: AuditGraph cross-page integration [NEW v2.2]
+- **dep:** T222, T143 (AuditGraph)
+- **spec:** §4.4 REQ-ORCH-SUBGRAPH-001 (v2.2)
+- **files:** Edit `packages/agent-core/src/orchestration/AuditGraph.ts`
+- **smoke test:** Graph flows: page_router → cross_page_analyze → audit_complete when page queue empty
+- **acceptance:** routePageRouter routes to "cross_page_analyze" instead of "audit_complete". New edge `cross_page_analyze → audit_complete`.
+
+### Phase 4: Token-Level Cost Accounting (T224-T226)
+
+#### T224: llm_call_log table + LLMCallRecord [NEW v2.2]
+- **dep:** T070 (DB schema), T073 (LLMAdapter)
+- **spec:** §13.7 REQ-DATA-V22-001
+- **files:** Migration `0003_llm_call_log.sql`, extend LLMAdapter interface
+- **smoke test:** `pnpm db:migrate` creates llm_call_log table with correct indexes
+- **acceptance:** Table created. LLMAdapter.invoke() returns `{ response, callRecord }`. MODEL_PRICING config.
+
+#### T225: CostTracker refactored to actuals [NEW v2.2]
+- **dep:** T224, T118 (CostTracker)
+- **spec:** §11.7 REQ-COST-010..014
+- **files:** Refactor `packages/agent-core/src/analysis/CostTracker.ts`
+- **smoke test:** Evaluate call logs row in llm_call_log with actual tokens + cost. State budget updated from actual, not estimate.
+- **acceptance:** Pre-call budget gate estimates from getTokenCount. Actual cost decremented from budget_remaining_usd. Cost summary in audit_runs.cost_summary.
+
+#### T226: Per-client cost attribution query [NEW v2.2]
+- **dep:** T224
+- **spec:** §11.7 REQ-COST-014
+- **files:** `packages/agent-core/src/analytics/costAttribution.ts`
+- **smoke test:** `getClientCost(clientId, startDate, endDate)` returns sum from llm_call_log JOIN audit_runs
+- **acceptance:** Query function available. Used by admin dashboard (Phase 9).
+
+### Phase 12: Mobile Viewport (T227-T231) — MASTER PLAN ONLY, NOT MVP
+
+#### T227: AuditPage.viewport_strategy field [NEW v2.2]
+- **dep:** T135
+- **spec:** §5.2 AuditPage (v2.2 extension)
+- **files:** Edit AuditState types
+- **acceptance:** `viewport_strategy: "desktop_only" | "mobile_only" | "both"`, default `desktop_only`.
+
+#### T228: AnalyzePerception viewport_context [NEW v2.2]
+- **dep:** T013 (ContextAssembler)
+- **spec:** §7.9 viewport_context
+- **files:** Extend AnalyzePerception type
+- **acceptance:** `viewport_context: { width, height, device_type }` in metadata. Populated as desktop in MVP.
+
+#### T229: Dual-viewport pipeline [NEW v2.2]
+- **dep:** T227, T228, T186 (DeepPerceiveNode)
+- **files:** Extend deep_perceive to re-run at mobile viewport if `viewport_strategy === "both"`
+- **smoke test:** Audit with viewport_strategy="both" produces two AnalyzePerceptions (desktop + mobile) per page
+- **acceptance:** page.setViewportSize(390x844) for mobile pass. Both findings tagged with viewport.
+
+#### T230: Stage 3 heuristic filtering by viewport [NEW v2.2]
+- **dep:** T107 (HeuristicFilter), T229
+- **spec:** §9.6 three-stage filtering
+- **files:** Extend HeuristicFilter with filterByViewport
+- **acceptance:** Heuristics filtered by business_type → page_type → viewport_applicability.
+
+#### T231: Author 10-15 mobile-specific heuristics [NEW v2.2]
+- **dep:** T213 (benchmark schema), T230
+- **files:** `heuristics-repo/mobile.json`
+- **acceptance:** 10-15 heuristics with viewport_applicability="mobile". MOB-TAP-001, MOB-THUMB-001, MOB-SCROLL-001, MOB-STICKY-001, MOB-FONT-001, etc. All have benchmarks.
+
+### Phase 7: Perception Quality Gate + Error Recovery (T232-T235)
+
+#### T232: PerceptionQualityScorer [NEW v2.2]
+- **dep:** T186 (DeepPerceiveNode)
+- **spec:** §7.10 REQ-ANALYZE-QUALITY-001..004
+- **files:** `packages/agent-core/src/analysis/quality/PerceptionQualityScorer.ts`
+- **smoke test:** Page with cookie overlay covering 45% viewport scores <0.6 on no_overlay_detected signal
+- **acceptance:** 7 weighted signals. Returns PerceptionQualityScore with overall, signals, blocking_issue.
+
+#### T233: Quality gate routing in analyze graph [NEW v2.2]
+- **dep:** T232, T134 (AnalysisGraph)
+- **spec:** §7.10 three outcomes table
+- **files:** Edit AnalysisGraph to add quality_gate node between deep_perceive and evaluate
+- **smoke test:** Score <0.3 → analysis_status = "perception_insufficient", skip evaluate
+- **acceptance:** Three routing paths: proceed / partial / skip. Analysis_status set correctly.
+
+#### T234: Analysis error recovery matrix [NEW v2.2]
+- **dep:** T120 (EvaluateNode), T121 (SelfCritiqueNode), T130 (EvidenceGrounder)
+- **spec:** §7.11 REQ-ANALYZE-RECOVERY-001..003
+- **files:** Extend each node with error handlers
+- **smoke test:** Simulate LLM timeout → pipeline splits batch and retries. Simulate all-rejected critique → skip critique.
+- **acceptance:** All 8 failure modes from recovery matrix have specific handlers. Every page gets analysis_status.
+
+#### T235: Audit completion report with status breakdown [NEW v2.2]
+- **dep:** T234, T144 (AuditComplete)
+- **spec:** §7.11 REQ-ANALYZE-RECOVERY-003
+- **files:** Extend AuditComplete to compute completion_summary
+- **acceptance:** Summary includes: pages_complete, pages_partial, pages_skipped_*, completion_summary string.
+
+### Phase 4: LLM Rate Limiting + Failover (T236-T238)
+
+#### T236: LLM rate limiter [NEW v2.2]
+- **dep:** T073 (LLMAdapter)
+- **spec:** §11.8 REQ-RATE-LLM-001..004
+- **files:** `packages/agent-core/src/adapters/LLMRateLimiter.ts`
+- **smoke test:** 51 rapid calls to Anthropic provider — 51st waits until window resets
+- **acceptance:** Sliding window in Redis. Configurable RPM/TPM/concurrent per provider. Exponential backoff with jitter.
+
+#### T237: LLM failover policy [NEW v2.2]
+- **dep:** T073, T236
+- **spec:** §11.9 REQ-FAILOVER-001..006
+- **files:** `packages/agent-core/src/adapters/LLMFailoverAdapter.ts`
+- **smoke test:** Simulate 3 Claude failures → next call uses GPT-4o. Next call tries Claude again.
+- **acceptance:** Per-call failover. FailoverEvent logged. Finding gets model_used + model_mismatch fields.
+
+#### T238: Both-providers-down pause/resume [NEW v2.2]
+- **dep:** T237, BullMQ
+- **spec:** §11.9 REQ-FAILOVER-005
+- **files:** Extend orchestrator with pause handler + BullMQ resume job
+- **smoke test:** 3 consecutive page failures → audit_status = "paused_llm_unavailable". BullMQ scheduled resume.
+- **acceptance:** Pause (not terminate). 3 resume attempts over 15min. Consultant notified.
+
+### Phase 9: §34 Observability (T239-T244)
+
+#### T239: Pino structured logging [NEW v2.2]
+- **dep:** T002
+- **spec:** §34.3 REQ-OBS-001..005
+- **files:** `packages/agent-core/src/observability/logger.ts`
+- **smoke test:** Log line includes audit_run_id, page_url, node_name as JSON fields
+- **acceptance:** No console.log in production code. All structured JSON. Sensitive data redaction.
+
+#### T240: audit_events table [NEW v2.2]
+- **dep:** T070
+- **spec:** §34.4 REQ-OBS-010..014, §13.7 REQ-DATA-V22-002
+- **files:** Migration `0004_audit_events.sql`
+- **acceptance:** Table + indexes created. 22 event_type values enumerated in types.
+
+#### T241: Event emission in nodes [NEW v2.2]
+- **dep:** T240
+- **files:** Inject EventEmitter into all graph nodes
+- **smoke test:** Running an audit produces events: audit_started, page_analyze_started, finding_produced, page_analyze_completed, audit_completed
+- **acceptance:** All 22 event types emitted from appropriate nodes. Events appear in audit_events table and SSE stream.
+
+#### T242: Heuristic health metrics materialized view [NEW v2.2]
+- **dep:** T070, T240
+- **spec:** §34.5 REQ-OBS-021..022, §13.7 REQ-DATA-V22-003
+- **files:** Migration for materialized view + refresh job
+- **acceptance:** View queryable. Nightly refresh job. health_score computed correctly.
+
+#### T243: Alerting rules + BullMQ job [NEW v2.2]
+- **dep:** T241, T242, notification adapter
+- **spec:** §34.6 REQ-OBS-030..032
+- **files:** `packages/agent-core/src/observability/AlertingJob.ts`
+- **smoke test:** Audit running >45 min triggers warning alert within 5 min of threshold
+- **acceptance:** 7 alert rules. Scheduled every 5 min. Debounced per audit_run_id per alert type per hour.
+
+#### T244: Operational dashboard [NEW v2.2]
+- **dep:** T241, T242, Phase 9 dashboard infrastructure
+- **spec:** §34.7 REQ-OBS-040..042
+- **files:** `apps/dashboard/src/app/console/admin/operations/page.tsx`
+- **acceptance:** 6 sections rendered: active audits, 24h summary, heuristic health table, alert feed, cost trend, failure breakdown. Admin role only. Build LAST in Phase 9.
+
+### Phase 9: §35 Report Generation (T245-T249)
+
+#### T245: ExecutiveSummary type + generator [NEW v2.2]
+- **dep:** T144 (AuditComplete), T217 (PatternFinding)
+- **spec:** §35.2 REQ-REPORT-001..005
+- **files:** `packages/agent-core/src/delivery/ExecutiveSummaryGenerator.ts`
+- **smoke test:** Audit with 15 findings produces summary with overall_score, grade, top 5, strengths
+- **acceptance:** Deterministic score formula. Strengths from pass results. 1 LLM call for recommended_next_steps ($0.10 cap).
+
+#### T246: ExecutiveSummary integration [NEW v2.2]
+- **dep:** T245
+- **files:** Extend AuditComplete to populate state.executive_summary
+- **acceptance:** executive_summary non-null when audit_run.status = "completed".
+
+#### T247: ActionPlan generator [NEW v2.2]
+- **dep:** T135 (findings), T165 (ScoringPipeline)
+- **spec:** §35.3 REQ-REPORT-010..012
+- **files:** `packages/agent-core/src/delivery/ActionPlanGenerator.ts`
+- **smoke test:** Findings bucketed into 4 quadrants based on business_impact and effort_hours
+- **acceptance:** Deterministic bucketing. estimated_total_effort_hours computed. Findings sort by priority within each quadrant.
+
+#### T248: Next.js report HTML template [NEW v2.2]
+- **dep:** T245, T247
+- **spec:** §35.4 REQ-REPORT-020..024
+- **files:** `apps/dashboard/src/app/api/report/[audit_run_id]/render/page.tsx`
+- **smoke test:** GET /api/report/:id/render returns 8-section HTML page
+- **acceptance:** Cover, exec summary, action plan, findings, patterns, funnel, methodology, appendix. Branded per client.
+
+#### T249: PDF generator via Playwright [NEW v2.2]
+- **dep:** T248
+- **files:** `packages/agent-core/src/delivery/ReportGenerator.ts`
+- **smoke test:** ReportGenerator.generate(auditRunId) produces PDF under 5MB, stored in R2
+- **acceptance:** Playwright page.pdf(). R2 upload at /{client_id}/reports/{audit_run_id}/report.pdf. URL stored in audit_runs.report_pdf_url.
+
+### Phase 7 + 0: §36 Golden Test Suite (T250-T251)
+
+#### T250: Golden test infrastructure [NEW v2.2]
+- **dep:** T252 (MockLLMAdapter)
+- **spec:** §36.2-4 REQ-GOLDEN-001..022
+- **files:** `test/golden/runner.ts`, `test/golden/comparator.ts`, CI workflow
+- **smoke test:** Running a golden test case produces TP/FN/FP counts vs expected_findings
+- **acceptance:** Test runner supports fast mode (MockLLMAdapter) and nightly mode (real LLM). Pass criteria enforced.
+
+#### T251: Regression alerting for golden tests [NEW v2.2]
+- **dep:** T250, T243 (alerting)
+- **spec:** §36.5 REQ-GOLDEN-032
+- **files:** Extend AlertingJob with golden_score_regression rule
+- **acceptance:** Nightly scores drop >10% vs 7-day rolling avg fires P1 alert. Blocks next deployment.
+
+### Phase 0: §36 Offline Mock Mode (T252-T253)
+
+#### T252: MockBrowserEngine [NEW v2.2]
+- **dep:** T002 (BrowserEngine interface)
+- **spec:** §36.6 REQ-GOLDEN-041
+- **files:** `test/mocks/MockBrowserEngine.ts`
+- **smoke test:** NEURAL_MODE=offline returns saved perception from test/fixtures/sites/amazon-pdp/perception.json
+- **acceptance:** Implements BrowserEngine interface. Returns saved fixtures. No Playwright.
+
+#### T253: MockLLMAdapter [NEW v2.2]
+- **dep:** T073 (LLMAdapter interface)
+- **spec:** §36.6 REQ-GOLDEN-041
+- **files:** `test/mocks/MockLLMAdapter.ts`
+- **smoke test:** NEURAL_MODE=offline: evaluate call returns cached response from test/fixtures/llm-responses/
+- **acceptance:** Implements LLMAdapter. Returns cached for known inputs, placeholder for unknown. Tracks simulated cost.
+
+### Phase 1: §36 Fixture Capture (T254)
+
+#### T254: Fixture capture CLI [NEW v2.2]
+- **dep:** T013 (ContextAssembler)
+- **spec:** §36.6 REQ-GOLDEN-043
+- **files:** `apps/cli/src/commands/fixture-capture.ts`
+- **smoke test:** `pnpm fixture:capture --url https://example.com` saves perception.json + page-state.json + screenshots to test/fixtures/sites/example-com/
+- **acceptance:** One-time network hit. Reusable fixtures. Both `pnpm fixture:capture` and `pnpm golden:capture` commands work.
+
+### Phase 1 / 5: Overlay Dismissal (T255) [v2.2a]
+
+#### T255: Overlay dismissal step [NEW v2.2a]
+- **dep:** T006 (BrowserManager), T048 (page_analyze)
+- **spec:** §6.17 REQ-BROWSE-OVERLAY-001..006
+- **files:** `packages/agent-core/src/browser-runtime/OverlayDismisser.ts`
+- **smoke test:** Navigate to page with cookie banner → dismiss button clicked → banner removed → perception sees full page
+- **acceptance:** Runs between stabilization and perception. 12 common selector patterns. Ghost-cursor click. 2s stability wait. Non-fatal on failure.
+
+### Phase 9: DiscoveryStrategy (T256-T257) [v2.2a]
+
+#### T256: DiscoveryStrategy adapter interface [NEW v2.2a]
+- **dep:** T002
+- **spec:** Design spec §1.2 (v2.2a DiscoveryStrategy)
+- **files:** `packages/agent-core/src/gateway/DiscoveryStrategy.ts`
+- **acceptance:** Interface defined. Three implementations: SitemapDiscovery, NavigationCrawlDiscovery, ManualDiscovery.
+
+#### T257: DiscoveryStrategy integration in audit_setup [NEW v2.2a]
+- **dep:** T256, T137 (AuditSetupNode)
+- **files:** Extend audit_setup to accept discovery_strategy param
+- **smoke test:** `--discovery nav-crawl` crawls homepage nav links, produces page queue
+- **acceptance:** audit_setup selects strategy based on AuditRequest.discovery_strategy. All 3 implementations produce AuditPage[].
+
+### Phase 7: Persona-Based Evaluation (T258-T259) [v2.2a]
+
+#### T258: PersonaContext type + default personas [NEW v2.2a]
+- **dep:** T002
+- **spec:** §7.12 REQ-ANALYZE-PERSONA-001..004
+- **files:** `packages/agent-core/src/analysis/personas/types.ts`, `packages/agent-core/src/analysis/personas/defaults.ts`
+- **acceptance:** PersonaContext type with Zod schema. Default personas per business type (ecommerce, saas, leadgen, media).
+
+#### T259: Persona injection in evaluate prompt [NEW v2.2a]
+- **dep:** T258, T215 (benchmark injection)
+- **files:** Extend EvaluateNode prompt template
+- **smoke test:** client.personas = 3 personas → evaluate prompt includes persona descriptions → finding.persona tagged
+- **acceptance:** 2-3 personas injected. Finding schema extended with `persona: string | null`. Evaluation considers each persona's perspective.
+
+### Phase 9: NotificationAdapter (T260-T261) [v2.2a]
+
+#### T260: NotificationAdapter + email implementation [NEW v2.2a]
+- **dep:** T002
+- **spec:** §14.8 REQ-DELIVERY-NOTIFY-001..003
+- **files:** `packages/agent-core/src/adapters/NotificationAdapter.ts`, `packages/agent-core/src/adapters/EmailNotificationAdapter.ts`
+- **smoke test:** notify({ type: "audit_completed", ... }) sends email via Resend
+- **acceptance:** Adapter interface. Email implementation using Resend or Postmark. Notification preferences per user.
+
+#### T261: Notification integration in audit_complete [NEW v2.2a]
+- **dep:** T260, T144
+- **files:** Extend AuditComplete to call notifier on completion
+- **smoke test:** Completed audit triggers email with report URL to consultant
+- **acceptance:** audit_completed, audit_failed, findings_ready_for_review events emit notifications. Preferences respected.
+
+### Phase 8: Progressive Funnel Context (T262) [v2.2a, MASTER PLAN]
+
+#### T262: Progressive funnel context injection [NEW v2.2a]
+- **dep:** T217, T120 (EvaluateNode)
+- **spec:** §7.13 REQ-ANALYZE-CROSSPAGE-004
+- **files:** Extend EvaluateNode prompt with accumulated PageSignals
+- **smoke test:** Page 5 evaluate prompt includes PageSignals summary from pages 1-4
+- **acceptance:** For pages beyond first 2-3, PageSignals injected. Enables inline funnel-aware findings ("homepage promises X but this page doesn't"). MVP: skip this, use post-hoc only.
+
+---
+
+## v2.2 → v2.2a Summary
+
+**Total tasks added:** 50 (T213-T262)
+**New phases:** Phase 12 (Mobile Viewport, master plan only)
+**Parallel workstream:** Phase 0b (Heuristic Authoring — CRO team, not engineering)
+
+**Breakdown by category:**
+- Benchmarks + GR-012: 4 tasks (T213-T216)
+- Cross-page analysis: 7 tasks (T217-T223)
+- Token-level cost: 3 tasks (T224-T226)
+- Mobile viewport: 5 tasks (T227-T231) — master plan only
+- Perception quality + error recovery: 4 tasks (T232-T235)
+- LLM rate limiting + failover: 3 tasks (T236-T238)
+- §34 Observability: 6 tasks (T239-T244)
+- §35 Report generation: 5 tasks (T245-T249)
+- §36 Golden tests + offline mock: 5 tasks (T250-T254)
+- v2.2a additions: 8 tasks (T255-T262)
+
+**Revised master plan total: 263 tasks across 12 phases (~21 weeks aspirational)**
+
+**MVP extraction notes:**
+- Mobile viewport (T227-T231) deferred to post-MVP
+- Progressive funnel context (T262) deferred to post-MVP (use post-hoc only)
+- NavigationCrawlDiscovery deferred to post-MVP (MVP: Sitemap + Manual only)
+- Cross-page: pattern detection (T217-T218) only for MVP; defer consistency + funnel
+- Ops dashboard (T244): build LAST in Phase 9
