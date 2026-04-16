@@ -1,50 +1,123 @@
 PROJECT: AI CRO Audit System (REO Digital / Neural Product)
-STATUS: Architecture LOCKED + REVIEWED. 213 tasks ready. Implementation starts now.
+STATUS: Architecture LOCKED + REVIEWED + v2.2a REFINED. 263 tasks ready. Implementation starts now.
 METHOD: Spec-Driven Development with Claude Code
+VERSION: v2.2a (April 15, 2026)
 
 WARNING: This HANDOVER replaces the previous version entirely.
-Previous version referenced 18 specs, 155 tasks, 8 phases — all outdated.
-Current: 35 specs, 213 tasks, 11 phases. Read THIS file, not the old one.
+Previous versions referenced 213 tasks / 11 phases (v2.1), 211 tasks (v2.0), 155 tasks (v1.0) — all outdated.
+Current: 38 specs (36 + §33a + §33), 263 tasks, 12 phases. Read THIS file, not the old one.
+
+===============================================================
+WHAT CHANGED IN v2.2a (since v2.1)
+===============================================================
+
+REFINEMENT PROCESS:
+  1. PROJECT_BRIEF.md created for LLM analysis
+  2. Gap analysis from 4 LLMs: GPT, Claude chat, Deepseek, Kimi
+     → Files in gap analysis/ folder
+  3. User chose to keep master plan at full scope (no cuts)
+  4. Design spec written: docs/superpowers/specs/2026-04-15-master-plan-refinement-design.md
+  5. External architecture review → 15 additional fixes applied (v2.2a)
+  6. PROJECT_BRIEF.md, master-architecture.html, DEMO_GUIDE_v2.2.md all updated
+
+ADDITIONS TO MASTER PLAN (v2.2 + v2.2a):
+  NEW SPECS:
+    §34 — Observability & Operational Monitoring
+    §35 — Report Generation & Export
+    §36 — Golden Test Suite & Quality Assurance
+    NOTE: These 3 specs EXIST ONLY in the refinement design doc.
+    They have NOT been written as separate spec files yet.
+
+  SPEC MODIFICATIONS (not yet applied to source files):
+    §9 Heuristic KB — benchmark field (REQUIRED, quantitative OR qualitative), viewport_applicability
+    §7 Analyze Mode — perception quality gate (Step 1b), error recovery matrix, persona evaluation
+    §4 + §7 — cross_page_analyze node (pattern + consistency + funnel)
+    §11 + §26 — token-level cost accounting
+    §6 + §7 + §9 — mobile viewport (master plan only)
+    §6.14 — LLM rate limiting + failover policy
+    Browse subgraph — overlay dismissal step before perception
+
+  NEW GROUNDING RULE:
+    GR-012 — benchmark claims must match heuristic benchmark data
+
+  NEW TYPES:
+    PageSignals (lightweight cross-page accumulator, NOT full perceptions)
+    PersonaContext (persona-based evaluation)
+    DiscoveryStrategy (Sitemap / NavigationCrawl / Manual)
+    NotificationAdapter (email)
+    PatternFinding / ConsistencyFinding / FunnelFinding
+    ExecutiveSummary / ActionPlan / ActionPlanPhase
+    LLMCallRecord / AuditEvent / HeuristicHealthMetrics
+    GoldenTestCase
+
+  NEW TABLES:
+    llm_call_log — per-call cost tracking
+    audit_events — 22 event types for observability
+
+  NEW PHASE:
+    Phase 12 — Mobile Viewport (5 tasks, master plan only)
+    Phase 0b — Heuristic Authoring (PARALLEL with engineering)
 
 ===============================================================
 CURRENT STATE (April 2026)
 ===============================================================
 
-ARCHITECTURE:
+DOCUMENTATION (all committed to git):
+  docs/PROJECT_BRIEF.md (v2.2a, ~40KB)
+    → Complete LLM-readable project brief, 28 sections, all claims trace to REQ-IDs
+  docs/DEMO_GUIDE_v2.2.md (~25KB)
+    → 60-minute demo briefing with Say This / Show This / They'll Ask structure
+  docs/superpowers/specs/2026-04-15-master-plan-refinement-design.md (~35KB)
+    → Approved design spec with all 50 new tasks (T213-T262)
+  docs/specs/final-architecture/diagrams/master-architecture.html (v2.2a, ~245KB)
+    → Updated 10-tab interactive diagram
+  gap analysis/ (4 files, ~104KB)
+    → External LLM reviews that drove the refinement
+
+ARCHITECTURE FILES (NOT YET MODIFIED for v2.2/v2.2a):
   35 spec files in docs/specs/final-architecture/ (§01-§30 + §31 superseded + §32 superseded + §33 + §33a)
-  1 master diagram: docs/specs/final-architecture/diagrams/master-architecture.html (3800+ lines, 10 tabs)
-  7 archived diagrams in diagrams/archive/
+  IMPORTANT: The refinement changes are specified in the design doc but
+  HAVE NOT been applied to the individual spec files yet.
+  Next session MUST either:
+    (a) Apply refinement changes to §5, §7, §9, §11, §4, §6.14 and write new §34, §35, §36
+    (b) Treat the refinement design doc as the authoritative v2.2a spec overlay
+
   2 source-of-truth specs UNTOUCHED (canonical, never edit):
     - docs/specs/AI_Browser_Agent_Architecture_v3.1.md
     - docs/specs/AI_Analysis_Agent_Architecture_v1.0.md
 
 IMPLEMENTATION PLAN:
-  docs/specs/mvp/tasks-v2.md — 213 tasks across 11 phases (v2.1)
-
-DEMO GUIDE:
-  docs/specs/demo-guide.md — full walkthrough of master-architecture.html
-
-ARCHITECTURE REVIEW: COMPLETE
-  6 critical + 7 major + 4 minor issues found and ALL FIXED
-  Cross-section consistency verified across all 35 specs
-  MVP tasks synchronized with every architecture change
+  docs/specs/mvp/tasks-v2.md — 213 tasks across 11 phases (v2.1 — OUTDATED)
+  MUST be updated to tasks-v2.2.md with:
+    - Phase 12 added
+    - 50 new tasks T213-T262
+    - Phase 0b (parallel heuristic authoring) added
+    - Task count: 263 total
 
 ===============================================================
-SYSTEM SUMMARY (memorize these numbers)
+SYSTEM SUMMARY v2.2a (memorize these numbers)
 ===============================================================
 
 Architecture:   5 layers (Orchestration → Browser Agent → Analysis Engine → Data → Delivery)
-Tools:          28 total (23 browse + 5 analysis) + 3 composition output tools (§33)
-Heuristics:     100 (50 Baymard + 35 Nielsen + 15 Cialdini)
-Grounding:      11 rules (GR-001 through GR-011)
+Tools:          31 total (23 browse + 5 analysis + 3 composition output tools §33)
+Heuristics:     100 with REQUIRED benchmarks (quantitative or qualitative)
+                50 Baymard + 35 Nielsen + 15 Cialdini
+Grounding:      12 rules (GR-001 through GR-012)
+                GR-012 = benchmark claim validation
 Tiers:          3 reliability tiers (~42 Tier 1, ~42 Tier 2, ~16 Tier 3)
-Failure modes:  110 catalogued (12 browse + 10 analysis + 16 composition + 72 platform)
-Pipeline:       5-step: perceive → evaluate → self-critique → ground → annotate
+Failure modes:  110+ catalogued (browse, analysis, composition, platform)
+Pipeline:       5-step + Step 1b quality gate: perceive → QUALITY GATE → evaluate → self-critique → ground → annotate
 Filter:         3-layer hallucination filter: CoT (~50%) → Self-Critique (~30%) → Evidence Ground (~95%)
 Composition:    §33 — Browser Agent tools injected into Analysis Agent evaluate node
 Modes:          Interactive (default after Phase 11) + Static (budget, Phases 1-10 default)
-Phases:         11 phases, 213 tasks, ~17 weeks
+Cross-Page:     Pattern detection + consistency check + funnel analysis (Phase 8)
+Reports:        Executive summary + action plan (effort/impact quadrants) + PDF (§35)
+Observability:  Structured logging + audit_events + heuristic health + alerting (§34)
+Quality:        Golden test suite + offline mock mode (§36)
+Personas:       2-3 per business type, injected into evaluate (v2.2a)
+Phases:         12 phases, 263 tasks, ~21 weeks (aspirational)
 Cost:           $0.35/page (static) to $1.80/page (deep interactive)
+                Now with token-level accounting + pre-call budget gates
 
 Tech stack:     TypeScript 5.x, Node.js 22, Turborepo + pnpm
                 LangGraph.js, Playwright + stealth + ghost-cursor
@@ -53,6 +126,8 @@ Tech stack:     TypeScript 5.x, Node.js 22, Turborepo + pnpm
                 Hono 4.x, SSE, Next.js 15, shadcn/ui, Tailwind CSS
                 Clerk auth, Cloudflare R2, Docker (dev), Fly.io (prod)
                 Temporal (durable orchestration, Phase 6+)
+                Sharp (annotations), Playwright page.pdf() (reports)
+                Pino (structured logging), Resend/Postmark (notifications)
 
 ===============================================================
 WHAT TO READ (in priority order)
@@ -62,73 +137,111 @@ BEFORE ANY TASK — read these:
 
   1. THIS FILE (you're reading it)
 
-  2. docs/specs/mvp/tasks-v2.md
-     → 213 tasks (T001-T213) across 11 phases
-     → Find the NEXT uncompleted task
+  2. docs/PROJECT_BRIEF.md (v2.2a)
+     → Complete project brief, all 28 sections
+     → Every architectural decision and interface contract
+     → Start here for big-picture understanding
+
+  3. docs/superpowers/specs/2026-04-15-master-plan-refinement-design.md
+     → Design spec with all v2.2 + v2.2a additions
+     → Task IDs T213-T262 defined
+     → Authoritative for §34, §35, §36, and all modifications
+
+  4. docs/specs/mvp/tasks-v2.md
+     → 213 tasks (v2.1) — needs update to v2.2
+     → Find the NEXT uncompleted task (start with T001)
      → Each task has: dep, spec REQ-ID, file path, smoke test, acceptance
 
-  3. docs/specs/mvp/constitution.md
-     → Non-negotiable engineering rules (see RULES section below)
+  5. docs/specs/mvp/constitution.md
+     → Non-negotiable engineering rules
 
 FOR THE CURRENT TASK — read the relevant spec:
 
-  Phase 1-5 (Browse Agent, T001-T100):
+  Phase 0 (Setup + Golden Test Infra, T001-T005 + T252-T253):
+    → docs/specs/mvp/plan.md (monorepo structure)
+    → Design doc §2.3 for golden test infrastructure
+
+  Phase 0b (Heuristic Authoring, PARALLEL):
+    → This is a CRO team workstream, not engineering
+    → docs/specs/final-architecture/09-heuristic-kb.md (schema)
+    → Design doc §1.1 for benchmark requirements
+
+  Phase 1 (Perception + Overlay Dismissal, T006-T015 + T254, T255):
     → docs/specs/final-architecture/06-browse-mode.md
+    → Design doc §1.5 for overlay dismissal
     → Source: AI_Browser_Agent_Architecture_v3.1.md (canonical)
 
-  Phase 6 (Heuristic KB, T101-T112):
-    → docs/specs/final-architecture/09-heuristic-kb.md
-    → TWO-STAGE filtering: §9.6 REQ-HK-020a (business type in audit_setup) + REQ-HK-020b (page type in page_router)
+  Phase 2 (Tools + Behavior, T016-T050):
+    → docs/specs/final-architecture/06-browse-mode.md
+    → docs/specs/final-architecture/08-tool-manifest.md
+    → §33a ToolRegistry changes on T024
 
-  Phase 7 (Analysis Pipeline, T113-T134):
+  Phase 4 (Safety + Infra + Cost, T066-T080 + T224-T226 + T236-T238):
+    → docs/specs/final-architecture/11-safety-cost.md
+    → Design doc §1.3 for token-level cost accounting
+    → Design doc §1.7 for LLM rate limiting + failover
+
+  Phase 5 (Browse MVP, T081-T100):
+    → §33a external browser session injection on T081
+
+  Phase 6 (Heuristic KB + Benchmarks, T101-T112 + T213-T216):
+    → docs/specs/final-architecture/09-heuristic-kb.md
+    → Design doc §1.1 for benchmark schema
+    → TWO-STAGE filtering: filterByBusinessType + filterByPageType
+
+  Phase 7 (Analysis Pipeline + Quality + Personas, T113-T134 + T232-T235 + T250-T251 + T258-T259):
     → docs/specs/final-architecture/07-analyze-mode.md
-    → §33a: EvaluateStrategy pattern (StaticEvaluateStrategy default, InteractiveEvaluateStrategy Phase 11)
+    → Design doc §1.5 for perception quality gate
+    → Design doc §1.6 for analysis error recovery
+    → Design doc §1.2 cross-page intro + PersonaContext
     → Source: AI_Analysis_Agent_Architecture_v1.0.md (canonical)
 
-  Phase 8 (Orchestrator, T135-T155):
+  Phase 8 (Orchestrator + Cross-Page, T135-T155 + T217-T223 + T262):
     → docs/specs/final-architecture/04-orchestration.md
     → docs/specs/final-architecture/05-unified-state.md
+    → Design doc §1.2 for cross_page_analyze node
     → §33a: Session passing browse→analyze, restore_state node
 
-  Phase 9 (Master Foundations, T156-T175):
+  Phase 9 (Foundations + Observability + Reports, T156-T175 + T239-T249 + T256-T257 + T260-T261):
+    → Design doc §2.1 for §34 Observability
+    → Design doc §2.2 for §35 Report Generation
+    → Design doc for DiscoveryStrategy + NotificationAdapter (v2.2a)
     → docs/specs/final-architecture/18-trigger-gateway.md
     → docs/specs/final-architecture/25-reproducibility.md
     → docs/specs/final-architecture/24-two-store-pattern.md
-    → docs/specs/final-architecture/23-findings-engine-extended.md
 
   Phase 10 (State Exploration, T176-T192):
     → docs/specs/final-architecture/20-state-exploration.md
-    → docs/specs/final-architecture/07-analyze-mode.md §7.4a (per-state screenshots)
+    → docs/specs/final-architecture/07-analyze-mode.md §7.4a
 
   Phase 11 (Agent Composition, T193-T212):
     → docs/specs/final-architecture/33-agent-composition-model.md
     → docs/specs/final-architecture/33a-composition-integration.md
     → NOTE: §31 and §32 are SUPERSEDED by §33. Do NOT implement from §31/§32.
 
-CROSS-CUTTING SPECS (read when relevant):
-    → 03-architecture-layers.md — 5-layer contracts, REQ-LAYER-005 v3
-    → 08-tool-manifest.md — all 28 tools with TypeScript interfaces
-    → 11-safety-cost.md — safety classification, rate limits, cost model
-    → 13-data-layer.md — 25+ tables, RLS, R2, published_findings view
-    → 14-delivery-layer.md — MCP server, dashboards, SSE events
-    → 15-failure-modes.md — 110 failure modes
-    → 17-context-preservation.md — repo structure, adapter interfaces
-    → 21-workflow-orchestration.md — funnel traversal
-    → 26-cost-and-guardrails.md — budget enforcement, kill-switch
-    → 27-durable-orchestration.md — Temporal + LangGraph integration
+  Phase 12 (Mobile Viewport, T227-T231):
+    → Design doc §1.4 for mobile viewport support
+    → NOT MVP — deferred post-MVP
 
 VISUAL REFERENCE (open in browser during development):
-    → docs/specs/final-architecture/diagrams/master-architecture.html
+    → docs/specs/final-architecture/diagrams/master-architecture.html (v2.2a)
+    → 10 tabs: System, Browse Agent, Analysis, Composition, Heuristics,
+      State, Safety, Orchestration, Data & Delivery, Implementation
+
+DEMO PREP:
+    → docs/DEMO_GUIDE_v2.2.md
+    → 60-min structured demo with Q&A for REO Digital team
 
 ===============================================================
-NON-NEGOTIABLE RULES
+NON-NEGOTIABLE RULES (same as v2.1 + v2.2a additions)
 ===============================================================
 
 R1: SOURCE OF TRUTH
    Browse mode: AI_Browser_Agent_Architecture_v3.1.md
    Analyze mode: AI_Analysis_Agent_Architecture_v1.0.md
    Composition: 33-agent-composition-model.md
-   System: docs/specs/final-architecture/ (§01-§30 + §33 + §33a)
+   v2.2a additions: 2026-04-15-master-plan-refinement-design.md
+   System: docs/specs/final-architecture/ (§01-§30 + §33 + §33a + pending §34/35/36)
    If specs disagree: ASK USER. Don't pick arbitrarily.
 
 R2: TYPE SAFETY FIRST
@@ -140,6 +253,7 @@ R3: TEST-DRIVEN
    Write the test first, then implement
    Each task has a smoke test in tasks-v2.md
    NEVER disable a failing test
+   Golden tests (§36) are regression safety net — build incrementally
 
 R4: BROWSE MODE
    Tool names from v3.1 are EXACT (browser_get_state, NOT page_snapshot)
@@ -147,19 +261,20 @@ R4: BROWSE MODE
    Verify EVERY action — no exceptions
    Safety gate is CODE, not LLM judgment
    Browser session created by ORCHESTRATOR, not by browse graph (§33a REQ-COMP-PHASE5-001)
+   Overlay dismissal runs before perception (v2.2a)
 
 R5: ANALYZE MODE
    Findings are HYPOTHESES, not verdicts
    Three-layer filter: CoT → self-critique → evidence grounding
    Self-critique is a SEPARATE LLM call with DIFFERENT persona (SD-07)
    NEVER predict conversion impact (GR-007 enforces)
-   Two-stage heuristic filtering:
-     Stage 1: filterByBusinessType in audit_setup (100 → ~60-70)
-     Stage 2: filterByPageType in page_router (~60-70 → 15-20)
+   Two-stage heuristic filtering: filterByBusinessType + filterByPageType
+   Three-stage filtering when mobile active: + filterByViewport (Phase 12)
    Heuristics injected into USER MESSAGE, not system prompt
-   Evaluate node uses EvaluateStrategy pattern (§33a REQ-COMP-PHASE7-001):
-     StaticEvaluateStrategy = default (Phases 1-10)
-     InteractiveEvaluateStrategy = Phase 11
+   Benchmarks REQUIRED on all heuristics (v2.2)
+   Persona context injected into evaluate prompt (v2.2a)
+   Perception quality gate BEFORE evaluate (v2.2)
+   Evaluate node uses EvaluateStrategy pattern (§33a REQ-COMP-PHASE7-001)
 
 R6: HEURISTIC IP
    Heuristic content NEVER in API responses or dashboards
@@ -168,9 +283,10 @@ R6: HEURISTIC IP
    Redacted in LangSmith traces
 
 R7: LOOSE COUPLING
-   All external deps via adapters: LLMAdapter, StorageAdapter,
-     ScreenshotStorage, BrowserEngine, HeuristicLoader,
-     BrowserSessionManager (§33a), ToolRegistry (§33a)
+   All external deps via adapters:
+     LLMAdapter, StorageAdapter, ScreenshotStorage, BrowserEngine,
+     HeuristicLoader, BrowserSessionManager (§33a), ToolRegistry (§33a),
+     DiscoveryStrategy (v2.2a), NotificationAdapter (v2.2a)
    No direct imports of Anthropic SDK / Playwright / pg
      OUTSIDE adapter modules
 
@@ -179,7 +295,7 @@ R8: SPEC-DRIVEN DISCIPLINE
    When spec is unclear: ASK, don't invent
    Commit messages reference task ID + REQ-ID
 
-R9: §33 INTERFACE-FIRST (NEW)
+R9: §33 INTERFACE-FIRST
    These interfaces MUST be built in earlier phases, not bolted on later:
      Phase 2: ToolRegistry with getToolsForContext() — REQ-COMP-PHASE2-001
      Phase 4: SafetyContext with callingNode field — REQ-COMP-PHASE4-001
@@ -190,92 +306,85 @@ R9: §33 INTERFACE-FIRST (NEW)
    Static mode is the default. Interactive mode activates in Phase 11.
    If you're building Phase 2-8: check tasks-v2.md for §33a modifications.
 
-R10: REPRODUCIBILITY (NEW)
+R10: REPRODUCIBILITY
    temperature = 0 for: evaluate, evaluate_interactive, self_critique
    Reproducibility snapshot created by GATEWAY (§18), loaded by audit_setup
    Snapshot is IMMUTABLE after creation — mutation throws Error
    Same inputs → same outputs (deterministic grounding)
 
-===============================================================
-§33 AGENT COMPOSITION MODEL (critical context)
-===============================================================
+R11 (NEW v2.2): COST ACCOUNTABILITY
+   Every LLM call logged atomically to llm_call_log
+   Pre-call budget gate estimates cost before calling
+   Actual cost tracking, not estimates
+   Per-client attribution via audit_runs JOIN
 
-The analysis agent can use browser tools during evaluation (Phase 11).
-This changes fundamental interfaces — which is why §33a bakes them
-into earlier phases.
-
-KEY CONCEPTS:
-  - Browser Agent = reusable capability library (23 tools, stealth, verification)
-  - Analysis Agent = CRO domain expert (5-step pipeline, heuristic evaluation)
-  - Composition = tool injection (9 browser tools + 6 analysis tools during evaluate)
-  - Navigation tools EXCLUDED from analysis (navigate, go_back, go_forward, tab_manage)
-  - Sensitive actions BLOCKED during analysis
-  - REQ-LAYER-005 v3: analysis MAY use browser tools, SHALL NOT navigate
-
-DUAL-MODE EVALUATION:
-  Pass 1: Heuristic-driven (filtered heuristics, interactive CoT, scope split)
-  Pass 2: Open observation ("what did heuristics miss?", static-only, max 5, Tier 3)
-  Both feed → self-critique → evidence grounding → annotate
-
-TWO OPERATING MODES:
-  Interactive: browser tools during evaluate, Pass 2 enabled, 5-15 interactions/page
-  Static: single-shot evaluate, no browser tools, no Pass 2 (Phases 1-10 default)
-
-POST-AUDIT LIFECYCLE:
-  Two-store: INTERNAL (consultant sees all) + PUBLISHED (client sees approved only)
-  Warm-up: new clients → all findings held until ≥3 audits + <25% rejection
-  Learning: consultant decisions → calibration engine → improved future audits
-  Crystallization: approved open observations → candidate heuristics → KB growth
+R12 (NEW v2.2): QUALITY GATES
+   Perception quality gate before evaluate (skip/partial/proceed)
+   Analysis error recovery for every failure mode
+   No page silently dropped — every page gets a status
+   Golden test suite catches regressions in CI
 
 ===============================================================
-AUDIT LIFECYCLE (7 phases, the complete journey)
+AUDIT LIFECYCLE (7 phases, v2.2a complete journey)
 ===============================================================
 
 PHASE 1: TRIGGER & INITIALIZATION
   Trigger → Gateway validates → Reproducibility snapshot (temp=0) →
   Load client + heuristics (AES-256-GCM) → Stage 1 filter (business type) →
-  Discover pages → Build queue → Budget: $15 total, $5/page
+  Discover pages (SitemapDiscovery / NavigationCrawlDiscovery / ManualDiscovery) →
+  Build queue → Budget: $15 total, $5/page
 
 PHASE 2: PAGE LOOP (per page, max 50)
-  page_router → browse (navigate + stabilize + HITL if needed) →
+  page_router → browse (navigate + dismiss overlays + stabilize + HITL if needed) →
   [explore_states §20: Pass 1 heuristic-primed + Pass 2 bounded-exhaustive → StateGraph] →
   deep_perceive (page_analyze + screenshots + per-state screenshots) →
-  evaluate (interactive CoT or static, scope split: global/per_state/transition) →
+  perception_quality_gate (proceed ≥0.6 / partial 0.3-0.59 / skip <0.3) →
+  evaluate (interactive CoT or static, scope split: global/per_state/transition, benchmarks injected, personas injected) →
   Pass 2 open observation (static, max 5, Tier 3) →
   self_critique (SEPARATE call, 5 checks, KEEP/REVISE/DOWNGRADE/REJECT) →
-  evidence ground (11 rules, deterministic code, NO LLM) →
+  evidence ground (12 rules, deterministic code, NO LLM) →
   annotate + store → review gate (Tier 1 auto / Tier 2 24hr / Tier 3 held) →
-  restore_state → back to page_router
+  emit PageSignals for cross-page → restore_state → back to page_router
 
 PHASE 3: WORKFLOW (if funnel items in queue)
   Continuous session → per-step browse+analysis → cross-step synthesis
 
+PHASE 3b (v2.2): CROSS-PAGE ANALYSIS
+  Pattern detection (deterministic) → Consistency check (deterministic) →
+  Funnel analysis (1 LLM call, $1 cap)
+
 PHASE 4: COMPLETION
-  Summary → cross-page consistency → competitor comparison (pairwise) → version diff
+  Executive summary (score/grade/top 5/strengths) → Action plan (4 quadrants) →
+  Cross-page consistency → Competitor comparison (pairwise) → Version diff →
+  PDF report generation → Email notification (NotificationAdapter)
 
 PHASE 5: REVIEW GATE + TWO-STORE
   Internal store (all findings) → Tier routing → Warm-up override →
   Consultant review (approve/edit/reject) → Published store (client-visible)
 
 PHASE 6: DELIVERY
-  CLI + PostgreSQL (RLS) + R2 + MCP Server (9 tools) + Client Dashboard + Consultant Dashboard
+  CLI + PostgreSQL (RLS) + R2 + MCP Server (9 tools) + Client Dashboard +
+  Consultant Dashboard + Ops Dashboard (§34, admin) + PDF Export (§35)
 
 PHASE 7: LEARNING LOOP
   Consultant decisions → Calibration engine (30+ samples, reliability_delta) →
   Open observation crystallization → Overlay chain (base→brand→learned→client) →
-  Scheduled re-audits with version diff
+  Scheduled re-audits with version diff → Heuristic health metrics
 
 ===============================================================
-IMPLEMENTATION MILESTONES
+IMPLEMENTATION MILESTONES (v2.2a)
 ===============================================================
 
-Phase 0-4:   Foundation (setup, perception, tools, verification, safety)
+Phase 0-4:   Foundation (setup, perception, tools, verification, safety, cost, failover)
+             + PARALLEL Phase 0b: heuristic authoring starts Day 1
 Phase 5:     ★ BROWSE WORKS — agent navigates real sites
-Phase 6-7:   Analysis pipeline (heuristics + 5-step pipeline)
-Phase 8:     ★ MVP AUDIT — single-site audit end-to-end
-Phase 9:     Master foundations (gateway, reproducibility, two-store, scoring)
+Phase 6-7:   Analysis pipeline (heuristics with benchmarks + 5-step pipeline + personas + quality gate)
+Phase 8:     ★ MVP AUDIT — single-site audit end-to-end WITH cross-page analysis
+Phase 9:     ★ PLATFORM READY — observability, PDF reports, exec summary, action plan,
+             discovery strategies, notifications
 Phase 10:    State exploration (§20, per-state analysis)
 Phase 11:    ★ FULL PRODUCT — interactive composition (§33), the competitive moat
+Phase 12:    ★ MOBILE COMPLETE — dual-viewport audits (master plan only)
 
 §33a INTERFACE MODIFICATIONS (built into earlier phases):
   T024 (Phase 2): ToolRegistry
@@ -285,16 +394,57 @@ Phase 11:    ★ FULL PRODUCT — interactive composition (§33), the competitiv
   T127 (Phase 7): EvaluateStrategy pattern
   T143 (Phase 8): Session passing + restore_state
 
+v2.2a NEW TASK IDS: T213-T262 (50 new tasks)
+  T213-T216: Benchmark schema + authoring + GR-012
+  T217-T223: Cross-page analysis (pattern + consistency + funnel)
+  T224-T226: Token-level cost accounting
+  T227-T231: Mobile viewport (Phase 12)
+  T232-T233: Perception quality scoring
+  T234-T235: Analysis error recovery
+  T236-T238: LLM rate limiting + failover
+  T239-T244: §34 Observability (logging, events, metrics, alerts, dashboard)
+  T245-T249: §35 Executive summary + action plan + PDF reports
+  T250-T251: Golden test infrastructure
+  T252-T254: Offline mock mode + fixture capture
+  T255: Overlay dismissal step
+  T256-T257: DiscoveryStrategy adapter
+  T258-T259: Persona-based evaluation
+  T260-T261: NotificationAdapter + email
+  T262: Progressive funnel context injection
+
 ===============================================================
-WHAT I NEED FROM YOU NOW
+WHAT I NEED FROM YOU NOW (next session)
 ===============================================================
 
-1. Read tasks-v2.md — find the next uncompleted task (start with T001)
-2. Read the relevant spec for that task's phase
-3. Tell me which task you're picking up (cite T### ID)
-4. Confirm you understand the §33a interface requirements for that phase
-5. Wait for my approval before writing code
+THREE OPTIONS for what to tackle first:
 
-DO NOT start coding until I confirm. Ask if anything is unclear.
+OPTION A — Apply refinement to spec files:
+  1. Write §34-observability.md (new spec)
+  2. Write §35-report-generation.md (new spec)
+  3. Write §36-golden-test-suite.md (new spec)
+  4. Patch existing specs (§5, §7, §9, §11, §4, §6) with v2.2 + v2.2a changes
+  5. Update tasks-v2.md → tasks-v2.2.md with all 50 new tasks
+
+OPTION B — Start implementation:
+  1. Read tasks-v2.md — find T001
+  2. Read docs/specs/mvp/constitution.md
+  3. Initialize monorepo (T001)
+  4. Add golden test infrastructure (T252-T253) alongside T001
+
+OPTION C — Demo preparation:
+  1. Review docs/DEMO_GUIDE_v2.2.md
+  2. Rehearse walkthrough with master-architecture.html
+  3. Prepare Q&A responses
+
+RECOMMENDED PATH:
+  1. First: Option A step 5 (update tasks-v2.md) — blocking for implementation
+  2. Then: Option A steps 1-4 (write new specs) — good for documentation
+  3. Then: Option B (start implementation) — T001 onwards
+  4. In parallel: Phase 0b (CRO team starts authoring heuristics Day 1)
+
+DO NOT start coding until user confirms direction.
 DO NOT implement from §31 or §32 — they are SUPERSEDED by §33.
 DO check tasks-v2.md for §33a modifications on tasks T024, T066, T071, T081, T127, T143.
+DO reference design doc §1.x / §2.x for v2.2 + v2.2a additions.
+
+CURRENT IMPLEMENTATION: 0% complete. No source code exists yet.
