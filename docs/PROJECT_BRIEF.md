@@ -2,7 +2,7 @@
 
 > **Purpose:** Self-contained document for LLM analysis. Contains every architectural decision, data flow, interface contract, and implementation constraint. Nothing omitted.
 > **Status:** 0% implemented. 38 specs locked (§01-§36 + §33a). 263 tasks across 12 phases. ~21 weeks estimated.
-> **Version:** v2.2a — Refined from 4 independent LLM gap analyses + external architecture review.
+> **Version:** v2.3 (2026-04-17) — AnalyzePerception schema enriched with 14 consultant-grade signals (§07.9.1). Baseline v2.2a preserved; v2.3 is additive.
 > **Owner:** REO Digital (Indian digital agency). Product name: Neural.
 
 ---
@@ -253,7 +253,7 @@ Browse and analyze compiled as independent subgraphs, nested inside audit orches
 ## 10. ANALYSIS PIPELINE DETAIL
 
 ### Step 1: deep_perceive
-Single page.evaluate() call. Returns AnalyzePerception with: headingHierarchy, landmarks, semanticHTML, textContent (word count, readability, paragraphs), ctas (with bounding boxes, computed styles, contrast ratio), forms (field count, labels, validation), trustSignals, layout (fold position, visual hierarchy, whitespace), images (alt text, lazy load), navigation, performance (DOMContentLoaded, LCP).
+Single page.evaluate() call. Returns AnalyzePerception with baseline sections (headingHierarchy, landmarks, semanticHTML, textContent word count + readability + paragraphs, ctas with bounding boxes + computed styles + contrast ratio, forms with field count + labels + validation, trustSignals, layout with fold position + visual hierarchy + whitespace, images with alt text + lazy load, navigation, performance with DOMContentLoaded + LCP) PLUS v2.3 consultant-grade enrichments: full metadata (meta description, canonical, lang, OG tags, schema.org), structure.titleH1Match, textContent.valueProp + urgencyScarcityHits + riskReversalHits, ctas[].accessibleName + role + hover/focus styles, forms[].fields[].accessibleName + role, trustSignals[].subtype + source + attribution + freshnessDate + pixelDistanceToNearestCta, iframes[] with origin + purposeGuess (Stripe/YouTube/maps), navigation.footerNavItems, accessibility.keyboardFocusOrder + skipLinks, performance.INP + CLS + TTFB + timeToFirstCtaInteractable, inferredPageType.primary + alternatives[] with confidence. All extracted in the same single page.evaluate() call — no cost impact.
 
 Auto-detects page type from perception data.
 
@@ -609,13 +609,27 @@ visual?: {screenshotBase64, width, height}
 diagnostics: {consoleErrors, failedRequests, pendingMutations}
 ```
 
-### AnalyzePerception (Analysis Perception)
+### AnalyzePerception (Analysis Perception, v2.3 enriched)
 ```
-metadata, headingHierarchy, landmarks, semanticHTML, textContent,
-ctas (with boundingBox + computedStyles + contrastRatio),
-forms (with fields + validation info), trustSignals,
-layout (foldPosition + visualHierarchy + whitespaceRatio),
-images, navigation, performance (DOMContentLoaded + LCP)
+Baseline (v2.2a):
+  metadata, headingHierarchy, landmarks, semanticHTML, textContent,
+  ctas (with boundingBox + computedStyles + contrastRatio),
+  forms (with fields + validation info), trustSignals,
+  layout (foldPosition + visualHierarchy + whitespaceRatio),
+  images, navigation, performance (DOMContentLoaded + LCP)
+
+v2.3 additions (consultant-grade enrichments, all in the same page.evaluate() call):
+  metadata: +requestedUrl, metaDescription, canonical, lang, ogTags, schemaOrg
+  structure (new): titleH1Match, titleH1Similarity
+  textContent: +valueProp (H1+heroSub+firstPara), urgencyScarcityHits, riskReversalHits
+  ctas: +accessibleName, role, hoverStyles, focusStyles
+  forms.fields: +accessibleName, role
+  trustSignals: +subtype, source, attribution, freshnessDate, pixelDistanceToNearestCta
+  iframes (new): src, origin, isCrossOrigin, boundingBox, isAboveFold, purposeGuess
+  navigation: +footerNavItems
+  accessibility (new): keyboardFocusOrder, skipLinks
+  performance: +INP, CLS, TTFB, timeToFirstCtaInteractable
+  inferredPageType (new): primary + alternatives[{type, confidence}] + signalsUsed
 ```
 
 ### Finding Lifecycle

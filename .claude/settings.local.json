@@ -27,7 +27,12 @@
       "Bash(find /c/Sabari/Neural/NBA -type f -exec ls -la {} \\\\;)",
       "Bash(find /c/Sabari/Neural/NBA -type f -not -path '*/.git/*' -exec ls -la {} \\\\;)",
       "Bash(sort -k5 -rn)",
-      "Bash(find /c/Sabari/Neural/NBA -type f -not -path '*/.git/*' -exec du -ch {} +)"
+      "Bash(find /c/Sabari/Neural/NBA -type f -not -path '*/.git/*' -exec du -ch {} +)",
+      "Bash(wc -l docs/specs/final-architecture/*.md)",
+      "WebFetch(domain:github.com)",
+      "Bash(sed -i 's|docs/specs/mvp/PRD-mvp-v1\\\\.md|docs/specs/mvp/PRD.md|g; s|`PRD-mvp-v1\\\\.md`|`PRD.md`|g; s|`mvp-plan-v1\\\\.md`|Spec Kit `plan.md`|g; s|`tasks-mvp-v1\\\\.md`|Spec Kit `tasks.md`|g; s|mvp-plan-v1\\\\.md|plan.md|g; s|tasks-mvp-v1\\\\.md|tasks.md|g' CLAUDE.md)",
+      "Bash(sed -n '13,22p' CLAUDE.md)",
+      "Bash(git add *)"
     ]
   }
 }

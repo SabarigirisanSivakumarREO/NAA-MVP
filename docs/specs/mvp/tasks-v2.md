@@ -186,9 +186,10 @@
 ### T047: page_annotate_screenshot
 - **acceptance:** Sharp-based, severity colors, overlap avoidance.
 
-### T048: page_analyze
-- **spec:** REQ-TOOL-PA-001
-- **acceptance:** Single page.evaluate(), returns full AnalyzePerception.
+### T048: page_analyze [MOD v2.3]
+- **spec:** REQ-TOOL-PA-001 + REQ-ANALYZE-PERCEPTION-V23-001
+- **v2.3 changes:** `sections[]` union extended with `metadata_full`, `iframes`, `accessibility`, `page_type` (4 new sections). Implementation populates 14 v2.3 enrichment fields within the same single `page.evaluate()` call — no extra round-trips, no cost impact. See §07.9.1 for full enrichment list: metadata merge (description/canonical/lang/OG/schema.org), structure.titleH1Match, textContent.valueProp + urgencyScarcityHits + riskReversalHits, ctas[].accessibleName + role + hover/focus styles, forms[].fields[].accessibleName + role, trustSignals[].subtype + source + attribution + freshnessDate + pixelDistanceToNearestCta, iframes[] with purposeGuess, navigation.footerNavItems, accessibility.keyboardFocusOrder + skipLinks, performance.INP + CLS + TTFB + timeToFirstCtaInteractable, inferredPageType.primary + alternatives[].
+- **acceptance:** Single page.evaluate(), returns full AnalyzePerception with all baseline + 14 v2.3 fields populated. Unit tests for each v2.3 field on fixture pages.
 
 ### T049: RateLimiter
 - **spec:** REQ-BROWSE-RATE-001..002
@@ -319,9 +320,20 @@
 
 ---
 
-## Phase 7: Analysis Pipeline (T113-T134) — UNCHANGED
+## Phase 7: Analysis Pipeline (T113-T134) — T114, T117 MODIFIED v2.3
 
-### T113-T134: All tasks unchanged. AnalysisState, detectPageType, assignConfidenceTier, CostTracker, DeepPerceiveNode, EvaluateNode, SelfCritiqueNode, 8 Grounding Rules, EvidenceGrounder, AnnotateNode, StoreNode, AnalysisGraph, Phase 7 integration test.
+### T113, T115, T116, T118-T134: unchanged. AnalysisState, assignConfidenceTier, CostTracker, EvaluateNode, SelfCritiqueNode, 8 Grounding Rules, EvidenceGrounder, AnnotateNode, StoreNode, AnalysisGraph, Phase 7 integration test.
+
+### T114: detectPageType [MOD v2.3]
+- **spec:** REQ-ANALYZE-V23-001
+- **v2.3 changes:** Return type changes from `PageType` (enum) to `{primary: PageType, alternatives: Array<{type: PageType, confidence: number}>, signalsUsed: {...}}`. Scoring weights: URL keywords × 0.4 + CTA texts × 0.3 + form signals × 0.2 + schema.org × 0.1. Result stored in `AnalyzePerception.inferredPageType`.
+- **Backward compatibility:** expose `.primary` accessor for call sites that only need the enum.
+- **acceptance:** Ranked list with confidence scores; primary matches the pre-v2.3 enum result on all test fixtures.
+
+### T117: DeepPerceiveNode [MOD v2.3]
+- **spec:** REQ-ANALYZE-NODE-001 + REQ-ANALYZE-PERCEPTION-V23-001
+- **v2.3 changes:** Calls extended `page_analyze` with the 4 new sections (`metadata_full`, `iframes`, `accessibility`, `page_type`) alongside the baseline 9. Consumes enriched AnalyzePerception (all 14 v2.3 fields populated). `current_page_type` derived from `AnalyzePerception.inferredPageType.primary`.
+- **acceptance:** AnalyzePerception returned from DeepPerceiveNode has all baseline + v2.3 fields populated on 3 test pages (checkout, PDP, homepage).
 
 ---
 

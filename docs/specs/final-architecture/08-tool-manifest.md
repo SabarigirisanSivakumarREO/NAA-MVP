@@ -254,11 +254,24 @@ export interface AnalysisMCPServer {
     annotatedImageBase64: string;
   }>;
 
-  // Tool 28: Comprehensive page scan
+  // Tool 28: Comprehensive page scan (v2.3 enriched — see §07.9 AnalyzePerception)
   page_analyze(params: {
     sections: Array<
-      "structure" | "content" | "ctas" | "forms" |
-      "trust" | "layout" | "images" | "navigation" | "performance"
+      // Baseline sections (v1.0)
+      | "structure"       // headingHierarchy, landmarks, semanticHTML, titleH1Match (v2.3)
+      | "content"         // textContent incl. valueProp + urgencyScarcityHits + riskReversalHits (v2.3)
+      | "ctas"            // incl. accessibleName, role, hoverStyles, focusStyles (v2.3)
+      | "forms"           // incl. accessibleName + role on fields (v2.3)
+      | "trust"           // incl. subtype, source, attribution, freshnessDate, pixelDistanceToNearestCta (v2.3)
+      | "layout"
+      | "images"
+      | "navigation"      // incl. footerNavItems (v2.3)
+      | "performance"     // incl. INP, CLS, TTFB, timeToFirstCtaInteractable (v2.3)
+      // v2.3 new sections
+      | "metadata_full"   // v2.3: merges browser_get_metadata output (description, canonical, lang, ogTags, schemaOrg)
+      | "iframes"         // v2.3: enumerated iframes with origin + purpose guess
+      | "accessibility"   // v2.3: keyboardFocusOrder, skipLinks
+      | "page_type"       // v2.3: inferredPageType with primary + alternatives[] + confidence
     >;
   }): Promise<AnalyzePerception>;
 }

@@ -925,25 +925,31 @@ function calculateAnnotationPositions(
 
 ## 7.9 AnalyzePerception Schema
 
-**REQ-ANALYZE-PERCEPTION-001:**
+**REQ-ANALYZE-PERCEPTION-001** (baseline) **+ REQ-ANALYZE-PERCEPTION-V23-001** (v2.3 consultant-grade enrichments):
 
 ```typescript
 interface AnalyzePerception {
   metadata: {
-    url: string;
+    url: string;                                       // final URL after redirects
+    requestedUrl: string;                              // v2.3: URL as originally requested
     title: string;
+    metaDescription: string | null;                    // v2.3: <meta name="description">
+    canonical: string | null;                          // v2.3: <link rel="canonical">
+    lang: string | null;                               // v2.3: <html lang>
+    ogTags: Record<string, string>;                    // v2.3: og:title, og:description, og:image, og:type, etc.
+    schemaOrg: Record<string, unknown>[];              // v2.3: JSON-LD + microdata
     timestamp: number;
     viewport: { width: number; height: number };
   };
 
   headingHierarchy: Array<{
-    level: number;                     // 1-6
-    text: string;                      // truncated to 100 chars
+    level: number;                                     // 1-6
+    text: string;                                      // truncated to 100 chars
     isAboveFold: boolean;
   }>;
 
   landmarks: Array<{
-    role: string;                      // "navigation", "main", "footer"
+    role: string;                                      // "navigation", "main", "footer"
     label: string;
   }>;
 
@@ -955,15 +961,40 @@ interface AnalyzePerception {
     tableCount: number;
   };
 
+  // v2.3: new top-level structure derivation section
+  structure: {
+    titleH1Match: boolean;                             // does <title> semantically match first <h1>?
+    titleH1Similarity: number;                         // 0.0-1.0 cosine or Jaccard on tokens
+  };
+
   textContent: {
     wordCount: number;
-    readabilityScore: number;          // Flesch-Kincaid
+    readabilityScore: number;                          // Flesch-Kincaid
     primaryLanguage: string;
     paragraphs: Array<{ text: string; position: "above_fold" | "below_fold" }>;
+
+    // v2.3 additions
+    valueProp: {                                       // extracted value-prop candidates
+      h1: string | null;
+      heroSubheading: string | null;                   // first <h2> or hero subtitle above fold
+      firstParagraph: string | null;                   // first paragraph of main content
+    };
+    urgencyScarcityHits: Array<{                       // pattern matches: "limited time", "only N left", "ends in HH:MM", "N viewing now"
+      pattern: string;
+      match: string;
+      boundingBox?: { x: number; y: number; width: number; height: number };
+    }>;
+    riskReversalHits: Array<{                          // pattern matches: "money-back", "free returns", "N-day guarantee", "no commitment"
+      pattern: string;
+      match: string;
+      boundingBox?: { x: number; y: number; width: number; height: number };
+    }>;
   };
 
   ctas: Array<{
     text: string;
+    accessibleName: string | null;                     // v2.3: from AX-tree (aria-label, aria-labelledby, or computed name)
+    role: string | null;                               // v2.3: computed ARIA role
     type: "primary" | "secondary" | "tertiary";
     isAboveFold: boolean;
     boundingBox: { x: number; y: number; width: number; height: number };
@@ -974,6 +1005,18 @@ interface AnalyzePerception {
       padding: string;
       contrastRatio: number;
     };
+    // v2.3: pseudo-class computed styles (via CSS matching, no real interaction required)
+    hoverStyles: {
+      backgroundColor: string;
+      color: string;
+      contrastRatio: number;
+    } | null;
+    focusStyles: {
+      backgroundColor: string;
+      color: string;
+      contrastRatio: number;
+      outlineVisible: boolean;                         // outline-width > 0 and outline-color visible
+    } | null;
     surroundingContext: string;
   }>;
 
@@ -985,6 +1028,8 @@ interface AnalyzePerception {
       type: string;
       label: string;
       hasLabel: boolean;
+      accessibleName: string | null;                   // v2.3: AX-tree merge
+      role: string | null;                             // v2.3: computed ARIA role
       isRequired: boolean;
       hasValidation: boolean;
       hasErrorMessage: boolean;
@@ -996,9 +1041,16 @@ interface AnalyzePerception {
 
   trustSignals: Array<{
     type: "review" | "badge" | "testimonial" | "guarantee" | "security" | "social_proof";
+    subtype: "payment" | "security_certification" | "industry_cert" | "customer_review" | "expert_endorsement" | "press_mention" | "aggregate_rating" | "other";  // v2.3
     text: string;
     isAboveFold: boolean;
     boundingBox: { x: number; y: number; width: number; height: number };
+
+    // v2.3 additions
+    source: "third_party" | "self_claimed" | "unknown";             // third-party iff sourced from external verifiable source (Trustpilot, schema.org AggregateRating, etc.)
+    attribution: string | null;                                     // "4.7 stars on Trustpilot", "ISO 27001 certified", etc.
+    freshnessDate: string | null;                                   // ISO date — e.g., date of review, date of certification
+    pixelDistanceToNearestCta: number | null;                       // Euclidean distance in pixels from trust signal center to nearest CTA center
   }>;
 
   layout: {
@@ -1019,11 +1071,37 @@ interface AnalyzePerception {
     isLazyLoaded: boolean;
   }>;
 
+  // v2.3: iframes are a distinct concern from images (embedded third-party content)
+  iframes: Array<{
+    src: string;
+    origin: string;
+    isCrossOrigin: boolean;
+    boundingBox: { x: number; y: number; width: number; height: number };
+    isAboveFold: boolean;
+    purposeGuess: "checkout" | "video" | "map" | "chat" | "antibot" | "analytics" | "social_embed" | "other";  // heuristic: stripe.com → checkout, youtube.com → video, maps.google → map, recaptcha → antibot, etc.
+  }>;
+
   navigation: {
     primaryNavItems: Array<{ text: string; url: string; isActive: boolean }>;
     breadcrumbs: string[];
+    footerNavItems: Array<{ text: string; url: string; section: string | null }>;  // v2.3
     hasSearch: boolean;
     hasMobileMenu: boolean;
+  };
+
+  // v2.3: new top-level accessibility section
+  accessibility: {
+    keyboardFocusOrder: Array<{                        // enumeration of [tabindex], button, a, input, select, textarea in tab order
+      selector: string;
+      role: string | null;
+      accessibleName: string | null;
+      tabindex: number;
+    }>;
+    skipLinks: Array<{                                 // anchors to #main, #content, etc., positioned in top 100px
+      text: string;
+      target: string;
+      isVisible: boolean;                              // not hidden via display:none or positioned off-screen
+    }>;
   };
 
   performance: {
@@ -1032,6 +1110,12 @@ interface AnalyzePerception {
     resourceCount: number;
     totalTransferSize: number;
     largestContentfulPaint?: number;
+
+    // v2.3 additions — Core Web Vitals + CRO-specific metric
+    interactionToNextPaint?: number;                   // INP (via PerformanceObserver)
+    cumulativeLayoutShift?: number;                    // CLS (via PerformanceObserver)
+    timeToFirstByte?: number;                          // TTFB (performance.timing.responseStart - navigationStart)
+    timeToFirstCtaInteractable?: number;               // CRO-specific: timestamp when first CTA has non-zero bounding box + intersects viewport
   };
 
   // v2.2 Addition
@@ -1040,8 +1124,49 @@ interface AnalyzePerception {
     height: number;
     device_type: "desktop" | "mobile";
   };
+
+  // v2.3: replaces the separate detectPageType() return value; now attached directly to perception
+  inferredPageType: {
+    primary: PageType;
+    alternatives: Array<{
+      type: PageType;
+      confidence: number;                              // 0.0-1.0
+    }>;
+    signalsUsed: {                                     // for transparency + grounding
+      urlKeywords: string[];
+      ctaTexts: string[];
+      formSignals: string[];
+      schemaOrgTypes: string[];
+    };
+  };
 }
 ```
+
+### 7.9.1 v2.3 Enrichment Summary
+
+Added in v2.3 (2026-04-17) — consultant-grade perception signals merged from MVP v1.0 work back into master plan:
+
+**Rationale:** Close real spec defects (accessibility primitives missing, iframes not modeled, CWV INP/CLS/TTFB absent, trust signal provenance shallow, Cialdini heuristics lacked pattern-detection inputs, page type classification had no confidence score per checklist gap G6.2). All extractions happen inside the same single `page.evaluate()` call — REQ-TOOL-PA-001 unchanged; zero cost impact.
+
+| Section | v2.3 additions |
+|---|---|
+| `metadata` | `requestedUrl`, `metaDescription`, `canonical`, `lang`, `ogTags`, `schemaOrg` (merged from `browser_get_metadata`) |
+| `structure` (new) | `titleH1Match`, `titleH1Similarity` |
+| `textContent` | `valueProp` (H1 + hero subheading + first paragraph), `urgencyScarcityHits[]`, `riskReversalHits[]` |
+| `ctas[]` | `accessibleName`, `role`, `hoverStyles`, `focusStyles` (via CSS pseudo-class matching, no interaction) |
+| `forms[].fields[]` | `accessibleName`, `role` |
+| `trustSignals[]` | `subtype`, `source`, `attribution`, `freshnessDate`, `pixelDistanceToNearestCta` |
+| `iframes` (new top-level) | `src`, `origin`, `isCrossOrigin`, `boundingBox`, `isAboveFold`, `purposeGuess` |
+| `navigation` | `footerNavItems[]` |
+| `accessibility` (new top-level) | `keyboardFocusOrder[]`, `skipLinks[]` |
+| `performance` | `interactionToNextPaint`, `cumulativeLayoutShift`, `timeToFirstByte`, `timeToFirstCtaInteractable` |
+| `inferredPageType` (new top-level) | `primary + alternatives[]` with confidence scores; replaces bare `detectPageType()` return |
+
+**Backward compatibility:** All v2.3 fields are additive. No baseline field removed or renamed. Existing code that reads baseline fields continues to work.
+
+**Tooling impact:** `page_analyze` implementation (§08.4) extends to populate new fields within the same `page.evaluate()` call. `detectPageType()` (§07.4) return type changes from `PageType` to `AnalyzePerception.inferredPageType`.
+
+**Grounding impact:** New grounding opportunities — benchmarks on INP/CLS/TTFB (v2.3 Core Web Vitals heuristics), trust-signal provenance checks, accessibility baseline checks. GR-001..GR-012 unchanged; new rules (GR-013+) may be added as heuristics authored against new fields.
 
 ---
 

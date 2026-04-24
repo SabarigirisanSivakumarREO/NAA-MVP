@@ -4,6 +4,8 @@
 
 > **For Claude Code:** These rules are mandatory. They override convenience, speed, or your own preferences. If a task seems to require breaking a rule, STOP and ask the user.
 
+> **Opening principle (v1.1 — 2026-04-22):** **This Constitution is a control system, not documentation.** Specifications govern AI behavior + system evolution. Every rule here exists because violating it produces unreliable or unmaintainable systems at scale. When in doubt: obey the rule, ask for override with rationale in the PR body.
+
 ---
 
 ## 1. Source of Truth
@@ -244,3 +246,124 @@ Stop and ask the user when:
 - Implementation diverges from the spec
 
 It is ALWAYS better to ask than to silently invent.
+
+---
+
+## 17. Spec Lifecycle States (v1.1)
+
+**RULE 17.1:** Every spec artifact (PRD, spec.md, plan.md, tasks.md, design doc, checklist, rollup, impact) SHALL carry an explicit `status:` field in its frontmatter. No artifact is ambiguous about whether it is current, under review, or obsolete.
+
+**Allowed states:**
+- `draft` — being written; not approved; do not use as authoritative
+- `validated` — reviewed by owner; content verified; awaiting approval
+- `approved` — approved for use; informs implementation
+- `implemented` — code exists; implementation landed
+- `verified` — conformance tests pass; in production use
+- `superseded` — replaced by newer version; reference only
+- `archived` — historical; do not use
+
+**RULE 17.2:** An artifact in state `superseded` or `archived` SHALL reference its successor (`supersededBy: <path>`). Readers encountering one SHALL follow the pointer rather than reading stale content.
+
+**RULE 17.3:** Claude Code and human readers SHALL skip artifacts in states `draft`, `superseded`, or `archived` when loading context for implementation tasks, unless explicitly instructed otherwise.
+
+**RULE 17.4:** State transitions SHALL be explicit:
+- `draft → validated`: owner (author) marks after self-review
+- `validated → approved`: PR approval by product owner or engineering lead
+- `approved → implemented`: commit references the artifact's REQ-IDs
+- `implemented → verified`: conformance tests green + acceptance test pass
+- `verified → superseded`: a new version replaces it (commit references `supersedes:`)
+
+**RULE 17.5:** Frontmatter is YAML between `---` fences at the top of any Markdown artifact. Template in `docs/specs/mvp/templates/frontmatter-lifecycle.template.md`.
+
+---
+
+## 18. Delta-Based Updates (v1.1)
+
+**RULE 18.1:** Every spec update SHALL include an explicit `delta` section in frontmatter or changelog enumerating:
+- `new:` — content added
+- `changed:` — content modified (with rationale)
+- `impacted:` — downstream artifacts affected (with cross-references)
+- `unchanged:` — major sections preserved (to reassure readers)
+
+**RULE 18.2:** No silent edits. A commit that modifies a spec file without a `delta` entry in changelog + frontmatter SHALL be rejected in PR review.
+
+**RULE 18.3:** Delta entries are append-only. When a v1.1 change supersedes a v1.0 delta, both remain in the changelog — v1.0 marked `superseded by v1.1`.
+
+**RULE 18.4:** For cross-cutting changes (touching ≥ 3 artifacts), the primary spec SHALL also carry an `impact:` pointer to an `impact.md` file (see Rule 20).
+
+---
+
+## 19. Rollup per Phase (v1.1)
+
+**RULE 19.1:** At the end of every implementation phase (per `tasks-mvp-v1.md` phase exit criteria), a `phase-N-current.md` rollup SHALL be produced BEFORE the next phase begins.
+
+**RULE 19.2:** A rollup captures the compressed current state after a phase:
+- Active modules introduced
+- Data contracts now in effect
+- System flows now operational
+- Known limitations carried forward
+- Open risks for next phase
+
+Template: `docs/specs/mvp/templates/phase-rollup.template.md`.
+
+**RULE 19.3:** Phase N+1 implementation SHALL read `phase-N-current.md` FIRST (rollup) rather than loading all Phase N artifacts. Full phase artifacts are reference material; rollup is the operational baseline.
+
+**RULE 19.4:** Rollups are `approved` state immediately after phase exit; they transition to `verified` when Phase N+1 begins and to `superseded` when phase N+1 produces its own rollup. Earlier phase rollups remain `verified` as part of the system history.
+
+**RULE 19.5:** Rollup size cap: 300 lines (~3000 tokens). If the system state exceeds this, split by subsystem (e.g., `phase-N-browser-current.md` + `phase-N-analysis-current.md`) rather than bloating one file.
+
+---
+
+## 20. Impact Analysis Before Cross-Cutting Changes (v1.1)
+
+**RULE 20.1:** Any change that modifies a shared contract SHALL be preceded by an `impact.md` analysis committed in the same PR. Shared contracts include:
+- `AnalyzePerception` schema (§07.9)
+- `PageStateModel` schema (§06)
+- `AuditState` (§05)
+- `Finding` lifecycle types (§07, §23)
+- Any adapter interface (`LLMAdapter`, `StorageAdapter`, `ScreenshotStorage`, `BrowserEngine`, `HeuristicLoader`, `NotificationAdapter`, `DiscoveryStrategy`)
+- Database schema (`findings`, `audit_runs`, `llm_call_log`, `audit_events`, etc.)
+- MCP tool interfaces (§08)
+- Grounding rule interfaces (GR-001 through GR-012)
+
+**RULE 20.2:** An `impact.md` SHALL document:
+- **Affected modules:** list with file paths
+- **Affected contracts:** data contracts touched; before/after shapes
+- **Breaking changes:** yes/no + migration steps
+- **Migration plan:** concrete steps, in order, to roll the change out
+- **Risk level:** low / medium / high + rationale
+- **Verification:** which conformance tests guard this change
+
+Template: `docs/specs/mvp/templates/impact.template.md`.
+
+**RULE 20.3:** For additive-only changes (new fields with defaults; new adapter implementations; new grounding rules), `impact.md` SHALL state `breaking: false` + `migration: none required` but still exist. The discipline of producing it is the rule; the content may be short.
+
+**RULE 20.4:** For breaking changes, `impact.md` SHALL be reviewed and approved BEFORE any implementation PR. Breaking-change PRs without an approved `impact.md` SHALL be rejected.
+
+---
+
+## 21. Traceability Matrix (v1.1)
+
+**RULE 21.1:** A central traceability matrix (`docs/specs/mvp/spec-to-code-matrix.md`) SHALL map every REQ-ID to:
+- Spec file + section
+- Implementation file(s) + line ranges (if implemented)
+- Test file(s) covering this requirement
+- Status: spec-only / implemented / verified
+
+**RULE 21.2:** The matrix SHALL be auto-generated by `pnpm spec:matrix` — not hand-maintained. Script scans:
+- All Markdown files under `docs/specs/` for `REQ-\w+-\d+` patterns → source
+- All TypeScript source files for `// REQ-\w+-\d+` inline references → implementation
+- All test files for `// REQ-\w+-\d+` references → coverage
+- Git log / conformance suite results → status
+
+**RULE 21.3:** CI SHALL run `pnpm spec:matrix --check` on every PR. If a REQ-ID is referenced in a spec but has no implementation reference (and the task is marked `implemented` or later), CI fails with a clear gap report.
+
+**RULE 21.4:** Claude Code SHALL reference REQ-IDs in comments when implementing a spec requirement:
+
+```typescript
+// REQ-GROUND-007: NEVER predict conversion impact
+// Implements rule GR-007 from §07.7. Deterministic regex check; no LLM.
+export function groundGR007(...) { ... }
+```
+
+**RULE 21.5:** The matrix is read-only reference — never edited by hand. Changes to the matrix come from updating the underlying specs or code, then re-running the generation script.
