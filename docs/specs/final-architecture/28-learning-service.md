@@ -1,3 +1,16 @@
+---
+title: 28-learning-service
+artifact_type: architecture-spec
+status: approved
+loadPolicy: on-demand-only
+version: 2.3
+updated: 2026-04-24
+governing_rules:
+  - Constitution R17 (Lifecycle States)
+  - Constitution R22 (The Ratchet)
+note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+---
+
 # Section 28 — Learning Service (Deferred Contract)
 
 **Status:** Contract reserved. Implementation Phase 12. Data collection starts Phase 6 (consultant decisions are stored from day 1).

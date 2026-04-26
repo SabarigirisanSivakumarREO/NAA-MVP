@@ -32,7 +32,18 @@
       "WebFetch(domain:github.com)",
       "Bash(sed -i 's|docs/specs/mvp/PRD-mvp-v1\\\\.md|docs/specs/mvp/PRD.md|g; s|`PRD-mvp-v1\\\\.md`|`PRD.md`|g; s|`mvp-plan-v1\\\\.md`|Spec Kit `plan.md`|g; s|`tasks-mvp-v1\\\\.md`|Spec Kit `tasks.md`|g; s|mvp-plan-v1\\\\.md|plan.md|g; s|tasks-mvp-v1\\\\.md|tasks.md|g' CLAUDE.md)",
       "Bash(sed -n '13,22p' CLAUDE.md)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git check-ignore *)",
+      "WebFetch(domain:addyosmani.com)",
+      "Bash(find /c/Sabari/Neural/NBA/.claude/skills/neural-dev-workflow/ -type f -exec echo \"  {}\" \\\\;)",
+      "Bash(sed -i '1382,1696d' /c/Sabari/Neural/NBA/docs/specs/mvp/PRD.md)",
+      "Bash(sed -n '1378,1390p' /c/Sabari/Neural/NBA/docs/specs/mvp/PRD.md)",
+      "Bash(sed -i '1260,1482d' /c/Sabari/Neural/NBA/docs/specs/mvp/PRD.md)",
+      "Bash(sed -n '1255,1265p' /c/Sabari/Neural/NBA/docs/specs/mvp/PRD.md)",
+      "Read(//c/Sabari/Neural//**)",
+      "Bash(git -C /c/Sabari/Neural/NBA status --short --untracked-files=all)",
+      "Bash(git -C /c/Sabari/Neural/NBA check-ignore -v .env)"
     ]
   }
 }

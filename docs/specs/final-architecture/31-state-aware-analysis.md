@@ -1,3 +1,16 @@
+---
+title: 31-state-aware-analysis
+artifact_type: architecture-spec
+status: approved
+loadPolicy: on-demand-only
+version: 2.3
+updated: 2026-04-24
+governing_rules:
+  - Constitution R17 (Lifecycle States)
+  - Constitution R22 (The Ratchet)
+note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+---
+
 # Section 31 — State-Aware Analysis Architecture
 
 **Status:** Architectural extension. Addresses the gap between state exploration (§20) and analysis (§7): the current merged-view analysis misses state-dependent issues. This section redesigns the analysis pipeline to support per-state evaluation.

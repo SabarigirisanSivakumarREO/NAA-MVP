@@ -14,7 +14,7 @@ generated_by: pnpm spec:index    # Auto-regenerated — DO NOT HAND-EDIT
 
 # Phases Index — Neural MVP v1.0
 
-> **Summary (~100 tokens):** Master index of the 9 implementation phases + Phase 0b parallel workstream. Load this file first when starting or picking up a task. Do NOT load all phase files — use the decision table to find the one you need.
+> **Summary (~100 tokens):** Master index of MVP phases — Phase 0 (Setup), Phase 0b (LLM-assisted heuristic authoring, engineering-owned), then sequential phases 1 → 9. Load this file first when starting or picking up a task. Do NOT load all phase files — use the decision table to find the one you need. Phase 0b runs after Phase 0 (depends on monorepo + heuristics-repo/ scaffold) and BLOCKS Phase 6.
 
 > **Rule:** When working on a task, read this index, identify the phase, then load only `phase-<N>-<name>/README.md` + `spec.md` + `tasks.md` for that phase (plus cited REQ-IDs from architecture specs).
 
@@ -25,7 +25,7 @@ generated_by: pnpm spec:index    # Auto-regenerated — DO NOT HAND-EDIT
 | Phase | Name | Status | Tasks | Folder | Depends on | Blocks |
 |---|---|---|---|---|---|---|
 | 0 | Setup | ⚪ not started | M0.1-M0.5 | `phase-0-setup/` | — | 1 |
-| 0b | Heuristic Authoring (CRO parallel) | ⚪ not started | Week 1-4 milestones | `phase-0b-heuristics/` | — | 6 |
+| 0b | Heuristic Authoring (LLM-assisted, engineering-owned) | ⚪ not started | T-NNN range pending PRD F-012 task expansion | `phase-0b-heuristics/` | 0 | 6 |
 | 1 | Browser Perception Foundation | ⚪ not started | M1.1-M1.10 | `phase-1-perception/` | 0 | 2, 5 |
 | 2 | MCP Tools (subset) | ⚪ not started | M2.1-M2.20 | `phase-2-tools/` | 1 | 5 |
 | 3 | Verification (thin) | ⚪ not started | M3.1-M3.8 | `phase-3-verification/` | 2 | 5 |

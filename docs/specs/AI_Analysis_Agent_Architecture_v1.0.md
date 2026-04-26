@@ -1,3 +1,16 @@
+---
+title: AI_Analysis_Agent_Architecture_v1.0
+artifact_type: architecture-spec
+status: approved
+loadPolicy: on-demand-only
+version: 2.3
+updated: 2026-04-24
+governing_rules:
+  - Constitution R17 (Lifecycle States)
+  - Constitution R22 (The Ratchet)
+note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+---
+
 # AI Analysis Agent Architecture v1.0 — Specification
 
 ## CRO Heuristic Evaluation Engine

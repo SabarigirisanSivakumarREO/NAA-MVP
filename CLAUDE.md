@@ -195,7 +195,9 @@ neural-nba/
 
 ## 5. Code style
 
-From Constitution R10:
+**Canonical reference:** [`docs/engineering-practices/code-style.md`](docs/engineering-practices/code-style.md) — naming conventions, file organization, TypeScript patterns (Zod-first, `unknown` not `any`, named exports, pure functions), error handling, adapter pattern, Pino logging.
+
+Quick summary (from Constitution R10):
 
 - **Comments explain WHY, not WHAT.** The code shows what; comments explain why a non-obvious decision was made (e.g., "Multiplicative decay (R4.4) — additive would accumulate unboundedly").
 - **No `console.log` in production code.** Use Pino with correlation fields (audit_run_id, page_url, node_name, heuristic_id, trace_id).
@@ -207,6 +209,10 @@ From Constitution R10:
 ---
 
 ## 6. Git workflow
+
+**Canonical reference:** [`docs/engineering-practices/git-workflow.md`](docs/engineering-practices/git-workflow.md) — branch naming, full commit message template with examples, pre-commit checklist, PR policy (requires PRD §10.9 PR Contract + §10.6 Spec coverage), branching model.
+
+Quick summary:
 
 ### Commit format
 
@@ -246,55 +252,21 @@ Examples:
 
 ---
 
-## 7. Three-tier operational boundaries (mirror of PRD §17)
+## 7. Three-tier operational boundaries
 
-### ALWAYS
+**Canonical location:** **PRD §10** (`docs/specs/mvp/PRD.md`). Load it directly — do not rely on this section.
 
-- Read the relevant spec before writing code (Constitution R11.1)
-- Write the failing test first (R3.1)
-- Validate every external boundary with Zod (R2.2)
-- Use the adapter pattern for external dependencies (R7, R9)
-- Reference task ID + REQ-ID in commit messages (R11.5)
-- Run `pnpm lint && pnpm typecheck && pnpm test` before every commit
-- Match tool names from v3.1 EXACTLY (R4.5)
-- Use multiplicative confidence decay — `current × 0.97` (R4.4)
-- Cap filtered heuristics at 30 per page (§09.6)
-- Enforce temperature=0 on evaluate/self_critique/evaluate_interactive (R10)
-- Every finding needs evidence — suppress if empty (R5.7)
-- Log to Pino, never `console.log` (R10.6)
+This CLAUDE.md section previously mirrored PRD §10 verbatim, which spent attention budget on duplication (Addy Osmani, "the curse of instructions"). The mirror has been collapsed per §10.9 PR Contract research and Constitution R22 (The Ratchet).
 
-### ASK FIRST
+**When working on a task:**
+- For ALWAYS/ASK FIRST/NEVER tiers → read PRD §10.1–§10.3
+- For agent self-verification protocol → PRD §10.6
+- For modular-prompt rule (one task per prompt) → PRD §10.7
+- For agent reasoning log guidelines → PRD §10.8
+- For PR Contract 4-block format → PRD §10.9
+- For comprehension-debt pacing → PRD §10.10
 
-- Two specs disagree (R1.4)
-- A REQ-ID is missing for a non-trivial decision (R11.2)
-- About to break a Constitution rule (R16)
-- Crossing a layer boundary (analysis calling browser directly, or vice versa)
-- Touching heuristic content (IP-protected per R6)
-- Changing `AnalyzePerception` schema (ripples to §07.9 + §08.4 + grounding rules)
-- Adding a new MCP tool (requires §08 + safety classification + registry)
-- Introducing a new external dependency (must go through an adapter)
-- Bypassing safety classification
-- Spec appears to have a defect — fix spec FIRST (R11.4)
-- Test reveals the spec is wrong
-- Tempted to use `any` or disable a test
-
-### NEVER
-
-- Use `any` without `// TODO: type this` + tracking issue (R2.1, R13)
-- Disable a failing test (R3.3, R13)
-- Predict conversion impact — banned phrases caught by GR-007 (R5.3, R13)
-- Expose heuristic content in API, dashboard, logs, traces (R6.1, R13)
-- Skip evidence grounding (R13)
-- Call Anthropic SDK / Playwright / pg / Drizzle directly outside adapter modules (R7.1, R13)
-- `console.log` in production code (R10.6, R13)
-- Hardcode API keys, secrets, or credentials (R13)
-- Mix browse-mode and analyze-mode logic in the same file (R13)
-- Use Playwright APIs outside `BrowserEngine` (R13)
-- Commit raw LLM output without Zod validation
-- Set temperature > 0 on evaluate / self_critique / evaluate_interactive (R10)
-- UPDATE or DELETE rows from append-only tables (R7.4): `audit_log`, `rejected_findings`, `finding_edits`, `llm_call_log`, `audit_events`
-- Auto-publish findings during warm-up mode
-- Commit to main without running lint + typecheck + test
+If PRD §10 is not already in your task context, load that section before proceeding.
 
 ---
 
@@ -470,3 +442,8 @@ Explicit to prevent drift:
 ---
 
 *End of CLAUDE.md. Last updated 2026-04-17 with MVP v1.0 + master plan v2.3 context.*
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- SPECKIT END -->

@@ -1,3 +1,16 @@
+---
+title: 24-two-store-pattern
+artifact_type: architecture-spec
+status: approved
+loadPolicy: on-demand-only
+version: 2.3
+updated: 2026-04-24
+governing_rules:
+  - Constitution R17 (Lifecycle States)
+  - Constitution R22 (The Ratchet)
+note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+---
+
 # Section 24 — Two-Store Pattern & Warm-Up Mode
 
 **Status:** Master architecture extension. Phase 6 (day 1 of post-MVP). Implements C9 locked decision.

@@ -1,0 +1,49 @@
+# Neural MVP — local dev stack (PRD §6.4 + §8.1).
+# Boots Postgres 16 + pgvector, Valkey (OSS Redis fork), and Mailpit (SMTP catcher).
+# Production swaps: Upstash Redis, Resend, Cloudflare R2 — see .env.example.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: neural-postgres
+    environment:
+      POSTGRES_USER: neural
+      POSTGRES_PASSWORD: neural
+      POSTGRES_DB: neural
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U neural -d neural"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  valkey:
+    image: valkey/valkey:8
+    container_name: neural-valkey
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: neural-mailpit
+    ports:
+      - "1025:1025"   # SMTP — NotificationAdapter (mailpit mode) sends here
+      - "8025:8025"   # Web UI — inspect captured emails at http://localhost:8025
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+volumes:
+  postgres-data:
+  valkey-data:

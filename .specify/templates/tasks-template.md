@@ -1,0 +1,265 @@
+---
+# R17 Lifecycle Frontmatter — auto-included on every Neural-generated tasks file.
+# Spec Kit MUST populate these fields. Do not remove the frontmatter block.
+
+title: Tasks — [FEATURE NAME]
+artifact_type: tasks
+status: draft
+version: 0.1
+created: [DATE]
+updated: [DATE]
+owner: [OWNER]
+authors: []
+
+supersedes: null
+supersededBy: null
+
+derived_from:
+  - specs/[###-feature-name]/spec.md (acceptance criteria AC-NN)
+  - specs/[###-feature-name]/plan.md (technical decomposition)
+  - docs/specs/mvp/tasks-v2.md (master catalog T001-T262 — pull next-available IDs from here)
+  - docs/specs/mvp/constitution.md (R3 TDD, R23 Kill Criteria)
+  - docs/specs/mvp/testing-strategy.md (§9.6 conformance pattern)
+  - .claude/skills/neural-dev-workflow/references/templates.md (Brief format + kill criteria template)
+
+req_ids: []
+
+delta:
+  new: []
+  changed: []
+  impacted: []
+  unchanged: []
+
+governing_rules:
+  - Constitution R3 (TDD)
+  - Constitution R11 (Spec-Driven Development Discipline)
+  - Constitution R17 (Lifecycle)
+  - Constitution R23 (Kill Criteria Before Task Start)
+
+description: "Task list — Neural conventions; pulls T-NNN from tasks-v2.md; kill criteria mandatory > 2hrs"
+---
+
+# Tasks: [FEATURE NAME]
+
+**Input:** Design documents from `/specs/[###-feature-name]/`
+**Prerequisites:** plan.md (required), spec.md (required for user stories + AC-NN), research.md, data-model.md, contracts/, impact.md (if shared contract touched)
+
+**Test policy:** TDD is mandatory per Constitution R3. Write tests FIRST, ensure they FAIL, then implement.
+
+**Organization:** Tasks grouped by user story for independent implementation and testing.
+
+---
+
+## Task ID Assignment Rule
+
+**Pull from `docs/specs/mvp/tasks-v2.md`:** the master catalog runs T001-T262. New tasks for this feature start at the next available `T-NNN`. Do NOT restart at T001 — that breaks cross-feature traceability and the R21 spec-to-code matrix.
+
+Format: `[T-NNN] [P?] [US-N?] Description (AC-NN, REQ-ID)`
+
+- `[P]` — can run in parallel (different files, no shared deps)
+- `[US-N]` — which user story this task belongs to (US-1, US-2, US-3...)
+- AC-NN — acceptance criterion satisfied by this task (from spec.md)
+- REQ-ID — REQ-DOMAIN-NNN from architecture spec
+- Include exact file paths in descriptions
+
+---
+
+## Path Conventions (from architecture.md §6.5)
+
+| Kind of file | Location |
+|---|---|
+| Browser agent code | `packages/agent-core/src/browser-runtime/` or `perception/` |
+| MCP tool | `packages/agent-core/src/mcp/tools/<toolName>.ts` |
+| Grounding rule | `packages/agent-core/src/analysis/grounding/rules/GR<NNN>.ts` |
+| Heuristic JSON | `heuristics-repo/<source>.json` |
+| Orchestration node | `packages/agent-core/src/orchestration/nodes/<NodeName>.ts` |
+| External dep wrapper | `packages/agent-core/src/adapters/<Name>Adapter.ts` (R9) |
+| Zod schema | adjacent to the owning module |
+| Dashboard page | `apps/dashboard/src/app/console/<route>/page.tsx` |
+| CLI subcommand | `apps/cli/src/commands/<name>.ts` |
+| Unit test | `packages/*/tests/unit/<same-path>.test.ts` |
+| Integration test | `packages/*/tests/integration/<name>.test.ts` |
+| Acceptance test | `tests/acceptance/<name>.spec.ts` |
+| Conformance test | `packages/agent-core/tests/conformance/<component>.test.ts` (PRD §9.6) |
+
+If a new file doesn't fit above → STOP and ASK (R11.3).
+
+---
+
+## Default Kill Criteria *(applies to every task > 2 hrs OR touching a shared contract — R23)*
+
+Reference this block from each qualifying task instead of repeating inline.
+
+```yaml
+kill_criteria:
+  resource:
+    token_budget_pct: 85          # auto-pause at 85% of allocated LLM budget
+    wall_clock_factor: 2x         # exceeds 2× estimate → stop and re-scope
+    iteration_limit: 3            # 3+ retries on same error → stop, reassign
+  quality:
+    - "any previously-passing test breaks"
+    - "pnpm test:conformance -- <component> fails"
+    - "implementation reveals spec defect (R11.4 — fix spec first)"
+  scope:
+    - "diff introduces forbidden pattern (R13: any without TODO, console.log, direct SDK import outside adapter, disabled test)"
+    - "cross-cutting change emerges without impact.md (R20)"
+  on_trigger:
+    - "snapshot WIP to wip/killed/<task-id>-<reason>"
+    - "log to audit_events (PRODUCT) or task thread (META)"
+    - "escalate to human with specific failure mode"
+    - "do NOT silently retry; do NOT --no-verify"
+```
+
+Tasks that need different kill criteria override inline.
+
+---
+
+## Phase 1 — Setup (Shared Infrastructure)
+
+**Purpose:** Project initialization for THIS feature within the existing monorepo (Phase 0 setup of the master plan should already be complete).
+
+- [ ] T-NNN [P] [SETUP] Create feature branch `feat/<phase>-<task-id>-<short-name>` per `docs/engineering-practices/git-workflow.md` §1
+- [ ] T-NNN [P] [SETUP] Add Zod schemas for new types in `packages/agent-core/src/<module>/types.ts` (R2.1)
+- [ ] T-NNN [P] [SETUP] Update `docs/specs/mvp/spec-to-code-matrix.md` REQ-IDs (auto-generated by `pnpm spec:matrix` per R21)
+
+---
+
+## Phase 2 — Foundational (Blocking Prerequisites)
+
+**Purpose:** Core infrastructure that MUST complete before ANY user story can be implemented.
+
+⚠️ CRITICAL: No user story work can begin until this phase is complete.
+
+- [ ] T-NNN Setup [adapter / DB schema / framework piece] in [path] — blocks all user stories
+- [ ] T-NNN [P] Add conformance test scaffolds at `packages/agent-core/tests/conformance/<component>.test.ts` per PRD §9.6
+- [ ] T-NNN Configure Pino correlation fields for new node names (R10.6)
+
+**Checkpoint:** Foundation ready — user story implementation can begin.
+
+---
+
+## Phase 3 — User Story 1: [Title] (Priority: P1) 🎯 MVP
+
+**Goal:** [What this story delivers]
+**Independent Test:** [How to verify the story works alone]
+**AC IDs covered:** AC-01, AC-02, AC-03
+
+### Tests for User Story 1 (R3 TDD — write FIRST, ensure FAIL, then implement)
+
+- [ ] T-NNN [P] [US-1] Conformance test for AC-01 in `packages/agent-core/tests/conformance/<component>.test.ts`
+- [ ] T-NNN [P] [US-1] Unit test for [component] in `packages/agent-core/tests/unit/<component>.test.ts`
+- [ ] T-NNN [P] [US-1] Integration test for [user journey] in `packages/agent-core/tests/integration/<feature>.test.ts`
+
+### Implementation for User Story 1
+
+- [ ] T-NNN [P] [US-1] Create [Entity] Zod schema in `packages/agent-core/src/<module>/types.ts` (REQ-DOMAIN-NNN, AC-01)
+- [ ] T-NNN [P] [US-1] Implement [pure function / model] in `<file>.ts` (R10.1-R10.3 — < 300 lines, named exports)
+- [ ] T-NNN [US-1] Implement [Service / Node] in `<file>.ts` (depends on prior tasks; **kill criteria: see default block above**)
+- [ ] T-NNN [US-1] Wire into AuditGraph / dashboard / CLI as appropriate
+- [ ] T-NNN [US-1] Add Pino logging with correlation fields (audit_run_id, page_url, node_name, heuristic_id) — never `console.log` (R10.6)
+
+**Checkpoint:** User Story 1 fully functional and testable independently. Run `pnpm test:conformance -- <component>` before marking complete.
+
+---
+
+## Phase 4 — User Story 2: [Title] (Priority: P2)
+
+[Same structure as Phase 3]
+
+---
+
+## Phase 5 — User Story 3: [Title] (Priority: P3)
+
+[Same structure as Phase 3]
+
+---
+
+## Phase N — Polish & Cross-Cutting Concerns
+
+- [ ] T-NNN [P] Documentation updates in `docs/specs/mvp/<file>.md` (R18 — include delta block)
+- [ ] T-NNN Code cleanup, refactoring (R10 — file size, function size, named exports)
+- [ ] T-NNN [P] Conformance test suite green: `pnpm test:conformance` (PRD §9.6)
+- [ ] T-NNN [P] Update spec-to-code matrix: `pnpm spec:matrix` (R21)
+- [ ] T-NNN Run quickstart.md validation
+- [ ] T-NNN Phase rollup at exit: `pnpm spec:rollup --phase <N>` (R19)
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **Setup (Phase 1):** No dependencies — can start immediately
+- **Foundational (Phase 2):** Depends on Setup — BLOCKS all user stories
+- **User Stories (Phase 3+):** Depend on Foundational; can proceed in parallel after
+- **Polish (Final Phase):** Depends on all user stories complete
+
+### Within Each User Story
+
+- Tests MUST be written and FAIL before implementation (R3.1)
+- Zod schemas before services
+- Services before endpoints / dashboard pages
+- Conformance tests must pass before merge (PRD §9.6)
+- Story complete before moving to next priority
+
+### Parallel Opportunities & Comprehension-Debt Pacing (PRD §10.10)
+
+- All `[P]` tasks within a phase can run in parallel (different files, no shared deps)
+- After Foundational completes, multiple user stories can run in parallel — but **gate parallelization on REVIEW capacity, not task independence alone** (PRD §10.10)
+- Start with 1 fewer subagent than feels comfortable; ceiling 3-5 (research-cited working-memory limit)
+- If review time per diff > implementation time → reduce scope per agent BEFORE reducing agent count
+
+---
+
+## Implementation Strategy
+
+### MVP First (User Story 1 Only)
+
+1. Complete Phase 1 Setup
+2. Complete Phase 2 Foundational (CRITICAL — blocks all stories)
+3. Complete Phase 3 User Story 1
+4. **STOP and VALIDATE:** Test User Story 1 independently; run `pnpm test:conformance -- <component>`
+5. Demo / merge to phase rollup
+
+### Incremental Delivery
+
+After Setup + Foundational:
+- Add User Story 1 → test → demo (MVP slice)
+- Add User Story 2 → test → demo
+- Add User Story 3 → test → demo
+- Each story adds value without breaking previous stories
+
+### Per-task workflow (apply `neural-dev-workflow` skill)
+
+For each task:
+1. Brief format (`.claude/skills/neural-dev-workflow/references/templates.md` §Brief)
+2. Kill criteria declared if > 2 hrs OR touches shared contract (R23)
+3. Test-first (R3.1) — write test, see it fail
+4. Implement
+5. Validate: `pnpm lint && pnpm typecheck && pnpm test && pnpm test:conformance -- <component>`
+6. Commit: `<type>(<scope>): T-NNN <imperative summary> (REQ-ID)` per `docs/engineering-practices/git-workflow.md` §2
+7. PR Contract (PRD §10.9) + Spec Coverage (PRD §10.6) in PR body
+
+---
+
+## Notes
+
+- `[P]` = different files, no dependencies → parallelizable
+- `[US-N]` label maps task to user story for traceability
+- Each user story should be independently completable and testable
+- Verify tests fail before implementing (R3.1)
+- Commit small atomic commits per R11.5
+- Stop at any checkpoint to validate story independently
+- Apply kill criteria immediately on trigger (R23.4) — do NOT silently retry
+- Avoid: vague tasks, same-file conflicts, cross-story dependencies that break independence
+- Constitution R22 (Ratchet): every new convention added needs `why:` provenance — quarterly review removes stale rules
+
+---
+
+## Cross-references
+
+- Constitution R3 (TDD), R11 (Spec discipline), R17 (Lifecycle), R23 (Kill Criteria)
+- PRD §10.6 Spec Coverage, §10.9 PR Contract, §10.10 Comprehension-debt pacing
+- `docs/engineering-practices/git-workflow.md` §2 commit format
+- `.claude/skills/neural-dev-workflow/references/templates.md` (Brief, Kill Criteria, PR Contract)
+- `docs/specs/mvp/tasks-v2.md` (master task catalog T001-T262)

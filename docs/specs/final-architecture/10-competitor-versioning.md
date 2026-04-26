@@ -1,3 +1,16 @@
+---
+title: 10-competitor-versioning
+artifact_type: architecture-spec
+status: approved
+loadPolicy: on-demand-only
+version: 2.3
+updated: 2026-04-24
+governing_rules:
+  - Constitution R17 (Lifecycle States)
+  - Constitution R22 (The Ratchet)
+note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+---
+
 # Section 10 — Competitor Analysis, Version Tracking & Cross-Page Consistency
 
 > **G1-FIX (Master Architecture):** Competitor analysis is a **separate audit mode**, NOT inline within the client audit run. This aligns with the source-of-truth Analysis v1.0 REQ-COMPARISON-001: *"runs AFTER both client and competitor sites have been analyzed. It is a separate step, NOT part of the per-page analysis pipeline."* The integrated architecture (§4 orchestrator) previously muddled this by placing competitor comparison inside `audit_complete`. This fix restores the source spec's intent.

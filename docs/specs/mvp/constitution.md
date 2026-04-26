@@ -1,4 +1,57 @@
+---
+title: MVP Engineering Constitution
+artifact_type: constitution
+status: approved
+version: 1.2
+created: 2026-04-22
+updated: 2026-04-24
+owner: engineering lead
+authors: [REO Digital team, Claude]
+reviewers: [REO Digital team]
+
+supersedes: v1.1
+supersededBy: null
+
+derived_from:
+  - docs/engineering-practices/ai-orchestration-research-2026-04-24.md (R22-R23 provenance)
+
+req_ids: []  # Constitution defines rules R1-R23, not REQ-IDs
+
+impact_analysis: null
+breaking: false
+affected_contracts: []
+
+delta:
+  new:
+    - R22 The Ratchet — Rules Trace to Failures
+    - R23 Kill Criteria Before Task Start
+    - R22.5 — Retroactive audit record (good-spec review Option B, 2026-04-24) for R3, R5, R6, R7, R9, R10, R11, R13
+    - R22.6 — Flagged stale cross-reference; temperature=0 lacks explicit rule codification (punch-list for v1.3)
+    - R15.3.1 — `provenance` block fields for heuristics (2026-04-26)
+    - R15.3.2 — Human verification mandatory for LLM-drafted heuristics (2026-04-26)
+    - R15.3.3 — LLM-drafted heuristic content is still IP per R6 (2026-04-26)
+    - R17 lifecycle frontmatter on this constitution file itself (was missing; self-compliance fix)
+  changed:
+    - R3, R5, R6, R7, R9, R10, R11, R13 now carry `why:` provenance blocks (retroactive audit per R22.2)
+    - R15.3 expanded 2026-04-26 — benchmark + provenance both required for Zod validation
+  impacted:
+    - docs/specs/mvp/PRD.md §10.9 (PR Contract references R23)
+    - docs/specs/mvp/PRD.md §10.10 (Pacing references R22)
+    - CLAUDE.md §7 (boundaries updated)
+    - .claude/skills/neural-dev-workflow/ (new skill operationalizing R22-R23)
+  unchanged:
+    - R1 (Source of Truth), R2 (Type Safety), R4 (Browser Agent), R8 (Cost & Safety), R12 (Definition of Done), R14 (Cost Accountability), R15 (Quality Gates), R16 (When to Stop and Ask) — retain grandfather status per R22.4; audit on next amendment
+    - R17-R21 (v1.1 SDD infrastructure) — PR-reviewed at introduction; treat approval PR as implicit provenance
+
+governing_rules:
+  - Constitution R17 (Lifecycle)
+  - Constitution R18 (Delta)
+  - Constitution R22 (Ratchet)
+---
+
 # MVP Engineering Constitution
+
+> **Summary (~100 tokens — agent reads this first):** Non-negotiable engineering rules R1-R23 for Neural MVP. Override order: user instructions > constitution > default behavior. R1-R21 are grandfathered (predate R22 Ratchet provenance rule). Every future rule requires a `why:` provenance block citing a specific failure or research source per R22.2. R17 governs artifact lifecycle states; R18 requires delta blocks on every update; R19 mandates phase rollups; R20 requires impact analysis for shared-contract changes; R21 auto-generates a spec-to-code traceability matrix; R22 ratchets rule hygiene; R23 requires pre-task kill criteria.
 
 ## Non-Negotiable Rules for Implementation
 
@@ -40,6 +93,21 @@
 
 **RULE 3.4:** Use Vitest for unit tests, Playwright Test for integration tests.
 
+**Provenance (retroactive audit 2026-04-24, per R22.2):**
+
+```yaml
+why:
+  source: >
+    docs/engineering-practices/ai-orchestration-research-2026-04-24.md §Part 1 §2 (ai-coding-workflow) + §5 (agentic-engineering) + TDD canon (Kent Beck, 2002)
+  evidence: >
+    Addy Osmani: "test after each increment, not at the end"; "passing tests ≠ correct, secure, or maintainable code."
+    Agentic-engineering research: "comprehensive testing is the primary differentiator from vibe coding";
+    "AI-assisted development actually rewards good engineering practices more than traditional coding does."
+  linked_failure: >
+    Generic LLM failure mode — plausible code that passes static checks but fails runtime edge cases.
+    TDD forces boundary/invariant thinking before implementation, which LLMs systematically underweight.
+```
+
 ---
 
 ## 4. Browser Agent Rules (Browse Mode)
@@ -72,6 +140,26 @@
 
 **RULE 5.7:** Severity is tied to MEASURABLE EVIDENCE, not LLM opinion. Critical/high severity REQUIRES a measurement field. Grounding rule GR-006 enforces this.
 
+**Provenance (retroactive audit 2026-04-24, per R22.2):**
+
+```yaml
+why:
+  source: REO Digital product policy + GR-007 deterministic enforcement + §07.9 self-critique design
+  evidence: >
+    R5.1 hypotheses-not-verdicts: every finding passes a 3-layer filter (CoT, separate-persona self-critique,
+    deterministic grounding) before reaching a consultant. LLM "confidence" alone is unreliable.
+    R5.3 no conversion predictions: absolute ban because unfounded quantitative lift claims expose REO Digital
+    to legal and reputational risk (clients cannot hold consultants to forecasted numbers). GR-007 enforces at
+    code level as deterministic regex check, not LLM judgment.
+    R5.6 separate self-critique LLM call: different system prompt persona catches ~30% more false positives
+    than combined evaluate-and-critique; cost is worth it (pre-MVP prompt testing).
+    R5.7 severity tied to measurable evidence: blocks LLM opinion-as-fact via GR-006.
+  linked_failure: >
+    Cross-session pattern during spec design — LLM-generated findings repeatedly included unfounded
+    percentage lift claims that passed CoT review but failed GR-007 deterministic check. This codified R5.3
+    as an absolute ban rather than a guideline.
+```
+
 ---
 
 ## 6. Heuristic IP Protection
@@ -84,6 +172,22 @@
 
 **RULE 6.4:** Even in development, do not log full heuristic JSON to console or files. Log heuristic IDs only.
 
+**Provenance (retroactive audit 2026-04-24, per R22.2):**
+
+```yaml
+why:
+  source: REO Digital competitive strategy + docs/specs/final-architecture/§07 analyze-mode IP boundary + §09 heuristic-kb
+  evidence: >
+    Heuristic content (Baymard/Nielsen/Cialdini applications with research-grounded benchmarks) is
+    Neural's direct competitive differentiator vs generic AI tools (Lighthouse, Hotjar, ChatGPT-audits).
+    If heuristic JSON leaks via LangSmith traces, Pino logs, API responses, or error messages, any
+    competitor can reproduce the pipeline. MVP uses private git repo (PRD §F-012); AES-256-GCM at rest
+    ships before first external pilot (v1.1 per PRD §3.2 deferred-to-v1.1).
+  linked_failure: >
+    General risk class — LLM systems leaking proprietary knowledge via observability infrastructure
+    (error strings, trace metadata, retry logs, debug dumps).
+```
+
 ---
 
 ## 7. Database & Storage
@@ -95,6 +199,25 @@
 **RULE 7.3:** Screenshots are stored in Cloudflare R2 (production) or local disk (dev). Never store screenshots as base64 strings in the database.
 
 **RULE 7.4:** Audit log tables are append-only. Never UPDATE or DELETE rows from `audit_log`, `rejected_findings`, or `finding_edits`.
+
+**Provenance (retroactive audit 2026-04-24, per R22.2):**
+
+```yaml
+why:
+  source: Audit compliance + incident forensics practice + docs/specs/final-architecture/§13 data-layer
+  evidence: >
+    R7.1 Drizzle-only: typed migrations prevent schema drift; enables spec:matrix REQ-ID tracing (R21).
+    R7.2 RLS on client-scoped tables: single-agency MVP today but multi-tenant is v1.2 target; RLS-first
+    prevents accidental cross-client data exposure during prototyping.
+    R7.3 R2 for screenshots not base64-in-DB: Postgres bloats unpredictably with base64; R2 zero-egress
+    on Cloudflare keeps storage costs predictable and queryability unaffected.
+    R7.4 append-only: `audit_log`, `rejected_findings`, `finding_edits`, `llm_call_log`, `audit_events` are
+    forensic evidence of what the system did during client audits. UPDATE/DELETE breaks reproducibility
+    analysis (§25), cost attribution (R14.4), and incident root-cause forensics.
+  linked_failure: >
+    General risk class — mutable audit data during incident investigation yielding incorrect root cause
+    (analyst editing evidence to match hypothesis).
+```
 
 ---
 
@@ -126,6 +249,25 @@
 - `HeuristicLoader` for heuristic KB
 - `AuthProvider` for Clerk
 
+**Provenance (retroactive audit 2026-04-24, per R22.2):**
+
+```yaml
+why:
+  source: Ports & adapters pattern (Cockburn, Fowler) + docs/engineering-practices/ai-orchestration-research-2026-04-24.md §Part 1 §8 (agent-harness-engineering)
+  evidence: >
+    Addy Osmani: "Every component in a harness encodes an assumption about what the model can't."
+    Direct imports of @anthropic-ai/sdk, Playwright, pg, Drizzle outside adapters prevent:
+    (a) v1.2 GPT-4o failover (PRD §3.2 deferred-to-v1.2)
+    (b) temperature-guard enforcement at a single boundary (forbidden-pattern in R13)
+    (c) MockLLMAdapter in unit/integration tests (required by R3 TDD)
+    (d) LLM cost logging to llm_call_log at a single chokepoint (required by R14.1)
+    The adapter boundary IS the Control Layer of Neural's five-layer harness
+    (docs/specs/mvp/architecture.md §6.1).
+  linked_failure: >
+    General risk class — tightly-coupled LLM code requiring cross-module refactor for each provider
+    swap, temperature policy change, or test harness setup.
+```
+
 ---
 
 ## 10. Code Quality
@@ -142,6 +284,33 @@
 
 **RULE 10.6:** No `console.log` in production code. Use the Pino logger.
 
+**Provenance (retroactive audit 2026-04-24, per R22.2):**
+
+```yaml
+why:
+  source: docs/engineering-practices/code-style.md + industry conventions (clean code, named exports) + pilot usage observations
+  evidence: >
+    R10.1 files < 300 lines: beyond ~300 lines LLMs and humans both lose track of responsibilities. The
+    grounding/rules/ directory pattern (one rule per file) is an applied example.
+    R10.2 functions < 50 lines: keeps call graphs reviewable; limits cyclomatic complexity.
+    R10.3 named exports: refactor-friendly; IDE rename-symbol works; avoids default-export import name drift.
+    R10.4 WHY not WHAT comments: LLM-generated code tends to narrate ("Increment i"); this forbids that pattern.
+    R10.5 no commented-out code: git remembers; dead code in comments trains Claude Code to tune out
+    neighboring comments.
+    R10.6 no console.log: Pino with correlation fields (audit_run_id, page_url, node_name, heuristic_id) is
+    required for R14.1 cost logging + §25 reproducibility audit trails; console.log defeats both.
+  linked_failure: >
+    Pilot-era sessions where bare console.log broke audit_run_id correlation during incident triage;
+    required re-running with Pino to diagnose.
+
+note_on_stale_xref: >
+  PRD §10.1 ALWAYS list and Constitution R13 Forbidden Patterns both cite "(R10)" for the
+  temperature=0 rule on evaluate/self_critique/evaluate_interactive. This cross-reference is STALE —
+  §10 Code Quality does NOT codify temperature=0. The temperature invariant lives only in PRD §10.1
+  ALWAYS + R13 NEVER + TemperatureGuard implementation. Flagged as a post-audit punch-list item;
+  temperature=0 likely belongs as its own Constitution rule (candidate: R10.7 or a new top-level rule).
+```
+
 ---
 
 ## 11. Spec-Driven Development Discipline
@@ -156,6 +325,28 @@
 
 **RULE 11.5:** Commit messages reference the task ID and REQ-ID:
 `feat(perception): T003 implement AccessibilityExtractor (REQ-BROWSE-PERCEPT-001)`
+
+**Provenance (retroactive audit 2026-04-24, per R22.2):**
+
+```yaml
+why:
+  source: Spec-Driven Development (GitHub Spec Kit) + docs/engineering-practices/ai-orchestration-research-2026-04-24.md §Part 2 theme 1 (spec-as-leverage)
+  evidence: >
+    Addy Osmani: "A vague spec multiplies errors across the fleet."
+    Agentic-engineering research: "better specs yield better AI output" — spec discipline is the
+    single strongest lever on AI output quality across Claude, GPT-4, and Gemini.
+    R11.1 read-spec-first: LLMs fill in gaps by inventing; reading the spec first forces the
+    implementation to match documented requirements rather than plausible-sounding invention.
+    R11.2 REQ-ID tracing: every decision must cite a REQ-ID, which makes spec drift detectable in CI
+    via R21 traceability matrix.
+    R11.4 fix-spec-first: prevents the "we'll document it later" rationalization that produces
+    code/spec divergence over time.
+    R11.5 commit-message format: TaskID + REQ-ID in commit subject makes `git log` a spec-to-code index.
+  linked_failure: >
+    Pilot session where Claude Code invented field names not in the spec because it relied on
+    "reasonable defaults" instead of reading §07.9 AnalyzePerception schema — caught in code review
+    because no REQ-ID could be cited.
+```
 
 ---
 
@@ -198,6 +389,37 @@ A task is complete only when ALL of these are true:
 - Reference REQ-IDs
 - Commit small, atomic changes
 
+**Provenance (retroactive audit 2026-04-24, per R22.2):**
+
+```yaml
+why:
+  source: >
+    Collected pilot failure modes + docs/engineering-practices/ai-orchestration-research-2026-04-24.md
+    §Part 1 §3 (code-review-ai lethal-trifecta) + §Part 1 §8 (agent-harness-engineering safety mechanisms)
+  evidence: >
+    Each NEVER pattern traces to a concrete failure mode:
+    - `any` without TODO + tracking issue: type erasure compounds across dependencies; LLMs lean on it under pressure
+    - `console.log` in production: breaks R14.1 Pino correlation on audit_run_id / heuristic_id
+    - Direct SDK imports outside adapters: violates R9 (blocks test mocking, failover, temperature guard)
+    - Disabled tests: hides regressions; violates R3.3
+    - Hardcoded secrets: basic security breach; LLM autocomplete frequently suggests them
+    - Heuristic content in API/dashboard/logs: violates R6 IP protection
+    - Mixed browse/analyze logic in same file: breaks Layer 2 / Layer 3 architecture isolation
+    - Playwright outside BrowserEngine: violates R9
+    - Raw LLM output without Zod: violates R2.2 + enables hallucination injection into downstream stages
+    - UPDATE/DELETE on append-only tables: violates R7.4
+    - Temperature > 0 on evaluate/self_critique/evaluate_interactive: violates reproducibility target (§25, NF-006)
+    Lethal-trifecta principle (Addy Osmani): code touching auth/payments/secrets/untrusted-input must
+    treat AI as "high-speed intern" requiring human threat model + security tool pass.
+  linked_failure: >
+    Multiple pilot-identified failure modes collapsed into one enforceable NEVER list,
+    cross-referenced from PRD §10.3.
+  note_on_stale_xref: >
+    The "(R10)" reference in "Set temperature > 0 ... (R10)" is stale — Constitution §10 is Code Quality,
+    not reproducibility. Temperature=0 isn't explicitly codified as a Constitution rule; it lives in
+    PRD §10.1 ALWAYS list + this R13 NEVER list + TemperatureGuard implementation. Flagged post-audit.
+```
+
 ---
 
 ## 14. Cost Accountability (v2.2)
@@ -222,7 +444,34 @@ A task is complete only when ALL of these are true:
 
 **RULE 15.2:** Every page gets an `analysis_status`. The audit NEVER silently drops a page. Every non-complete page has a documented reason.
 
-**RULE 15.3:** Every heuristic MUST have a benchmark (quantitative or qualitative). Heuristics without benchmarks fail Zod validation and cannot be loaded.
+**RULE 15.3:** Every heuristic MUST have a benchmark (quantitative or qualitative) AND a `provenance` block. Heuristics without either fail Zod validation and cannot be loaded.
+
+**RULE 15.3.1:** `provenance` block fields:
+- `source_url` — URL or stable reference to the cited research (e.g., Baymard article URL, Nielsen page, Cialdini chapter reference)
+- `citation_text` — verbatim excerpt from the source supporting the heuristic + benchmark
+- `draft_model` — identifier of the LLM that drafted the heuristic, OR `"human"` if hand-authored
+- `verified_by` — name of the human verifier
+- `verified_date` — ISO-8601 date of verification
+
+**RULE 15.3.2:** When `draft_model` is an LLM, a human verifier MUST manually re-derive the benchmark from `source_url` + `citation_text` and confirm match within ±20% (quantitative) or text-reference (qualitative) BEFORE commit. Verification is captured in the PR Contract Proof block (PRD §10.9).
+
+**RULE 15.3.3:** LLM-drafted heuristic content is still IP and subject to R6.1-R6.4. The drafting prompt + the resulting heuristic JSON are both protected. Drafting LLM responses MUST NOT be logged to LangSmith / Pino / dashboard / API / error messages — apply the same redaction discipline as for hand-authored heuristics.
+
+**Provenance for R15.3 amendment (per R22.2):**
+
+```yaml
+why:
+  source: User decision 2026-04-26 to use LLM-assisted heuristic authoring instead of CRO consultant authoring (PRD F-012 amendment, same date)
+  evidence: >
+    LLM authoring introduces hallucination risk on benchmarks (e.g., LLM cites
+    "Baymard 2024 says 6-8 form fields" but actual research says 4-6). Without
+    verifiable provenance + human verification, GR-012 benchmark validation at
+    runtime cannot trust source-of-truth values it's checking against.
+  linked_failure: >
+    Anticipated risk class — LLM-drafted heuristics with hallucinated benchmarks
+    cascade into false-confidence findings during real audits, eroding REO
+    Digital's consultant defensibility.
+```
 
 **RULE 15.4:** GR-012 validates benchmark claims. Quantitative: claimed value within ±20% of actual. Qualitative: finding references the standard text.
 
@@ -367,3 +616,76 @@ export function groundGR007(...) { ... }
 ```
 
 **RULE 21.5:** The matrix is read-only reference — never edited by hand. Changes to the matrix come from updating the underlying specs or code, then re-running the generation script.
+
+---
+
+## 22. The Ratchet — Rules Trace to Failures (v1.2)
+
+**RULE 22.1:** Every rule added to `constitution.md`, `CLAUDE.md`, or any `.claude/skills/*.md` SHALL be traceable to a specific failure, research finding, or documented AI-system mistake. Speculative rules accumulate noise that degrades the harness. Research synthesized in `docs/engineering-practices/ai-orchestration-research-2026-04-24.md` shows human-curated agent instructions produce ~4% improvement while auto-generated or speculative ones produce ~3% regression.
+
+**RULE 22.2:** New rules require a `why:` provenance block in the PR body citing either (a) a specific commit where the failure happened, (b) a research source with URL + date, or (c) a `docs/engineering-practices/` synthesis file documenting the pattern.
+
+Example:
+
+```yaml
+why:
+  source: docs/engineering-practices/ai-orchestration-research-2026-04-24.md §Part 2
+  evidence: "human-curated AGENTS.md ~4% improvement; auto-generated ~3% regression"
+```
+
+**RULE 22.3:** Quarterly review of `constitution.md` + `CLAUDE.md` SHALL remove any rule whose `why:` provenance has become stale (failure no longer reproduces, research superseded, context no longer applies). Dead rules are worse than missing rules — they train Claude Code to tune out the rule set.
+
+**RULE 22.4:** This Ratchet principle applies prospectively. Rules R1–R21 were initially exempt from the `why:` provenance requirement (they predate R22) but any FUTURE amendment, clarification, or additional rule MUST carry provenance.
+
+**RULE 22.5 (Retroactive audit, 2026-04-24 per good-spec review Option B):** A targeted retroactive `why:` audit was performed on the 8 most-referenced rules — **R3** (TDD), **R5** (Analysis Agent, covering R5.1/R5.3/R5.6/R5.7), **R6** (Heuristic IP Protection), **R7** (Database & Storage, covering R7.4 append-only), **R9** (Loose Coupling), **R10** (Code Quality), **R11** (Spec-Driven Development), **R13** (Forbidden Patterns). These rules now carry provenance blocks (see each section). Remaining grandfathered rules — R1 (Source of Truth), R2 (Type Safety), R4 (Browser Agent), R8 (Cost & Safety), R12 (Definition of Done), R14 (Cost Accountability), R15 (Quality Gates), R16 (When to Stop and Ask) — retain R22.4 grandfather status; audit them individually when their text is next amended (R22.2 requires provenance on amendment). R17–R21 codified current SDD practice in v1.1 and were approved under PR review at introduction; treat that PR as their implicit provenance source.
+
+**RULE 22.6 (Stale cross-reference flagged by retroactive audit):** R10 Code Quality does NOT codify temperature=0 on `evaluate / self_critique / evaluate_interactive`, despite PRD §10.1 ALWAYS list and R13 NEVER list both citing "(R10)" for this invariant. The temperature=0 rule lives only as a forbidden pattern in R13 + an enforcement requirement at `TemperatureGuard` (adapter boundary, R9). Codify temperature=0 as its own Constitution rule in v1.3 — candidate: promote from R13 into a new top-level rule "Reproducibility Guarantees." Tracked as post-audit punch-list item.
+
+---
+
+## 23. Kill Criteria Before Task Start (v1.2)
+
+**RULE 23.1:** Every task meeting ANY of the following SHALL define explicit kill criteria in the task description BEFORE implementation begins:
+
+- Estimated effort > 2 hours
+- Touches a shared contract (R20: `AnalyzePerception`, `PageStateModel`, `AuditState`, `Finding`, any adapter interface, DB schema, MCP tool interface, grounding rule interface)
+- Dispatched to a subagent (CLAUDE.md §9)
+- LLM budget > $0.50
+
+**Kill criteria answer:** *"What would cause me to stop, revert, and escalate rather than iterate forward?"*
+
+**RULE 23.2:** Acceptable kill criteria SHALL include at least one from each category:
+
+**Resource:**
+- Token budget: per-node auto-pause at 85% of allocated budget
+- Wall-clock: task exceeds 2× estimate → stop and re-scope
+- Iteration count: 3+ iterations on same error → stop, reassign
+
+**Quality:**
+- Test-suite regression: any previously-passing test breaks → stop, investigate
+- Conformance test failure: any `pnpm test:conformance` failure → stop, do not merge
+- Spec contradiction: implementation reveals spec defect → stop, fix spec first (R11.4)
+
+**Scope / forbidden patterns:**
+- Subagent diff reveals forbidden patterns (R13: `any` without TODO, `console.log`, direct Anthropic/Playwright/pg imports outside adapters, disabled tests) → reject, do not merge
+- Cross-cutting change emerges mid-task without `impact.md` (R20) → stop, produce impact analysis first
+
+**RULE 23.3:** Kill criteria are SEPARATE from acceptance criteria. Acceptance = "how we know we're done successfully." Kill = "how we know to stop trying." Both are mandatory; neither substitutes for the other.
+
+**RULE 23.4:** When kill criteria trigger, the orchestrator SHALL:
+
+1. Snapshot current state (commit WIP to a scratch branch: `wip/killed/<task-id>-<reason>`)
+2. Log the trigger reason — to `audit_events` (PRODUCT scope) or the task thread (META scope)
+3. Escalate to human with specific failure mode ("GR-001 conformance failing on fixture X after 3 iterations"), not a generic "stuck"
+4. Do NOT silently retry. Do NOT `--no-verify` around the trigger. Kill criteria exist to protect quality; bypassing them defeats the rule.
+
+**Provenance (per R22.2):**
+
+```yaml
+why:
+  source: docs/engineering-practices/ai-orchestration-research-2026-04-24.md §Part 1 §4 (coding-agents-manager) + §7 (code-agent-orchestra)
+  evidence: >
+    "Kill criteria defined before starting — what would cause you to stop"
+    "Kill & reassign after 3+ iterations on same error"
+    "Per-agent token budgeting with auto-pause at 85%"
+```

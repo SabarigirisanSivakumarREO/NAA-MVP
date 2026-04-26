@@ -1,8 +1,66 @@
+---
+title: Neural MVP — Product Requirements Document
+artifact_type: prd
+status: approved
+version: 1.2
+created: 2026-04-22
+updated: 2026-04-24
+owner: product + engineering lead
+authors: [REO Digital team, Claude]
+reviewers: [REO Digital team]
+
+supersedes: v1.1
+supersededBy: null
+
+derived_from:
+  - docs/specs/final-architecture/ (§01-§36 + §33a)
+  - docs/specs/mvp/tasks-v2.md
+  - docs/engineering-practices/ai-orchestration-research-2026-04-24.md
+
+req_ids: []  # PRD introduces F-001..F-021 + NF-001..NF-010, tracked inline
+
+impact_analysis: null
+breaking: false
+affected_contracts: []
+
+delta:
+  new:
+    - §10.9 PR Contract (per code-review-ai research)
+    - §10.10 Comprehension-debt pacing (per cognitive-parallel-agents research)
+    - R17 lifecycle frontmatter on PRD.md itself (was missing; self-compliance fix)
+    - F-012 amendment 2026-04-26 — heuristic authoring switched from CRO-parallel to LLM-assisted with human verification (engineering-owned in Phase 0b)
+    - §3.1 item 6 amendment 2026-04-26 — clarified LLM-assisted authoring + provenance requirement
+  changed:
+    - References throughout aligned to master plan v2.3
+    - References throughout cite docs/engineering-practices/ai-orchestration-research-2026-04-24.md
+    - F-012 acceptance criteria expanded to require provenance + verification evidence in PR Contract
+  impacted:
+    - docs/specs/mvp/constitution.md (R22-R23 added; R15.3 expanded with provenance + verification rules on 2026-04-26)
+    - docs/specs/mvp/phases/INDEX.md (Phase 0b row updated 2026-04-26 to engineering-owned)
+    - .claude/skills/neural-dev-workflow/ (new runtime playbook operationalizing §10.9-10.10)
+    - CLAUDE.md (§7 reference drift fix done)
+    - HeuristicSchema (Phase 6 implementation must add provenance fields per Constitution R15.3)
+  unchanged:
+    - F-001..F-011, F-013..F-021 functional requirements (only F-012 amended)
+    - NF-001..NF-010 non-functional requirements
+    - §6 architecture (5-layer stack)
+    - §6.4 tech stack
+    - R6 IP protection (still applies regardless of author — restated in R15.3.3 for clarity)
+
+governing_rules:
+  - Constitution R17 (Lifecycle)
+  - Constitution R18 (Delta)
+  - Constitution R22 (Ratchet)
+  - PRD §12 (Spec-Driven Workflow)
+---
+
 # Neural MVP — Product Requirements Document
+
+> **Summary (~150 tokens — agent reads this first):** Canonical Product Requirements Document for Neural MVP v1.2. Input to Spec Kit CLI. Covers product vision (§2), scope (§3), functional + non-functional requirements (§4-5), 5-layer architecture (§6), component breakdown (§7), commands (§8), testing strategy (§9), Claude Code operational boundaries (§10), domain + policies (§11), spec-driven workflow (§12), success metrics (§13), timeline (§14), risks + mitigations (§15), and appendices with mini-spec pattern and conformance test templates.
 
 > **Product:** Neural — AI CRO Audit Platform
 > **Company:** REO Digital (Indian digital agency)
-> **Version:** 1.2 (2026-04-22) — adds Constitution R17-R21 (lifecycle, delta, rollup, impact, traceability) + phases/ folder structure + templates/ + scripts/ per scalable SDD framework (see §16)
+> **Version:** 1.2 (2026-04-22, updated 2026-04-24) — adds Constitution R17-R21 (lifecycle, delta, rollup, impact, traceability) + R22-R23 (Ratchet, Kill criteria) + §10.9-10.10 (PR Contract, Comprehension-debt pacing) + phases/ folder structure + templates/ + scripts/ per scalable SDD framework (see §16)
 > **Status:** Approved; ready for Spec Kit CLI → `/speckit.specify` → `/speckit.plan` → `/speckit.tasks`
 > **Source of truth (architecture):** `docs/specs/final-architecture/§01-§36 + §33a` (master plan v2.3)
 > **This document's role:** Canonical PRD. Spec Kit consumes this to regenerate `spec.md`, `plan.md`, `tasks.md`. All other session-specific docs archived or deleted.
@@ -124,7 +182,7 @@ The MVP ships a consultant-pilot-ready product with:
     b. Structural signals baked into `page_analyze`
     c. 12 grounding rules post-LLM (10 active in MVP, GR-010/011 deferred)
 5. Analysis pipeline: chain-of-thought `evaluate` → separate-persona `self_critique` → deterministic `ground` → `annotate_and_store`
-6. 30 CRO heuristics authored with quantitative or qualitative benchmarks (subset of the 100 in the master plan)
+6. 30 CRO heuristics LLM-drafted with human verification, each carrying quantitative or qualitative benchmarks AND a `provenance` block (source URL, citation, draft model, verifier, date) — engineering-owned in Phase 0b (not parallel CRO workstream); subset of the 100 in the master plan
 7. Two-stage heuristic filter (business type → page type → max 20 per page)
 8. Persona-based evaluation (2-3 personas per business type injected into evaluate prompt)
 9. Cross-page pattern detection (deterministic; 3+ pages violating same heuristic → PatternFinding)
@@ -321,10 +379,12 @@ Sharp-based overlay: colored box at finding bounding box + numbered pin with fin
 
 ### F-012 — Heuristic Knowledge Base
 
-30 heuristics authored by CRO team in parallel Phase 0b: ~15 Baymard + ~10 Nielsen + ~5 Cialdini. Every heuristic has a required benchmark (quantitative or qualitative per v2.2 schema). JSON files in `heuristics-repo/` (plain JSON for MVP; AES encryption deferred to v1.1).
+30 heuristics drafted via **LLM-assisted authoring with human verification** in Phase 0b (engineering-owned, not parallel CRO workstream): ~15 Baymard + ~10 Nielsen + ~5 Cialdini. Drafting prompt injects research excerpts (Baymard URLs, Nielsen pages, Cialdini chapters); human verifier manually re-derives each benchmark from the cited source URL and confirms match within ±20% (quantitative) or text reference (qualitative) BEFORE commit. Every heuristic carries a `provenance` block (`source_url`, `citation_text`, `draft_model`, `verified_by`, `verified_date`) AND a required benchmark (quantitative or qualitative per v2.2 schema). JSON files in `heuristics-repo/` (plain JSON for MVP; AES encryption deferred to v1.1). R6 IP boundary applies regardless of author — LLM-drafted heuristic content is still IP-protected (Constitution R6.1-R6.4).
 
 **Acceptance:**
-- All 30 heuristics pass `HeuristicSchema` Zod validation at load
+- All 30 heuristics pass `HeuristicSchema` Zod validation at load (benchmark + `provenance` both required per Constitution R15.3)
+- Per-heuristic verification evidence captured in PR Contract Proof block (PRD §10.9): `verified_by` name + manual re-derivation outcome
+- Spot check: 5 random heuristics re-verified by a different human against the cited source URL; ≤ 1 may diverge (the diverging heuristic is rejected)
 - 2-stage filter: `filterByBusinessType` (30 → ~20) then `filterByPageType` (~20 → 15-20)
 - Heuristic content never appears in API / dashboard / logs / LangSmith traces (only `heuristic_id`)
 
@@ -485,257 +545,9 @@ Every LLM call logs atomically to `llm_call_log` with model, tokens, cost, durat
 
 ## 6. Architecture
 
-### 6.1 Five-layer architecture
+**Canonical location:** [`docs/specs/mvp/architecture.md`](architecture.md)
 
-```
-┌───────────────────────────────────────────────────────────────────┐
-│  Layer 5 — DELIVERY                                               │
-│    CLI (`pnpm cro:audit`) + Consultant Dashboard (Next.js 15 +    │
-│    shadcn/ui + Clerk) + PDF (Playwright page.pdf) + Email (Resend)│
-├───────────────────────────────────────────────────────────────────┤
-│  Layer 4 — DATA                                                   │
-│    PostgreSQL 16 + pgvector (clients, audit_runs, findings,       │
-│    screenshots, reproducibility_snapshots, llm_call_log,          │
-│    audit_events) + R2 (screenshots, PDFs) + heuristics-repo       │
-├───────────────────────────────────────────────────────────────────┤
-│  Layer 3 — ANALYSIS ENGINE                                        │
-│    deep_perceive → quality_gate → evaluate → self_critique →      │
-│    ground (12 rules) → annotate_and_store → cross_page_analyze    │
-├───────────────────────────────────────────────────────────────────┤
-│  Layer 2 — BROWSER AGENT                                          │
-│    BrowserManager + MutationMonitor + OverlayDismisser +          │
-│    ScreenshotExtractor + AccessibilityExtractor + HardFilter +    │
-│    SoftFilter + ContextAssembler → PageStateModel. 12 MCP tools.  │
-│    RateLimiter + CircuitBreaker.                                  │
-├───────────────────────────────────────────────────────────────────┤
-│  Layer 1 — ORCHESTRATION                                          │
-│    AuditRequest + GatewayService + AuditState (LangGraph.js) +    │
-│    audit_setup + page_router + audit_complete +                   │
-│    cross_page_analyze + WarmupManager + 4D ScoringPipeline +      │
-│    ReproducibilitySnapshot + TemperatureGuard                     │
-└───────────────────────────────────────────────────────────────────┘
-```
-
-### 6.2 Pipeline flow
-
-```
-Trigger → AuditRequest (Zod) → GatewayService → audit_setup → page_router
-  → browse subgraph (navigate + dismiss + stabilize + capture)
-  → deep_perceive (page_analyze → AnalyzePerception v2.3)
-  → quality_gate (skip / partial / proceed)
-  → evaluate (Claude Sonnet 4, temp=0, heuristics + benchmarks + personas)
-  → self_critique (separate LLM, different persona, 5 checks)
-  → ground (12 deterministic rules)
-  → score (4D) + suppress
-  → annotate + store (R2 + Postgres)
-  → emit PageSignals → accumulator
-  → back to page_router (loop)
-  → (queue empty) → cross_page_analyze (pattern detection, deterministic)
-  → audit_complete (exec summary + action plan + PDF + email)
-  → consultant review (approve/reject/edit in dashboard)
-  → published store (client-visible)
-```
-
-### 6.3 Data contracts (full Zod schemas in `docs/specs/final-architecture/`)
-
-- `AuditRequest` — trigger payload (see `§18 trigger-gateway.md`)
-- `AuditState` — LangGraph Annotation, all fields (see `§05 unified-state.md`)
-- `PageStateModel` — browser perception (see `§06 browse-mode.md`)
-- `AnalyzePerception` — v2.3 enriched analysis perception (see `§07.9` + `§07.9.1`)
-- `Heuristic` — with required benchmark (see `§09 heuristic-kb.md`)
-- `Finding` lifecycle — Raw → Reviewed → Grounded / Rejected (see `§07` + `§23`)
-- `PatternFinding` — cross-page (see design doc `§1.2`)
-- `PersonaContext` — personas (see design doc `§1.2`)
-- `ReproducibilitySnapshot` — immutable (see `§25`)
-- `LLMCallRecord` — per-call logging (see `§11.7`)
-- `AuditEvent` — 22 event types (see `§34.4`)
-- `ExecutiveSummary` / `ActionPlan` — (see `§35`)
-
-### 6.4 Tech stack (precise names + versions)
-
-| Layer | Technology | Version |
-|---|---|---|
-| Language | TypeScript | 5.x |
-| Runtime | Node.js | 22 LTS |
-| Monorepo | Turborepo + pnpm | Turborepo 2.x, pnpm 9.x |
-| Validation | Zod | 3.x |
-| Browser | Playwright | latest (default; stealth plugin deferred to v1.1) |
-| Orchestration | LangGraph.js | latest |
-| MCP | `@modelcontextprotocol/sdk` | latest |
-| Primary LLM | Claude Sonnet 4 via `@anthropic-ai/sdk` | `claude-sonnet-4-20260301` |
-| Fallback LLM | (Deferred to v1.2) GPT-4o | — |
-| Database | PostgreSQL + pgvector | Postgres 16, pgvector latest |
-| ORM | Drizzle | latest |
-| Cache / Queue | Redis (Upstash in prod) + BullMQ | latest |
-| API framework | Hono | 4.x |
-| Frontend | Next.js App Router | 15 |
-| UI components | shadcn/ui + Tailwind CSS | latest |
-| Auth | Clerk | latest |
-| Storage | Cloudflare R2 (S3-compatible); LocalDisk fallback in dev | — |
-| Image annotation | Sharp | latest |
-| PDF generation | Playwright `page.pdf()` | — |
-| Logging | Pino (JSON structured) | latest |
-| Email | Resend (or Postmark) | latest |
-| Testing | Vitest (unit) + Playwright Test (integration + acceptance) | latest |
-| Deployment | Fly.io (API) + Vercel (dashboard) | — |
-| Containerization | Docker + docker-compose | latest |
-
-Exact version pins go to `package.json` + `pnpm-lock.yaml`. Never upgrade a pinned version without approval.
-
-### 6.5 Project structure map
-
-Top-level layout. Every file belongs somewhere; if a task wants a file outside these locations, STOP and ask.
-
-```
-neural-nba/                                    # repo root
-├── CLAUDE.md                                  # Claude Code operational entry point
-├── README.md                                  # human-readable repo intro
-├── .env.example                               # secret KEY=VALUE documentation (no real values)
-├── .env                                       # gitignored; real secrets
-├── package.json                               # workspace root config
-├── pnpm-workspace.yaml                        # workspace declarations
-├── turbo.json                                 # Turborepo pipeline
-├── tsconfig.json                              # shared TS config
-├── docker-compose.yml                         # local Postgres 16 + pgvector
-├── .specify/                                  # Spec Kit managed (created by `specify init`)
-│   ├── memory/
-│   │   └── constitution.md                    # Spec Kit constitution (symlink → docs/specs/mvp/)
-│   ├── scripts/                               # Spec Kit shell scripts
-│   └── templates/                             # spec/plan/tasks templates
-│
-├── apps/                                      # deployable apps (Turborepo workspace)
-│   ├── cli/                                   # `pnpm cro:audit` command
-│   │   ├── src/
-│   │   │   ├── index.ts                       # entry point
-│   │   │   ├── commands/
-│   │   │   │   └── audit.ts                   # cro:audit subcommand
-│   │   │   └── output/
-│   │   │       ├── ConsoleReporter.ts
-│   │   │       └── JsonReporter.ts
-│   │   ├── tests/
-│   │   │   ├── unit/                          # fast, isolated
-│   │   │   └── integration/                   # real DB, real browser
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   └── dashboard/                             # Next.js 15 consultant UI
-│       ├── src/
-│       │   ├── app/                           # App Router pages
-│       │   │   ├── layout.tsx
-│       │   │   ├── console/
-│       │   │   │   ├── audits/page.tsx
-│       │   │   │   ├── review/page.tsx
-│       │   │   │   ├── review/[id]/page.tsx
-│       │   │   │   └── clients/[id]/page.tsx
-│       │   │   └── api/
-│       │   │       └── report/[audit_run_id]/
-│       │   │           └── render/page.tsx    # HTML for PDF rendering
-│       │   ├── components/                    # shadcn/ui components
-│       │   ├── lib/                           # Dashboard-local utilities
-│       │   └── middleware.ts                  # Clerk auth gate
-│       ├── tests/
-│       ├── package.json
-│       └── tsconfig.json
-│
-├── packages/                                  # shared libraries (Turborepo workspace)
-│   └── agent-core/                            # THE core library
-│       ├── src/                               # ★ all source code here
-│       │   ├── index.ts                       # public exports
-│       │   ├── orchestration/                 # AuditState, AuditGraph, nodes
-│       │   │   ├── AuditState.ts
-│       │   │   ├── AuditGraph.ts
-│       │   │   └── nodes/
-│       │   │       ├── AuditSetupNode.ts
-│       │   │       ├── PageRouterNode.ts
-│       │   │       ├── AuditCompleteNode.ts
-│       │   │       └── CrossPageAnalyzeNode.ts
-│       │   ├── gateway/                       # AuditRequest + GatewayService
-│       │   ├── reproducibility/               # Snapshot + TemperatureGuard
-│       │   ├── browser-runtime/               # BrowserManager, OverlayDismisser, Rate/Circuit
-│       │   ├── perception/                    # PageStateModel extractors
-│       │   ├── mcp/                           # MCP server + 12 tools + ToolRegistry
-│       │   │   └── tools/                     # 1 file per tool
-│       │   ├── safety/                        # ActionClassifier, DomainPolicy
-│       │   ├── verification/                  # ActionContract, 3 strategies, VerifyEngine
-│       │   ├── analysis/
-│       │   │   ├── nodes/                     # DeepPerceive, Evaluate, SelfCritique, Ground, Annotate, Store
-│       │   │   ├── grounding/
-│       │   │   │   └── rules/                 # GR-001 to GR-012, 1 file each
-│       │   │   ├── scoring/                   # 4D scoring + IMPACT_MATRIX + EFFORT_MAP
-│       │   │   ├── heuristics/                # Schema, loader, 2-stage filter
-│       │   │   ├── personas/                  # PersonaContext + defaults
-│       │   │   ├── cross-page/                # PatternDetector
-│       │   │   ├── quality/                   # PerceptionQualityScorer
-│       │   │   └── strategies/                # StaticEvaluateStrategy
-│       │   ├── storage/                       # AccessModeMiddleware, TwoStore
-│       │   ├── review/                        # WarmupManager
-│       │   ├── delivery/                      # ExecSummary, ActionPlan, ReportGenerator
-│       │   ├── observability/                 # Pino logger, EventEmitter
-│       │   ├── adapters/                      # LLMAdapter, StorageAdapter, etc.
-│       │   ├── db/                            # Drizzle schema + migrations
-│       │   └── types/                         # cross-cutting Zod schemas + TS types
-│       ├── tests/
-│       │   ├── unit/                          # ★ per-module unit tests
-│       │   └── integration/                   # ★ cross-module integration
-│       ├── package.json
-│       └── tsconfig.json
-│
-├── heuristics-repo/                           # 30 heuristics, JSON (private)
-│   ├── README.md
-│   ├── baymard.json
-│   ├── nielsen.json
-│   └── cialdini.json
-│
-├── tests/                                     # top-level acceptance suite (Playwright Test)
-│   ├── acceptance/
-│   │   ├── example-com.spec.ts                # T148
-│   │   ├── amazon-in.spec.ts                  # T149
-│   │   └── shopify-demo.spec.ts               # T150
-│   └── fixtures/                              # cached pages for offline tests (v1.2)
-│
-└── docs/                                      # all specs + documentation
-    ├── PROJECT_BRIEF.md                       # 28-section cross-LLM brief
-    ├── master-architecture-checklist.md
-    ├── specs/
-    │   ├── AI_Browser_Agent_Architecture_v3.1.md      # CANONICAL
-    │   ├── AI_Analysis_Agent_Architecture_v1.0.md     # CANONICAL
-    │   ├── final-architecture/                        # §01–§36 + §33a (38 specs)
-    │   └── mvp/
-    │       ├── PRD.md                         # ★ CANONICAL PRD (this file)
-    │       ├── README.md
-    │       ├── constitution.md                # engineering rules R1-R16
-    │       ├── examples.md                    # samples, pitfalls, style guide
-    │       ├── tasks-v2.md                    # 263-task master catalog
-    │       ├── spec.md                        # (generated by Spec Kit CLI)
-    │       ├── plan.md                        # (generated by Spec Kit CLI)
-    │       ├── tasks.md                       # (generated by Spec Kit CLI)
-    │       └── archive/
-    │           └── 2026-04-07-walking-skeleton/
-    └── superpowers/
-        ├── specs/                             # design specs (from brainstorming skill)
-        └── plans/                             # implementation plans (from writing-plans)
-```
-
-#### Where things go (decision tree)
-
-| Kind of file | Location |
-|---|---|
-| Browser agent code | `packages/agent-core/src/browser-runtime/` or `perception/` |
-| MCP tool implementation | `packages/agent-core/src/mcp/tools/<toolName>.ts` |
-| Grounding rule | `packages/agent-core/src/analysis/grounding/rules/GR<NNN>.ts` |
-| Heuristic JSON | `heuristics-repo/<source>.json` |
-| Orchestration graph node | `packages/agent-core/src/orchestration/nodes/<NodeName>.ts` |
-| External dependency wrapper | `packages/agent-core/src/adapters/<Name>Adapter.ts` |
-| Zod schema | Adjacent to the module that owns it (e.g., `.../analysis/types.ts`) |
-| Dashboard page | `apps/dashboard/src/app/console/<route>/page.tsx` |
-| CLI subcommand | `apps/cli/src/commands/<name>.ts` |
-| Unit test | `packages/*/tests/unit/<same-path>.test.ts` |
-| Integration test | `packages/*/tests/integration/<name>.test.ts` |
-| Acceptance (end-to-end) test | `tests/acceptance/<name>.spec.ts` |
-| Design spec (new feature) | `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` |
-| Implementation plan | `docs/superpowers/plans/YYYY-MM-DD-<feature>.md` |
-| Architecture spec | `docs/specs/final-architecture/§NN-<name>.md` (extend existing, don't create new without approval) |
-
-**If a new category of file doesn't fit above: STOP and ASK** (Constitution R11.3).
+This section was extracted on 2026-04-24 to separate architecture (how the system is built) from product requirements (what must be built) per good-spec review Option A. Subsection numbering (§6.1 Five-layer architecture, §6.2 Pipeline flow, §6.3 Data contracts, §6.4 Tech stack, §6.5 Project structure map) preserved in the sibling file so existing cross-references continue to resolve.
 
 ---
 
@@ -944,75 +756,9 @@ pnpm cro:audit --help
 
 ## 9. Testing Strategy
 
-### 9.1 Philosophy
+**Canonical location:** [`docs/specs/mvp/testing-strategy.md`](testing-strategy.md)
 
-- **Test-first** (Constitution R3.1): write the failing test, see it fail, then implement
-- **Never disable a failing test** (R3.3): fix the implementation
-- **Every task has a smoke test** (R3.2) — defined in Spec Kit `tasks.md` (generated by CLI)
-- **Findings-as-hypotheses applies to tests too:** tests assert concrete behavior, not opinions
-
-### 9.2 Stack
-
-| Level | Tool | Location | Purpose |
-|---|---|---|---|
-| Unit | Vitest | `packages/*/tests/unit/` | Function-level, isolated, <5s suite |
-| Integration | Vitest + test DB + Playwright browser | `packages/*/tests/integration/` | Cross-module; real Postgres; real Chromium |
-| Acceptance | Playwright Test | `tests/acceptance/` | Full CLI audit on 3 sites (example.com, amazon.in, Shopify demo) |
-| Smoke (per task) | Inline in task description | Varies | Quick verification |
-
-### 9.3 Coverage targets
-
-| Path | Target | Rationale |
-|---|---|---|
-| `packages/agent-core/src/analysis/grounding/` | ≥ 90% | Hallucination filter; regressions are quality failures |
-| `packages/agent-core/src/analysis/scoring/` | ≥ 80% | Deterministic 4D; easy to test; high downstream impact |
-| `packages/agent-core/src/adapters/` | ≥ 70% | External boundaries; runtime failures expensive |
-| `packages/agent-core/src/orchestration/` | ≥ 60% | Integration-heavy; acceptance suite catches rest |
-| `packages/agent-core/src/browser-runtime/` | ≥ 50% | Real browser in integration catches most |
-| `apps/dashboard/` | ≥ 40% | Smoke-tested in acceptance |
-| Overall `packages/agent-core/` | **≥ 70%** | |
-
-### 9.4 Phase exit criteria
-
-Each phase in Spec Kit-generated `tasks.md` has exit criteria. A phase is "done" only when all pass. Final MVP exit: all 3 acceptance tests pass + 1 real client audit shippable.
-
-### 9.5 Real-LLM policy
-
-- Acceptance tests call real Claude Sonnet 4 (budget: ≤ $15 per acceptance run)
-- Unit + integration: may mock LLM responses
-- MVP: do NOT mock Claude in acceptance tests — catch prompt regressions against real model
-
-### 9.6 Conformance test suite
-
-Every critical component has a conformance test that verifies it meets its spec requirement, not just "does it run". Claude Code must run the conformance suite before declaring a task complete.
-
-**Command:** `pnpm test:conformance` — runs the per-component conformance matrix below. See Appendix B for full sample test cases.
-
-**Conformance matrix (critical components):**
-
-| Component | Conformance check | Expected behavior | Sample spec requirement |
-|---|---|---|---|
-| GR-001 (element exists) | Given a finding citing `ctas[5]` and a perception with `ctas.length === 3` → REJECT | Rejection with rule_id=GR-001, reason="element not found" | REQ-GROUND-001 |
-| GR-007 (no conversion predictions) | Given a finding recommendation `"this will increase conversion by 15%"` → REJECT | Rejection with rule_id=GR-007, pattern match logged | R5.3 + REQ-GROUND-007 |
-| GR-012 (benchmark validation) | Finding claims 14 fields against benchmark `6-8` (threshold_critical: 15) → PASS at `severity: "high"` | Accept; measurement cited | REQ-GROUND-012 |
-| GR-012 (benchmark hallucination) | Finding claims 30 fields against benchmark `6-8` but actual form has 5 → REJECT | Actual-vs-claimed deviation > ±20% | REQ-GROUND-012 |
-| Self-critique separation | Evaluate LLM + Self-critique LLM must have different system prompts | Snapshot test on prompt hashes | R5.6 |
-| Temperature guard | Calling LLMAdapter.invoke({nodeName: "evaluate", temperature: 0.7}) → throws | Runtime Error: "temperature must be 0 for evaluate" | R10 |
-| 2-stage heuristic filter | 30 heuristics → Stage 1 (ecommerce) → ~20 → Stage 2 (checkout) → 15-20 | Counts in expected range | §09.6 |
-| Warm-up mode | New client (audits_completed=0) → publish any finding → finding.status = "held" | Not auto-published | §24.4 |
-| AnalyzePerception schema | `page_analyze` output passes Zod validation on 3 fixture pages | Zod parse returns no errors | §07.9 |
-| `page_analyze` single-call invariant | Playwright trace shows exactly 1 `page.evaluate()` call per analysis | Count === 1 | REQ-TOOL-PA-001 |
-| Reproducibility | Run audit twice on same URL + same snapshot → finding overlap ≥ 90% | Jaccard similarity ≥ 0.9 | §25 |
-| Annotate renders box + pin + ID | Output PNG has readable finding_id at correct bounding box | Pixel-level visual snapshot | §07.8 |
-| Append-only tables | `UPDATE rejected_findings SET ...` → DB error | Constraint or trigger blocks | R7.4 |
-
-**Policy:**
-- Conformance tests run in CI **on every PR** (unlike acceptance tests which run nightly on main)
-- A PR cannot merge if any conformance test fails
-- New grounding rule or scoring component requires a new conformance test in the same PR
-- Conformance tests live at `packages/agent-core/tests/conformance/<component>.test.ts`
-
-**Claude Code usage rule:** After completing a task, run `pnpm test:conformance -- <component>` for every component the task touched. If any fails, debug before declaring complete (§10.6 self-verification).
+This section was extracted on 2026-04-24 to separate testing conventions from product requirements per good-spec review Option A. Subsection numbering (§9.1 Philosophy, §9.2 Stack, §9.3 Coverage targets, §9.4 Phase exit criteria, §9.5 Real-LLM policy, §9.6 Conformance test suite with matrix) preserved in the sibling file. Conformance templates in Appendix B remain in this PRD pending move to `docs/specs/mvp/templates/` (priority #7).
 
 ---
 
@@ -1219,6 +965,52 @@ Claude Code SHOULD log its reasoning at key decision points so developers can in
 
 **Developer inspection rule:** When a task's output seems wrong, read the PR description's reasoning log FIRST. Misalignment is usually visible in the "interpretation" sentence.
 
+### 10.9 PR Contract (per code-review-ai research)
+
+Every PR body SHALL include a 4-block PR Contract header BEFORE the §10.6 Spec coverage section:
+
+```
+## PR Contract
+1. **What / Why** (1-2 sentences): <change + motivation>
+2. **Proof** (concrete): <passing test file:line OR screenshot OR log excerpt OR conformance suite output>
+3. **Risk tier + AI involvement**: <low / medium / high> + <which files/functions were AI-generated vs human-written>
+4. **Review focus**: <3-5 bullets telling reviewer where to look first>
+```
+
+**Rationale:** §10.6 Spec coverage tells the reviewer WHAT was built; PR Contract tells the reviewer HOW to review efficiently. Combined, they cut review time and catch AI-specific failure modes (hallucinated imports, plausible-but-wrong logic, missed security implications).
+
+**Risk-tier definitions:**
+
+- **Low** — no shared-contract changes, no auth/payments/secrets/untrusted-input touches, no LLM prompt edits. Examples: typo fixes, internal refactors, isolated test additions.
+- **Medium** — single shared-contract touch, single-module LLM prompt edit, new grounding rule implementation. Reviewer verifies impact beyond the diff.
+- **High** — touches auth, payments, secrets, RLS policies, untrusted input handling, GR-007 conversion-prediction logic, reproducibility snapshot fields, or any append-only table schema (R7.4). Requires a human threat model walkthrough BEFORE merge, not at-merge.
+
+**Enforcement:** CI check blocks any PR whose body lacks "## PR Contract" heading. Additive to the §10.6 Spec coverage check; neither substitutes for the other.
+
+**Source:** `docs/engineering-practices/ai-orchestration-research-2026-04-24.md` Part 1 §3 (code-review-ai).
+
+### 10.10 Comprehension-debt pacing (per cognitive-parallel-agents research)
+
+When dispatching parallel subagents per §10.5, gate parallelization on **review capacity**, not on task independence alone.
+
+**Guidelines:**
+
+- Start with ONE fewer subagent than feels comfortable. Calibrate UP only after reviewing successive parallel batches without quality regression.
+- 3–5 parallel subagents is the realistic ceiling for most humans (research-cited working-memory + vigilance limit).
+- Time-box parallel-dispatch review rounds to ≤ 30 minutes before integrating, committing, and resetting context.
+- Monitor "ambient anxiety" as a capacity signal — if you're mentally juggling more work than you're reviewing, reduce SCOPE per agent BEFORE reducing AGENT COUNT. Scope reduction lowers per-thread overhead more than count reduction.
+- Trust calibration is per-thread, not per-agent: a subagent reliable on `grounding/` may be unreliable on `browser-runtime/`. Do not carry trust across domains.
+
+**Signals that pacing is wrong (stop and calibrate):**
+
+- Review time per diff > implementation time (agents outpacing review) → reduce count or scope
+- Same review-comment category repeats across agents (e.g., missing error handling on 3 of 3 diffs) → add to CLAUDE.md or skill instructions BEFORE dispatching more
+- Test coverage regresses during parallel work → suspend parallel dispatch until regressions are root-caused
+
+**Source:** `docs/engineering-practices/ai-orchestration-research-2026-04-24.md` Part 1 §6 (cognitive-parallel-agents).
+
+**Cross-ref:** CLAUDE.md §9 (sub-agent dispatch policy — operational companion); `.claude/skills/neural-dev-workflow/` (full playbook with pacing checklists).
+
 ---
 
 ## 11. Domain Knowledge + Policies
@@ -1248,508 +1040,45 @@ Claude Code SHOULD log its reasoning at key decision points so developers can in
 
 Full sample inputs, sample outputs (grounded Finding, rejected Finding, PatternFinding, cost summary, PDF structure), writing style (GOOD vs BAD findings), 25 Claude Code pitfalls, heuristic authoring examples, worked task-flow example: see `docs/specs/mvp/examples.md`.
 
-### 11.4 Code style + patterns (with examples)
+### 11.4 Code style + patterns
 
-#### 11.4.1 Naming conventions
+**Canonical location:** [`docs/engineering-practices/code-style.md`](../../engineering-practices/code-style.md)
 
-| Element | Convention | Example |
-|---|---|---|
-| Class | PascalCase | `BrowserManager`, `EvidenceGrounder`, `AnthropicAdapter` |
-| Interface / type | PascalCase | `AnalyzePerception`, `LLMAdapter`, `GroundedFinding` |
-| Zod schema const | PascalCase + `Schema` | `FindingSchema`, `AnalyzePerceptionSchema` |
-| Function (non-component) | camelCase | `detectPageType()`, `filterByBusinessType()`, `groundGR007()` |
-| React component | PascalCase | `AuditList`, `FindingDetailCard`, `ReviewInbox` |
-| Variable (local, private) | camelCase | `auditRunId`, `groundedFindings`, `perceptionScore` |
-| Database column | snake_case | `audit_run_id`, `business_type`, `cost_usd` |
-| JSON key (external API, MCP tool I/O) | snake_case | `heuristic_id`, `element_ref`, `bounding_box` |
-| Environment variable | SCREAMING_SNAKE | `ANTHROPIC_API_KEY`, `POSTGRES_URL`, `NEURAL_MODE` |
-| Constant (module-scope) | SCREAMING_SNAKE | `MAX_PAGES_PER_AUDIT`, `DEFAULT_BUDGET_USD`, `MODEL_PRICING` |
-| File (module) | kebab-case.ts OR PascalCase.ts (matches default export) | `browser-manager.ts` OR `BrowserManager.ts` — per workspace convention |
-| Test file | `<name>.test.ts` (unit) OR `<name>.spec.ts` (Playwright) | `grounding.test.ts`, `amazon-in.spec.ts` |
-| Spec REQ-ID | `REQ-<DOMAIN>-<NAME>-<NNN>` | `REQ-ANALYZE-NODE-001`, `REQ-GROUND-007` |
-| Grounding rule | `GR-NNN` (3-digit) | `GR-001`, `GR-012` |
-| Task ID (MVP/phase) | `M<phase>.<n>` | `M7.16`, `M2.19a` |
-| Task ID (master catalog) | `T<NNN>` | `T117`, `T255` |
+This content was extracted from PRD §11.4 on 2026-04-24 to separate engineering conventions from product requirements (good-spec review finding #6). The PRD now points to the engineering-practice doc; that file is the source of truth for naming conventions, file organization, TypeScript patterns, error handling, adapter usage, and logging requirements.
 
-#### 11.4.2 File organization (one concern per file)
+Governing Constitution rules remain: R10 (Code Quality), R2 (Type Safety), R7 + R9 (Adapter Pattern), R13 (Forbidden Patterns).
 
-**RULE:** Files < 300 lines; functions < 50 lines (Constitution R10.1-R10.2). Split when they grow. Each file has ONE responsibility.
+### 11.5 Git workflow
 
-**Good:**
-```typescript
-// packages/agent-core/src/analysis/grounding/rules/GR007.ts
-// REQ-GROUND-007: NEVER predict conversion impact.
-// This file exports a single pure function that checks a finding's text
-// for banned conversion-prediction phrases.
+**Canonical location:** [`docs/engineering-practices/git-workflow.md`](../../engineering-practices/git-workflow.md)
 
-import type { ReviewedFinding, GroundingResult } from "../types";
+This content was extracted from PRD §11.5 on 2026-04-24 to separate engineering conventions from product requirements (good-spec review finding #6). The PRD now points to the engineering-practice doc; that file is the source of truth for branch naming, commit message template, pre-commit checklist, PR policy, and branching model.
 
-const BANNED_PATTERNS: RegExp[] = [
-  /\bincrease(s|d)?\s+conversion/i,
-  /\bboost(s|ed)?\s+(conversion|revenue|sales)/i,
-  /\b\d+\s*%\s*(lift|increase|improvement)/i,
-  /\bROI\s+of\s+\d+/i,
-];
+Governing Constitution rules remain: R11.5 (commit message format). PR body still requires PRD §10.6 Spec coverage + §10.9 PR Contract.
 
-export function groundGR007(
-  finding: Pick<ReviewedFinding, "observation" | "assessment" | "recommendation">,
-): GroundingResult {
-  const corpus = [finding.observation, finding.assessment, finding.recommendation].join(" ");
-  for (const pattern of BANNED_PATTERNS) {
-    if (pattern.test(corpus)) {
-      return {
-        pass: false,
-        reason: `GR-007: conversion prediction detected (${pattern} matched)`,
-      };
-    }
-  }
-  return { pass: true };
-}
-```
-
-**Bad:**
-```typescript
-// all-grounding-rules.ts — 800 lines, 12 rules, hard to test or find
-
-// Also bad: mixing grounding with scoring in same file
-// Also bad: default export — prefer named exports for refactor-friendliness
-```
-
-#### 11.4.3 TypeScript patterns
-
-**Zod before TypeScript:** define the Zod schema, infer the type.
-
-```typescript
-// ✅ GOOD — schema is source of truth
-export const FindingSchema = z.object({
-  heuristic_id: z.string(),
-  status: z.enum(["violation", "pass", "needs_review"]),
-  severity: z.enum(["critical", "high", "medium", "low"]),
-  // ...
-});
-export type Finding = z.infer<typeof FindingSchema>;
-
-// ❌ BAD — type without schema; runtime validation impossible
-export type Finding = {
-  heuristic_id: string;
-  status: string;  // no enum constraint
-  severity: string;
-};
-```
-
-**Narrow `unknown`, don't use `any`:**
-
-```typescript
-// ✅ GOOD
-function parseLLMResponse(raw: unknown): Finding {
-  return FindingSchema.parse(raw);  // Zod throws on invalid
-}
-
-// ❌ BAD
-function parseLLMResponse(raw: any): Finding {
-  return raw as Finding;  // no runtime check, type lies
-}
-```
-
-**Named exports; avoid default:**
-
-```typescript
-// ✅ GOOD
-export function groundGR007(...) { ... }
-export const GR007_RULE_ID = "GR-007" as const;
-
-// ❌ BAD
-export default function(...) { ... }  // refactor-hostile
-```
-
-**Pure functions for grounding + scoring:**
-
-```typescript
-// ✅ GOOD — deterministic, easy to test
-export function computePriority(
-  severity: number,
-  confidence: number,
-  impact: number,
-  effort: number,
-): number {
-  return Math.round(
-    (severity * 2 + impact * 1.5 + confidence * 1 - effort * 0.5) * 100,
-  ) / 100;
-}
-
-// ❌ BAD — hidden dependency, untestable
-export function computePriority(finding: Finding): number {
-  return globalConfig.scoringWeights.severity * finding.severity + ...;
-}
-```
-
-#### 11.4.4 Error handling
-
-```typescript
-// ✅ GOOD — structured, includes context, correlation ID
-throw new Error(
-  `[GR-001] Element not found in perception. ` +
-  `Finding references 'ctas[5]' but perception.ctas.length === 3. ` +
-  `audit_run_id=${auditRunId} page=${pageUrl} heuristic=${heuristicId}`,
-);
-
-// ❌ BAD — opaque
-throw new Error("Element not found");
-
-// ❌ BAD — leaks IP (heuristic content)
-throw new Error(`Heuristic '${heuristic.name}: ${heuristic.description}' failed`);
-```
-
-Never `catch {}` silently. Either handle (log + recover), or re-throw with added context.
-
-#### 11.4.5 Adapter pattern (R7, R9)
-
-All external dependencies go through adapter modules. Direct imports of Anthropic SDK / Playwright / `pg` / Drizzle outside `adapters/` are FORBIDDEN.
-
-```typescript
-// ✅ GOOD — packages/agent-core/src/adapters/AnthropicAdapter.ts
-import Anthropic from "@anthropic-ai/sdk";
-import type { LLMAdapter, LLMResponse } from "./types";
-
-export class AnthropicAdapter implements LLMAdapter {
-  constructor(private readonly client = new Anthropic()) {}
-  async invoke<T>(args: ...): Promise<LLMResponse<T>> { ... }
-}
-
-// ❌ BAD — packages/agent-core/src/analysis/nodes/EvaluateNode.ts
-import Anthropic from "@anthropic-ai/sdk";  // FORBIDDEN outside adapter
-```
-
-#### 11.4.6 Logging — Pino only, correlation fields mandatory
-
-```typescript
-// ✅ GOOD
-import { logger } from "../../observability/logger";
-
-logger.info(
-  { audit_run_id, page_url, node_name: "deep_perceive", heuristic_id: null },
-  "Perception captured",
-);
-
-// ❌ BAD
-console.log("Perception captured");  // R10.6 forbids
-console.log(perception);  // also dumps 50-150KB
-```
-
-### 11.5 Git workflow (branches, commits, PRs with examples)
-
-#### 11.5.1 Branch naming
-
-```
-<type>/<phase>-<task-id>-<short-kebab-name>
-
-Types: feat, fix, refactor, test, docs, chore, perf
-```
-
-**Examples:**
-```
-feat/phase-1-m1.5-mutation-monitor
-feat/phase-7-m7.16-gr-007-no-conversion-predictions
-fix/m7.10-gr-001-off-by-one
-refactor/heuristic-loader-async
-test/phase-8-m8.15-example-com-acceptance
-docs/prd-v1.1-add-conformance-suite
-chore/bump-claude-sonnet-to-latest
-```
-
-**Rules:**
-- Lowercase only
-- Kebab-case for the short name
-- Include task ID (`m7.16`, not just "gr-007")
-- Keep `<short-kebab-name>` under 40 chars
-
-#### 11.5.2 Commit message template
-
-**Full form:**
-```
-<type>(<scope>): <TaskID> <imperative summary> (<REQ-ID>)
-
-<body explaining WHY — not WHAT>
-
-<optional: Spec coverage section per §10.6>
-
-<trailer>
-```
-
-**Real example — grounding rule implementation:**
-
-```
-feat(grounding): M7.16 add GR-007 no-conversion-predictions rule (REQ-GROUND-007)
-
-GR-007 is the absolute ban on conversion impact predictions. The rule
-runs deterministically after self-critique and rejects any finding whose
-observation, assessment, or recommendation contains banned phrases
-("increase conversion", "%lift", "ROI of N", etc.).
-
-Design choice: regex-based pattern list rather than LLM check, because
-grounding must be deterministic (R13, REQ-GROUND-007). Patterns cover
-the most common LLM hallucinations observed during prompt testing.
-
-Spec coverage for M7.16 (REQ-GROUND-007):
-  ✅ Regex pattern list covers "increase conversion", "%lift", "ROI of N"
-     - packages/agent-core/src/analysis/grounding/rules/GR007.ts:5-10
-  ✅ Case-insensitive matching (i flag on every pattern)
-  ✅ Scans observation + assessment + recommendation (not just one field)
-  ✅ Returns structured {pass, reason} result
-  ✅ Conformance test added: tests/conformance/gr007.test.ts
-
-Not covered by this PR:
-  - Integration into EvidenceGrounder chain → M7.22 (separate PR)
-  - Rejected-finding storage → M7.26 (StoreNode task)
-
-Task: M7.16
-Spec: docs/specs/final-architecture/07-analyze-mode.md §7.7 GR-007
-```
-
-**Short form (for small / unambiguous changes):**
-```
-fix(grounding): M7.10 off-by-one on GR-001 element index lookup (REQ-GROUND-001)
-
-Array index was 1-based in spec example but 0-based in implementation.
-Aligned to 0-based per TypeScript/JS convention.
-```
-
-**Rules:**
-- Lowercase `<type>`. Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`
-- `<scope>` in parentheses. Common: `grounding`, `perception`, `orchestration`, `dashboard`, `adapters`, `scoring`, `prd`, `docs`
-- `<TaskID>` always present for implementation commits (`M7.16` or `T117`)
-- `<REQ-ID>` in parens at end of subject
-- Subject line < 72 chars including prefix
-- Body required for any non-trivial change; explain WHY, not WHAT
-- **Spec coverage section required** (per §10.6) for tasks tied to acceptance criteria
-
-#### 11.5.3 Pre-commit checklist
-
-Claude Code (and humans) MUST run before every commit:
-
-1. `pnpm lint` → zero warnings
-2. `pnpm typecheck` → no TS errors
-3. `pnpm test` (affected workspace) → green
-4. `pnpm test:conformance -- <component>` if task touches a component with a conformance test (§9.6)
-5. Task's smoke test → passes (from `tasks-v2.md`)
-6. Verify changed files match task scope — no drive-by edits (§10.6)
-7. Sanity-check `.env` is NOT staged; no secrets, no large logs, no `node_modules`
-8. Commit message follows §11.5.2 format; Spec coverage section present (§10.6)
-
-#### 11.5.4 Pull request policy
-
-- **One task = one PR** (unless tasks are trivially sequential and break intermediate state)
-- **PR title = commit subject line format**
-- **PR body** MUST include:
-  1. Spec coverage section (§10.6)
-  2. Test output (paste CI check summary)
-  3. Screenshots if UI-touching
-  4. Any deviations from spec + approval reference (§10.8)
-- **Phase exit criteria met** before merging the last PR of a phase (Spec Kit `tasks.md` has these)
-- **No** `--no-verify` / hook bypass / signing bypass without written approval in PR body
-- **Never** force-push to `main`
-- **Never** merge a PR with any red CI check
-
-#### 11.5.5 Branching model
-
-```
-main ────────────────────────────────────────────────────────────────►
-  │                                                    ▲
-  ├──► feat/phase-1-m1.5-mutation-monitor  ────────────┤
-  │                                                    │  (PR, review, merge)
-  ├──► fix/m7.10-gr-001-off-by-one  ───────────────────┤
-  │                                                    │
-  └──► docs/prd-v1.1-add-conformance-suite ────────────┘
-```
-
-- `main` is always deployable
-- No long-lived feature branches (merge after each task)
-- Short-lived branches (1-3 days max)
-- If a task is truly multi-day, split it into smaller tasks first
+<!-- deleted-content-begin: PRD §11.4 + §11.5 prior inline content
+The following subsections moved to docs/engineering-practices/:
+- 11.4.1 Naming conventions → code-style.md §1
+- 11.4.2 File organization → code-style.md §2
+- 11.4.3 TypeScript patterns → code-style.md §3
+- 11.4.4 Error handling → code-style.md §4
+- 11.4.5 Adapter pattern → code-style.md §5
+- 11.4.6 Logging → code-style.md §6
+- 11.5.1 Branch naming → git-workflow.md §1
+- 11.5.2 Commit message template → git-workflow.md §2
+- 11.5.3 Pre-commit checklist → git-workflow.md §3
+- 11.5.4 Pull request policy → git-workflow.md §4
+- 11.5.5 Branching model → git-workflow.md §5
+deleted-content-end -->
 
 ---
 
+
 ## 12. Spec-Driven Workflow + Versioning
 
-### 12.1 Spec Kit integration
+**Canonical location:** [`docs/specs/mvp/spec-driven-workflow.md`](spec-driven-workflow.md)
 
-The workflow follows GitHub Spec Kit's gated progression. This PRD is the input; Spec Kit CLI produces the downstream artifacts.
-
-```
-PRD.md (this document)
-    │  (run Spec Kit CLI)
-    ▼
-/speckit.constitution   → updates docs/specs/mvp/constitution.md if needed
-/speckit.specify        → generates docs/specs/mvp/spec.md from this PRD
-/speckit.plan           → generates docs/specs/mvp/plan.md from spec.md + tech stack in §6.4
-/speckit.tasks          → generates docs/specs/mvp/tasks.md from plan.md
-/speckit.analyze        → cross-artifact consistency check
-/speckit.implement      → executes tasks (or hand off to Claude Code + superpowers skills)
-```
-
-**Never skip a gate.** If a gate reveals ambiguity, return to the previous artifact and fix before proceeding.
-
-### 12.2 Version bump rules
-
-| Change type | Version bump |
-|---|---|
-| Typos, clarifications | 1.0.0 → 1.0.1 |
-| Scope additions (new feature in §3.1) | 1.0.x → 1.1.0 |
-| Scope removals (cut a feature) | 1.0.x → 1.1.0 (document rationale) |
-| Breaking acceptance criteria change | 1.x.y → 2.0.0 |
-
-Bump triggers:
-- Minor clarifications: inline edit + §16 changelog entry
-- Scope additions: product owner approval required; PR with rationale
-- Scope removals: product owner + engineering lead approval
-- Breaking: all stakeholders + version bump
-
-### 12.3 Cross-doc synchronization
-
-When this PRD changes, check for downstream sync:
-
-| This PRD changes | Sync to |
-|---|---|
-| Scope (§3.1) | Regenerate `spec.md` via `/speckit.specify` |
-| Tech stack (§6.4) | Regenerate `plan.md` via `/speckit.plan` |
-| Functional req (§4) | Regenerate `spec.md` + `tasks.md` |
-| Boundaries (§10) | Update `CLAUDE.md` §7 + `constitution.md` if new non-negotiable |
-| Commands (§8) | Update `CLAUDE.md` §3 |
-| Domain knowledge (§11) | Update `examples.md` |
-
-### 12.4 Update process
-
-- **Minor:** edit inline, add §16 changelog entry, commit `docs(prd): clarify <section>`.
-- **Scope:** PR + rationale + product-owner approval.
-- **Review cadence:** weekly during implementation (engineering lead checks §13 acceptance + §4 success metrics). End of each phase: full PRD re-read, update §16 with drift. Post-demo: incorporate feedback.
-
-### 12.5 Context management + spec summarization
-
-This PRD is ~1200 lines. The master plan is 38 specs. Loading everything per task wastes context, costs money, and increases agent drift. We manage this actively.
-
-#### 12.5.1 Rule — load only the relevant section
-
-When Claude Code works on a task, the prompt MUST include:
-1. **This PRD §10** (Claude Code Operational Boundaries) — always
-2. **`constitution.md`** — always (it's short)
-3. **The task** from Spec Kit `tasks.md` — always
-4. **Only the spec section(s) cited by the task's REQ-IDs** — use file-structure map in §6.5
-5. **Relevant `examples.md` section** if a pattern exists (grounding, findings, heuristics)
-6. **This PRD's component section (§7.N)** matching the workspace being touched
-
-**Do NOT load:**
-- The full PRD (too big, most sections irrelevant per task)
-- Unrelated architecture specs (e.g., don't give dashboard tasks §20 state-exploration spec)
-- `PROJECT_BRIEF.md` for implementation tasks (it's for LLM analysis / gap analysis; strategic, not operational)
-
-#### 12.5.2 Per-phase spec summary (to be generated)
-
-For each phase in Spec Kit `tasks.md`, maintain a concise phase summary (~ 200-400 tokens) that captures:
-- Phase goal (1 sentence)
-- List of tasks in phase (IDs + 1-line descriptions)
-- Required specs (REQ-IDs with file paths)
-- Exit criteria
-- Common pitfalls for this phase (from `examples.md`)
-
-**Script (planned):** `pnpm spec:summarize --phase <N>` generates `docs/specs/mvp/phase-summaries/phase-<N>.md` from `tasks.md` + referenced specs. Target post-MVP but can be manual until then.
-
-**Usage:** when starting a task in Phase N, load `phase-<N>.md` as the phase-level context instead of the entire PRD + master plan.
-
-#### 12.5.3 Context-management tooling options
-
-For MVP: manual discipline per §12.5.1.
-
-**Post-MVP options** to manage larger spec corpus:
-
-| Option | Purpose | Integration |
-|---|---|---|
-| **Context7 MCP server** | Fetch current library docs at runtime (TypeScript, Playwright, LangGraph, Zod, Drizzle, Clerk) | Already available as MCP tool; Claude Code can call `mcp__plugin_context7_context7__query-docs` |
-| **Pgvector-backed RAG** | Embed the 38 architecture specs; retrieve top-k relevant chunks per query | `packages/agent-core/src/db/` has pgvector; one script to embed specs, one RAG query function |
-| **Per-component spec extracts** | Pre-generate small (<500 token) summaries per §07.N spec section | Automated via summarization script; output committed alongside source specs |
-| **Spec Kit `/speckit.analyze`** | Cross-artifact consistency — not RAG, but catches drift between spec/plan/tasks | Already in Spec Kit v0.7.4 |
-
-**Recommendation:** start with Context7 (free, already available) for external library docs. Add pgvector RAG in v1.2 when the spec corpus + golden test library grow. Don't over-engineer context management before the MVP ships.
-
-#### 12.5.4 Spec summarization pipeline (target state, v1.2)
-
-```
-docs/specs/final-architecture/§NN-<name>.md              (source of truth, 500-1500 lines each)
-   │
-   ▼ (summarization script, prompts Claude Sonnet 4)
-docs/specs/mvp/phase-summaries/phase-<N>.md              (200-400 tokens, auto-regenerated)
-   │
-   ▼ (Spec Kit tasks.md references phase summary)
-Claude Code prompt context                                (compact, targeted)
-```
-
-Until that pipeline exists, the rule is manual discipline: load only what §12.5.1 says to load.
-
-### 12.6 Lifecycle states (Constitution R17)
-
-Every spec artifact carries a `status:` field in YAML frontmatter. Allowed states: `draft | validated | approved | implemented | verified | superseded | archived`. Claude Code and humans SHALL skip `draft`, `superseded`, `archived` artifacts when loading context for implementation.
-
-**Frontmatter template:** `docs/specs/mvp/templates/frontmatter-lifecycle.template.md`.
-
-**State transitions:**
-- `draft → validated`: author self-review complete
-- `validated → approved`: PR approved by product owner or engineering lead
-- `approved → implemented`: code lands referencing the artifact's REQ-IDs
-- `implemented → verified`: conformance + acceptance tests green
-- `verified → superseded`: newer version replaces it (the new version carries `supersedes:` pointer)
-
-Enforcement: `pnpm spec:validate` (stub; full implementation Phase 9) checks frontmatter on every PR.
-
-### 12.7 Delta-based updates (Constitution R18)
-
-Every spec update MUST include a `delta:` block in frontmatter AND a changelog entry enumerating what is `new`, `changed`, `impacted`, `unchanged`. Silent edits are rejected in PR review. Delta entries are append-only — when v1.1 supersedes v1.0, both deltas remain in the changelog with v1.0 marked `superseded by v1.1`.
-
-### 12.8 Phase rollups (Constitution R19)
-
-At the end of every phase, a `phase-<N>-current.md` rollup SHALL be produced by `pnpm spec:rollup --phase <N>` before the next phase starts. The rollup is the compressed current-system baseline that Phase N+1 reads; Phase N+1 does NOT re-load Phase N's full artifacts.
-
-**Rollup capture** (~200 lines max, per Rule R19.5):
-- Active modules introduced
-- Data contracts in effect
-- System flows now operational
-- Known limitations carried forward
-- Open risks for next phase
-- Conformance gate status
-
-**Template:** `docs/specs/mvp/templates/phase-rollup.template.md`.
-
-**State:** `approved` immediately at phase exit; transitions to `verified` when N+1 starts; to `superseded` when N+1 rollup lands (earlier rollups retained as `verified` history).
-
-### 12.9 Impact analysis for cross-cutting changes (Constitution R20)
-
-Any PR modifying a shared contract — `AnalyzePerception`, `PageStateModel`, `AuditState`, `Finding`, any adapter interface, DB schema, MCP tool interface, or grounding rule interface — MUST include an `impact.md` analysis documenting:
-- Affected modules
-- Affected contracts (before / after)
-- Breaking / not breaking + migration steps
-- Risk level (low / medium / high)
-- Conformance tests that guard the change
-- Downstream ripple (which other artifacts need updating)
-
-**Template:** `docs/specs/mvp/templates/impact.template.md`.
-
-For additive-only changes (new fields with defaults, new adapters, new grounding rules), `impact.md` is still required — the discipline of producing it catches ripple effects; content can be short.
-
-Breaking-change PRs without an approved `impact.md` are rejected.
-
-### 12.10 Traceability matrix (Constitution R21)
-
-A central traceability matrix (`docs/specs/mvp/spec-to-code-matrix.md`) maps every REQ-ID → spec section → implementation file + lines → tests → status. Auto-generated by `pnpm spec:matrix`. CI runs `pnpm spec:matrix --check` on every PR; a REQ-ID referenced in a spec with `status: implemented` but no code reference fails the build.
-
-**Template:** `docs/specs/mvp/templates/spec-to-code-matrix.template.md`.
-
-**Code-side convention:** every REQ-ID implementation carries a comment marker:
-
-```typescript
-// REQ-GROUND-007: NEVER predict conversion impact
-// Implements rule GR-007 from §07.7 (§07 analyze-mode.md).
-export function groundGR007(...) { ... }
-```
-
-The matrix is read-only reference — never hand-edited (Rule 21.5). Changes flow: update specs or code → re-run `pnpm spec:matrix` → commit.
+This section was extracted on 2026-04-24 to separate workflow meta from product requirements per good-spec review Option A. Subsection numbering (§12.1 Spec Kit integration, §12.2 Version bump rules, §12.3 Cross-doc sync, §12.4 Update process, §12.5 Context management, §12.6 Lifecycle states, §12.7 Delta updates, §12.8 Phase rollups, §12.9 Impact analysis, §12.10 Traceability matrix) preserved in the sibling file. Constitution R17-R21 rules remain in `constitution.md`; this sibling operationalizes them.
 
 ---
 
@@ -1797,7 +1126,7 @@ MVP ships when ALL of the following are true:
 
 ## 14. Timeline + Resources
 
-| Week | Milestone | Engineering | CRO (parallel Phase 0b) |
+| Week | Milestone | Engineering | Heuristic authoring (Phase 0b — LLM-assisted, engineering-owned per F-012 v1.2 amendment) |
 |---|---|---|---|
 | 0 (days 1-3) | Setup + CLI skeleton | Monorepo, Docker, Postgres, env | (Day 1) Heuristic authoring kickoff |
 | 1 | Browser perception foundation | PageStateModel on 3 real sites | Top 15 heuristics drafted |
@@ -1825,147 +1154,9 @@ MVP ships when ALL of the following are true:
 
 ## 15. Risks + Mitigations
 
-### 15.1 Primary risk register
+**Canonical location:** [`docs/specs/mvp/risks.md`](risks.md)
 
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Heuristic authoring slips | Medium | High | Phase 0b starts Day 1; top 15 by Week 2 is gating milestone |
-| Claude rate limit / outage during demo | Low | High | Pre-cache demo audit results; live demo has fallback replay |
-| Target site has aggressive bot detection | Medium | Medium | Curate demo sites known to work; stealth deferred to v1.1 |
-| PDF layout breaks on complex findings | Medium | Low | Build PDF template early (Week 11 start); test on 5 audits before demo |
-| Grounding rejects too aggressively → empty reports | Low | Medium | Tunable thresholds; "review needed" fallback for borderline cases |
-| Consultant finds output "not better than Lighthouse" | Low | High | Heuristic depth + benchmark citation + grounded evidence is differentiator — CRO team must deliver depth, not just breadth |
-| Cost exceeds $0.50 per page | Medium | Medium | Kimi gap analysis estimated ~$0.80/page; validate in Phase 5 and tune |
-| Anti-bot detection during demo | Medium | Medium | Safe demo sites (example.com, known-friendly Shopify) |
-| 12 weeks too long for fundraising | — | — | Can compress to 8 weeks by dropping dashboard (CLI-only) — loses investor polish |
-| Scope creep from stakeholders | High | Medium | This PRD locked; new requests → v1.1 backlog |
-
-### 15.2 Lethal trifecta contingencies — speed × non-determinism × cost
-
-AI-assisted systems that move fast, produce non-deterministic output, AND burn variable cost per call are a combined risk that individual mitigations miss. Neural faces all three vectors.
-
-#### 15.2.1 Non-determinism contingency
-
-**Risk:** same audit inputs produce meaningfully different findings across runs, undermining consultant trust + client defensibility.
-
-**Prevention:**
-- Temperature=0 enforced on evaluate / self_critique / evaluate_interactive (R10)
-- Reproducibility snapshot per audit (immutable; model version + prompt hashes + heuristic version) — §F-015
-- Target: ≥ 90% finding overlap on repeat audit within 24 hrs
-
-**Detection:**
-- Every audit's reproducibility snapshot logged to `reproducibility_snapshots` table
-- Nightly job (post-MVP) re-runs a golden audit; diffs findings; alerts if overlap drops below 85%
-
-**Recovery when triggered:**
-1. Pause audits for the affected client
-2. Alert consultant + engineering lead (email via `NotificationAdapter`)
-3. Diagnose: compare prompt hash vs previous; check LLM provider for silent model update (Anthropic doesn't version-lock aggressively)
-4. If a silent model change: pin an older model version in `MODEL_PRICING` / adapter config; roll forward with stable pin
-5. Re-run affected audits with the pinned model; communicate with consultant before re-delivering to client
-6. **If determinism cannot be restored within 48 hrs:** manual-audit fallback per §15.3.1
-
-#### 15.2.2 Cost-spike contingency
-
-**Risk:** per-audit cost exceeds budget unexpectedly (Kimi gap analysis estimated real costs at ~2.3× projections; complex sites + retry loops compound).
-
-**Prevention:**
-- Hard budget cap: $15/audit, $5/page, $0.50/exploration (enforced at runtime, not advisory)
-- Token-level cost accounting in `llm_call_log` (per-call actuals, not estimates — NF-002, F-021)
-- Pre-call budget gate: estimate from `getTokenCount()` before invoking; skip or split batch if over
-- Per-client cost attribution queryable for profitability tracking
-
-**Detection:**
-- BullMQ-scheduled cost-sanity job (post-MVP) checks last 24 hrs of `llm_call_log`:
-    - Any audit where `actual_cost_usd > 2 × projected_cost_usd` → alert
-    - Any client where rolling 7-day cost exceeds revenue share → alert engineering lead
-- Dashboard `/console/admin/operations` (deferred to v1.2) surfaces cost trend chart
-
-**Recovery when triggered:**
-1. **Immediate:** audit hits $15 cap → `budget_exceeded` termination (already implemented); partial findings delivered with note
-2. **Client-level cost spike (recurring):** throttle per §15.3.2 — reduce max_pages, disable persona iteration, fall back to Tier 1 quantitative heuristics only (skip LLM evaluate on low-quality pages via quality gate)
-3. **System-wide cost spike:** circuit-break new audit starts (BullMQ pause job); engineering investigates before resuming
-4. **Catastrophic:** if a bug causes runaway calls (> 10× projected), revoke the Anthropic API key immediately via dashboard; rotate key after fix + cost-reconciliation with Anthropic billing
-
-#### 15.2.3 Speed-vs-quality contingency
-
-**Risk:** under demo pressure, engineering cuts corners (skip tests, widen `any`, bypass grounding) — a single compromised commit can erode trust in the entire audit output.
-
-**Prevention:**
-- Pre-commit checklist enforced by CI (§11.5.3): lint + typecheck + test + conformance + Spec coverage (§10.6)
-- Constitution R3.3: never disable a failing test; §10.3 NEVER rules are absolute
-- Phase-level review gate (§10.5) before merging last PR of a phase
-- Reviewer (human or subagent-reviewer) must confirm Spec coverage section present
-
-**Detection:**
-- CI blocks any PR lacking Spec coverage section
-- Reviewer checks that `any` additions have `// TODO: type this` + tracking issue link (R2.1)
-- Quarterly review of `rejected_findings` table: if same grounding rule is firing on many real-client findings, the prompt or heuristic likely has a systemic quality gap
-
-**Recovery when triggered:**
-1. A bad commit discovered in production → revert PR, do NOT try to patch forward
-2. Root cause: did a reviewer miss the Spec coverage, or did `--no-verify` bypass the checklist? Update reviewer guidelines or CI hook
-3. If a whole set of findings already shipped to a client were based on broken code: pause delivery of new audits for that client; communicate proactively; offer re-audit with fixed pipeline at no additional cost
-
-### 15.3 Fallback protocols
-
-#### 15.3.1 Manual audit fallback
-
-**When to invoke:** Determinism unrecoverable (§15.2.1) OR pipeline broken mid-engagement OR client-critical finding must be verified OR system-wide outage.
-
-**Protocol:**
-1. Consultant is informed via email/Slack within 1 hour of system failure detection
-2. Consultant opens the consultant dashboard (if still functional) OR raw CLI logs; reviews last captured perception data per page
-3. Consultant drafts findings manually using:
-    - Annotated screenshots from R2 (if already captured)
-    - Heuristic reference docs (available to consultants outside the `heuristics-repo/` IP barrier)
-    - Consultant's own CRO expertise
-4. Consultant delivers manual PDF through existing REO Digital template (pre-Neural workflow)
-5. Post-incident review documents what failed + adds regression test
-
-**Goal:** zero client-facing disruption. Consultant experience degrades (back to 40 hr workflow) but client never sees the break.
-
-#### 15.3.2 Model-throttle protocol
-
-**When to invoke:** Cost spike detected (§15.2.2) OR Anthropic rate-limit sustained > 10 min OR budget alert fires.
-
-**Throttle levels (applied in order until issue resolves):**
-
-| Level | Action | Expected effect |
-|---|---|---|
-| 1 — Gentle | Reduce `max_pages` from 20 to 10 per audit | ~50% LLM cost cut per audit |
-| 2 — Moderate | Disable persona iteration (single default persona only) | ~30% additional cut on evaluate cost |
-| 3 — Aggressive | Enable "skip if perception quality < 0.8" (stricter gate) | ~20% additional cut; more pages skip to partial |
-| 4 — Maximum | Evaluate only Tier 1 quantitative heuristics deterministically; skip LLM evaluate entirely for low-quality pages | ~70% cost cut; quality drops to "checklist-grade" |
-| 5 — Circuit break | Pause all new audits via BullMQ; drain in-flight; engineering investigates | No new cost incurred; in-flight audits finish |
-
-Throttle config lives in `AuditRequest.throttle_level` (new field for v1.2; MVP accepts it as optional and ignores if absent).
-
-#### 15.3.3 Circuit breaker on repeated failures
-
-**Already implemented** (Constitution references § 11.3, §15):
-- Domain-level: 3 failures → 1-hour block per domain
-- LLM provider-level: 5 errors in 10 min → alert (v1.1 adds failover to GPT-4o)
-- Audit-level: 3 consecutive page failures → pause audit; BullMQ resume in 5 min (3 attempts over 15 min)
-
-**When circuit triggers:**
-1. Audit paused → consultant notified
-2. Engineering investigates root cause (check Pino logs correlated by `audit_run_id`)
-3. If fixable in < 15 min: fix + resume
-4. If not: audit marked `failed`, partial findings delivered with explicit status, consultant escalates per §15.3.1
-
-#### 15.3.4 Human override at every gate
-
-Humans can override the system at four gates:
-
-| Gate | Human action | Effect |
-|---|---|---|
-| Audit trigger | Consultant chooses manual URL list instead of sitemap | Full control over page queue |
-| Warm-up mode | Engineering / admin manually toggles `warmup_mode_active: false` for a trusted client | Bypasses the "first 3 audits held" rule |
-| Consultant review | Reject or edit any finding before publication | Finding never reaches client without consultant approval |
-| PDF delivery | Consultant previews PDF, can regenerate with edits | No auto-delivery to client |
-
-There is no scenario where the system sends output to a client without at least one human approval gate (Constitution §6-R6.1, §24 two-store pattern, §F-019 review workflow).
+This section was extracted on 2026-04-24 to separate operational risk + incident playbooks from product requirements per good-spec review Option A. Subsection numbering (§15.1 Primary risk register, §15.2 Lethal trifecta contingencies — non-determinism / cost-spike / speed-vs-quality, §15.3 Fallback protocols — manual audit / model-throttle / circuit breaker / human override) preserved in the sibling file. Read at incident triage time, not for every task.
 
 ---
 
@@ -2075,226 +1266,12 @@ When any of the above is false → STOP and write a proper design spec (`superpo
 
 ## 19. Appendix B — Sample Conformance Test Cases
 
-These are templates for the `pnpm test:conformance` suite referenced in §9.6. Implement in `packages/agent-core/tests/conformance/`. One file per component.
+**Canonical location:** [`docs/specs/mvp/templates/conformance-test-templates.md`](templates/conformance-test-templates.md)
 
-### 19.1 Template: grounding rule conformance
+This appendix was extracted on 2026-04-24 to the `templates/` directory so copy-paste scaffolds live alongside other templates (frontmatter-lifecycle, impact, phase-rollup, spec-to-code-matrix). Contains TypeScript templates for: grounding rule conformance (GR-007 example), temperature guard (R10), 2-stage heuristic filter, append-only tables (R7.4), reproducibility (§25, nightly-only, real-LLM). Plus §19.6 "How to add a new conformance test" workflow.
 
-```typescript
-// packages/agent-core/tests/conformance/gr007.test.ts
-// CONFORMANCE: REQ-GROUND-007 — no conversion predictions
-// See PRD §9.6 matrix row "GR-007"
-
-import { describe, it, expect } from "vitest";
-import { groundGR007 } from "@/analysis/grounding/rules/GR007";
-
-describe("GR-007 conformance: no conversion predictions", () => {
-  const banned = [
-    { field: "recommendation", text: "Adding trust badges will increase conversion by 15%." },
-    { field: "assessment", text: "The 14-field form causes a conversion-rate decrease of 10%." },
-    { field: "observation", text: "Expected ROI of 3x if the CTA is above the fold." },
-    { field: "recommendation", text: "This change would boost revenue significantly." },
-    { field: "assessment", text: "A 20% lift is likely with this tweak." },
-  ];
-
-  for (const { field, text } of banned) {
-    it(`rejects banned phrase in ${field}: "${text.slice(0, 40)}..."`, () => {
-      const finding = {
-        observation: field === "observation" ? text : "",
-        assessment: field === "assessment" ? text : "",
-        recommendation: field === "recommendation" ? text : "",
-      };
-      const result = groundGR007(finding);
-      expect(result.pass).toBe(false);
-      expect(result.reason).toMatch(/conversion prediction/i);
-    });
-  }
-
-  const safe = [
-    "Add trust badges above the fold. Measure with an A/B test.",
-    "Reduce form fields to 8. Research shows 6-8 is the Baymard benchmark.",
-    "CTA color contrast is 4.2:1, below WCAG AA 4.5:1.",
-    "Prior similar sites have reported improvements with trust badges (Baymard 2024).",
-  ];
-  for (const text of safe) {
-    it(`accepts safe recommendation: "${text.slice(0, 40)}..."`, () => {
-      const result = groundGR007({
-        observation: "",
-        assessment: "",
-        recommendation: text,
-      });
-      expect(result.pass).toBe(true);
-    });
-  }
-});
-```
-
-### 19.2 Template: temperature guard conformance
-
-```typescript
-// packages/agent-core/tests/conformance/temperature-guard.test.ts
-// CONFORMANCE: R10 reproducibility — temperature=0 on analysis LLM calls
-// See PRD §9.6 matrix row "Temperature guard"
-
-import { describe, it, expect } from "vitest";
-import { LLMAdapterWithGuard } from "@/adapters/LLMAdapterWithGuard";
-import { MockLLMAdapter } from "@/adapters/MockLLMAdapter";
-
-describe("Temperature guard conformance", () => {
-  const guarded = new LLMAdapterWithGuard(new MockLLMAdapter());
-
-  it("rejects temperature > 0 for evaluate", async () => {
-    await expect(
-      guarded.invoke({ system: "x", user: "y", nodeName: "evaluate", temperature: 0.7 }),
-    ).rejects.toThrow(/temperature must be 0 for evaluate/i);
-  });
-
-  it("rejects temperature > 0 for self_critique", async () => {
-    await expect(
-      guarded.invoke({ system: "x", user: "y", nodeName: "self_critique", temperature: 0.3 }),
-    ).rejects.toThrow(/temperature must be 0/i);
-  });
-
-  it("allows temperature=0 for evaluate", async () => {
-    const r = await guarded.invoke({ system: "x", user: "y", nodeName: "evaluate", temperature: 0 });
-    expect(r).toBeDefined();
-  });
-
-  it("allows any temperature for non-analysis nodes (e.g., executive_summary)", async () => {
-    // Executive summary recommended_next_steps allows slight variation
-    const r = await guarded.invoke({ system: "x", user: "y", nodeName: "executive_summary", temperature: 0.2 });
-    expect(r).toBeDefined();
-  });
-});
-```
-
-### 19.3 Template: 2-stage heuristic filter conformance
-
-```typescript
-// packages/agent-core/tests/conformance/heuristic-filter.test.ts
-// CONFORMANCE: §09.6 REQ-HK-020a/b — two-stage filter
-// See PRD §9.6 matrix row "2-stage heuristic filter"
-
-import { describe, it, expect } from "vitest";
-import { filterByBusinessType, filterByPageType } from "@/analysis/heuristics/filter";
-import { loadHeuristics } from "@/analysis/heuristics/HeuristicLoader";
-
-describe("2-stage heuristic filter conformance", () => {
-  const all = loadHeuristics(); // 30 heuristics from heuristics-repo/
-
-  it("Stage 1: filterByBusinessType(ecommerce) reduces 30 to ~20", () => {
-    const s1 = filterByBusinessType(all, "ecommerce");
-    expect(s1.length).toBeGreaterThanOrEqual(15);
-    expect(s1.length).toBeLessThanOrEqual(25);
-    expect(s1.every((h) => h.business_type_applicability.includes("ecommerce"))).toBe(true);
-  });
-
-  it("Stage 2: filterByPageType(checkout) reduces ~20 to 10-18", () => {
-    const s1 = filterByBusinessType(all, "ecommerce");
-    const s2 = filterByPageType(s1, "checkout");
-    expect(s2.length).toBeGreaterThanOrEqual(10);
-    expect(s2.length).toBeLessThanOrEqual(18);
-    expect(s2.every((h) => h.page_type_applicability.includes("checkout"))).toBe(true);
-  });
-
-  it("Two-stage filter ≡ single-stage filter (no drift)", () => {
-    const twoStage = filterByPageType(filterByBusinessType(all, "ecommerce"), "checkout");
-    const singleStage = all.filter(
-      (h) =>
-        h.business_type_applicability.includes("ecommerce") &&
-        h.page_type_applicability.includes("checkout"),
-    );
-    expect(twoStage.map((h) => h.id).sort()).toEqual(singleStage.map((h) => h.id).sort());
-  });
-
-  it("Stage 2 cap at 30 applied after filtering", () => {
-    // Contrived case: load a mock set with > 30 heuristics matching everything
-    const mockAll = Array(50).fill(null).map((_, i) => ({
-      id: `MOCK-${i}`,
-      business_type_applicability: ["ecommerce"],
-      page_type_applicability: ["checkout"],
-      // ...minimum valid heuristic shape
-    }));
-    const filtered = filterByPageType(filterByBusinessType(mockAll as any, "ecommerce"), "checkout");
-    expect(filtered.length).toBeLessThanOrEqual(30);
-  });
-});
-```
-
-### 19.4 Template: append-only table conformance
-
-```typescript
-// packages/agent-core/tests/conformance/append-only.test.ts
-// CONFORMANCE: R7.4 — append-only tables
-// See PRD §9.6 matrix row "Append-only tables"
-
-import { describe, it, expect } from "vitest";
-import { getTestDb, closeTestDb, insertRejectedFinding } from "../helpers/db";
-
-describe("Append-only table conformance", () => {
-  const db = getTestDb();
-  afterAll(() => closeTestDb(db));
-
-  const appendOnlyTables = [
-    "audit_log",
-    "rejected_findings",
-    "finding_edits",
-    "llm_call_log",
-    "audit_events",
-  ];
-
-  for (const table of appendOnlyTables) {
-    it(`${table}: UPDATE is rejected`, async () => {
-      const row = await insertRejectedFinding(db, { ... });
-      await expect(
-        db.execute(`UPDATE ${table} SET rejection_reason = 'tampered' WHERE id = $1`, [row.id]),
-      ).rejects.toThrow();
-    });
-
-    it(`${table}: DELETE is rejected`, async () => {
-      const row = await insertRejectedFinding(db, { ... });
-      await expect(
-        db.execute(`DELETE FROM ${table} WHERE id = $1`, [row.id]),
-      ).rejects.toThrow();
-    });
-  }
-});
-```
-
-### 19.5 Template: reproducibility conformance (nightly only)
-
-```typescript
-// packages/agent-core/tests/conformance/reproducibility.test.ts
-// CONFORMANCE: §25 + NF-006 — same inputs → ≥90% finding overlap
-// See PRD §9.6 matrix row "Reproducibility"
-// NOTE: this test makes REAL LLM calls. Run nightly, not on every PR.
-
-import { describe, it, expect } from "vitest";
-import { runAudit } from "@/orchestration/AuditGraph";
-import { computeJaccardOverlap } from "../helpers/finding-diff";
-
-describe("Reproducibility conformance (real LLM)", () => {
-  it("Same URL + snapshot → ≥90% finding overlap", async () => {
-    const url = "https://example-stable.test.neural.dev/checkout";
-
-    const run1 = await runAudit({ url, business_type: "ecommerce", page_type: "checkout" });
-    const run2 = await runAudit({ url, business_type: "ecommerce", page_type: "checkout" });
-
-    const overlap = computeJaccardOverlap(run1.findings, run2.findings);
-    expect(overlap).toBeGreaterThanOrEqual(0.9);
-  }, 120000); // 2 min timeout
-});
-```
-
-### 19.6 How to add a new conformance test
-
-When adding a new critical component:
-
-1. Open PRD §9.6 matrix; add a row with component + conformance check + expected behavior + spec REQ-ID
-2. Create `packages/agent-core/tests/conformance/<component>.test.ts` following the templates above
-3. Ensure the test covers the §9.6 matrix expected behavior at minimum
-4. Run `pnpm test:conformance` — new test should pass
-5. Commit with `test(conformance): add <component> conformance per PRD §9.6 (REQ-...)`
+The conformance matrix itself lives in [`docs/specs/mvp/testing-strategy.md`](testing-strategy.md) §9.6; templates implement matrix rows.
 
 ---
 
-*End of PRD v1.1. Approved 2026-04-22. Source of truth: `docs/specs/final-architecture/§01-§36 + §33a` (master plan v2.3). Every claim traces to a REQ-ID in the spec corpus. Ready for Spec Kit CLI.*
+*End of PRD v1.2. Approved 2026-04-22; updated 2026-04-24 (R17 frontmatter + R22-R23 + §10.9-§10.10 + extractions per good-spec review). Source of truth: `docs/specs/final-architecture/§01-§36 + §33a` (master plan v2.3). Every claim traces to a REQ-ID in the spec corpus. Ready for Spec Kit CLI.*

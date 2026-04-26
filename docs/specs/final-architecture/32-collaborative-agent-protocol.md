@@ -1,3 +1,16 @@
+---
+title: 32-collaborative-agent-protocol
+artifact_type: architecture-spec
+status: approved
+loadPolicy: on-demand-only
+version: 2.3
+updated: 2026-04-24
+governing_rules:
+  - Constitution R17 (Lifecycle States)
+  - Constitution R22 (The Ratchet)
+note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+---
+
 # Section 32 — Collaborative Agent Protocol (Analysis ↔ Browse ↔ Web)
 
 **Status:** Architectural extension. Addresses a fundamental limitation: the current analysis pipeline is passive — it evaluates pre-captured data but cannot gather its own evidence. Real CRO consultants interact, research, compare, then conclude. This section gives the Analysis Agent the ability to REQUEST evidence from the Browser Agent and the Web, without breaking the layer separation.

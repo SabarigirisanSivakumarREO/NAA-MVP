@@ -1,12 +1,56 @@
-# MVP Tasks v2.2a (T001-T262)
+---
+title: Neural MVP Task Catalog (T001-T262)
+artifact_type: tasks
+status: approved
+version: 2.3
+created: 2026-04-15
+updated: 2026-04-24
+owner: engineering lead
+authors: [REO Digital team, Claude]
+reviewers: [REO Digital team]
 
-## Reconciled from Master Architecture + §33 Agent Composition + v2.2 Refinement + v2.2a External Review
+supersedes: v2.2a
+supersededBy: null
 
-> **Version:** 2.2a — Extended with v2.2 refinement (benchmarks, cross-page, cost accounting, observability, reports, golden tests, mobile) + v2.2a patches (overlay dismissal, discovery, personas, notifications, progressive funnel)
-> **Prior versions:** v2.1 (T001-T212, §33), v2.0 (T001-T192, §01-§30), v1.0 (T001-T155, original)
+derived_from:
+  - docs/specs/final-architecture/ (§01-§36 + §33a)
+  - docs/specs/mvp/PRD.md (F-001..F-021, NF-001..NF-010)
+
+req_ids: []  # Tasks reference REQ-IDs from source specs; do not define their own
+
+impact_analysis: null
+breaking: false
+affected_contracts: []
+
+delta:
+  new: []
+  changed:
+    - Version label bumped v2.2a → v2.3 to align with master plan version (PRD §17 already referenced v2.3; file was out of sync)
+    - R17 lifecycle frontmatter added (was missing; self-compliance fix)
+  impacted:
+    - CLAUDE.md §1 (reading order — version reference now consistent)
+  unchanged:
+    - All 263 task definitions
+    - 12-phase structure
+    - Phase 0b parallel workstream
+    - Acceptance criteria + smoke tests per task
+
+governing_rules:
+  - Constitution R17 (Lifecycle)
+  - Constitution R18 (Delta)
+---
+
+# MVP Tasks v2.3 (T001-T262)
+
+> **Summary (~120 tokens — agent reads this first):** Canonical task catalog for Neural MVP — 263 tasks across 12 phases (MVP subset: ~103 tasks across 9 phases). Each task has acceptance criteria, smoke test, and cross-references to source architecture specs. Eventually superseded per-phase by Spec Kit-generated `tasks.md` once `/speckit.tasks` runs; this file remains the canonical definitions reference.
+
+## Reconciled from Master Architecture + §33 Agent Composition + v2.2 Refinement + v2.2a External Review + v2.3 AnalyzePerception Enrichments
+
+> **Version:** 2.3 — Version label bumped from v2.2a on 2026-04-24 to align with master plan v2.3 (PRD §17 already cited v2.3; the file was lagging). No task-content changes in the v2.2a → v2.3 bump; this is a label-alignment fix. v2.3 AnalyzePerception enrichments (14 fields) are tracked in PRD §F-005 and referenced from task definitions.
+> **Prior versions:** v2.2a (label drift, fixed 2026-04-24), v2.2 (T001-T262, pre-gap-analysis), v2.1 (T001-T212, §33), v2.0 (T001-T192, §01-§30), v1.0 (T001-T155, original)
 > **Methodology:** Q6-R ruling + §33a interface-first integration + gap-analysis-driven refinement
 > **Total:** 263 tasks across 12 phases
-> **Key changes in v2.2a:**
+> **Key changes in v2.2a (retained in v2.3):**
 >   - Phase 12 (Mobile Viewport, T227-T231) added — MASTER PLAN ONLY
 >   - Phase 0b (Heuristic Authoring) parallel workstream — CRO team, not engineering
 >   - 50 new tasks T213-T262

@@ -1,3 +1,16 @@
+---
+title: 23-findings-engine-extended
+artifact_type: architecture-spec
+status: approved
+loadPolicy: on-demand-only
+version: 2.3
+updated: 2026-04-24
+governing_rules:
+  - Constitution R17 (Lifecycle States)
+  - Constitution R22 (The Ratchet)
+note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+---
+
 # Section 23 — Findings Engine (Extended)
 
 **Status:** Master architecture extension. Core scoring deployed Phase 6; rollups Phase 8. Extends §7 (Analyze Mode) and §12 (Review Gate).

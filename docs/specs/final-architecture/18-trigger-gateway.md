@@ -1,3 +1,16 @@
+---
+title: 18-trigger-gateway
+artifact_type: architecture-spec
+status: approved
+loadPolicy: on-demand-only
+version: 2.3
+updated: 2026-04-24
+governing_rules:
+  - Constitution R17 (Lifecycle States)
+  - Constitution R22 (The Ratchet)
+note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+---
+
 # Section 18 — Trigger Gateway
 
 **Status:** Master architecture extension. Required from Phase 6 onwards. The gateway is the **only** entry point into the audit orchestrator.

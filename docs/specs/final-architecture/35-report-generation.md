@@ -1,3 +1,16 @@
+---
+title: 35-report-generation
+artifact_type: architecture-spec
+status: approved
+loadPolicy: on-demand-only
+version: 2.3
+updated: 2026-04-24
+governing_rules:
+  - Constitution R17 (Lifecycle States)
+  - Constitution R22 (The Ratchet)
+note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+---
+
 # Section 35 — Report Generation & Export
 
 **Status:** Master architecture extension (v2.2). Phase 9 implementation. The deliverable chain: raw findings → executive summary → action plan → branded PDF report.

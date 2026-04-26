@@ -1,3 +1,16 @@
+---
+title: 20-state-exploration
+artifact_type: architecture-spec
+status: approved
+loadPolicy: on-demand-only
+version: 2.3
+updated: 2026-04-24
+governing_rules:
+  - Constitution R17 (Lifecycle States)
+  - Constitution R22 (The Ratchet)
+note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+---
+
 # Section 20 — State Exploration Engine
 
 **Status:** Master architecture extension. Phase 7 implementation. Implements the Q2-R locked ruling: heuristic-primed Pass 1 + auto-escalated bounded Pass 2. Best-effort rejected.

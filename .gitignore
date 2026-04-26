@@ -1,0 +1,17 @@
+# Secrets — NEVER commit (Constitution R13)
+.env
+.env.local
+.env.*.local
+
+# Dev storage (local_disk ScreenshotStorage writes here — PRD §7.5)
+.storage/
+
+# Node / Turborepo / Next.js build artifacts
+node_modules/
+.turbo/
+dist/
+.next/
+coverage/
+*.log
+
+.claude/settings.local.json

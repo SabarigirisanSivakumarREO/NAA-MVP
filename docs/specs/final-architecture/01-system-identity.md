@@ -1,3 +1,16 @@
+---
+title: 01-system-identity
+artifact_type: architecture-spec
+status: approved
+loadPolicy: on-demand-only
+version: 2.3
+updated: 2026-04-24
+governing_rules:
+  - Constitution R17 (Lifecycle States)
+  - Constitution R22 (The Ratchet)
+note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+---
+
 # Section 1 — System Identity
 
 > **G9-FIX: Scope Note.** This section describes the FULL end-state platform identity. §01-§17 (original files) specify the agent internals and MVP platform. §18-§30 (master extensions) specify the platform capabilities that evolve across Phases 6-16. Both layers are architecturally locked. The MVP is a subset extracted from the combined architecture — see §16.5.

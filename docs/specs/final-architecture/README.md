@@ -1,3 +1,16 @@
+---
+title: Final Architecture — Directory Manifest
+artifact_type: index
+status: approved
+loadPolicy: on-demand-only
+version: 2.3
+updated: 2026-04-24
+governing_rules:
+  - Constitution R17 (Lifecycle States)
+  - Constitution R22 (The Ratchet)
+note: Reference-material directory manifest for 38 source-of-truth architecture specs. Do NOT load by default (CLAUDE.md Tier 3). Load only the specific §NN-<name>.md file cited by the current task's REQ-IDs.
+---
+
 # AI CRO Audit System — Final Production Architecture
 
 ## REO Digital / Neural Product Team — April 2026
