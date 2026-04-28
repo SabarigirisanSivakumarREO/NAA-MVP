@@ -2,14 +2,14 @@
 title: Neural MVP Task Catalog (T001-T262)
 artifact_type: tasks
 status: approved
-version: 2.3.2
+version: 2.3.3
 created: 2026-04-15
-updated: 2026-04-27
+updated: 2026-04-28
 owner: engineering lead
 authors: [REO Digital team, Claude]
 reviewers: [REO Digital team]
 
-supersedes: v2.3.1
+supersedes: v2.3.2
 supersededBy: null
 
 derived_from:
@@ -29,14 +29,18 @@ delta:
     - R17 lifecycle frontmatter added (was missing; self-compliance fix)
     - v2.3 → v2.3.1 (2026-04-27) — T007 StealthConfig acceptance scope REDUCED to honor PRD §3.1 + architecture.md §6.4 v1.1 deferral of the stealth plugin. Stealth plugin (`playwright-extra-plugin-stealth`) NOT loaded in MVP; T007 now scaffolds a thin wrapper using Playwright's native API for user-agent + viewport + WebGL fingerprint rotation per session. v1.1 plugs the actual stealth plugin into this scaffold. Resolved Option B per Constitution R1.4 + R11.4 spec-conflict resolution 2026-04-27.
     - v2.3.1 → v2.3.2 (2026-04-27) — Phase 3 verification scope REDUCED from 9 verify strategies (T053-T061) to **3 MVP strategies** (T053 url_change, T054 element_appears, T055 element_text) to honor INDEX.md row 3 "Verification (thin)" + CLAUDE.md §4 "3 verify strategies (MVP) + VerifyEngine". T056-T061 (network_request, no_error_banner, snapshot_diff, custom_js, no_captcha, no_bot_block) DEFERRED to v1.1. T065 acceptance updated: "all 3 MVP strategies + VerifyEngine + FailureClassifier + ConfidenceScorer integration on browse fixture". Resolved Option A per blanket pattern adopted 2026-04-27 (same precedent as T007).
+    - v2.3.2 → v2.3.3 (2026-04-28) — **Phase 0b section added** (T0B-001..T0B-005 — drafting prompt template, verification protocol, PR Contract Proof block extension, `pnpm heuristic:lint` CLI, heuristics-repo README) per PRD F-012 v1.2 amendment 2026-04-26 (LLM-assisted authoring, engineering-owned). **T103-T105 counts REDUCED** from 50/35/15 (=100) to **15/10/5 (=30)** per same F-012 v1.2 amendment — MVP scope; the additional 70 deferred to v1.1+ to reach §09.3's 100-heuristic master target. T103-T105 task definitions remain in Phase 6 section but are now declared OWNED by Phase 0b workstream (Phase 6 is the engine; Phase 0b is the content). Resolved Option A per CLAUDE.md standing directive (drift discovered mid-session 2026-04-28). See `docs/specs/mvp/phases/phase-0b-heuristics/{spec,plan,tasks,impact,README}.md` for full Phase 0b authoring workflow.
   impacted:
     - CLAUDE.md §1 (reading order — version reference now consistent)
     - docs/specs/AI_Browser_Agent_Architecture_v3.1.md REQ-BROWSE-HUMAN-005 — v3.1 stealth requirement remains canonical for v1.1; MVP carries reduced scope only.
     - docs/specs/mvp/phases/phase-1-perception/ — Phase 1 spec/plan/tasks reflect reduced T007 scope from authoring date.
+    - docs/specs/mvp/phases/phase-0b-heuristics/ — NEW phase folder shipped 2026-04-28 (spec/plan/tasks/impact/README/checklist)
+    - docs/specs/mvp/phases/phase-6-heuristics/ — already references "T103-T105 are Phase 0b workstream" since v0.2; v2.3.3 patch makes the count reduction (50/35/15 → 15/10/5) explicit in T103-T105 entries
+    - docs/specs/mvp/phases/INDEX.md — v1.1 → v1.2 (Phase 0b row marked spec-shipped; Phase 7 + Phase 8 marked spec-shipped 2026-04-28)
   unchanged:
-    - 262 of 263 task definitions (only T007 acceptance changed)
+    - 262 of 263 task definitions retain v2.3.2 wording (T103-T105 counts reduced; nothing else changed)
     - 12-phase structure
-    - Phase 0b parallel workstream
+    - Phase 0b workstream principle (was already documented; v2.3.3 makes the section explicit)
     - All other acceptance criteria + smoke tests
     - REQ-BROWSE-HUMAN-005/006 ID references in T007 (REQ-IDs preserved; acceptance scope re-interpreted per MVP deferral)
 
@@ -105,6 +109,56 @@ governing_rules:
 - **dep:** T004
 - **files:** `.env.example`, `.env` (gitignored)
 - **acceptance:** All required env vars documented.
+
+---
+
+## Phase 0b: Heuristic Authoring (T0B-001..T0B-005 + T103-T105) — NEW v2.3.3 (2026-04-28)
+
+> **Source:** PRD F-012 v1.2 amendment (2026-04-26) — heuristic authoring switched from CRO-parallel to LLM-assisted with mandatory human verification per Constitution R15.3.2; engineering-owned MVP workstream. **30 heuristics total** (≈15 Baymard + ≈10 Nielsen + ≈5 Cialdini); the additional 70 to reach §09.3's 100-heuristic master target deferred to v1.1+.
+>
+> **Phase 0b folder:** `docs/specs/mvp/phases/phase-0b-heuristics/` (spec/plan/tasks/impact/README/checklist).
+>
+> **Task IDs:** T0B-001..T0B-005 are CANONICAL HERE. **T103/T104/T105 are CANONICAL in Phase 6 section below** (their count reduced 50/35/15 → 15/10/5 in v2.3.3); they are OWNED by Phase 0b workstream (Phase 6 is the engine; Phase 0b is the content authoring).
+
+### T0B-001: Drafting prompt template
+- **dep:** T001
+- **spec:** REQ-HK-001 + Constitution R15.3.1 (provenance fields) + R15.3.3 (drafting LLM responses isolated from observability)
+- **files:** `docs/specs/mvp/templates/heuristic-drafting-prompt.md`
+- **acceptance:** Markdown template with system block + user block accepting `{source, source_url, citation_text, archetype, page_types, device}` inputs. Output schema reference to `HeuristicSchemaExtended` (Phase 6 T101). Banned-phrasing prohibition (no conversion-rate predictions) embedded in system block. Producing a draft on a known Baymard excerpt yields valid `HeuristicSchemaExtended.parse()`-compatible JSON. See `phase-0b-heuristics/plan.md` §2.
+
+### T0B-002: Verification protocol document
+- **dep:** none
+- **spec:** Constitution R15.3.2 (human verification mandatory)
+- **files:** `docs/specs/mvp/templates/heuristic-verification-protocol.md`
+- **acceptance:** 8-step protocol — URL liveness check, citation locate, ±20% benchmark re-derivation (quantitative) or text-reference (qualitative), banned-phrase check, manifest-selector check, fill `verified_by`/`verified_date`, run `pnpm heuristic:lint`, commit with PR Contract Proof block. Includes 3-strike re-draft rule + escalation criteria. See `phase-0b-heuristics/plan.md` §3.
+
+### T0B-003: PR Contract Proof block extension
+- **dep:** T0B-002, PRD §10.9 PR Contract template
+- **spec:** Constitution R15.3.2 + PRD §10.9
+- **files:** `docs/specs/mvp/templates/heuristic-pr-proof.md`
+- **acceptance:** Per-heuristic Proof block template covering heuristic ID, file path, drafted by, verified by + date, source URL (with status / archive note), re-derivation note, lint status, banned-phrase check status, manifest selectors. Linked from PRD §10.9 PR Contract section in next PRD bump. See `phase-0b-heuristics/plan.md` §4.
+
+### T0B-004: `pnpm heuristic:lint` CLI helper
+- **dep:** T002, T003, T101 (HeuristicSchemaExtended — Phase 6)
+- **spec:** Constitution R15.3 (benchmark + provenance both required) + R15.3.1 (5 provenance fields) + R15.3.3 (isolation) + R5.3 + GR-007 (banned phrasing)
+- **files:**
+  - `apps/cli/src/commands/heuristic-lint.ts` (NEW)
+  - `apps/cli/package.json` (add `heuristic:lint` script)
+  - `apps/cli/tests/conformance/heuristic-lint.test.ts` (NEW)
+- **acceptance:** Five checks — (1) Zod parse against `HeuristicSchemaExtended`; (2) all 5 `provenance` fields non-empty; (3) `benchmark` discriminated union present + well-formed; (4) manifest selectors `archetype` + `page_type` + `device` present; (5) deterministic banned-phrase regex check on `recommendation.summary` + `recommendation.details`. Exit non-zero on any failure. Conformance test covers 5 fail cases + 1 pass case + AC-13 isolation assertions (`.gitignore` contains `.heuristic-drafts/`; no LangSmith client in drafting subprocess). See `phase-0b-heuristics/plan.md` §5.
+- **smoke test:** `pnpm heuristic:lint heuristics-repo/baymard/BAY-CHECKOUT-001.json` exit code 0 on a synthetic valid heuristic.
+
+### T0B-005: `heuristics-repo/README.md` + `.gitignore` patch
+- **dep:** T0B-001, T0B-002, T0B-003, T0B-004
+- **spec:** Constitution R6 + R15.3 + R15.3.3
+- **files:**
+  - `heuristics-repo/README.md` (NEW)
+  - `.gitignore` (add `.heuristic-drafts/`)
+- **acceptance:** README covers — authoring workflow (draft → verify → lint → PR), R6 IP discipline (drafting subprocess isolation per `phase-0b-heuristics/plan.md` §6), spot-check protocol (3 rounds at +10/+20/+30 marks; ≤1 of 5 divergence acceptance), link back to PRD F-012 + Phase 0b spec. New author can follow it without engineering-lead clarification.
+
+---
+
+> **T103/T104/T105 are canonically defined in the Phase 6 section below** (with counts reduced to 15/10/5 in v2.3.3). They are OWNED by the Phase 0b workstream — see Phase 0b section above + `docs/specs/mvp/phases/phase-0b-heuristics/tasks.md` for full sequencing, kill criteria, and PR Contract Proof block requirements.
 
 ---
 
@@ -717,20 +771,56 @@ governing_rules:
 
 ### T102: HeuristicKnowledgeBase schema — UNCHANGED
 
-### T103: Author 50 Baymard heuristics [MOD]
-- **dep:** T101
-- **files:** `heuristics-repo/baymard.json`
-- **v2.0 changes:**
-  - All 50 heuristics now include `version: "1.0.0"`, `rule_vs_guidance`, `business_impact_weight`, `effort_category` per §9.10.7 defaults
-  - **~8 heuristics get `preferred_states`:** e.g., BAY-CHECKOUT-001 (guest checkout) needs `preferred_states: [{ pattern_id: "checkout_form_visible", interaction_hint: { type: "click", target_text_contains: ["Checkout", "Proceed"] } }]`
-  - **~10 heuristics classified as `rule_vs_guidance: "rule"`** (e.g., form field count, CTA presence, guest checkout option, trust badge presence)
-- **acceptance:** All 50 pass HeuristicSchemaExtended validation. ~8 have preferred_states. ~10 have rule_vs_guidance="rule".
+### T103: Author ~15 Baymard heuristics [MOD v2.3.3 — Phase 0b workstream, count reduced]
+- **owner:** Phase 0b workstream (per PRD F-012 v1.2 amendment 2026-04-26 — engineering-owned, LLM-assisted with mandatory human verification per Constitution R15.3.2)
+- **dep:** T101 (HeuristicSchemaExtended) + T0B-001..T0B-005 (Phase 0b authoring infrastructure) + T4B-013 contract surface (manifest selectors `archetype`/`page_type`/`device`)
+- **spec:** PRD F-012 v1.2 + REQ-HK-001 + REQ-HK-EXT-001..019 + REQ-HK-BENCHMARK-001..003 + REQ-CONTEXT-DOWNSTREAM-001 + Constitution R15.3 (benchmark + provenance both required) + R15.3.1 (5 provenance fields) + R15.3.2 (human verification mandatory) + R15.3.3 (drafting LLM responses isolated) + R5.3 + GR-007 (no conversion-rate predictions)
+- **files:** `heuristics-repo/baymard/*.json` (~15 files, one per heuristic — NOT a single bundle file)
+- **v2.3.3 changes (vs v2.0):**
+  - **Count reduced 50 → ~15** per PRD F-012 v1.2 amendment 2026-04-26 (MVP scope; the additional 35 deferred to v1.1+ to reach §09.3's 50-Baymard master target)
+  - **Distribution:** ≈4 homepage, ≈4 PDP, ≈5 checkout, ≈2 cart, ≥1 mobile-specific
+  - **Each heuristic MUST carry `provenance` block** (5 fields per R15.3.1: `source_url`, `citation_text`, `draft_model`, `verified_by`, `verified_date`)
+  - **Each heuristic MUST carry `benchmark` block** (quantitative for structural Tier 1; qualitative for content Tier 2/3 per REQ-HK-BENCHMARK-002/003)
+  - **Each heuristic MUST carry manifest selectors** `archetype` + `page_type` + `device` (consumed by Phase 4b T4B-013 `loadForContext(profile)` filter)
+  - **PR Contract Proof block REQUIRED per heuristic** (T0B-003 template)
+  - **Spot-check at +10 mark:** ≤1 of 5 random heuristics diverges from cited source (F-012 acceptance)
+- **v2.0 changes (retained):**
+  - Heuristics include `version: "1.0.0"`, `rule_vs_guidance`, `business_impact_weight`, `effort_category` per §9.10.7 defaults
+  - **~3-5 heuristics get `preferred_states`** (e.g., BAY-CHECKOUT-001 guest checkout needs `preferred_states: [{ pattern_id: "checkout_form_visible", interaction_hint: { type: "click", target_text_contains: ["Checkout", "Proceed"] } }]`)
+  - **~5 heuristics classified as `rule_vs_guidance: "rule"`** (form field count, CTA presence, guest checkout option, trust badge presence, etc.)
+- **acceptance:** All ~15 pass `pnpm heuristic:lint heuristics-repo/baymard/*.json` (T0B-004). All ~15 pass Phase 6 T112 `HeuristicLoader.loadAll()` integration test under `HeuristicSchemaExtended.parse()`. Per-heuristic PR Contract Proof block cites `verified_by` + `verified_date` + source URL + brief re-derivation note.
+- **smoke test:** `pnpm heuristic:lint heuristics-repo/baymard/*.json` exit code 0
+- **kill criteria:** if 3+ Baymard heuristics fail human verification on first attempt → STOP, review drafting prompt for systematic drift (per Phase 0b plan.md §7)
 
-### T104: Author 35 Nielsen heuristics [MOD]
-- **v2.0 changes:** Same pattern as T103. ~5 get preferred_states. ~8 get rule_vs_guidance="rule".
+### T104: Author ~10 Nielsen heuristics [MOD v2.3.3 — Phase 0b workstream, count reduced]
+- **owner:** Phase 0b workstream
+- **dep:** T103 (workflow exercised + smoothed) + T101 + T0B-001..T0B-005 + T4B-013 contract surface
+- **spec:** PRD F-012 v1.2 + REQ-HK-001 + REQ-HK-EXT-001..019 + REQ-HK-BENCHMARK-001..003 + R15.3 + R15.3.1 + R15.3.2 + R15.3.3 + R5.3 + GR-007
+- **files:** `heuristics-repo/nielsen/*.json` (~10 files)
+- **v2.3.3 changes (vs v2.0):**
+  - **Count reduced 35 → ~10** per F-012 v1.2 (the additional 25 deferred to v1.1+)
+  - **Distribution:** ≈4 visibility/feedback, ≈3 error prevention/recovery, ≈3 consistency/standards
+  - Same `provenance` + `benchmark` + manifest selectors + PR Contract Proof block requirements as T103
+  - **Spot-check at +20 mark** (5 random across full set so far): ≤1 divergence
+- **v2.0 changes (retained):** Same pattern as T103. ~2-3 get preferred_states. ~3 get rule_vs_guidance="rule".
+- **acceptance:** All ~10 pass `pnpm heuristic:lint heuristics-repo/nielsen/*.json`.
+- **smoke test:** `pnpm heuristic:lint heuristics-repo/nielsen/*.json` exit code 0
 
-### T105: Author 15 Cialdini heuristics [MOD]
-- **v2.0 changes:** Same pattern. ~3 get preferred_states (e.g., social proof heuristic needs reviews tab). ~3 get rule_vs_guidance="rule".
+### T105: Author ~5 Cialdini heuristics [MOD v2.3.3 — Phase 0b workstream, count reduced]
+- **owner:** Phase 0b workstream
+- **dep:** T104 + T101 + T0B-001..T0B-005
+- **spec:** PRD F-012 v1.2 + REQ-HK-001 + REQ-HK-EXT-001..019 + REQ-HK-BENCHMARK-003 (qualitative — persuasion principles rarely quantified) + R15.3 + R15.3.1 + R15.3.2 + R15.3.3 + R5.3 + GR-007
+- **files:** `heuristics-repo/cialdini/*.json` (~5 files)
+- **v2.3.3 changes (vs v2.0):**
+  - **Count reduced 15 → ~5** per F-012 v1.2 (the additional 10 deferred to v1.1+)
+  - **Distribution:** 1 social proof, 1 scarcity, 1 authority, 1 reciprocity, 1 liking
+  - Same `provenance` + manifest selector + PR Contract Proof block requirements as T103/T104
+  - **Cialdini citations** may be book chapter references (not URLs) per spec.md edge case — verifier confirms book + chapter access
+  - **Spot-check at +30 mark (final round):** ≤1 of 5 random across full pack diverges
+  - **`heuristics-repo/_spot-checks.md` log committed** with all 3 rounds documented
+- **v2.0 changes (retained):** Same pattern as T103/T104. ~1-2 get preferred_states (e.g., social proof needs reviews tab open). ~1 get rule_vs_guidance="rule".
+- **acceptance:** All ~5 pass `pnpm heuristic:lint heuristics-repo/cialdini/*.json`. Spot-check log complete.
+- **smoke test:** `pnpm heuristic:lint heuristics-repo/cialdini/*.json` exit code 0
 
 ### T106-T112: HeuristicLoader, filters, encryption, tier validator, Phase 6 test [T107 MOD]
 

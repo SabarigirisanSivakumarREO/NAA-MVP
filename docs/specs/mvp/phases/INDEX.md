@@ -2,7 +2,7 @@
 title: Neural MVP — Phases Index
 artifact_type: index
 status: approved
-version: 1.1
+version: 1.2
 created: 2026-04-22
 updated: 2026-04-28
 owner: engineering lead
@@ -14,7 +14,7 @@ generated_by: pnpm spec:index    # Auto-regenerated when phase folders or sub-ph
 
 # Phases Index — Neural MVP v1.0
 
-> **Summary (~100 tokens):** Master index of MVP phases — Phase 0 (Setup) and Phase 0b (LLM-assisted heuristic authoring) seed the project; Phases 1 → 9 sequentially deliver perception, MCP tools, verification, safety + infra + cost, browse, heuristic KB, analysis, orchestrator, and delivery. **v1.1 (2026-04-28):** four NEW sub-phases land — 1b (Perception Extensions v2.4), 1c (PerceptionBundle Envelope v2.5), 4b (Context Capture Layer v1.0), 5b (Multi-Viewport + Trigger Taxonomy + Cookie Policy). Phase 4 + Phase 6 refreshed for §11.1.1 robots/ToS + ContextProfile filter dependencies. Load this file first when starting or picking up a task. Do NOT load all phase files — use the decision table to find the one you need.
+> **Summary (~100 tokens):** Master index of MVP phases — Phase 0 (Setup) and Phase 0b (LLM-assisted heuristic authoring) seed the project; Phases 1 → 9 sequentially deliver perception, MCP tools, verification, safety + infra + cost, browse, heuristic KB, analysis, orchestrator, and delivery. **v1.2 (2026-04-28 Session 4):** Phase 0b + Phase 7 + Phase 8 spec corpus shipped (spec/plan/tasks/impact/README/checklist each). tasks-v2.md patched v2.3.2 → v2.3.3 (Phase 0b section + T103-T105 counts reduced to 15/10/5 per F-012 v1.2). **v1.1 (2026-04-28 Session 3):** four NEW sub-phases landed — 1b (Perception Extensions v2.4), 1c (PerceptionBundle Envelope v2.5), 4b (Context Capture Layer v1.0), 5b (Multi-Viewport + Trigger Taxonomy + Cookie Policy). Phase 4 + Phase 6 refreshed for §11.1.1 robots/ToS + ContextProfile filter dependencies. Load this file first when starting or picking up a task. Do NOT load all phase files — use the decision table to find the one you need.
 
 > **Rule:** When working on a task, read this index, identify the phase, then load only `phase-<N>-<name>/README.md` + `spec.md` + `tasks.md` for that phase (plus cited REQ-IDs from architecture specs).
 
@@ -25,7 +25,7 @@ generated_by: pnpm spec:index    # Auto-regenerated when phase folders or sub-ph
 | Phase | Name | Status | Tasks | Folder | Depends on | Blocks |
 |---|---|---|---|---|---|---|
 | 0 | Setup | ⚪ not started | M0.1-M0.5 | `phase-0-setup/` | — | 1 |
-| 0b | Heuristic Authoring (LLM-assisted, engineering-owned) | ⚪ not started | T-NNN range pending PRD F-012 task expansion | `phase-0b-heuristics/` (pending) | 0 | 6 |
+| **0b** | **Heuristic Authoring (LLM-assisted, engineering-owned)** | ⚪ not started — spec shipped v0.1 | T0B-001..T0B-005 + T103/T104/T105 | `phase-0b-heuristics/` | 0 | 6 |
 | 1 | Browser Perception Foundation | ⚪ not started | M1.1-M1.10 (T006-T015) | `phase-1-perception/` | 0 | 1b, 2, 5 |
 | **1b** | **Perception Extensions v2.4** | ⚪ not started | T1B-001..T1B-012 | `phase-1b-perception-extensions/` | 1 | 1c, 6, 7 |
 | **1c** | **PerceptionBundle Envelope v2.5** | ⚪ not started | T1C-001..T1C-012 | `phase-1c-perception-bundle/` | 1b | 7 (EvaluateNode token budget); 13 (state graph master) |
@@ -36,16 +36,44 @@ generated_by: pnpm spec:index    # Auto-regenerated when phase folders or sub-ph
 | 5 | Browse MVP | ⚪ not started | M5.1-M5.8 (T081-T100) | `phase-5-browse-mvp/` | 1, 2, 3, 4 | 5b, 7, 8 |
 | **5b** | **Multi-Viewport + Trigger Taxonomy + Cookie Policy** | ⚪ not started | T5B-001..T5B-019 | `phase-5b-multi-viewport-triggers-cookie/` | 5, 1b, 1c | 7 (multi-bundle iteration); 8 (multi-viewport coordinate) |
 | 6 | Heuristic KB Engine | ⚪ not started | M6.1-M6.11 (T101, T102, T106-T112) — refreshed v0.3 | `phase-6-heuristics/` | 4, 0b, 4b (T4B-013 contract) | 7 |
-| 7 | Analysis Pipeline | ⚪ not started | M7.1-M7.28 | `phase-7-analysis/` (pending) | 5, 6, 1c | 8 |
-| 8 | Orchestrator + Cross-Page | ⚪ not started | M8.1-M8.17 | `phase-8-orchestrator/` (pending) | 7 | 9 |
+| **7** | **Analysis Pipeline** | ⚪ not started — spec shipped v0.1 | M7.1-M7.22 (T113-T134) | `phase-7-analysis/` | 5, 6, 1c, 4b | 8 |
+| **8** | **Orchestrator + Cross-Page** | ⚪ not started — spec shipped v0.1 | M8.1-M8.21 (T135-T155) | `phase-8-orchestrator/` | 7, 4b (T4B-011) | 9 |
 | 9 | Foundations + Delivery | ⚪ not started | M9.1-M9.28 | `phase-9-delivery/` (pending) | 8 | ★ MVP |
 
 **Status legend:** ⚪ not started · 🟡 in progress · 🟢 complete · 🔴 blocked
-**Bold rows** = NEW sub-phases added in v1.1 (2026-04-28)
+**Bold rows** = NEW sub-phases added in v1.1 (2026-04-28 Session 3) OR phases with spec corpus shipped in v1.2 (2026-04-28 Session 4)
 
 ---
 
-## v1.1 changes (2026-04-28)
+## v1.2 changes (2026-04-28 Session 4)
+
+Three phase-folder spec corpora shipped (spec/plan/tasks/impact/README/checklist each):
+
+| Phase | Status | Key surface | Risk |
+|---|---|---|---|
+| **0b** — Heuristic Authoring (LLM-assisted, engineering-owned) | spec corpus shipped | T0B-001..T0B-005 (drafting prompt template, verification protocol, PR Contract Proof block, `pnpm heuristic:lint` CLI, `heuristics-repo/README.md`) + T103/T104/T105 (≈15+10+5=30 heuristics per F-012 v1.2) | LOW — content authoring; HeuristicSchemaExtended already locked in Phase 6 v0.3 |
+| **7** — Analysis Pipeline | spec corpus shipped | T113-T134 (22 tasks); 5-step pipeline (deep_perceive → evaluate → self_critique → ground → annotate_and_store); FIRST runtime activation of R10/R13 TemperatureGuard + R6 LangSmith trace channel + R5.6 separate self-critique call; Finding lifecycle producer; 8 GR rules + GR-012 benchmark validation | **HIGH** — analytical apex; 3 first activations; 5 append-only producers |
+| **8** — Orchestrator + Cross-Page | spec corpus shipped | T135-T155 (21 tasks); LangGraph subgraph composition (BrowseGraph + AnalysisGraph); AuditState 3-phase coordination (Phase 4b T4B-011 + Phase 7 T113 + Phase 8 T135); cross-page PatternDetector (F-014 folded into T139); reproducibility_snapshot consumer; PostgresCheckpointer; ★ MVP COMPLETE gate ★ (T148 + T149 + T150) | **HIGH** — AuditState extension; PatternFinding contract; MVP COMPLETE gate; 3-phase merge surface |
+
+### tasks-v2.md patch v2.3.3 (this session)
+
+Applied per CLAUDE.md standing directive (Option A drift resolution):
+
+- **Phase 0b section ADDED** (T0B-001..T0B-005 — drafting prompt, verification protocol, PR Contract Proof block, `pnpm heuristic:lint`, repo README) — engineering-owned LLM-assisted authoring infrastructure per PRD F-012 v1.2 amendment 2026-04-26
+- **T103-T105 counts REDUCED** from 50/35/15 (=100, v2.0) to 15/10/5 (=30, F-012 v1.2 MVP scope) — additional 70 deferred to v1.1+ to reach §09.3 master target
+- **T103-T105 ownership** clarified: definitions remain in Phase 6 section (engine consumes), but OWNED by Phase 0b workstream (content producer)
+- See `docs/specs/mvp/phases/phase-0b-heuristics/{spec,plan,tasks,impact,README}.md` for full Phase 0b authoring workflow
+
+### Punch-list candidates (v2.3.4 — NOT applied this session)
+
+- Add discrete T-ID for GR-012 benchmark validation (currently folded into Phase 7 T130 EvidenceGrounder acceptance per phase-7-analysis/plan.md §3)
+- Add discrete T-ID for cross-page PatternDetector (currently folded into Phase 8 T139 AuditCompleteNode acceptance per phase-8-orchestrator/plan.md §3)
+- Constitution R22.6 stale xref: PRD §10.1 + R13 cite "(R10)" for temperature=0; should cite R13 directly (carry-over from Session 3)
+- Phase 2 "28 vs 29 MCP tools" mismatch in impact.md + plan.md (carry-over from Session 2)
+
+---
+
+## v1.1 changes (2026-04-28 Session 3)
 
 Four NEW sub-phase folders + two refreshes:
 
