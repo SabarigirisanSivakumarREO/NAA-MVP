@@ -13,6 +13,8 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 3 — 5-Layer System Architecture
 
+> **See also §33 — Agent Composition Model.** REQ-LAYER-005 (Layer 2 ↔ Layer 3 boundary) is revised to v3 by §33. The 5-layer model below remains accurate; §33 adds tool injection from Layer 2 (Browser Agent) into Layer 3's evaluate node, maintaining layer separation by injecting capabilities rather than dependencies.
+
 ## 3.1 Layer Diagram
 
 ```

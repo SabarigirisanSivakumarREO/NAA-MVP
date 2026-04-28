@@ -1,14 +1,17 @@
 ---
 title: 32-collaborative-agent-protocol
 artifact_type: architecture-spec
-status: approved
-loadPolicy: on-demand-only
+status: superseded
+supersededBy: 33-agent-composition-model.md
+supersededVia:
+  - 32-interactive-analysis.md (intermediate revision)
+loadPolicy: do-not-load
 version: 2.3
-updated: 2026-04-24
+updated: 2026-04-28
 governing_rules:
   - Constitution R17 (Lifecycle States)
   - Constitution R22 (The Ratchet)
-note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+note: SUPERSEDED. This was the original §32 draft proposing a message-bus / RPC model where Analysis sends typed evidence requests, Browser gathers, and the Orchestrator routes. §33 explicitly REJECTS that model in favour of dependency injection — see §33.1 ("not an orchestrator-mediated message bus"). The motivating problem (analysis cannot gather its own evidence) is solved in §33 via tool injection into the evaluate node. Retained for historical reference only.
 ---
 
 # Section 32 — Collaborative Agent Protocol (Analysis ↔ Browse ↔ Web)

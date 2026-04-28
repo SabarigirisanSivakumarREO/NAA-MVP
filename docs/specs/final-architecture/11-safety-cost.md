@@ -13,6 +13,8 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 11 — Safety, Rate Limits & Cost Control
 
+> **See also §33 — Agent Composition Model.** §33.9 extends the cost model with composition-mode pricing: interactive evaluate costs more per heuristic (typically 1.3-2.5× single-shot) due to ReAct loop tool calls. Per-heuristic interaction budgets (§33.7c) and Pass 2 open observation budgets (§33.10) are enforced through the rate limiter and budget gate defined here. Phase 4 builds the `SafetyContext`-aware classifier (§33a REQ-COMP-PHASE4-001); analyze-mode safety rules activate in Phase 14.
+
 ## 11.1 Safety Classification (Browse Mode)
 
 **REQ-SAFETY-001:** Classification is deterministic code, NOT LLM judgment.
@@ -30,6 +32,33 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 - **Default:** Standard restrictions
 
 **REQ-SAFETY-003:** All `caution` and `sensitive` actions logged to `audit_log` table.
+
+### 11.1.1 Robots / ToS Hard Rules (v2.5 — Phase 4 extension)
+
+**REQ-SAFETY-005:** The browser SHALL respect `robots.txt`. Implementation:
+- Fetch `<root>/robots.txt` once per audit at `audit_setup`
+- Parse User-agent rules, Disallow paths
+- Refuse navigation to disallowed paths; emit `ROBOTS_TXT_DISALLOWED` warning into PerceptionBundle
+- Do not bypass via UA spoofing
+
+**REQ-SAFETY-006:** Real form submissions are **hard-blocked** unless the AuditRequest explicitly enables them:
+
+| Form action | Default behavior | Override |
+|---|---|---|
+| Submit checkout / payment / purchase | **NEVER** — hard block, no override | None. Hard rule. |
+| Create account / register | Block by default | Requires `AuditRequest.allow_form_submit: ["account_creation"]` + consultant approval per audit |
+| Add-to-cart (state-mutating retry) | Block on retry — first attempt allowed | Requires `AuditRequest.allow_cart_mutation: true` |
+| Newsletter / marketing signup | Block by default | Requires explicit list in AuditRequest |
+| Search / filter / non-mutating GET | Allowed | — |
+| Login / authentication | **NEVER auto-attempt** | Use `AuditRequest.auth_seed` (cookies / localStorage) instead |
+
+**REQ-SAFETY-007:** The browser SHALL use a **realistic User-Agent**. No spoofing of search engine crawlers (Googlebot etc.). Default UA = Playwright stealth default. Override only for testing-environment whitelist.
+
+**REQ-SAFETY-008:** Throttling defaults — same as §11.3 rate limits, but per-domain (not just global). Audits cannot DDoS a single client by spreading load globally.
+
+**REQ-SAFETY-009:** No automated authentication attempts. Auth-required pages produce `AUTH_REQUIRED_DETECTED` warning + skip page from queue. To audit authenticated pages, use `AuditRequest.auth_seed` mechanism (Phase 13 master track).
+
+**REQ-SAFETY-010:** Retries that mutate state are forbidden. If add-to-cart succeeds then page navigation fails, do NOT retry add-to-cart. Mark page as failed; audit continues.
 
 ## 11.2 Domain Circuit Breaker
 

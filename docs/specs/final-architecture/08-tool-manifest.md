@@ -13,6 +13,8 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 8 — Unified Tool Manifest (28 Tools)
 
+> **See also §33 — Agent Composition Model.** §33.4 defines the tool injection matrix — 9 of the 23 browse tools (click, hover, select, type, press_key, scroll, get_state, screenshot, find_by_text) plus 3 perception tools and 3 analysis-output tools (`produce_finding`, `mark_heuristic_pass`, `mark_heuristic_needs_review`) form the `analyze_interactive` tool set used by the Analysis Agent during interactive evaluate. The 28-tool manifest below is the reusable browser surface; §33 specifies which subset is injected into Analysis at runtime.
+
 > **Source of truth:** `docs/specs/AI_Browser_Agent_Architecture_v3.1.md` Section 6 (23 browse tools) + `docs/specs/AI_Analysis_Agent_Architecture_v1.0.md` Section 5 (5 analysis tools)
 
 ---

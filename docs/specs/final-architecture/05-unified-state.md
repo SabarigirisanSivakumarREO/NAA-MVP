@@ -13,6 +13,10 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 5 — Unified State Schema
 
+> **See also §33 — Agent Composition Model.** §33.13 adds composition-specific state fields to AuditState: `composition_mode`, `interaction_depth`, `dual_mode_evaluation`, `analysis_interactions[]`, `analysis_interaction_count`, `analysis_interaction_budget`, `open_observations[]`, `session_contamination_events[]`, `browser_session_id`. All have defaults so static-mode code is unaffected. See §33a Phase 7 for the canonical state extension list.
+
+> **See also §37 — Context Capture Layer.** Phase 4b adds `context_profile_id: string` and `context_profile_hash: string` to AuditState. Populated by the `context_capture` node before `audit_setup`. Used by `audit_setup` to gate the audit (halt if blocking open_questions exist) and by §09 HeuristicLoader for filtering. Pinned into §25 ReproducibilitySnapshot.
+
 ## 5.1 Overview
 
 The `AuditState` is a single LangGraph `Annotation` object that carries **all** state across the orchestrator, browse subgraph, and analyze subgraph. Both subgraphs read from and write to the same state object; mode-specific fields are simply ignored by the inactive subgraph.

@@ -43,7 +43,13 @@
       "Bash(sed -n '1255,1265p' /c/Sabari/Neural/NBA/docs/specs/mvp/PRD.md)",
       "Read(//c/Sabari/Neural//**)",
       "Bash(git -C /c/Sabari/Neural/NBA status --short --untracked-files=all)",
-      "Bash(git -C /c/Sabari/Neural/NBA check-ignore -v .env)"
+      "Bash(git -C /c/Sabari/Neural/NBA check-ignore -v .env)",
+      "Bash(grep -o \"\\\\`browser_[a-z_]*\\\\`\\\\|\\\\`page_[a-z_]*\\\\`\\\\|\\\\`agent_[a-z_]*\\\\`\")",
+      "Bash(grep -o \"\\\\`[a-z_]*\\\\`\")",
+      "Bash(grep -B 5 -A 15 \"^### \\\\`MCPToolRegistry\\\\`\" C:/Sabari/Neural/NBA/docs/specs/mvp/phases/phase-2-tools/impact.md)",
+      "Bash(awk -F'|' '{print $2, \"|\", $4}')",
+      "Bash(cat)",
+      "Read(//tmp/**)"
     ]
   }
 }

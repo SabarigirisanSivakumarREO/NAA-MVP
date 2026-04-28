@@ -13,6 +13,8 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 7 — Analyze Mode (Analysis Pipeline)
 
+> **See also §33 — Agent Composition Model.** §33 extends the 5-step pipeline below: the `evaluate` node becomes pluggable via `EvaluateStrategy` (§33a Phase 7). The `StaticEvaluateStrategy` is the path defined here; the `InteractiveEvaluateStrategy` (Phase 14) replaces single-shot evaluation with a ReAct loop using injected browser tools. This section remains the canonical static path; for the interactive path, read §33 §33.7b.
+
 > **Source of truth:** `docs/specs/AI_Analysis_Agent_Architecture_v1.0.md`
 > This section is the COMPLETE specification for analyze mode.
 
@@ -1180,6 +1182,386 @@ Added in v2.3 (2026-04-17) — consultant-grade perception signals merged from M
 **Tooling impact:** `page_analyze` implementation (§08.4) extends to populate new fields within the same `page.evaluate()` call. `detectPageType()` (§07.4) return type changes from `PageType` to `AnalyzePerception.inferredPageType`.
 
 **Grounding impact:** New grounding opportunities — benchmarks on INP/CLS/TTFB (v2.3 Core Web Vitals heuristics), trust-signal provenance checks, accessibility baseline checks. GR-001..GR-012 unchanged; new rules (GR-013+) may be added as heuristics authored against new fields.
+
+---
+
+### 7.9.2 v2.4 Perception Extensions (Phase 1b)
+
+**Status:** Added in v2.4 (2026-04-28). Implemented in **Phase 1b** (Perception Extensions, Week 2-3) per §16 v2.4. Closes the 9 perception gaps identified in the master-checklist coverage audit.
+
+**Rationale:** Top-1% CRO consultants evaluate signals the v2.3 schema doesn't capture — pricing display, click target sizing (Fitt's Law), sticky element behavior, popup quality, friction aggregates, social proof depth, microcopy semantics near CTAs, visual attention, and commerce-specific signals (stock, shipping, returns). All extractions happen inside the same single `page.evaluate()` call. Cost impact: zero (no new LLM calls).
+
+**REQ-ANALYZE-PERCEPTION-V24-001:** The `AnalyzePerception` schema is extended with 10 new field groups (9 top-level + 1 nested in `metadata`). All fields are additive and backward-compatible.
+
+```typescript
+interface AnalyzePerceptionV24Extensions {
+  // Added to existing metadata block
+  metadata: {
+    // ...all v2.3 fields...
+    currencySwitcher: {
+      present: boolean;
+      currentCurrency: string | null;                   // matches html.lang region default
+      availableCurrencies: string[];                    // e.g., ["USD","EUR","GBP","INR"]
+      isAccessibleAt: "header" | "footer" | "none";
+    } | null;
+  };
+
+  // NEW top-level: pricing display
+  pricing: {
+    hasPricing: boolean;
+    displayFormat: "amount" | "amount_period" | "amount_with_strike" | "from_amount" | "contact_for_quote" | null;
+    amount: string | null;                              // raw text e.g. "$49.99"
+    amountNumeric: number | null;
+    currency: string | null;
+    taxInclusion: "inclusive" | "exclusive" | "unspecified";
+    anchorPrice: string | null;                         // strikethrough original
+    discountPercent: number | null;                     // computed if anchor + amount present
+    comparisonShown: boolean;                           // "Save $X" / "Was Y, Now Z" present
+    boundingBox?: { x: number; y: number; width: number; height: number };
+  } | null;
+
+  // NEW top-level: click target sizing per WCAG 2.5.5 / Fitt's Law
+  clickTargets: Array<{
+    elementId: string;                                  // selector or stable ref
+    elementType: "cta" | "link" | "form_control" | "icon_button";
+    sizePx: { width: number; height: number };
+    isMobileTapFriendly: boolean;                       // ≥48×48 per WCAG 2.5.5
+    isAboveFold: boolean;
+  }>;
+
+  // NEW top-level: sticky / fixed elements at rest
+  stickyElements: Array<{
+    type: "cta" | "cart" | "nav" | "header" | "banner" | "chat_widget";
+    positionStrategy: "sticky" | "fixed";
+    initialBoundingBox: { x: number; y: number; width: number; height: number };
+    viewportCoveragePercent: number;
+    isAboveFold: boolean;
+    containsPrimaryCta: boolean;
+  }>;
+
+  // NEW top-level: popup PRESENCE (behavior probing deferred to Phase 5b)
+  popups: Array<{
+    type: "modal" | "lightbox" | "drawer" | "toast" | "cookie_banner" | "consent_form";
+    isInitiallyOpen: boolean;                           // present at page load
+    hasCloseButton: boolean;
+    closeButtonAccessibleName: string | null;
+    isEscapeDismissible: boolean | null;                // null until tested in Phase 5b
+    isClickOutsideDismissible: boolean | null;          // null until tested in Phase 5b
+    viewportCoveragePercent: number;
+    blocksPrimaryContent: boolean;                      // covers >50% of fold
+    // Behavior fields (timing, exit-intent, scroll trigger, dark patterns) → Phase 5b
+  }>;
+
+  // NEW top-level: derived friction metric
+  frictionScore: {
+    totalFormFields: number;
+    requiredFormFields: number;
+    popupCount: number;
+    forcedActionCount: number;                          // popups blocking content
+    raw: number;                                        // weighted sum
+    normalized: number;                                 // 0-1 scale
+  };
+
+  // NEW top-level: enrichment beyond trustSignals[]
+  socialProofDepth: {
+    reviewCount: number | null;                         // explicit count if shown
+    starDistribution: Array<{ stars: 1 | 2 | 3 | 4 | 5; count: number }> | null;
+    recencyDays: number | null;                         // age of most recent review
+    hasAggregateRating: boolean;                        // schema.org AggregateRating
+    hasIndividualReviews: boolean;
+    thirdPartyVerified: boolean;                        // sourced from Trustpilot, etc.
+  };
+
+  // NEW top-level: semantic tagging of microcopy near CTAs
+  microcopy: {
+    nearCtaTags: Array<{
+      ctaIndex: number;                                 // index into ctas[]
+      distance: "adjacent" | "within_50px" | "within_100px";
+      tag: "risk_reducer" | "urgency" | "security" | "guarantee" | "social_proof" | "value_prop" | "other";
+      text: string;
+    }>;
+  };
+
+  // NEW top-level: visual attention / saliency
+  attention: {
+    dominantElement: {
+      type: "cta" | "image" | "headline" | "form" | "video" | "popup" | "other";
+      selector: string | null;
+      score: number;                                    // 0-1, derived from contrast + size + position + saturation
+    } | null;
+    contrastHotspots: Array<{                           // top 3 highest-contrast regions
+      boundingBox: { x: number; y: number; width: number; height: number };
+      contrastScore: number;
+    }>;
+  };
+
+  // NEW top-level: commerce-specific signals
+  commerce: {
+    isCommerce: boolean;                                // page is part of e-comm flow
+    stockStatus: "in_stock" | "low_stock" | "out_of_stock" | "preorder" | "unspecified" | null;
+    stockMessage: string | null;                        // raw text e.g. "Only 3 left"
+    shippingSignals: Array<{
+      text: string;
+      type: "free" | "fast" | "estimated_delivery" | "international" | "other";
+      isAboveFold: boolean;
+    }>;
+    returnPolicyPresent: boolean;
+    returnPolicyText: string | null;
+    guaranteeText: string | null;
+  };
+}
+```
+
+**Phase 1b additions summary:**
+
+| Section | v2.4 additions | Closes gap |
+|---|---|---|
+| `metadata.currencySwitcher` | `present`, `currentCurrency`, `availableCurrencies`, `isAccessibleAt` | Currency clarity for international audits |
+| `pricing` (new top-level) | Display format, amount, currency, tax inclusion, anchor, discount % | Pricing display analysis (huge for e-comm) |
+| `clickTargets[]` (new top-level) | Per-element size + mobile-tap-friendly flag | Fitt's Law / mobile UX |
+| `stickyElements[]` (new top-level) | Type, position, coverage, primary-CTA flag | Sticky CTA / cart / nav analysis |
+| `popups[]` (new top-level) | Type, presence, dismissibility, viewport coverage | Popup quality (presence layer) |
+| `frictionScore` (new top-level) | Aggregate friction metric | "How many decisions to convert" |
+| `socialProofDepth` (new top-level) | Review count, star distribution, recency | Social proof granularity |
+| `microcopy.nearCtaTags[]` (new top-level) | Semantic tagging of CTA microcopy | Risk-reducer / urgency / security tags |
+| `attention.dominantElement` (new top-level) | Dominant visual element + contrast hotspots | Visual hierarchy depth |
+| `commerce` (new top-level) | Stock status, shipping signals, return policy | E-comm-specific signals |
+
+**Backward compatibility:** All v2.4 fields are additive. No baseline field removed or renamed. Existing v2.3 code paths continue to work without modification.
+
+**Tooling impact:** `page_analyze` (§08.4) extends to populate new fields within the same `page.evaluate()` call. No new MCP tools added. No new LLM calls. Cost impact = zero.
+
+**Token impact:** Estimated +1500 tokens to AnalyzePerception payload (5K → 6.5K). Stays under 8K hard cap. Heuristic prompts that consume new fields will see proportional token increase.
+
+**Grounding impact:** New grounding opportunities — pricing display heuristics, click target size heuristics (mobile-only audits), sticky element behavior, popup intrusiveness scoring, friction-vs-conversion correlation, semantic microcopy heuristics, attention/saliency heuristics, e-comm stock/shipping heuristics. New grounding rules (GR-013+) may be authored against these fields.
+
+**Phase 5b extension (deferred):** The `popups[].isEscapeDismissible`, `popups[].isClickOutsideDismissible`, popup timing, exit-intent triggers, scroll triggers, and dark-pattern detection require browser interaction at runtime and are populated in **Phase 5b** (Multi-Viewport + Popup Behavior). Multi-viewport diff (desktop vs mobile fold composition) is also Phase 5b.
+
+---
+
+### 7.9.3 PerceptionBundle Envelope (Phase 1c)
+
+**Status:** Added in v2.5 (2026-04-28). Implemented in **Phase 1c** (Week 3-4) per §16 v2.5. Adopts the `PerceptionBundle` contract from `docs/Improvement/perception_layer_spec.md`. **Wraps existing `AnalyzePerception` — does not replace it.**
+
+**Rationale:** Cross-channel queries ("low-contrast above-fold buttons") require shared element identity across DOM / AX-tree / layout / visual views. Current parallel arrays (`ctas[]`, `forms[]`, `clickTargets[]`, etc.) implicitly identify by index, which makes correlation fragile. The `PerceptionBundle` envelope adds an `ElementGraph` keyed by stable `element_id`, plus `nondeterminism_flags` and `warnings` for honest output. AnalyzePerception lives inside the bundle unchanged.
+
+**REQ-ANALYZE-PERCEPTION-V25-001:** The top-level perception contract becomes `PerceptionBundle`. Existing `AnalyzePerception` consumers continue to read `bundle.raw.analyze_perception_by_state[bundle.initial_state_id]`. New consumers query `bundle.element_graph_by_state[...]`.
+
+```typescript
+interface PerceptionBundle {
+  meta: {
+    url: string;
+    captured_at: string;                                // ISO8601
+    viewport: { w: number; h: number; dpr: number };
+    user_agent: string;
+    auth_state: "anonymous" | "authenticated" | "returning" | null;
+    geo: string | null;                                 // ISO country code or null
+    locale: string | null;                              // BCP-47, from html.lang or page meta
+    perception_layer_version: string;                   // semver
+  };
+
+  performance: {
+    lcp: number | null;
+    cls: number | null;
+    inp: number | null;
+    page_weight_bytes: number;
+    request_count: number;
+    blocked_by_tracker_count: number;
+    time_to_interactive_ms: number | null;
+  };
+
+  nondeterminism_flags: Array<                          // honest output: what may vary across runs
+    | "optimizely_active"
+    | "vwo_active"
+    | "google_optimize_active"
+    | "personalization_cookie_set"
+    | "ab_test_query_param"
+    | "time_based_content_detected"
+    | "ad_auction_detected"
+  >;
+
+  warnings: Array<{
+    code:
+      | "SHADOW_DOM_NOT_TRAVERSED"
+      | "IFRAME_SKIPPED"
+      | "BUDGET_EXHAUSTED_AT_DEPTH_2"
+      | "AUTH_REQUIRED_DETECTED"
+      | "SETTLE_TIMEOUT_5S"
+      | "FONTS_NOT_READY"
+      | "ANIMATION_NOT_SETTLED"
+      | "COOKIE_BANNER_BLOCKING_FOLD";
+    message: string;
+    severity: "info" | "warn" | "error";
+  }>;
+
+  initial_state_id: string;                             // root state of the StateGraph
+
+  state_graph: {
+    nodes: Array<{
+      state_id: string;
+      parent_state_id: string | null;
+      trigger_path: Array<{ element_id: string; action: string; value?: string }>;
+      new_content_summary: string | null;              // diff vs parent (Phase 13 master track adds delta_type)
+    }>;
+    edges: Array<{                                      // formal edges added in Phase 13 (master track) — Phase 1c emits node-only
+      from: string;
+      to: string;
+      trigger: { element_id: string; action: string; value?: string };
+    }>;
+  };
+
+  element_graph_by_state: Map<string, ElementGraph>;    // one graph per state_id
+
+  raw: {
+    analyze_perception_by_state: Map<string, AnalyzePerception>;  // §7.9 + §7.9.2 unchanged, lives here
+    page_state_model_by_state: Map<string, PageStateModel>;       // §6.6 unchanged, lives here
+    full_page_screenshot_url_by_state: Map<string, string>;       // R2 path
+    viewport_screenshot_url_by_state: Map<string, string>;        // R2 path
+  };
+}
+
+interface ElementGraph {
+  state_id: string;
+  elements: Map<string, FusedElement>;                  // keyed by element_id
+  root_element_ids: string[];                           // direct children of <body>
+}
+
+interface FusedElement {
+  element_id: string;                                   // stable hash: tag + classes + DOM position + text content prefix
+  tag: string;                                          // "button", "div", "input"
+  selector: string;                                     // CSS selector for retrieval
+  xpath: string;                                        // XPath for retrieval
+
+  text_content: string | null;                          // visible text including pseudo-element ::before/::after content
+  attrs: Record<string, string>;                        // id, class, href, src, alt, data-*, etc.
+
+  ax: {
+    role: string;
+    name: string | null;
+    states: { expanded?: boolean; selected?: boolean; checked?: boolean; disabled?: boolean; focused?: boolean; pressed?: boolean };
+    properties: { haspopup?: boolean; controls?: string; describedby?: string; required?: boolean };
+  } | null;
+
+  bbox: { x: number; y: number; w: number; h: number };
+  in_fold: boolean;
+  visible: boolean;                                     // computed: in viewport + display!=none + visibility!=hidden
+  z_index: number;
+  overflow_clipped: boolean;
+
+  style: {
+    color: string;
+    background_color: string;
+    font_size_px: number;
+    font_weight: number;
+    contrast_ratio: number;                             // WCAG ratio vs background
+  };
+
+  crop_url: string | null;                              // bbox reference into full_page_screenshot, NOT a separate image. Populated only for "key elements" (CTAs, hero, price, form fields)
+
+  is_interactive: boolean;                              // ax_role ∈ {button, link, tab, ...} OR onclick/href OR cursor:pointer + click handler
+
+  parent_id: string | null;
+  children_ids: string[];
+
+  // Cross-references back to existing v2.3/v2.4 arrays for backward compat
+  ref_in_analyze_perception: {
+    cta_index?: number;                                  // index into AnalyzePerception.ctas[]
+    form_index?: number;                                 // index into AnalyzePerception.forms[]
+    field_index?: number;                                // index into AnalyzePerception.forms[].fields[]
+    trust_signal_index?: number;
+    image_index?: number;
+    iframe_index?: number;
+    sticky_index?: number;
+    popup_index?: number;
+    click_target_index?: number;
+  } | null;
+}
+```
+
+**Cross-channel query API (utility, not in MVP — deferred to Phase 14):**
+
+```typescript
+// Example query that becomes possible after Phase 1c element fusion:
+bundle.element_graph_by_state[stateId].elements
+  .filter(e =>
+    e.ax?.role === "button" &&
+    e.in_fold &&
+    e.style.contrast_ratio < 4.5
+  );
+// → "low-contrast above-fold buttons"
+```
+
+The query API itself ships in Phase 14 (§33 interactive evaluate); Phase 1c only ships the data structure that makes it possible.
+
+**`element_id` stability rules:**
+
+| Rule | Detail |
+|---|---|
+| Hash inputs | `tag + sorted_classes + dom_position_path + text_content_prefix(50)` |
+| Stable across re-runs of same URL | Yes (unless DOM changes meaningfully) |
+| Stable across viewports | No — different viewports produce different `element_id`s when responsive layout reflows |
+| Re-used across states | Yes when DOM node persists; new ID when node is added/removed |
+
+**Token budget impact:**
+
+| Layer | v2.4 | v2.5 (Phase 1c) |
+|---|---|---|
+| `AnalyzePerception` | ≤6.5K | ≤6.5K (unchanged) |
+| `ElementGraph` (top 30 elements per state) | — | ~1.5K |
+| `PerceptionBundle` envelope (meta + flags + warnings + state nodes) | — | ~0.5K |
+| **Total per state** | ≤6.5K | **≤8.5K** |
+
+The 8K hard cap from §7.9.2 is raised to 9K in v2.5. New cap applies to bundle, not just `AnalyzePerception`.
+
+**Selective fusion — top N elements only:**
+
+`ElementGraph.elements` does NOT contain every DOM node. It contains only:
+
+1. All elements referenced by existing `AnalyzePerception` arrays (CTAs, forms, fields, trust signals, images, iframes, sticky, popups, click targets)
+2. All elements with `ax.role` ∈ {button, link, tab, menuitem, checkbox, radio, combobox, textbox}
+3. All elements with `is_interactive = true` not already covered above
+4. Direct ancestors of any of the above (for parent_id chain integrity)
+
+Default cap: 30 elements per state. Configurable via `AuditRequest.element_graph_size`.
+
+**Settle predicate (Phase 1c REQ-PERCEPT-V25-002):**
+
+```typescript
+async function waitForSettle(page: Page, opts: SettleOptions = {}): Promise<SettleResult> {
+  const start = Date.now();
+  await page.waitForLoadState("networkidle", { timeout: 2000 }).catch(() => {});  // soft
+  await waitForDomMutationsToStop(page, { idleMs: 300, maxMs: 3000 });
+  await page.waitForFunction(() => (document as any).fonts?.ready ?? true).catch(() => {});
+  await waitForAnimationsToFinish(page, { timeout: 1500 });                       // poll element.getAnimations()
+  if (opts.requireSelector) {
+    await page.waitForSelector(opts.requireSelector, { timeout: 2000 });
+  }
+  const elapsed = Date.now() - start;
+  return { elapsed_ms: elapsed, capped_at_5s: elapsed >= 5000 };
+}
+```
+
+Hard cap: 5 seconds. If exceeded, emit `SETTLE_TIMEOUT_5S` warning and proceed with the state as-captured.
+
+**Backward compatibility:**
+
+| Existing consumer | Reads from | Migration |
+|---|---|---|
+| `evaluate` node (§7.5) | `state.analyze_perception` | Now `state.bundle.raw.analyze_perception_by_state[state.bundle.initial_state_id]` — accessor helper provided |
+| Grounding rules GR-001 to GR-008 | `AnalyzePerception` field paths | Unchanged. All existing field paths still resolve. |
+| `annotate_and_store` (§7.10) | Screenshot URL | Now `bundle.raw.full_page_screenshot_url_by_state[stateId]` — accessor helper provided |
+| `deep_perceive` output | Returned `AnalyzePerception` | Now returns `PerceptionBundle`; helper `bundleToAnalyzePerception()` for legacy paths |
+
+**Things PerceptionBundle does NOT do (from spec §8):**
+
+- No CRO judgments (no "this CTA is too small" — record size, let heuristics judge)
+- No prioritization (don't rank elements by importance — record everything meeting capture criteria)
+- No content rewriting (don't normalize copy or fix typos)
+- No form submission unless explicitly allowed
+- No autonomous auth attempts
+- No retries that mutate state
+
+These are **architectural invariants** for the perception layer — captured in `constitution.md` updates for v2.5.
 
 ---
 

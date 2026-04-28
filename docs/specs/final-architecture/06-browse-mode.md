@@ -13,6 +13,8 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 6 — Browse Mode (Browser Agent v3.1)
 
+> **See also §33 — Agent Composition Model.** Under §33, the Browser Agent specified in this section is REUSABLE — it operates independently for non-CRO tasks (data extraction, scraping, monitoring) and exposes 9 of its 23 tools for injection into the Analysis Agent's evaluate node. This section's contracts are unchanged; §33 adds the composition pattern on top.
+
 > **Source of truth:** `docs/specs/AI_Browser_Agent_Architecture_v3.1.md`
 > This section is the COMPLETE specification for browse mode, inlined here for the unified architecture. Any discrepancy between this section and v3.1 should be resolved in favor of v3.1.
 
@@ -376,6 +378,48 @@ interface PageStateModel {
 **REQ-BROWSE-PERCEPT-005:** The system SHALL inject a `MutationObserver` to track DOM mutations between action and verification.
 
 **REQ-BROWSE-PERCEPT-006:** The verify node SHALL wait for DOM stability (`pending_mutations === 0` OR `mutation_timeout_ms` elapsed) before state comparison.
+
+### Comprehensive DOM Traversal (v2.5 — Phase 1c)
+
+**REQ-BROWSE-PERCEPT-007:** The DOM extractor SHALL traverse Shadow DOM, React Portals, and pseudo-element content. CRO-critical copy lives in all three places — missing them produces lossy perception.
+
+**Shadow DOM:**
+- Walk every node; if `node.shadowRoot` is non-null, recurse into the shadow tree
+- Treat shadow tree as a continuation of the host element's children
+- Cap recursion depth at 5 nested shadow roots (defensive)
+- If max depth hit, emit `SHADOW_DOM_NOT_TRAVERSED` warning to PerceptionBundle (§7.9.3)
+
+**React Portals (and similar — Vue Teleport, Angular CDK Overlay):**
+- Portals render outside their logical parent. Static parent-walk misses them.
+- Solution: scan whole `<body>` for elements not reachable from the logical tree, label them `is_portal: true` on the `FusedElement`
+- Common portal hosts: modals, tooltips, dropdown menus, toasts
+
+**Pseudo-element content (`::before`, `::after`):**
+- `getComputedStyle(el, '::before').content` returns the literal copy inside `content: "..."`
+- CRO-critical: badges ("NEW", "LIMITED", "BESTSELLER"), required-field markers (`*`), price prefixes
+- Capture for every element where pseudo-element `content` is non-empty and not just punctuation
+
+**iframes:**
+- Decision is per-iframe, controlled by `purposeGuess`:
+  - `checkout` (e.g., stripe.com, shopify checkout) → **descend** (capture nested perception, label `is_iframe_descended: true`)
+  - `chat` (intercom, drift) → **descend** (CRO-relevant)
+  - `video` (youtube, vimeo) → **skip** (capture iframe element only)
+  - `analytics` / `antibot` (recaptcha, gtm) → **skip**
+  - `social_embed` (twitter, instagram) → **skip**
+  - `other` → **skip** (default safe; can override per audit)
+- When skipping, emit `IFRAME_SKIPPED` warning with iframe src
+- Cross-origin iframes always skipped (browser policy)
+
+**REQ-BROWSE-PERCEPT-008:** Hidden elements (`display:none`, `visibility:hidden`, `aria-hidden=true`, `offscreen`) SHALL be captured but flagged. The perception layer captures facts; downstream heuristics decide whether to consume hidden elements (e.g., for accessibility findings or hidden-microcopy detection).
+
+```typescript
+// Added to PageStateModel (§6.6 v2.5):
+hiddenElements: Array<{
+  selector: string;
+  reason: "display_none" | "visibility_hidden" | "aria_hidden" | "offscreen" | "zero_dimension";
+  text_content: string | null;                          // visible-when-shown copy
+}>;
+```
 
 ---
 

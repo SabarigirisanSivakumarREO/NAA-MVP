@@ -13,6 +13,8 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 25 — Reproducibility & Audit Defensibility
 
+> **See also §37 — Context Capture Layer.** Phase 13b adds `context_profile_id` + `context_profile_hash` + `context_capture_layer_version` to `ReproducibilitySnapshot`. Same URL + same intake + same inference signals → same hash. Hash difference signals context drift (e.g., a previously-hidden CTA was added, changing CTA-copy inference) — explains why findings differ across runs.
+
 **Status:** Master architecture extension. Required from Phase 6 onwards; foundational for every LLM-backed audit run.
 
 **Cross-references:**

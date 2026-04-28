@@ -13,6 +13,8 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 13 — Data Layer
 
+> **See also §37 — Context Capture Layer.** Phase 4b adds the `context_profiles` table — append-only, immutable, one row per audit_run. ContextProfile JSONB is hashed (SHA-256) for §25 reproducibility binding.
+
 ## 13.1 PostgreSQL Schema
 
 **REQ-DATA-001:** All tables use UUID primary keys, TIMESTAMPTZ for dates, JSONB for flexible data.
@@ -266,6 +268,31 @@ CREATE TABLE audit_log (
   result JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- §37 Context Capture Layer (Phase 4b)
+-- Append-only, immutable. One row per audit_run.
+-- ContextProfile JSONB carries 5 dimensions + provenance + open_questions.
+CREATE TABLE context_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  audit_run_id UUID NOT NULL REFERENCES audit_runs(id) ON DELETE RESTRICT,
+  client_id UUID NOT NULL REFERENCES clients(id),
+  profile JSONB NOT NULL,                              -- §37 ContextProfile shape
+  profile_hash TEXT NOT NULL,                          -- SHA-256 for §25 reproducibility binding
+  capture_method TEXT NOT NULL,                        -- intake_form | inferred | hybrid
+  overall_confidence NUMERIC(3,2) NOT NULL,            -- 0-1
+  context_capture_layer_version TEXT NOT NULL,         -- semver
+  blocked_at_capture BOOLEAN DEFAULT FALSE,            -- true if any blocking open_question existed at capture
+  resolved_at TIMESTAMPTZ,                             -- when user answered blocking questions; NULL if no blocking
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_context_profiles_audit_run ON context_profiles(audit_run_id);
+CREATE INDEX idx_context_profiles_client ON context_profiles(client_id);
+CREATE INDEX idx_context_profiles_hash ON context_profiles(profile_hash);
+
+-- Append-only enforcement (§13.4 R7.4 — never UPDATE or DELETE):
+CREATE RULE context_profiles_no_update AS ON UPDATE TO context_profiles DO INSTEAD NOTHING;
+CREATE RULE context_profiles_no_delete AS ON DELETE TO context_profiles DO INSTEAD NOTHING;
 ```
 
 ## 13.2 Row-Level Security

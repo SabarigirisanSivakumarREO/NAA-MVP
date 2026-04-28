@@ -13,6 +13,8 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 9 — Heuristic Knowledge Base
 
+> **See also §33 — Agent Composition Model.** §33.6 adds dual-mode evaluation to the heuristic schema: each heuristic can declare a `static` evaluation strategy, an `interactive` strategy, or both. The schema extension is backward-compatible — heuristics without an `interactive` strategy fall back to static. See §33 §33.6 for the dual-mode contract.
+
 > **Source of truth:** `docs/specs/AI_Analysis_Agent_Architecture_v1.0.md` Section 6
 
 ---

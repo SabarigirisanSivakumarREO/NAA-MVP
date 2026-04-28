@@ -13,6 +13,10 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 4 — Audit Orchestrator
 
+> **See also §33 — Agent Composition Model.** §33 extends the orchestrator with session-passing between browse and analyze subgraphs and adds a `restore_state` node after analyze. Phase 8 implements the no-op static path (REQ-COMP-PHASE8-002); Phase 14 activates the interactive path. The orchestrator topology below stays valid — §33 adds nodes/edges, does not replace.
+
+> **See also §37 — Context Capture Layer.** Phase 4b inserts a `context_capture` node BEFORE `audit_setup`. The new flow is: `context_capture` → (blocking questions? halt) → `audit_setup` → `page_router` → ... Audit halts at `context_capture` if any blocking `open_question` exists; resumes after user answers. ContextProfile flows through AuditState as `context_profile_id` reference.
+
 ## 4.1 Orchestrator Graph Topology
 
 **REQ-ORCH-001:** The audit orchestrator is the OUTER graph. Browse and Analyze are INNER subgraphs.

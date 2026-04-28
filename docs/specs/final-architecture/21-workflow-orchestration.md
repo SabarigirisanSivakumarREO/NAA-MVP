@@ -13,7 +13,9 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 21 — Workflow Orchestration
 
-**Status:** Master architecture extension. Phase 8 implementation. Implements C6 locked decision: workflow orchestration gets its own tier with a dedicated Workflow Analyzer.
+> **See also §33 — Agent Composition Model.** §33.11 adds a `workflowStepRestore` node specific to workflow orchestration: after `evaluate_interactive` runs at a workflow step, the system must verify reentry into that step before continuing. The Workflow Orchestrator topology below is extended (not replaced) by §33 — the funnel traversal logic stays; the inter-step state restoration uses §33's contract.
+
+**Status:** Master architecture extension. Phase 13 implementation (per §16 v2.4). Implements C6 locked decision: workflow orchestration gets its own tier with a dedicated Workflow Analyzer.
 
 **Cross-references:**
 - §4 (Audit Orchestrator) — workflow orchestrator is a peer tier alongside page orchestrator

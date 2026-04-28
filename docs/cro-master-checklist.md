@@ -1,0 +1,785 @@
+# CRO AI Agent — Master Checklist (Zero Auditor)
+
+## Purpose
+
+This is a **spec coverage audit**, not an implementation tracker. Each item answers: *"Does the master plan (§01–§36) specify this CRO agent capability?"* — not *"Has this been built?"*
+
+Nothing has been implemented yet. Use the markers below to mark whether each item is covered by the existing spec, partially covered, or missing.
+
+## Status Legend
+
+| Marker | Meaning |
+|--------|---------|
+| `[ ]` | **Not assessed** — default state |
+| `[x]` | **✅ Covered** — fully specified in master plan; cite §NN reference on the line |
+| `[~]` | **🟡 Partial** — spec exists but incomplete; cite §NN + note what's missing |
+| `[!]` | **❌ Gap** — not covered by master plan; needs new spec or extension |
+| `[?]` | **Ambiguous** — spec mentions it but contract is unclear; needs clarification |
+| `[-]` | **Out of scope** — intentionally excluded; cite source (e.g., CLAUDE.md §14 non-goals) |
+
+Convention rules:
+- Every `[x]` MUST cite a §NN reference: `- [x] Implement BrowserManager — §06 §6.6 REQ-BROWSE-PERCEPT-001`
+- Every `[~]` MUST name the gap: `- [~] Capture pricing display — §07 §7.9 has currency in lang but no pricing block`
+- Every `[!]` MUST be one-liner-reason: `- [!] Sticky element detection — gap, no spec covers position:sticky analysis`
+- Every `[?]` MUST cite the ambiguous section: `- [?] Click target sizing — §07 captures boundingBox but no Fitt's Law check defined`
+- Every `[-]` MUST cite the exclusion: `- [-] Authenticated page audits — CLAUDE.md §14 non-goal`
+
+**Outcome of the audit:** Every `[!]` becomes a candidate spec gap to discuss before implementation starts.
+
+---
+
+## 0. Context Capture Layer
+
+- [ ] ContextProfile contract (Phase 4b) — §37 §37.2
+  - [ ] Zod schema validates all 5 dimensions — T4B-001
+  - [ ] Provenance per field: `{value, source, confidence}` — T4B-001
+  - [ ] Immutable after `Object.freeze` — T4B-001
+  - [ ] SHA-256 hash for §25 reproducibility binding — T4B-001
+- [ ] Five context dimensions — §37 §37.1
+  - [ ] **Business archetype** (D2C / marketplace / SaaS / subscription / B2B / enterprise / lead_gen / service) + AOV tier + cadence + vertical — T4B-005 §37 §37.1.1
+  - [ ] **Page type + funnel stage** (home / PLP / PDP / cart / checkout / post_purchase / category / landing / blog / about / pricing / comparison) + funnel_stage + job — T4B-006 §37 §37.1.2
+  - [ ] **Audience + intent** (buyer enum) — T4B-001 + Phase 13b for awareness/decision_style/sophistication §37 §37.1.3
+  - [ ] **Traffic source + device** (8 channels + device_priority + mobile_share) — T4B-001 + Phase 13b for message-match/geo/locale §37 §37.1.4
+  - [ ] **Conversion goal + constraints** (primary_kpi REQUIRED + secondary_kpis + baseline + target_lift + regulatory/accessibility/brand/technical constraints) — T4B-009 §37 §37.1.5
+- [ ] Inference engine (lightweight, no Playwright) — Phase 4b
+  - [ ] URLPatternMatcher (≥95% accuracy on canonical URL patterns) — T4B-002
+  - [ ] HtmlFetcher (cheerio + undici, 5s timeout, robots.txt-respecting, ETag cache) — T4B-003
+  - [ ] JsonLdParser (Product / Service / SoftwareApplication / Organization) — T4B-004
+  - [ ] BusinessArchetypeInferrer (CTA + pricing patterns) — T4B-005
+  - [ ] PageTypeInferrer (consolidates §07 §7.4) — T4B-006
+- [ ] Provenance + clarification loop — Phase 4b
+  - [ ] ConfidenceScorer with 3 bands (≥0.9 act / 0.6-0.9 use+flag / <0.6 ask) — T4B-007
+  - [ ] ProvenanceAssembler (8 source values: user / url_pattern / schema_org / copy_inference / layout_inference / default + Phase 13b additions) — T4B-007
+  - [ ] OpenQuestionsBuilder with `blocking: true | false` flag — T4B-008
+  - [ ] CLI clarification prompt halts audit until answered — T4B-010
+  - [ ] DashboardIntakeForm (Phase 13b) — replaces CLI prompt for non-CLI audits — T13B-008
+- [ ] AuditRequest intake (extend §18) — Phase 4b
+  - [ ] `goal.primary_kpi` REQUIRED (reject audits without it) — T4B-009 REQ-GATEWAY-INTAKE-001
+  - [ ] `constraints.regulatory` non-empty for regulated verticals (pharma / fintech / gambling / healthcare / legal / insurance) — T4B-009 REQ-GATEWAY-INTAKE-002
+  - [ ] All other intake fields optional — T4B-009
+- [ ] Pre-perception layer ordering — Phase 4b
+  - [ ] ContextCaptureNode runs BEFORE audit_setup — T4B-011
+  - [ ] Halts on blocking open_questions; resumes after user answers — T4B-011
+  - [ ] AuditState carries `context_profile_id` + `context_profile_hash` — §05
+  - [ ] HeuristicLoader filters by `business.archetype` + `page.type` + `device_priority` — T4B-013
+- [ ] Persistence — Phase 4b
+  - [ ] `context_profiles` table append-only (no UPDATE / no DELETE) — T4B-012 §13
+  - [ ] One row per audit_run, foreign key to `audit_runs` — T4B-012
+  - [ ] Indexes on `audit_run_id`, `client_id`, `profile_hash` — T4B-012
+- [ ] Reproducibility binding (Phase 13b) — §25 + §37 §37.6
+  - [-] ReproducibilitySnapshot pins `context_profile_hash` — T13B-006 (master track)
+  - [-] Same URL + same intake + same signals → same hash — T13B-006 (master track)
+- [ ] Phase 13b enrichments (master track) — items 7-12 from spec
+  - [-] AwarenessLevelInferrer (Schwartz: unaware → most_aware) — T13B-001
+  - [-] MessageMatchCapture (per-traffic-source `creative_or_message`) — T13B-002
+  - [-] IsIndexedDetector (SEO vs paid landing) — T13B-003
+  - [-] DecisionStyleInferrer (impulse / researched / committee / habitual) — T13B-004
+  - [-] GeoLocaleCapture (regulatory binding: EU→GDPR, CA→CCPA, BR→LGPD) — T13B-005
+  - [-] Per-traffic-source awareness segmentation — T13B-007
+- [ ] Heuristic weight modifiers (deferred indefinitely) — §37 §37.5 REQ-CONTEXT-DOWNSTREAM-002
+  - [-] `base × business_modifier × page_modifier × goal_modifier` — calibration data needed first
+- [ ] Constitution R25 compliance — §37 §37.7 + Constitution R25
+  - [ ] No perception (no Playwright in Context Capture Layer) — T4B-014
+  - [ ] No CRO judgments (no severity / impact / score fields) — T4B-014
+  - [ ] No silent guessing (every value carries source + confidence) — T4B-014
+  - [ ] No skip on low confidence (always surface as open_question) — T4B-014
+  - [ ] No mutating page state — T4B-014
+- [ ] Validation
+  - [ ] All 5 dimensions populated on 5 fixture sites — T4B-015
+  - [ ] Regulated vertical without constraints rejected — T4B-015
+  - [ ] Low-confidence inference produces blocking question — T4B-015
+  - [ ] Inference fetch failure degrades gracefully to URL-only — T4B-015
+  - [ ] Same URL + intake + signals → same ContextProfile hash — T13B-006
+
+---
+
+## 1. Perception Layer
+
+- [ ] Browser Runtime
+  - [ ] Implement `BrowserManager.launch()` with stealth config injected
+  - [ ] Implement `BrowserManager.navigate(url, options)` with configurable timeout
+  - [ ] Implement `BrowserManager.close()` with no orphaned processes
+  - [ ] Pass all `bot.sannysoft.com` stealth checks
+  - [ ] Block third-party trackers via launch options
+  - [ ] Set viewport from declared `viewport_context.{width,height,device_type}`
+- [ ] Accessibility Tree Extraction
+  - [ ] Implement `AccessibilityExtractor.extract()` returning `AXNode[]`
+  - [ ] Capture role, name, value, focused, expanded, level, checked, selected, disabled
+  - [ ] Skip hidden ancestors via `aria-hidden` traversal
+  - [ ] Verify >50 nodes returned on `amazon.in` homepage
+- [ ] DOM Filtering
+  - [ ] Implement `HardFilter.run(nodes)` removing invisible / disabled / zero-dim / aria-hidden elements
+  - [ ] Verify hard filter drops ≥50% of raw nodes on test pages
+  - [ ] Implement `SoftFilter.score(nodes, taskContext)` returning top N (default 30)
+  - [ ] Verify soft filter ranks task-relevant elements first on 5 fixtures
+  - [ ] Trigger screenshot fallback when filtered count <10
+- [ ] Mutation Monitoring
+  - [ ] Inject `MutationObserver` on every page load
+  - [ ] Track DOM mutations between action and verify
+  - [ ] Wait for `pending_mutations === 0` OR `mutation_timeout_ms` elapsed
+  - [ ] Capture `pending_mutations` count in `PageStateModel.diagnostics`
+- [ ] Screenshot Capture
+  - [ ] Capture viewport screenshot — JPEG ≤150KB, ≤1280px wide
+  - [ ] Capture full-page screenshot — ≤2MB
+  - [ ] Persist screenshots to R2 with `audit_run_id` correlation
+  - [ ] Capture per-state screenshots for multi-state perception
+- [ ] AnalyzePerception Capture (single `page.evaluate()`)
+  - [ ] `metadata.url`, `requestedUrl`, `title`, `metaDescription`, `canonical`, `lang`, `timestamp`, `viewport`
+  - [ ] `metadata.ogTags` (og:title, og:description, og:image, og:type)
+  - [ ] `metadata.schemaOrg` (JSON-LD + microdata)
+  - [ ] `headingHierarchy[]` with level, text, isAboveFold
+  - [ ] `landmarks[]` with role, label
+  - [ ] `semanticHTML.{hasMain, hasNav, hasFooter, formCount, tableCount}`
+  - [ ] `structure.{titleH1Match, titleH1Similarity}`
+  - [ ] `textContent.{wordCount, readabilityScore, primaryLanguage, paragraphs[]}`
+  - [ ] `textContent.valueProp.{h1, heroSubheading, firstParagraph}`
+  - [ ] `textContent.urgencyScarcityHits[]` with pattern, match, boundingBox
+  - [ ] `textContent.riskReversalHits[]` with pattern, match, boundingBox
+  - [ ] `ctas[]` with text, accessibleName, role, type, isAboveFold, boundingBox
+  - [ ] `ctas[].computedStyles.{backgroundColor, color, fontSize, padding, contrastRatio}`
+  - [ ] `ctas[].hoverStyles` and `focusStyles` via CSS pseudo-class matching
+  - [ ] `forms[]` with id, fieldCount, requiredFieldCount, fields[], hasInlineValidation, submitButtonText
+  - [ ] `forms[].fields[]` with type, label, hasLabel, accessibleName, role, isRequired, hasValidation, hasErrorMessage, placeholder
+  - [ ] `trustSignals[]` with type, subtype, source, attribution, freshnessDate, pixelDistanceToNearestCta, boundingBox
+  - [ ] `layout.{viewportHeight, foldPosition, contentAboveFold, visualHierarchy, whitespaceRatio}`
+  - [ ] `images[]` with src, alt, hasAlt, dimensions, isAboveFold, isLazyLoaded
+  - [ ] `iframes[]` with src, origin, isCrossOrigin, boundingBox, isAboveFold, purposeGuess
+  - [ ] `navigation.{primaryNavItems, breadcrumbs, footerNavItems, hasSearch, hasMobileMenu}`
+  - [ ] `accessibility.keyboardFocusOrder[]` with selector, role, accessibleName, tabindex
+  - [ ] `accessibility.skipLinks[]` with text, target, isVisible
+  - [ ] `performance.{domContentLoaded, fullyLoaded, resourceCount, totalTransferSize}`
+  - [ ] `performance.{lcp, inp, cls, ttfb, timeToFirstCtaInteractable}`
+  - [ ] `inferredPageType.{primary, alternatives[], signalsUsed}`
+  - [ ] `viewport_context.{width, height, device_type}`
+- [ ] Diagnostics
+  - [ ] Capture `diagnostics.consoleErrors[]`
+  - [ ] Capture `diagnostics.failedRequests[]`
+  - [ ] Capture `diagnostics.pendingMutations`
+- [x] Perception Gap Extensions — §07 §7.9.2 v2.4 / Phase 1b + 5b
+  - [x] `pricing.{displayFormat, discountPercent, anchorPrice, currency, taxInclusion, comparisonShown}` — §07 §7.9.2 / T1B-001
+  - [x] `clickTargets[]` with elementId, sizePx, isMobileTapFriendly (≥48×48) — §07 §7.9.2 / T1B-002
+  - [x] `stickyElements[]` with type (cta/cart/nav/banner), position, viewport coverage — §07 §7.9.2 / T1B-003
+  - [x] `popups[]` presence + dismissibility + viewport coverage — §07 §7.9.2 / T1B-004 (presence) + T5B-005/T5B-006/T5B-007 (behavior, timing, dark patterns)
+  - [x] Derived `frictionScore` from fields + steps + popups + required fields — §07 §7.9.2 / T1B-005
+  - [x] `socialProofDepth.{reviewCount, starDistribution, recencyDays}` — §07 §7.9.2 / T1B-006
+  - [x] `microcopy.nearCtaTags[]` (riskReducer, urgency, security, guarantee) — §07 §7.9.2 / T1B-007
+  - [x] `attention.dominantElement` from contrast + size + color saturation — §07 §7.9.2 / T1B-008
+  - [x] `commerce.{stockStatus, shippingSignals, returnPolicyPresent}` — §07 §7.9.2 / T1B-009
+- [ ] PerceptionBundle Envelope (v2.5 / Phase 1c) — §07 §7.9.3
+  - [ ] Settle predicate (network idle + mutation stop + fonts ready + animations done) — T1C-001
+  - [ ] Shadow DOM traversal (depth ≤5) — T1C-002
+  - [ ] React Portal / Vue Teleport scanning — T1C-003
+  - [ ] Pseudo-element `::before` / `::after` content capture — T1C-004
+  - [ ] iframe policy engine (descend checkout/chat, skip video/analytics) — T1C-005
+  - [ ] Hidden element capture with reason flag — T1C-006
+  - [ ] ElementGraph builder — top 30 elements per state with stable `element_id` — T1C-007
+  - [ ] FusedElement: DOM + AX + bbox + style + crop_url joined per element_id — T1C-007
+  - [ ] `ref_in_analyze_perception` cross-references back to v2.3/v2.4 arrays — T1C-007
+  - [ ] Nondeterminism flags (Optimizely / VWO / Google Optimize / personalization cookies) — T1C-008
+  - [ ] Warnings emitter (8 codes: SHADOW_DOM_NOT_TRAVERSED / IFRAME_SKIPPED / BUDGET_EXHAUSTED_AT_DEPTH_2 / AUTH_REQUIRED_DETECTED / SETTLE_TIMEOUT_5S / FONTS_NOT_READY / ANIMATION_NOT_SETTLED / COOKIE_BANNER_BLOCKING_FOLD) — T1C-009
+  - [ ] PerceptionBundle Zod schema + immutable envelope — T1C-010
+  - [ ] Backward-compat helper `bundleToAnalyzePerception()` — T1C-010
+  - [ ] Token budget per state ≤8.5K (bundle wraps AnalyzePerception unchanged at ≤6.5K) — T1C-010
+- [ ] Trigger Taxonomy (Phase 5b extended) — §20 + spec §3.1
+  - [ ] HoverTrigger — T5B-010
+  - [ ] ScrollPositionTrigger — T5B-011
+  - [ ] TimeDelayTrigger — T5B-012
+  - [ ] ExitIntentTrigger — T5B-013
+  - [ ] FormInputTrigger — T5B-014
+  - [ ] TriggerCandidateDiscovery with priority ordering — T5B-015
+- [ ] Cookie Banner Policy (Phase 5b extended) — spec §4.4
+  - [ ] CookieBannerDetector (OneTrust / Cookiebot / TrustArc + generic) — T5B-016
+  - [ ] CookieBannerPolicy executor (dismiss / preserve modes) — T5B-017
+  - [ ] AuditRequest.cookie_policy field — T5B-018
+- [ ] Robots / ToS Hard Rules (Phase 4 extended) — §11.1.1
+  - [ ] robots.txt fetched + parsed once per audit — REQ-SAFETY-005
+  - [ ] Real form submits hard-blocked (checkout / payment / purchase) — REQ-SAFETY-006
+  - [ ] No autonomous auth attempts — REQ-SAFETY-009
+  - [ ] No state-mutating retries (cart, account creation) — REQ-SAFETY-010
+  - [ ] Realistic User-Agent (no crawler spoofing) — REQ-SAFETY-007
+- [ ] State Graph Formalization (deferred to Phase 13 master track)
+  - [-] StateGraph formal edges with `delta_type` classification — Phase 13 master track
+  - [-] StateDiffClassifier (5 categories: content_added / content_revealed / content_replaced / cosmetic / navigation) — Phase 13 master track
+  - [-] Cosmetic-only filter — Phase 13 master track
+  - [-] ExplorationPriorityQueue — Phase 13 master track
+  - [-] DepthAndBudgetGuard — Phase 13 master track
+- [ ] Validation
+  - [ ] Zod schema validates `PageStateModel` end-to-end
+  - [ ] Zod schema validates `AnalyzePerception` end-to-end
+  - [ ] Zod schema validates `PerceptionBundle` end-to-end (v2.5)
+  - [ ] Reject perception missing required fields with structured error
+  - [ ] Browse perception payload ≤1500 tokens
+  - [ ] Analyze perception payload ≤6.5K tokens (v2.4)
+  - [ ] PerceptionBundle payload ≤8.5K tokens per state (v2.5)
+  - [ ] Capture cost = $0 (no LLM call in perception)
+  - [ ] Settle predicate completes within 5s hard cap
+  - [ ] Backward-compat: existing v2.3/v2.4 consumers work via `bundleToAnalyzePerception()`
+
+## 2. State Coverage (Dynamic UI)
+
+- [ ] State Exploration Engine
+  - [ ] Implement `explore_states` node per §20
+  - [ ] Build `DisclosureRuleLibrary` for tabs, accordions, filters, dropdowns, modals, tooltips
+  - [ ] Implement Pass 1 (heuristic-primed) on detected disclosure controls
+  - [ ] Implement Pass 2 (auto-escalated bounded) when Pass 1 confidence <0.7
+  - [ ] Cap Pass 2 budget at 20 interactions per page
+- [ ] Meaningful State Detection
+  - [ ] Implement `MeaningfulStateDetector` rejecting non-distinct states
+  - [ ] Discard states with <10% DOM diff vs default state
+  - [ ] Verify ≥30% raw state discard rate on fixture set
+- [ ] Multi-State Perception
+  - [ ] Capture per-state `AnalyzePerception` for each kept state
+  - [ ] Persist `MultiStatePerception` with full state graph
+  - [ ] Freeze state graph after exploration via `Object.freeze` (§33a REQ-COMP-PHASE10-002)
+  - [ ] Reject mutation attempts on frozen state graph
+- [ ] State Transitions
+  - [ ] Capture `StateTransition` records (default→tab2, default→accordion-expanded)
+  - [ ] Record transition latency, mutation count, console errors
+  - [ ] Detect form validation state (empty submit → N errors)
+  - [ ] Detect scroll-driven state (sticky CTA text change)
+  - [ ] Detect hover-driven state (tooltip reveal)
+- [ ] Provenance Grounding
+  - [ ] Implement GR-009 grounding rule (state provenance)
+  - [ ] Implement GR-011 grounding rule (per-state finding correctness)
+  - [ ] Reject finding citing default-state data when finding scoped to non-default state
+- [ ] Mutation Awareness
+  - [ ] Verify mutation observer detects SPA route changes
+  - [ ] Verify mutation observer settles within 2s of action on test SPAs
+  - [ ] Capture mutation diff per state transition
+- [ ] Validation
+  - [ ] Pass 1 runs on 5 fixture sites covering all disclosure types
+  - [ ] GR-009 catches ≥1 provenance violation in fixture batch
+  - [ ] GR-011 catches ≥1 state-finding mismatch in fixture batch
+  - [ ] State exploration cost ≤ $0.50 per page
+- [ ] Hybrid State Reset Strategy (Phase 13 — v3.1) — §20 §20.9.1
+  - [ ] HybridStateResetClassifier — modal/accordion/tab/hover/focus → reverse_action; input_change/scroll/time_delay/exit_intent/form_submit → reload_replay — 13.21
+  - [ ] ReverseActionExecutor with 1.5s timeout + reload+replay fallback — 13.22
+  - [ ] Reverse-action used for ≥50% of resets in fixture audit (cost reduction vs reload-only baseline) — 13.25
+- [ ] Storage Restoration Between Branches (Phase 13 — v3.1) — §20 §20.9.2
+  - [ ] StorageSnapshotAndRestore (cookies + localStorage + sessionStorage) — 13.23
+  - [ ] `restore_storage_per_branch: true` default — REQ-STATE-EXPLORE-107
+  - [ ] Exit-intent re-fires after restore (not session-cookie-suppressed across branches) — 13.25
+- [ ] Nondeterministic State Detection (Phase 13 — v3.1) — §20 §20.9.3
+  - [ ] NondeterministicStateDetector replay-samples first 3 non-default states — 13.24
+  - [ ] `NONDETERMINISTIC_STATE` warning emitted on hash mismatch — REQ-STATE-EXPLORE-110a
+  - [ ] suspected_cause classified (ab_test / personalization / time_based / live_inventory / ad_auction / unknown) — 13.24
+  - [ ] State recorded in graph despite nondeterminism (not silently absorbed) — REQ-STATE-EXPLORE-110b
+- [ ] Constitution R26 compliance — §20 + Constitution R26
+  - [ ] State exploration MUST NOT make CRO judgments — record states, let heuristics judge
+  - [ ] State exploration MUST NOT submit forms unless explicitly allowed
+  - [ ] State exploration MUST NOT take destructive actions (delete / logout / cancel order / unsubscribe)
+  - [ ] State exploration MUST NOT follow external links (record edge, don't follow)
+  - [ ] State exploration MUST NOT attempt authentication
+  - [ ] State exploration MUST NOT mutate perception data — drives perception, doesn't edit its output
+
+## 3. Context Detection
+
+- [ ] Page Type Classification
+  - [ ] Implement `detectPageType()` returning `{primary, alternatives[], confidence, signalsUsed}`
+  - [ ] Classify into: homepage, category, PDP, cart, checkout, confirmation, account, content, search, contact, pricing, demo
+  - [ ] Use signals: urlKeywords, ctaTexts, formSignals, schemaOrgTypes, headingPatterns
+  - [ ] Achieve ≥0.7 confidence on 90% of fixture pages
+  - [ ] Fall back to "other" when confidence <0.5
+- [ ] Business Type Detection
+  - [ ] Detect: ecommerce, saas, b2b, content, lead-gen, marketplace, fintech, healthcare
+  - [ ] Use signals: schemaOrg `@type`, pricing presence, cart presence, demo requests, gating patterns
+  - [ ] Persist `business_type` on `client_profile`
+- [ ] Template Clustering
+  - [ ] Implement HDBSCAN clustering over page DOM signatures (§19)
+  - [ ] Produce ≤20 templates from a 500-page site
+  - [ ] Achieve ≥70% rule-based classification accuracy
+  - [ ] Select representative page per template
+  - [ ] Persist template definition with member URL list
+- [ ] Funnel Synthesis
+  - [ ] Detect cart→checkout funnel from add-to-cart + checkout signals
+  - [ ] Detect signup→onboarding funnel from auth + first-run patterns
+  - [ ] Detect demo-request funnel from form + thank-you patterns
+  - [ ] Persist `WorkflowDefinition` with steps, transition rules, success criteria
+- [ ] Persona Context
+  - [ ] Load `PersonaContext` per audit (default: cold-traffic visitor)
+  - [ ] Apply `device_type` from `viewport_context`
+  - [ ] Apply `traffic_intent` (branded / generic / direct / referral)
+  - [ ] Apply `user_state` (anonymous / returning / authenticated)
+- [x] Locale & Currency — §07 §7.9 / §7.9.2 v2.4
+  - [x] Capture `html.lang` — §07 §7.9 metadata.lang
+  - [x] Detect currency switcher presence — §07 §7.9.2 metadata.currencySwitcher / T1B-010
+  - [x] Capture currency display format (£/$/€/INR) — §07 §7.9.2 pricing.currency / T1B-001
+  - [ ] Detect date format pattern (dd/mm vs mm/dd) — gap; not in scope of v2.4 extensions
+- [ ] Validation
+  - [ ] Reject classification with confidence <0.5 → "other"
+  - [ ] Log all classification signals to `llm_call_log`
+  - [ ] Pass classification on 30 manually-labeled fixture pages with ≥85% accuracy
+
+## 4. Element Classification
+
+- [ ] CTA Classification
+  - [ ] Classify CTAs as primary, secondary, tertiary by visual weight
+  - [ ] Compute primary CTA score from size + contrast + position + color saturation
+  - [ ] Verify exactly one primary CTA per fold on tested fixtures
+  - [ ] Detect ghost / outline / link-style CTAs
+- [ ] Form Field Classification
+  - [ ] Detect input type: text, email, tel, password, number, date, file, checkbox, radio, hidden
+  - [ ] Detect field role from label, placeholder, autocomplete, name, id
+  - [ ] Mark required vs optional fields
+  - [ ] Detect inline validation patterns
+  - [ ] Detect password reveal toggle
+  - [ ] Detect autofill compatibility (autocomplete attribute correctness)
+- [ ] Trust Signal Classification
+  - [ ] Classify type: review, badge, testimonial, guarantee, security, social_proof
+  - [ ] Classify subtype: payment, security_certification, industry_cert, customer_review, expert_endorsement, press_mention, aggregate_rating
+  - [ ] Classify source: third_party, self_claimed, unknown
+  - [ ] Compute pixel distance to nearest CTA
+- [ ] Image Classification
+  - [ ] Distinguish product / decorative / hero / icon / logo
+  - [ ] Detect logo by position + size + aspect ratio
+  - [ ] Detect lazy-loaded via `loading="lazy"` or IntersectionObserver
+  - [ ] Detect responsive `srcset` presence
+- [ ] Iframe Classification
+  - [ ] Classify `purposeGuess`: checkout, video, map, chat, antibot, analytics, social_embed, other
+  - [ ] Use src origin matching: stripe.com→checkout, youtube.com→video, recaptcha→antibot, intercom→chat
+- [ ] Interactive Control Graph
+  - [ ] Build graph of clickable, focusable, typeable elements
+  - [ ] Rank controls by relevance to current task
+  - [ ] Return `topControls` (top N by score)
+- [ ] Disclosure Pattern Detection
+  - [ ] Detect tabs via `role="tablist"` + `role="tab"`
+  - [ ] Detect accordions via `aria-expanded` + button parents
+  - [ ] Detect filters via form role + querystring binding
+  - [ ] Detect modals via `role="dialog"` + `aria-modal`
+  - [ ] Detect carousels via `role="region"` + paged content
+- [x] Sticky Element Detection — §07 §7.9.2 v2.4 / T1B-003
+  - [x] Detect sticky via `position: sticky` or `position: fixed` — §07 §7.9.2 stickyElements[].positionStrategy / T1B-003
+  - [x] Classify type: cta, cart, nav, header, banner, chat-widget — §07 §7.9.2 stickyElements[].type / T1B-003
+  - [x] Compute viewport coverage % when active — §07 §7.9.2 stickyElements[].viewportCoveragePercent / T1B-003
+- [ ] Validation
+  - [ ] Achieve ≥85% precision on CTA classification (manual ground truth)
+  - [ ] Achieve ≥80% precision on trust signal subtype
+  - [ ] Achieve ≥90% precision on iframe `purposeGuess`
+
+## 5. Heuristics Engine
+
+- [ ] Schema & Loading
+  - [ ] Define `HeuristicSchema` (Zod): id, name, source, tier, scope, applies_to, evaluation_strategy, version
+  - [ ] Implement `HeuristicLoader` reading from `heuristics-repo/`
+  - [ ] Validate all 60 MVP heuristics against schema
+  - [ ] Reject malformed heuristics with structured error
+- [ ] Reliability Tiers
+  - [ ] Tag Tier 1 (research-backed, ≥90% confidence threshold)
+  - [ ] Tag Tier 2 (industry-standard, ≥70%)
+  - [ ] Tag Tier 3 (emerging, ≥50%, warm-up required)
+- [ ] Source Decomposition
+  - [ ] Load Baymard heuristics (~25)
+  - [ ] Load Nielsen heuristics (~25)
+  - [ ] Load Cialdini heuristics (~10)
+  - [ ] Persist all to `heuristics-repo/` with version pin
+- [ ] Filtering
+  - [ ] `PageTypeFilter` filters by `applies_to.page_type`
+  - [ ] `BusinessTypeFilter` filters by `applies_to.business_type`
+  - [ ] Combined filter returns 12-25 heuristics per page+business combo
+  - [ ] Verify 0 cross-business-type leakage in tests
+- [ ] Dual-Mode Evaluation Strategy (§33.6)
+  - [ ] Define `static` strategy entry per heuristic
+  - [ ] Define optional `interactive` strategy entry per heuristic
+  - [ ] Default to static when interactive missing (backward compatible)
+  - [ ] Validate interactive strategy declares required browser tools
+- [ ] Vector Retrieval (Phase 16)
+  - [ ] Embed all heuristics into pgvector
+  - [ ] Implement `DynamicHeuristicRetrieval` over perception query
+  - [ ] Verify vector rerank improves over categorical baseline by ≥10%
+  - [ ] Scale to 5000+ heuristics with <200ms retrieval
+- [ ] Warm-Up Protocol
+  - [ ] New heuristics enter Tier 3 with `WarmupManager` tracking
+  - [ ] Auto-graduate to Tier 2 at 20 approvals + ≥80% rate
+  - [ ] Block warm-up heuristics from client-visible publication
+- [ ] IP Protection
+  - [ ] Heuristic content excluded from API responses
+  - [ ] Heuristic content excluded from LangSmith traces
+  - [ ] Heuristic content excluded from logs
+  - [ ] AES-256-GCM encryption of heuristics-repo (Phase 1.1)
+  - [ ] Verify no heuristic content in 10000-finding output sample
+- [ ] Validation
+  - [ ] All 60 heuristics load without errors
+  - [ ] Filtering produces non-empty result for every page+business combo
+  - [ ] No tier without test fixture coverage
+
+## 6. Mapping Engine
+
+- [ ] Heuristic-to-Perception Binding
+  - [ ] Each heuristic declares required `AnalyzePerception` fields
+  - [ ] Validate required fields present before evaluation
+  - [ ] Skip heuristic with structured "missing data" log when fields absent
+- [ ] Heuristic-to-Element Binding
+  - [ ] Map `heuristic.applies_to.element_type` to element classifier output
+  - [ ] Filter perception elements to those matching heuristic scope
+  - [ ] Pass scoped elements to evaluate prompt
+- [ ] Tool Injection Mapping (§33.4)
+  - [ ] Map each interactive heuristic to required tool subset (9 browser + 6 analysis)
+  - [ ] Inject `browser_click`, `browser_hover`, `browser_select`, `browser_type`, `browser_press_key`, `browser_scroll`, `browser_get_state`, `browser_screenshot`, `browser_find_by_text` per heuristic need
+  - [ ] Inject `page_analyze`, `page_get_element_info`, `page_get_performance` per heuristic need
+  - [ ] Reject tool requests outside declared tool set
+- [ ] State-to-Heuristic Mapping
+  - [ ] Map per-state heuristics to corresponding `StateNode` in `MultiStatePerception`
+  - [ ] Bind transition heuristics to `StateTransition` records
+  - [ ] Block default-state heuristic from evaluating non-default state without re-binding
+- [ ] Persona-to-Heuristic Mapping
+  - [ ] Filter heuristics by `PersonaContext.device_type`
+  - [ ] Filter heuristics by `PersonaContext.traffic_intent`
+  - [ ] Apply persona-specific weight multipliers in scoring
+- [ ] Output Mapping
+  - [ ] Map `heuristic_id` to `FindingTemplate`
+  - [ ] Bind evaluator output to `RawFinding` schema
+  - [ ] Bind grounded output to `GroundedFinding` schema
+- [ ] Validation
+  - [ ] Every heuristic has at least one perception field binding
+  - [ ] Every interactive heuristic has tool subset declared
+  - [ ] Reject mapping with cyclic state-heuristic references
+
+## 7. Analysis Engine
+
+- [ ] DeepPerceive Node
+  - [ ] Execute single `page.evaluate()` returning full `AnalyzePerception`
+  - [ ] Capture viewport + full-page screenshots
+  - [ ] Persist perception to working store
+  - [ ] Validate Zod schema before downstream nodes
+- [ ] Evaluate Strategy Pattern (§33a)
+  - [ ] Implement `EvaluateStrategy` interface accepting `BrowserSession | null`
+  - [ ] Implement `StaticEvaluateStrategy` (single-shot LLM call)
+  - [ ] Implement `InteractiveEvaluateStrategy` (ReAct loop with tool injection)
+  - [ ] Implement `EvaluateNode` wrapper with strategy selection by `composition_mode`
+- [ ] Static Evaluation
+  - [ ] Build evaluate prompt: perception + filtered heuristics + chain-of-thought instruction
+  - [ ] Enforce `temperature=0`
+  - [ ] Parse `RawFindings[]` from LLM response
+  - [ ] Retry up to 2 times on malformed JSON
+  - [ ] Track token count + cost per call
+- [ ] Interactive Evaluation (§33.7b)
+  - [ ] Build ReAct prompt: perception + heuristics + injected tool list + interaction budget
+  - [ ] Loop: reason → call tool → observe → re-evaluate
+  - [ ] Enforce per-heuristic interaction budget via `HeuristicInteractionTracker`
+  - [ ] Track each interaction in `analysis_interactions[]`
+  - [ ] Exit loop on `produce_finding` or budget exhausted
+  - [ ] Track session contamination events (§33.12)
+  - [ ] Manage context window via message pruning + state-delta compression
+- [ ] Self-Critique
+  - [ ] Implement `SelfCritiqueNode` with separate LLM persona (R5.6)
+  - [ ] Pass `RawFindings` to critique prompt with rejection criteria
+  - [ ] Reject or downgrade ≥1 finding in test fixtures
+  - [ ] Persist critique reasoning per finding
+- [ ] Evidence Grounding
+  - [ ] Implement `EvidenceGrounder` running 8 grounding rules
+  - [ ] GR-001: element_exists — claimed element present in perception
+  - [ ] GR-002: data_point_match — cited value matches `AnalyzePerception`
+  - [ ] GR-003: heuristic_in_kb — `heuristic_id` resolves to KB entry
+  - [ ] GR-004: severity_within_range — severity ∈ {low, medium, high, critical}
+  - [ ] GR-005: confidence_calibrated — confidence ∈ tier band
+  - [ ] GR-006: no_conversion_prediction — reject "this will increase conversion by X%"
+  - [ ] GR-007: scope_in_cro — reject SEO/A11y-only findings
+  - [ ] GR-008: data_point_section_real — cited section exists in `AnalyzePerception`
+  - [ ] Reject ≥1 hallucination per fixture batch
+- [ ] Annotation
+  - [ ] Implement `AnnotateNode` rendering pins on screenshot via Sharp
+  - [ ] Color: red (critical), orange (high), yellow (medium), blue (low)
+  - [ ] Render exactly one pin per published finding
+  - [ ] Persist annotated screenshot to R2
+- [ ] Confidence Tier Assignment
+  - [ ] `AssignConfidenceTier` per finding using heuristic.tier + measurement quality
+  - [ ] Block tier-3 findings from auto-publication
+- [ ] Cost Tracking
+  - [ ] Log every LLM call to `llm_call_log` atomically (R14.1)
+  - [ ] Pre-call budget gate via `getTokenCount` estimate
+  - [ ] Halt audit on budget exhaustion with clean state
+- [ ] Validation
+  - [ ] Pipeline runs end-to-end on 3 page types
+  - [ ] Self-critique rejects ≥1 finding
+  - [ ] Grounding rejects ≥1 hallucination
+  - [ ] Annotated screenshots render with correct severity colors
+  - [ ] Per-page cost ≤ $5 hard cap
+  - [ ] Per-audit cost ≤ $15 hard cap
+
+## 8. Hypothesis Engine
+
+- [ ] Hypothesis Generation
+  - [ ] Implement `HypothesisGenerator` consuming approved findings (§29)
+  - [ ] Generate hypothesis structure: observation + intervention + expected_outcome + confidence
+  - [ ] Bind each hypothesis to ≥1 source finding via `finding_id`
+  - [ ] Block hypothesis without source finding
+- [ ] Test Plan Generation
+  - [ ] Implement `TestPlanGenerator` producing variation ideas
+  - [ ] Generate ≥2 variations per hypothesis (control + treatment)
+  - [ ] Compute required sample size from baseline CR + MDE + alpha=0.05 + power=0.8
+  - [ ] Generate test duration estimate from traffic volume
+- [ ] Variation Idea Generation
+  - [ ] Generate copy variations for headline/CTA/value-prop hypotheses
+  - [ ] Generate layout variations for above-fold/sticky/CTA-position hypotheses
+  - [ ] Generate friction-reduction variations for form/checkout hypotheses
+  - [ ] Reject variations duplicating existing tested patterns
+- [ ] A/B Tool Export
+  - [ ] Implement VWO export adapter
+  - [ ] Implement Optimizely export adapter
+  - [ ] Implement GrowthBook export adapter
+  - [ ] Validate export schema against tool API
+- [ ] Test Result Loop
+  - [ ] Capture test result on completion (winner, lift, p-value)
+  - [ ] Match result to source finding via `hypothesis_id`
+  - [ ] Update finding confidence based on test outcome
+  - [ ] Feed result to LearningLoop for heuristic calibration
+- [ ] Validation
+  - [ ] Hypothesis generation produces ≥1 hypothesis per test finding
+  - [ ] Sample size calc verified against statistical reference
+  - [ ] VWO export round-trips through tool import
+  - [ ] No hypothesis with conversion prediction (GR-006)
+
+## 9. Prioritization Engine
+
+- [ ] Scoring Framework (4D)
+  - [ ] Compute Impact score 1-10 from `IMPACT_MATRIX`
+  - [ ] Compute Effort score 1-10 from `EFFORT_MAP`
+  - [ ] Compute Confidence score 0.0-1.0 from heuristic tier + grounding strength
+  - [ ] Compute Reach score 0.0-1.0 from page traffic / total traffic
+- [ ] Composite Scoring
+  - [ ] Compute ICE score: (Impact × Confidence) / Effort
+  - [ ] Compute PIE score: Potential × Importance × Ease
+  - [ ] Compute custom CRO score per consultant policy
+  - [ ] Persist all scores per finding
+- [ ] Effort Mapping
+  - [ ] Map "copy change" → effort 1-2
+  - [ ] Map "layout change" → effort 3-5
+  - [ ] Map "new component" → effort 6-8
+  - [ ] Map "tech debt / replatform" → effort 9-10
+- [ ] Impact Mapping
+  - [ ] Map "primary CTA visibility" → impact 8-10
+  - [ ] Map "trust signal placement" → impact 5-7
+  - [ ] Map "form friction" → impact 6-8
+  - [ ] Map "microcopy" → impact 2-4
+- [ ] Persona-Weighted Scoring
+  - [ ] Apply weight multipliers from `PersonaContext`
+  - [ ] Boost mobile-specific findings on mobile audits
+  - [ ] Boost first-time-visitor findings on cold-traffic audits
+- [ ] Cross-Page Aggregation
+  - [ ] Aggregate findings across pages of same template
+  - [ ] Boost score for findings appearing on >50% of template pages
+  - [ ] Suppress duplicate findings (same heuristic + same DOM signature)
+- [ ] Ranking & Surfacing
+  - [ ] Sort findings by composite score descending
+  - [ ] Group findings by page → template → audit
+  - [ ] Surface top 10 findings to executive summary
+- [ ] Validation
+  - [ ] Top 10 findings pass consultant review on 3 test audits
+  - [ ] Score distribution covers full range, no clustering at 5/10
+  - [ ] Effort+impact combinations match consultant intuition on spot-check
+
+## 10. Validation Engine
+
+- [ ] Grounding Rule Engine
+  - [ ] Implement GR-001 through GR-008 as pure functions
+  - [ ] GR-009: state provenance (Phase 13)
+  - [ ] GR-010: workflow data integrity (Phase 13)
+  - [ ] GR-011: per-state finding correctness (Phase 14)
+  - [ ] Run all rules on every finding before publication
+  - [ ] Reject finding on first rule failure with structured error
+- [ ] Self-Critique Validation
+  - [ ] Verify critique runs with separate LLM persona (R5.6)
+  - [ ] Verify critique produces accept/reject/downgrade verdict
+  - [ ] Verify ≥30% raw findings rejected or downgraded by critique on test set
+- [ ] Schema Validation
+  - [ ] Validate `AnalyzePerception` against Zod before evaluate
+  - [ ] Validate `RawFinding` against Zod after evaluate
+  - [ ] Validate `ReviewedFinding` against Zod after critique
+  - [ ] Validate `GroundedFinding` against Zod after grounding
+- [ ] Reproducibility Validation
+  - [ ] Persist `ReproducibilitySnapshot` per audit (model_id, prompt_hash, heuristic_versions, perception_hash)
+  - [ ] Run same audit twice — verify finding-set delta <5%
+  - [ ] Enforce `temperature=0` on evaluate / self_critique / evaluate_interactive
+  - [ ] Pin model version in snapshot
+- [ ] Analytics Binding Validation (Phase 16)
+  - [ ] Cross-check finding against GA4 event for same element
+  - [ ] Suppress finding contradicted by analytics (e.g., "weak CTA" but CTR=15%)
+  - [ ] Boost finding confirmed by analytics (e.g., "form friction" + 60% drop-off at field 3)
+- [ ] Golden Test Validation
+  - [ ] Build golden fixture set: 20 sites × 3 page types
+  - [ ] Compute reference finding set per fixture
+  - [ ] Run regression test on every commit affecting analysis path
+  - [ ] Block merge on golden test diff >10%
+- [ ] IP & Safety Validation
+  - [ ] Scan finding text for heuristic content leakage
+  - [ ] Block finding containing `heuristic_id` name in user-visible text
+  - [ ] Verify domain policy not violated by interactive evaluate
+- [ ] Cost Validation
+  - [ ] Verify per-audit cost ≤ $15 hard cap
+  - [ ] Verify per-page cost ≤ $5 hard cap
+  - [ ] Halt audit on budget exhaustion with clean state
+- [ ] Validation
+  - [ ] Golden test suite passes 100% on locked baseline
+  - [ ] Reproducibility delta <5% on 3 fixture audits
+  - [ ] No heuristic content in 10000-finding sample
+
+## 11. Learning Loop
+
+- [ ] Calibration Job
+  - [ ] Implement post-audit calibration job (§28)
+  - [ ] Read consultant approve/reject decisions per finding
+  - [ ] Adjust heuristic reliability score based on approval rate
+  - [ ] Persist updated reliability to `heuristics-repo/`
+- [ ] Warm-Up Graduation
+  - [ ] Track per-heuristic approval count + reject count
+  - [ ] Auto-graduate Tier 3 → Tier 2 at 20 approvals + ≥80% rate
+  - [ ] Auto-graduate Tier 2 → Tier 1 at 100 approvals + ≥90% rate
+  - [ ] Demote heuristic on approval rate <50% over 20 reviews
+- [ ] Pattern Extraction
+  - [ ] Detect recurring consultant edits to findings
+  - [ ] Crystallize edit patterns into proposed new heuristics
+  - [ ] Queue proposed heuristics for human review
+- [ ] Per-Client Learning
+  - [ ] Track client-specific finding acceptance patterns
+  - [ ] Generate client-specific heuristic variants
+  - [ ] Apply client weighting on subsequent audits
+- [ ] Heuristic Evolution (Phase 16)
+  - [ ] Re-embed heuristics on definition change
+  - [ ] Update vector index incrementally
+  - [ ] Track heuristic version history with rollback support
+- [ ] A/B Test Result Loop
+  - [ ] Capture test result from VWO/Optimizely/GrowthBook webhooks
+  - [ ] Match result to source finding via `hypothesis_id`
+  - [ ] Update finding confidence based on test outcome
+  - [ ] Feed outcome to `PatternExtractor`
+- [ ] Audit Trail
+  - [ ] Log every reliability adjustment with `audit_run_id` source
+  - [ ] Block silent reliability drift via audit log
+  - [ ] Surface reliability changes in consultant dashboard
+- [ ] Validation
+  - [ ] Calibration runs without error after 3 test audits
+  - [ ] Warm-up graduation triggers correctly in fixture
+  - [ ] Pattern extraction produces ≥1 proposed heuristic per 50 findings
+  - [ ] No reliability score moves >0.2 in single calibration run
+
+## 12. Output Engine
+
+- [ ] Review Gate
+  - [ ] Implement `FindingLifecycle` state machine: pending → approved/rejected/edited → published
+  - [ ] Surface pending findings in consultant dashboard
+  - [ ] Capture consultant decision + edit + reasoning
+  - [ ] Block client visibility until status=published
+- [ ] Two-Store Pattern (§24)
+  - [ ] Implement `WorkingStore` (mutable, consultant-only)
+  - [ ] Implement `PublishStore` (immutable, client-readable)
+  - [ ] Implement `AccessModeMiddleware` routing client queries to publish store
+  - [ ] Verify client cannot read working store via RLS
+- [ ] Annotated Screenshot Output
+  - [ ] Render pins with severity colors on viewport screenshot
+  - [ ] Render full-page screenshot with all pins
+  - [ ] Persist both to R2 with `audit_run_id`
+  - [ ] Generate signed URL for client dashboard access
+- [ ] Executive Summary
+  - [ ] Implement `ExecutiveSummaryGenerator` (§35)
+  - [ ] Generate 3-paragraph summary: top wins / top risks / next actions
+  - [ ] Include top 10 findings ranked by composite score
+  - [ ] Bind summary to `audit_run_id` immutably
+- [ ] Action Plan
+  - [ ] Implement `ActionPlanGenerator` (§35)
+  - [ ] Group findings by effort tier (quick wins / medium / long-term)
+  - [ ] Generate per-finding implementation guidance
+  - [ ] Include effort estimate + impact estimate per item
+- [ ] PDF Report
+  - [ ] Implement `ReportGenerator` using Playwright `page.pdf()`
+  - [ ] Include: cover, exec summary, finding details, annotated screenshots, action plan, methodology
+  - [ ] Persist PDF to R2 with version
+  - [ ] Generate downloadable signed URL
+- [ ] Client Dashboard
+  - [ ] Render published findings with annotations
+  - [ ] Render version comparison (audit v1 vs v2)
+  - [ ] Render competitor comparison view
+  - [ ] Stream live audit progress via SSE
+- [ ] Consultant Dashboard
+  - [ ] Render review gate UI (approve/reject/edit per finding)
+  - [ ] Render state graph viewer (multi-state perception)
+  - [ ] Render workflow visualizer (funnel steps)
+  - [ ] Render template inspector
+  - [ ] Render warm-up controls
+- [ ] MCP Server Output
+  - [ ] Implement CRO Audit MCP Server with NL query interface
+  - [ ] Expose tools: `get_findings`, `get_audit_status`, `get_report_url`
+  - [ ] Enforce API key + `client_id` scoping per tool call
+  - [ ] Return only published findings to client API keys
+- [ ] Notifications
+  - [ ] Send email on audit complete (Resend/Postmark)
+  - [ ] Send email on finding requiring consultant review
+  - [ ] Send Slack/Teams webhook on configured events
+- [ ] Validation
+  - [ ] PDF renders identically across 3 audits with same input
+  - [ ] Client cannot access working store via direct DB query
+  - [ ] MCP server returns 0 findings for unauthorized `client_id`
+  - [ ] Annotation pin colors match severity on 100% of test findings
+
+## 13. Implementation Tracker
+
+- [ ] Phase Gate Compliance
+  - [ ] Per-phase smoke tests pass (§16.3-§16.5)
+  - [ ] Per-phase exit gate met before next phase
+  - [ ] Phase artifact count matches §16.7 totals
+  - [ ] Human approval recorded per phase gate
+- [ ] Spec Coverage
+  - [ ] Every implementation file references its REQ-IDs in comments
+  - [ ] Every PR includes Spec Coverage section per PRD §10.6
+  - [ ] Every PR includes 4-block PR Contract per PRD §10.9
+- [ ] Constitution Compliance
+  - [ ] R1 single source of truth maintained per spec
+  - [ ] R10 file ≤300 lines, function ≤50 lines, named exports
+  - [ ] R14.1 every LLM call logged atomically to `llm_call_log`
+  - [ ] R17 spec lifecycle states enforced (approved/superseded/draft/archived)
+  - [ ] R22 The Ratchet — locked decisions not silently reopened
+- [ ] Repo Structure
+  - [ ] Follow §17 + CLAUDE.md §4 directory layout
+  - [ ] Turborepo + pnpm workspace structure
+  - [ ] `packages/agent-core` organized by responsibility
+- [ ] Pre-Commit Discipline
+  - [ ] `pnpm lint` clean per commit
+  - [ ] `pnpm typecheck` clean per commit
+  - [ ] `pnpm test` green per commit
+  - [ ] `pnpm test:conformance -- <component>` green per touched component
+  - [ ] No `--no-verify` or `--no-gpg-sign` without approval
+- [ ] Self-Verification Protocol
+  - [ ] Re-read task acceptance criteria before claiming done
+  - [ ] Per-criterion ✅/❌/🟡 status enumerated
+  - [ ] Run task smoke test → green
+  - [ ] No ❌ or 🟡 before declaring complete
+- [ ] Cost Discipline
+  - [ ] Per-audit cost ≤ $15 hard cap enforced
+  - [ ] Per-page cost ≤ $5 hard cap enforced
+  - [ ] Pre-call budget gate active
+  - [ ] Per-client cost attribution queryable
+- [ ] Reproducibility Discipline
+  - [ ] Reproducibility snapshot persisted per audit
+  - [ ] `temperature=0` on evaluate / critique / evaluate_interactive
+  - [ ] Model + prompt hashes pinned in snapshot
+- [ ] Security Discipline
+  - [ ] Heuristic content excluded from API/dashboard/logs/traces
+  - [ ] Secrets via `process.env` only, never committed
+  - [ ] Clerk handles dashboard auth, no custom auth code
+  - [ ] RLS active on all client-scoped tables
+  - [ ] Append-only tables never UPDATEd or DELETEd
+  - [ ] `browser_evaluate` sandbox blocked on untrusted domains
+- [ ] Spec-Driven Workflow
+  - [ ] Brainstorm → spec → plan → tasks → execute → review (no skipping)
+  - [ ] Spec Kit CLI used for spec.md / plan.md / tasks.md generation
+  - [ ] Constitution rules R17/R19/R20 enforced in lifecycle
+- [ ] Risk Register
+  - [ ] R-1 through R-7 from v3.1 §18.7 tracked at every phase gate
+  - [ ] New risks appended with phase tag + mitigation
+- [ ] Phase Milestones
+  - [ ] ◆ MVP Milestone — Phase 8 single-site audit
+  - [ ] ◆ Product Milestone — Phase 12 production deployment
+  - [ ] ◆ Master Milestone — Phase 16 full master architecture
+- [ ] Documentation Currency
+  - [ ] README updated when spec count changes
+  - [ ] §16 phase plan updated when new phase artifacts added
+  - [ ] Cross-references updated when supersession occurs
+- [ ] Observability Discipline
+  - [ ] Pino structured logs with audit_run_id, page_url, node_name, heuristic_id, trace_id
+  - [ ] LangSmith tracing enabled with IP-content excluded
+  - [ ] Sentry alerting on error rate >1%
+  - [ ] Health checks return 200 on all services
+- [ ] Validation
+  - [ ] All 6 directory remediation tasks (2026-04-28) verified completed
+  - [ ] No unresolved frontmatter status mismatches
+  - [ ] No phase numbering ambiguity in active specs
+  - [ ] Golden test suite passes on every merge to main

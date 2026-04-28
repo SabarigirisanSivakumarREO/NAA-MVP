@@ -689,3 +689,181 @@ why:
     "Kill & reassign after 3+ iterations on same error"
     "Per-agent token budgeting with auto-pause at 85%"
 ```
+
+---
+
+## 24. Perception Layer MUST NOT (v2.5)
+
+**The perception layer captures facts. Everything else is downstream's job.**
+
+### 24.1 Hard prohibitions (perception layer SHALL NOT)
+
+The perception layer is content-neutral and judgment-free. It SHALL NOT:
+
+1. **Make CRO judgments.** Don't compute "this CTA is too small" — record the size, let heuristics judge.
+2. **Prioritize elements.** Don't rank elements by importance — record everything meeting capture criteria.
+3. **Rewrite content.** Don't normalize copy or fix typos in extracted text.
+4. **Submit forms autonomously.** Form submits require explicit `AuditRequest.allow_form_submit` whitelist + per-audit consultant approval (per §11 REQ-SAFETY-006).
+5. **Attempt authentication.** Auth-required pages produce `AUTH_REQUIRED_DETECTED` warning + skip. Use `AuditRequest.auth_seed` (cookies / localStorage seed) when authenticated audit is needed.
+6. **Retry state-mutating operations.** If add-to-cart succeeds and a downstream step fails, do NOT retry add-to-cart. Mark page failed; audit continues.
+7. **Spoof crawlers.** No User-Agent spoofing of Googlebot or other search-engine UAs (per §11 REQ-SAFETY-007).
+8. **Bypass robots.txt.** Disallowed paths emit `ROBOTS_TXT_DISALLOWED` warning + skip. No UA workaround (per §11 REQ-SAFETY-005).
+9. **Mutate the captured bundle.** `PerceptionBundle` is immutable after capture (`Object.freeze`); any consumer needing a derived view must produce a new artifact, not modify the bundle.
+10. **Cross the layer boundary.** Perception SHALL NOT call analysis tools, heuristic evaluation, or finding production. The reverse holds: analysis SHALL NOT modify perception.
+
+### 24.2 What perception SHOULD do
+
+By contrast, the perception layer SHALL:
+
+- Capture all 4 channels (DOM / AX-tree / visual / layout) per state
+- Fuse channels into ElementGraph keyed by stable `element_id`
+- Run settle predicate before every state capture
+- Emit warnings for gaps (Shadow DOM depth, iframe skip, settle timeout, etc.)
+- Emit nondeterminism flags when A/B testing platforms or personalization detected
+- Capture hidden elements with reason flags (downstream decides whether to consume them)
+- Respect the configured cookie banner policy (`dismiss` / `preserve`)
+- Honor robots.txt + per-domain rate limits
+
+### 24.3 Why this rule exists
+
+CRO findings depend on a stable, reproducible perception layer. If perception silently makes judgments ("I think this CTA is too small, so I won't capture its bbox"), downstream cannot reason about the data, and reproducibility breaks. Separating capture from judgment is the architectural invariant that makes 3-layer finding validation (CoT → self-critique → grounding) possible.
+
+**Provenance:**
+
+```yaml
+why:
+  source: docs/Improvement/perception_layer_spec.md §8
+  evidence: >
+    "Perception captures facts. Everything else is downstream's job."
+    "No CRO judgments. Don't compute 'this CTA is too small' — record the size, let heuristics judge."
+    "No prioritization. Don't rank elements by importance — record everything that meets capture criteria."
+adopted_in: v2.5 / Phase 1c
+referenced_specs:
+  - §06 §6.6 (PageStateModel + Shadow DOM/Portal/pseudo-element traversal)
+  - §07 §7.9.3 (PerceptionBundle envelope + ElementGraph + FusedElement)
+  - §11 §11.1.1 (robots/ToS hard rules)
+  - §16 Phase 1c artifact table
+```
+
+---
+
+## 25. Context Capture Layer MUST NOT (v3.0)
+
+**The context capture layer captures intake. Everything else is downstream's job.**
+
+### 25.1 Hard prohibitions (context capture layer SHALL NOT)
+
+The context capture layer is a pre-perception intake layer. It SHALL NOT:
+
+1. **Run perception.** No headless browser, no state exploration, no Playwright at this layer. Lightweight HTTP fetch + cheerio only.
+2. **Make heuristic judgments.** Don't say "this is a bad page" — only "this is a PDP".
+3. **Silently guess.** Every inference MUST record `source` + `confidence`. No anonymous defaults.
+4. **Skip clarification when confidence is low.** When `confidence < 0.6` on a required field, the system MUST surface a blocking `open_question` and halt audit.
+5. **Mutate page state.** No clicks, no form submits, no JS execution. GET-only HTTP fetch.
+6. **Make assumptions about traffic without user input.** Inference for `audience.awareness_level` and `traffic.creative_or_message` is explicitly deferred to Phase 13b — and even then, must default to low confidence + flag.
+7. **Hide low-confidence values.** Profile fields with confidence <0.6 MUST be surfaced via `open_questions[]`, not silently used.
+8. **Bypass robots.txt.** The HtmlFetcher (T4B-003) honors robots.txt. UA spoofing is forbidden (per R5 + §11 REQ-SAFETY-007).
+9. **Persist mutable ContextProfile.** ContextProfile is `Object.freeze`'d after capture. The `context_profiles` table is append-only (no UPDATE, no DELETE per §13).
+10. **Run perception heuristics.** Heuristic selection happens in HeuristicLoader (Phase 6), not in context capture. Context capture produces inputs, not decisions.
+
+### 25.2 What context capture SHOULD do
+
+By contrast, the context capture layer SHALL:
+
+- Capture all 5 dimensions per audit (business / page / audience / traffic / goal+constraints)
+- Tag every field with `{value, source, confidence}`
+- Halt audit on blocking open_questions; resume cleanly after user answers
+- Cache HTTP fetch by URL+ETag for re-runs
+- Honor robots.txt + realistic UA
+- Pin into ReproducibilitySnapshot (§25)
+- Reject AuditRequest missing `goal.primary_kpi`
+- Reject AuditRequest for regulated verticals missing `constraints.regulatory`
+
+### 25.3 Why this rule exists
+
+Context drift causes silent finding-quality degradation. If context layer guesses business archetype as "D2C" when it's actually "B2B", the wrong heuristic pack runs, and the audit produces 30 generic findings instead of 10 relevant ones — wasted budget + wasted consultant review time. Provenance + clarification loop make context certainty visible to downstream layers.
+
+The architectural separation matters: context describes WHAT the page is for; perception describes HOW the page is built; analysis describes WHAT'S WRONG. Mixing context capture into perception (or perception into context) creates cyclic dependencies that break reproducibility and reasoning.
+
+**Provenance:**
+
+```yaml
+why:
+  source: docs/Improvement/context_capture_layer_spec.md §5
+  evidence: >
+    "No perception (no headless browser, no state exploration)."
+    "No heuristic judgments (don't say 'this is a bad page' — only 'this is a PDP')."
+    "No silent guessing — every inference must record source + confidence."
+    "No skipping user when confidence is low — always surface open_questions."
+adopted_in: v3.0 / Phase 4b
+referenced_specs:
+  - §37 §37.7 (Architectural Boundaries)
+  - §13 (context_profiles table — append-only)
+  - §18 (AuditRequest intake validation)
+  - §25 (ReproducibilitySnapshot pinning — Phase 13b)
+  - §16 Phase 4b artifact table
+```
+
+---
+
+## 26. State Exploration Layer MUST NOT (v3.1)
+
+**State exploration drives perception but does not edit it. It captures state transitions; everything else is downstream's job.**
+
+### 26.1 Hard prohibitions (state exploration layer SHALL NOT)
+
+The state exploration layer enumerates and fires triggers, captures resulting states, and emits a StateGraph. It SHALL NOT:
+
+1. **Make CRO judgments.** Don't decide a state is "bad" — record it, let heuristics judge.
+2. **Submit forms unless explicitly allowed.** `AuditRequest.allow_form_submit` whitelist required (per §11 REQ-SAFETY-006). Default = block all.
+3. **Take destructive actions.** Triggers whose copy contains "delete", "remove", "logout", "cancel order", "unsubscribe" are skipped. Captured as `unexplored[]` with `reason: "destructive"`.
+4. **Submit checkout / payment.** Hard rule. No override exists.
+5. **Follow external links.** Record edge in StateGraph with `delta_type: "navigation"` + external flag; do NOT navigate to external domain.
+6. **Attempt authentication.** Auth-required pages trigger `AUTH_REQUIRED_DETECTED` warning + skip. Use `AuditRequest.auth_seed` (Phase 13b master track) for authenticated audits.
+7. **Mutate perception data.** State exploration drives perception (decides what to interact with) — it never edits perception output. PerceptionBundle for each state is produced by the perception layer, frozen, and consumed read-only.
+8. **Submit payment ever.** Even with override flags, payment submission is forbidden. Hard rule.
+9. **Hide nondeterminism.** When replay-sampling reveals state hash mismatch, the layer MUST emit `NONDETERMINISTIC_STATE` warning. Silent absorption is a violation.
+10. **Bypass storage restoration policy.** When `restore_storage_per_branch: true` (default), the layer MUST snapshot at State 0 and restore between branches. Silent omission is a violation.
+
+### 26.2 What state exploration SHOULD do
+
+By contrast, the state exploration layer SHALL:
+
+- Discover candidate triggers from the element graph (§07 §7.9.3 ElementGraph)
+- Fire triggers in priority order (CRO-value heuristic per §20 §20.3)
+- Settle after each trigger via the predicate (§20 §20.4 / §07 §7.9.3 SettlePredicate)
+- Diff each new state vs parent and classify delta (§20 §20.5)
+- Hash each state for dedup (§20 §20.5)
+- Use hybrid state reset (reverse-action when reversible, reload+replay otherwise) per §20 §20.9.1
+- Snapshot + restore storage between branches per §20 §20.9.2
+- Replay-sample first 3 non-default states for nondeterminism detection per §20 §20.9.3
+- Emit warnings for caps reached, settle timeouts, trigger failures
+- Stay within resource caps (60s wall, 100 triggers, 50 states, 50MB screenshots)
+
+### 26.3 Why this rule exists
+
+State exploration is the layer where most page-analyzers fail. Naive enumeration explodes budget on duplicate states. Skipping state reset corrupts depth-2+ exploration. Failing to restore storage silently breaks exit-intent re-fire. Ignoring nondeterminism produces flaky findings that consultants can't reproduce. The MUST NOT list codifies the architectural discipline that prevents these failure modes.
+
+The architectural separation matters: state exploration decides WHAT TO INTERACT WITH; perception decides HOW TO CAPTURE WHAT'S THERE; analysis decides WHAT'S WRONG. Mixing creates cyclic dependencies that break reproducibility and reasoning.
+
+**Provenance:**
+
+```yaml
+why:
+  source: docs/Improvement/state_exploration_layer_spec.md §9
+  evidence: >
+    "No CRO judgments. Don't decide a state is 'bad' — record it, let heuristics judge."
+    "No form submits unless explicitly allowed."
+    "No destructive actions (delete, logout, cancel order, unsubscribe)."
+    "No following external links."
+    "No auth attempts."
+    "No payment submission ever."
+    "No mutation of perception data — drives perception, doesn't edit its output."
+adopted_in: v3.1 / Phase 13 extension
+referenced_specs:
+  - §20 §20.9.1 (Hybrid State Reset Strategy)
+  - §20 §20.9.2 (Storage Restoration Between Branches)
+  - §20 §20.9.3 (Nondeterministic State Detection)
+  - §11 §11.1.1 (robots/ToS hard rules)
+  - §16 Phase 13 v3.1 extension artifacts
+```

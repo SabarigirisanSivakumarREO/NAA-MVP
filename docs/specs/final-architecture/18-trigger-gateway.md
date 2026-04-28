@@ -13,6 +13,47 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 18 — Trigger Gateway
 
+> **See also §37 — Context Capture Layer.** Phase 4b extends `AuditRequest` with an optional `intake` block carrying user-provided context dimensions (business archetype, primary KPI, constraints, traffic sources, audience). The Context Capture Layer (§37) reads AuditRequest as one input among several, infers missing dimensions from URL + HTML, and produces a `ContextProfile` consumed by `audit_setup`.
+
+```typescript
+// Phase 4b extension to AuditRequest schema:
+interface AuditRequestIntake {
+  business?: {
+    archetype?: "D2C" | "marketplace" | "SaaS" | "subscription" | "B2B" | "enterprise" | "lead_gen" | "service";
+    aov_tier?: "low" | "mid" | "high" | "enterprise";
+    vertical?: string;
+  };
+  goal: {                                                // REQUIRED — primary KPI must be set
+    primary_kpi: "purchase" | "signup" | "lead" | "add_to_cart" | "demo_request" | "trial_start" | "subscribe" | "engagement";
+    secondary_kpis?: string[];
+    current_baseline?: number;
+    target_lift?: number;
+    constraints: {
+      regulatory: string[];                              // GDPR, HIPAA, PCI, FTC, gambling, pharma — non-empty for regulated verticals
+      accessibility?: "WCAG_AA" | "WCAG_AAA" | "none";
+      brand?: string[];
+      technical?: string[];
+    };
+  };
+  traffic?: {
+    primary_sources?: Array<{
+      channel: "paid_search" | "paid_social" | "organic" | "email" | "direct" | "referral" | "affiliate" | "display";
+      share?: number;
+      creative_or_message?: string;                      // Phase 13b message-match
+    }>;
+    device_priority?: "mobile" | "desktop" | "balanced";
+  };
+  audience?: {
+    buyer?: "consumer" | "prosumer" | "SMB" | "mid_market" | "enterprise" | "technical" | "non_technical";
+    awareness_level?: "unaware" | "problem_aware" | "solution_aware" | "product_aware" | "most_aware";  // Phase 13b
+  };
+}
+```
+
+**REQ-GATEWAY-INTAKE-001:** `goal.primary_kpi` is REQUIRED. AuditRequest validation rejects audits missing it.
+
+**REQ-GATEWAY-INTAKE-002:** If `business.vertical` matches a regulated-industry list (pharma, fintech, gambling, healthcare, legal, insurance), `goal.constraints.regulatory` MUST be non-empty.
+
 **Status:** Master architecture extension. Required from Phase 6 onwards. The gateway is the **only** entry point into the audit orchestrator.
 
 **Cross-references:**

@@ -13,7 +13,9 @@ note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only t
 
 # Section 20 — State Exploration Engine
 
-**Status:** Master architecture extension. Phase 7 implementation. Implements the Q2-R locked ruling: heuristic-primed Pass 1 + auto-escalated bounded Pass 2. Best-effort rejected.
+> **See also §33 — Agent Composition Model.** State exploration is unchanged by §33 in scope; §33 ADDS a downstream consumer. The `StateGraph` produced by `explore_states` (this section) is frozen at the end of Pass 1/Pass 2 (§33a REQ-COMP-PHASE10-002) and consumed read-only by §33 interactive evaluate (Phase 14). See §33a Phase 10 for the immutability contract.
+
+**Status:** Master architecture extension. Phase 13 implementation (per §16 v2.4). Implements the Q2-R locked ruling: heuristic-primed Pass 1 + auto-escalated bounded Pass 2. Best-effort rejected.
 
 **Cross-references:**
 - §5.7.1 (`StateNode`, `StateGraph`, `MultiStatePerception`, `ExplorationTrigger`) — types
@@ -465,6 +467,142 @@ function synthesiseMultiState(
 **REQ-STATE-EXPLORE-101:** Restoration has a 5s timeout. If restoration fails or takes too long, `browser_reload()` is the universal fallback.
 
 **REQ-STATE-EXPLORE-102:** Destructive interactions (form submission, navigation) are scheduled LAST in exploration order. The exploration planner sorts interactions: non-destructive first, destructive last, so that restoration reloads don't interfere with other exploration.
+
+### 20.9.1 Hybrid State Reset Strategy (Phase 13 extension, v3.1)
+
+**REQ-STATE-EXPLORE-103:** State reset for depth-2+ exploration uses a **hybrid strategy** — reverse-action for known-reversible interactions, reload+replay for everything else. Adopted from `docs/Improvement/state_exploration_layer_spec.md` §7.
+
+```typescript
+// Reset classifier — decides which strategy applies per trigger type:
+type ResetStrategy = "reverse_action" | "reload_replay";
+
+function classifyResetStrategy(trigger: TriggerRecord): ResetStrategy {
+  // Known-reversible: cheap to undo via inverse action
+  if (
+    trigger.type === "click" && (
+      trigger.semantic === "modal_open" ||      // close via Escape or close button
+      trigger.semantic === "accordion_toggle" || // click again
+      trigger.semantic === "tab_switch" ||      // click default tab
+      trigger.semantic === "drawer_open"        // close via Escape or close button
+    )
+  ) return "reverse_action";
+
+  // Hover and focus reset on next perception (mouse moves to neutral, blur)
+  if (trigger.type === "hover" || trigger.type === "focus") return "reverse_action";
+
+  // Variant changes, scroll positions, time-delayed states, exit-intent — not cleanly reversible
+  if (
+    trigger.type === "input_change" ||         // variant pickers persist
+    trigger.type === "scroll" ||                // scroll position state-dependent
+    trigger.type === "time_delay" ||            // can't undo time
+    trigger.type === "exit_intent"              // session-cookied
+  ) return "reload_replay";
+
+  // Form submits never explored at depth-2 (per REQ-SAFETY-006)
+  return "reload_replay";  // safe default
+}
+
+async function resetToParentState(
+  page: Page,
+  parentState: StateNode,
+  child: StateNode,
+  triggerToReset: TriggerRecord,
+): Promise<ResetResult> {
+  const strategy = classifyResetStrategy(triggerToReset);
+
+  if (strategy === "reverse_action") {
+    // Try inverse — fast path, ~200-500ms
+    const success = await tryReverseAction(page, triggerToReset);
+    if (success) return { strategy, elapsed_ms: ..., reverted: true };
+    // Fallthrough on failure → reload+replay
+  }
+
+  // Reload + replay trigger path from State 0
+  await page.reload();
+  for (const t of parentState.trigger_path) {
+    await fireTrigger(page, t);
+    await waitForSettle(page);
+  }
+  return { strategy: "reload_replay", elapsed_ms: ..., reverted: true };
+}
+```
+
+**REQ-STATE-EXPLORE-104:** Reverse-action timeout is 1.5s. On timeout or failure, reload+replay is the universal fallback (`REQ-STATE-EXPLORE-101`).
+
+**REQ-STATE-EXPLORE-105:** Performance: reverse-action is ~5-10× faster than reload+replay. The hybrid policy keeps total reset budget bounded — assume 50% of resets use reload+replay (conservative).
+
+**Cost model:**
+
+| Strategy | Per-reset cost | Use case |
+|---|---|---|
+| Reverse-action | ~200-500ms | Modal close, accordion toggle, tab switch, hover off, blur |
+| Reload + replay | ~3-5s (full page load) | Variant change, scroll position, time-delayed, exit-intent, form submit |
+
+### 20.9.2 Storage Restoration Between Branches (Phase 13 extension, v3.1)
+
+**REQ-STATE-EXPLORE-106:** Cookies + localStorage MUST be snapshotted at State 0 and optionally restored after each branch. Without this, exit-intent and promo states silently break after first fire (the page sets a cookie suppressing further appearances).
+
+```typescript
+interface StorageSnapshot {
+  cookies: Cookie[];
+  localStorage: Record<string, string>;
+  sessionStorage: Record<string, string>;
+  captured_at: string;
+  state_id: string;                            // always == initial_state_id
+}
+
+async function snapshotStorage(page: Page): Promise<StorageSnapshot> {
+  return {
+    cookies: await page.context().cookies(),
+    localStorage: await page.evaluate(() => Object.fromEntries(Object.entries(window.localStorage))),
+    sessionStorage: await page.evaluate(() => Object.fromEntries(Object.entries(window.sessionStorage))),
+    captured_at: new Date().toISOString(),
+    state_id: "initial",
+  };
+}
+
+async function restoreStorage(page: Page, snapshot: StorageSnapshot): Promise<void> {
+  await page.context().clearCookies();
+  await page.context().addCookies(snapshot.cookies);
+  await page.evaluate((s) => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+    Object.entries(s.localStorage).forEach(([k, v]) => window.localStorage.setItem(k, v));
+    Object.entries(s.sessionStorage).forEach(([k, v]) => window.sessionStorage.setItem(k, v));
+  }, snapshot);
+}
+```
+
+**REQ-STATE-EXPLORE-107:** `restore_storage_per_branch: true` (default). When set, storage is restored after every branch's exploration completes — before exploring the next sibling branch. This keeps exit-intent, promo, and "you've seen this" states reachable repeatedly.
+
+**REQ-STATE-EXPLORE-108:** `restore_storage_per_branch: false` allowed only for explicit per-audit override. Used when the audit goal explicitly requires capturing post-cookie behavior (rare).
+
+### 20.9.3 Nondeterministic State Detection (Phase 13 extension, v3.1)
+
+**REQ-STATE-EXPLORE-109:** When a trigger path is replayed and produces a **different state hash** than the original capture, emit a `NONDETERMINISTIC_STATE` warning. Common causes: A/B tests, personalization, time-based content, ad auctions, live inventory.
+
+```typescript
+interface NondeterministicStateRecord {
+  state_id: string;
+  trigger_path: TriggerRecord[];
+  original_hash: string;
+  replay_hash: string;
+  detected_at: string;
+  suspected_cause:
+    | "ab_test"
+    | "personalization"
+    | "time_based_content"
+    | "live_inventory"
+    | "ad_auction"
+    | "unknown";
+}
+```
+
+**REQ-STATE-EXPLORE-110a:** State exploration verifies determinism via re-replay sampling — for the FIRST 3 captured non-default states, replay the trigger path immediately after capture, hash the result, compare. Mismatch → record `NONDETERMINISTIC_STATE` warning + propagate to PerceptionBundle warnings.
+
+**REQ-STATE-EXPLORE-110b:** Nondeterministic states are still recorded in the StateGraph — they are not discarded. Downstream consumers (analysis layer) read the warning and decide how to handle (e.g., GR-009 may fail; consultant review surfaces uncertainty).
+
+**REQ-STATE-EXPLORE-110c:** This complements §07 §7.9.3 nondeterminism flags (which are perception-level, detected via script presence). State-level nondeterminism is detected via replay — surfaces drift the script-detection misses.
 
 ---
 

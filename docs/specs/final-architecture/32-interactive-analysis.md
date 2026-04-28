@@ -1,14 +1,16 @@
 ---
 title: 32-interactive-analysis
 artifact_type: architecture-spec
-status: approved
-loadPolicy: on-demand-only
+status: superseded
+supersededBy: 33-agent-composition-model.md
+supersedes: 32-collaborative-agent-protocol.md
+loadPolicy: do-not-load
 version: 2.3
-updated: 2026-04-24
+updated: 2026-04-28
 governing_rules:
   - Constitution R17 (Lifecycle States)
   - Constitution R22 (The Ratchet)
-note: Reference material. Do NOT load by default (CLAUDE.md Tier 3). Load only the single REQ-ID section cited by the current task.
+note: SUPERSEDED. Do not implement from this file. The concepts here (browser tool injection during evaluate, ReAct loop, safety classification, interaction budget, state restoration) are absorbed into §33 — Agent Composition Model. Retained for historical reference only.
 ---
 
 # Section 32 — Interactive Analysis (Supersedes previous §32 draft)

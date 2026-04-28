@@ -2,14 +2,14 @@
 title: Neural MVP Task Catalog (T001-T262)
 artifact_type: tasks
 status: approved
-version: 2.3
+version: 2.3.2
 created: 2026-04-15
-updated: 2026-04-24
+updated: 2026-04-27
 owner: engineering lead
 authors: [REO Digital team, Claude]
 reviewers: [REO Digital team]
 
-supersedes: v2.2a
+supersedes: v2.3.1
 supersededBy: null
 
 derived_from:
@@ -27,17 +27,24 @@ delta:
   changed:
     - Version label bumped v2.2a → v2.3 to align with master plan version (PRD §17 already referenced v2.3; file was out of sync)
     - R17 lifecycle frontmatter added (was missing; self-compliance fix)
+    - v2.3 → v2.3.1 (2026-04-27) — T007 StealthConfig acceptance scope REDUCED to honor PRD §3.1 + architecture.md §6.4 v1.1 deferral of the stealth plugin. Stealth plugin (`playwright-extra-plugin-stealth`) NOT loaded in MVP; T007 now scaffolds a thin wrapper using Playwright's native API for user-agent + viewport + WebGL fingerprint rotation per session. v1.1 plugs the actual stealth plugin into this scaffold. Resolved Option B per Constitution R1.4 + R11.4 spec-conflict resolution 2026-04-27.
+    - v2.3.1 → v2.3.2 (2026-04-27) — Phase 3 verification scope REDUCED from 9 verify strategies (T053-T061) to **3 MVP strategies** (T053 url_change, T054 element_appears, T055 element_text) to honor INDEX.md row 3 "Verification (thin)" + CLAUDE.md §4 "3 verify strategies (MVP) + VerifyEngine". T056-T061 (network_request, no_error_banner, snapshot_diff, custom_js, no_captcha, no_bot_block) DEFERRED to v1.1. T065 acceptance updated: "all 3 MVP strategies + VerifyEngine + FailureClassifier + ConfidenceScorer integration on browse fixture". Resolved Option A per blanket pattern adopted 2026-04-27 (same precedent as T007).
   impacted:
     - CLAUDE.md §1 (reading order — version reference now consistent)
+    - docs/specs/AI_Browser_Agent_Architecture_v3.1.md REQ-BROWSE-HUMAN-005 — v3.1 stealth requirement remains canonical for v1.1; MVP carries reduced scope only.
+    - docs/specs/mvp/phases/phase-1-perception/ — Phase 1 spec/plan/tasks reflect reduced T007 scope from authoring date.
   unchanged:
-    - All 263 task definitions
+    - 262 of 263 task definitions (only T007 acceptance changed)
     - 12-phase structure
     - Phase 0b parallel workstream
-    - Acceptance criteria + smoke tests per task
+    - All other acceptance criteria + smoke tests
+    - REQ-BROWSE-HUMAN-005/006 ID references in T007 (REQ-IDs preserved; acceptance scope re-interpreted per MVP deferral)
 
 governing_rules:
   - Constitution R17 (Lifecycle)
   - Constitution R18 (Delta)
+  - Constitution R1.4 (Source of Truth — spec disagreement resolution)
+  - Constitution R11.4 (Fix-spec-first when conflict found)
 ---
 
 # MVP Tasks v2.3 (T001-T262)
@@ -101,7 +108,7 @@ governing_rules:
 
 ---
 
-## Phase 1: Perception Foundation (T006-T015) — UNCHANGED
+## Phase 1: Perception Foundation (T006-T015) — T007 SCOPE REDUCED v2.3.1 (2026-04-27)
 
 ### T006: BrowserManager
 - **dep:** T002
@@ -110,12 +117,13 @@ governing_rules:
 - **smoke test:** Launch browser, navigate to amazon.in, close cleanly
 - **acceptance:** Wraps Playwright, returns BrowserSession, implements BrowserEngine interface.
 
-### T007: StealthConfig
+### T007: StealthConfig (REDUCED SCOPE per v2.3.1 — stealth plugin deferred to v1.1)
 - **dep:** T006
-- **spec:** REQ-BROWSE-HUMAN-005, REQ-BROWSE-HUMAN-006
+- **spec:** REQ-BROWSE-HUMAN-005, REQ-BROWSE-HUMAN-006 (interpreted at MVP-reduced scope per PRD §3.1 + architecture.md §6.4)
 - **files:** `packages/agent-core/src/browser-runtime/StealthConfig.ts`
-- **smoke test:** Navigate to bot.sannysoft.com, all checks pass
-- **acceptance:** playwright-extra + stealth, fingerprint rotation per session.
+- **smoke test (MVP):** Browser session reports a different user-agent + viewport + WebGL fingerprint pair on two consecutive launches (per-session rotation verified; bot.sannysoft.com is **NOT** an MVP acceptance target — full stealth in v1.1).
+- **acceptance (MVP):** Thin wrapper around Playwright's native context options. Provides `applyStealthConfig(context: BrowserContext, opts?: StealthOptions): void` that sets randomized user-agent (from a small pool of 5-10 modern Chrome strings), viewport (3 common desktop sizes), and WebGL fingerprint via `addInitScript`. Does **NOT** load `playwright-extra` or `playwright-extra-plugin-stealth` in MVP. v1.1 will plug the real plugin into this same interface without code-shape changes.
+- **deferred to v1.1:** `playwright-extra` + `playwright-extra-plugin-stealth` integration; bot.sannysoft.com full-pass acceptance; advanced fingerprint masking (canvas, audio, navigator props beyond webdriver).
 
 ### T008: AccessibilityExtractor
 - **dep:** T006
@@ -162,6 +170,162 @@ governing_rules:
 - **dep:** T013
 - **files:** `packages/agent-core/tests/integration/phase1.test.ts`
 - **acceptance:** PageStateModel on 3 sites, <1500 tokens each.
+
+---
+
+## Phase 1b: Perception Extensions v2.4 (T1B-001 to T1B-012) — NEW (2026-04-28)
+
+**Spec:** §07 §7.9.2 (AnalyzePerception v2.4 extensions). **Closes:** 9 perception gaps from master-checklist coverage audit + currency switcher. **Runs:** Week 2-3, after Phase 1, before Phase 2. **Token impact:** +1.5K to AnalyzePerception payload (5K → 6.5K). **Cost impact:** zero (no new LLM calls; single page.evaluate()).
+
+### T1B-001: PricingExtractor
+- **dep:** T013, T014
+- **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (pricing block)
+- **files:** `packages/agent-core/src/perception/extensions/PricingExtractor.ts`
+- **acceptance:** Extract from PDP fixture. `pricing.{displayFormat, amount, amountNumeric, currency, taxInclusion, anchorPrice, discountPercent, comparisonShown, boundingBox}` populated when present; `null` when absent.
+
+### T1B-002: ClickTargetSizer
+- **dep:** T013
+- **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (clickTargets[])
+- **files:** `packages/agent-core/src/perception/extensions/ClickTargetSizer.ts`
+- **acceptance:** Compute `clickTargets[]` on 5 fixtures. `isMobileTapFriendly` true for ≥48×48 px (WCAG 2.5.5), false for <48×48; `elementType` correctly classified as cta / link / form_control / icon_button.
+
+### T1B-003: StickyElementDetector
+- **dep:** T013
+- **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (stickyElements[])
+- **files:** `packages/agent-core/src/perception/extensions/StickyElementDetector.ts`
+- **acceptance:** Detect sticky CTA / cart / nav on test fixtures. `stickyElements[]` populated with `type`, `positionStrategy` ("sticky" / "fixed"), `viewportCoveragePercent`, `isAboveFold`, `containsPrimaryCta`.
+
+### T1B-004: PopupPresenceDetector (presence-only — behavior in Phase 5b)
+- **dep:** T013
+- **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (popups[] presence layer)
+- **files:** `packages/agent-core/src/perception/extensions/PopupPresenceDetector.ts`
+- **acceptance:** Detect modal / cookie banner / consent at page load. `popups[]` populated with `type`, `isInitiallyOpen`, `hasCloseButton`, `closeButtonAccessibleName`, `viewportCoveragePercent`, `blocksPrimaryContent`. Behavior fields (`isEscapeDismissible`, `isClickOutsideDismissible`) **null** until Phase 5b populates them.
+
+### T1B-005: FrictionScorer
+- **dep:** T1B-004, T013
+- **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (frictionScore)
+- **files:** `packages/agent-core/src/perception/extensions/FrictionScorer.ts`
+- **acceptance:** Compute on form + popup fixtures. `frictionScore.{totalFormFields, requiredFormFields, popupCount, forcedActionCount, raw, normalized}` computed; `normalized` ∈ [0, 1].
+
+### T1B-006: SocialProofDepthEnricher
+- **dep:** T013
+- **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (socialProofDepth)
+- **files:** `packages/agent-core/src/perception/extensions/SocialProofDepthEnricher.ts`
+- **acceptance:** Extract from review-block fixture. `socialProofDepth.{reviewCount, starDistribution, recencyDays, hasAggregateRating, hasIndividualReviews, thirdPartyVerified}` populated.
+
+### T1B-007: MicrocopyTagger
+- **dep:** T013
+- **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (microcopy.nearCtaTags[])
+- **files:** `packages/agent-core/src/perception/extensions/MicrocopyTagger.ts`
+- **acceptance:** Tag near-CTA microcopy on 5 fixtures with manual ground truth. Tags applied: `risk_reducer` / `urgency` / `security` / `guarantee` / `social_proof` / `value_prop`. Achieves ≥80% precision against ground truth.
+
+### T1B-008: AttentionScorer
+- **dep:** T013
+- **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (attention)
+- **files:** `packages/agent-core/src/perception/extensions/AttentionScorer.ts`
+- **acceptance:** Compute dominant element + 3 contrast hotspots on test fixtures. `attention.dominantElement` populated with `type` / `selector` / `score` ∈ [0, 1]; `contrastHotspots[]` has 3 entries with `boundingBox` + `contrastScore`.
+
+### T1B-009: CommerceBlockExtractor
+- **dep:** T013
+- **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (commerce)
+- **files:** `packages/agent-core/src/perception/extensions/CommerceBlockExtractor.ts`
+- **acceptance:** Extract on PDP / cart / checkout fixtures. `commerce.{isCommerce, stockStatus, stockMessage, shippingSignals[], returnPolicyPresent, returnPolicyText, guaranteeText}` populated when commerce; `isCommerce` false on non-commerce pages.
+
+### T1B-010: CurrencySwitcherDetector
+- **dep:** T013
+- **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (metadata.currencySwitcher)
+- **files:** `packages/agent-core/src/perception/extensions/CurrencySwitcherDetector.ts`
+- **acceptance:** Detect switcher in nav fixtures. `metadata.currencySwitcher.{present, currentCurrency, availableCurrencies, isAccessibleAt}` populated; `null` when no switcher present.
+
+### T1B-011: AnalyzePerception v2.4 schema (Zod)
+- **dep:** T1B-001 through T1B-010, T014
+- **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (full schema)
+- **files:** `packages/agent-core/src/perception/schema.ts`
+- **acceptance:** Zod schema validates all 10 new field groups. Backward-compat with v2.3 maintained — existing v2.3 consumers continue to work without modification. Total payload ≤6.5K tokens.
+
+### T1B-012: Phase 1b integration test
+- **dep:** T1B-001 through T1B-011
+- **spec:** Phase 1b exit gate
+- **files:** `packages/agent-core/tests/integration/perception-extensions.test.ts`
+- **acceptance:** Run on 5 fixture sites (homepage, PDP, cart, checkout, content). All 10 extensions populate without error. Backward-compat verified. Token budget ≤6.5K. No regression on v2.3 fields.
+
+---
+
+## Phase 1c: PerceptionBundle Envelope v2.5 (T1C-001 to T1C-012) — NEW (2026-04-28)
+
+**Spec:** §07 §7.9.3 (PerceptionBundle envelope + ElementGraph + FusedElement), §06 §6.6 v2.5 (DOM traversal extensions). **Adopts:** `docs/Improvement/perception_layer_spec.md` build-order items 1, 2, 6 + Shadow DOM / iframe / pseudo-element traversal. **Wraps existing AnalyzePerception — does not replace.** **Runs:** Week 3-5, after Phase 1b, before Phase 2. **Token impact:** +2K to bundle (analyze perception 6.5K → bundle 8.5K). **Cost impact:** zero LLM, ~+200ms per state for settle predicate.
+
+### T1C-001: SettlePredicate
+- **dep:** T006 (BrowserManager)
+- **spec:** REQ-PERCEPT-V25-002 + spec §3.4
+- **files:** `packages/agent-core/src/perception/SettlePredicate.ts`
+- **acceptance:** Wait for settle on SPA fixtures (network idle + mutation stop + fonts ready + animations done + optional selector). Returns within 5s hard cap. Emits `SETTLE_TIMEOUT_5S` warning if capped.
+
+### T1C-002: ShadowDomTraverser
+- **dep:** T013 (ContextAssembler)
+- **spec:** REQ-BROWSE-PERCEPT-007 (Shadow DOM)
+- **files:** `packages/agent-core/src/perception/ShadowDomTraverser.ts`
+- **acceptance:** Walk 3 nested shadow roots on test fixture. Captures all elements. Emits `SHADOW_DOM_NOT_TRAVERSED` warning if recursion depth >5.
+
+### T1C-003: PortalScanner
+- **dep:** T013
+- **spec:** REQ-BROWSE-PERCEPT-007 (React Portals + Vue Teleport + Angular CDK Overlay)
+- **files:** `packages/agent-core/src/perception/PortalScanner.ts`
+- **acceptance:** Detect React Portal modals on fixture. Marks `is_portal: true` on FusedElement. Finds elements not reachable from logical parent tree.
+
+### T1C-004: PseudoElementCapture
+- **dep:** T013
+- **spec:** REQ-BROWSE-PERCEPT-007 (pseudo-element content)
+- **files:** `packages/agent-core/src/perception/PseudoElementCapture.ts`
+- **acceptance:** Capture `::before` / `::after` content on badge fixture. Returns "NEW" / "BESTSELLER" / required-field markers. Skips empty / punctuation-only content.
+
+### T1C-005: IframePolicyEngine
+- **dep:** T013, T1B-009 (CommerceBlockExtractor for purposeGuess context)
+- **spec:** REQ-BROWSE-PERCEPT-007 (iframe policy)
+- **files:** `packages/agent-core/src/perception/IframePolicyEngine.ts`
+- **acceptance:** Process 5 iframe types. checkout (stripe.com) + chat (intercom) → descend. video (youtube) + analytics (gtm) + social_embed (twitter) → skip + emit `IFRAME_SKIPPED` warning. Cross-origin always skipped.
+
+### T1C-006: HiddenElementCapture
+- **dep:** T013
+- **spec:** REQ-BROWSE-PERCEPT-008
+- **files:** `packages/agent-core/src/perception/HiddenElementCapture.ts`
+- **acceptance:** Capture `display:none` + `aria-hidden=true` + `visibility:hidden` + offscreen + zero-dimension. `hiddenElements[]` populated with selector + reason.
+
+### T1C-007: ElementGraphBuilder
+- **dep:** T1C-002, T1C-003, T1C-004, T1C-005, T1C-006, T1B-011 (v2.4 schema)
+- **spec:** §07 §7.9.3 ElementGraph + FusedElement
+- **files:** `packages/agent-core/src/perception/ElementGraphBuilder.ts`
+- **acceptance:** Build fused graph from 5 fixture pages. Top-30 elements per state with stable `element_id`. AX + DOM + bbox + style + crop_url joined. `ref_in_analyze_perception` cross-references populated to link FusedElement back to v2.3/v2.4 array indices. `element_id` stable across re-runs of same URL.
+
+### T1C-008: NondeterminismDetector
+- **dep:** T013
+- **spec:** §07 §7.9.3 nondeterminism_flags
+- **files:** `packages/agent-core/src/perception/NondeterminismDetector.ts`
+- **acceptance:** Detect Optimizely / VWO / Google Optimize via script presence + cookie patterns. Detect personalization cookies. Detect ad auctions. Detect time-based content via runtime probe. `nondeterminism_flags[]` populated with specific flags per detector.
+
+### T1C-009: WarningEmitter
+- **dep:** T1C-001, T1C-002, T1C-005, T1C-007
+- **spec:** §07 §7.9.3 warnings
+- **files:** `packages/agent-core/src/perception/WarningEmitter.ts`
+- **acceptance:** Emit warnings during capture across all 8 documented warning codes. Bundle has `warnings[]` with code + message + severity. Severity routing: info / warn / error.
+
+### T1C-010: PerceptionBundle (Zod schema + envelope)
+- **dep:** T1C-001 through T1C-009
+- **spec:** §07 §7.9.3 PerceptionBundle
+- **files:** `packages/agent-core/src/perception/PerceptionBundle.ts`
+- **acceptance:** Wrap existing AnalyzePerception + ElementGraph + state nodes. Bundle Zod-validates. Backward-compat helper `bundleToAnalyzePerception()` returns existing v2.4 shape from bundle. Token budget ≤8.5K per state. Bundle is immutable after capture (Object.freeze).
+
+### T1C-011: Settle integration into deep_perceive
+- **dep:** T1C-001, T117 (DeepPerceiveNode from Phase 7 — forward-stub here, populate in Phase 7)
+- **spec:** §07 §7.5 deep_perceive
+- **files:** `packages/agent-core/src/analysis/nodes/DeepPerceiveNode.ts` (extend skeleton)
+- **acceptance:** Run settle before AnalyzePerception capture. Settle predicate gates capture; settle warnings propagate to bundle.
+
+### T1C-012: Phase 1c integration test
+- **dep:** T1C-001 through T1C-011
+- **spec:** Phase 1c exit gate
+- **files:** `packages/agent-core/tests/integration/perception-bundle.test.ts`
+- **acceptance:** Build PerceptionBundle on 5 fixture sites (homepage, PDP, cart, checkout, SPA-heavy). All channels populated. Bundle ≤8.5K tokens per state. ElementGraph ≤30 elements. `bundleToAnalyzePerception()` returns identical v2.4 shape on baseline fixtures. Nondeterminism flags emit on Optimizely-enabled fixture. Warnings emit on Shadow-DOM-deep fixture. Backward-compat with v2.4 consumers verified — existing T015 (Phase 1 test) and T1B-012 (Phase 1b test) still pass.
 
 ---
 
@@ -244,28 +408,30 @@ governing_rules:
 
 ---
 
-## Phase 3: Verification & Confidence (T051-T065) — UNCHANGED
+## Phase 3: Verification & Confidence (T051-T065) — T053-T061 SCOPE REDUCED v2.3.2 (2026-04-27)
 
 ### T051: ActionContract type
 ### T052: VerifyStrategy union type
 
-### T053-T061: 9 Verify Strategies [P]
-| Task | Strategy |
-|------|----------|
-| T053 | url_change |
-| T054 | element_appears |
-| T055 | element_text |
-| T056 | network_request |
-| T057 | no_error_banner |
-| T058 | snapshot_diff |
-| T059 | custom_js |
-| T060 | no_captcha |
-| T061 | no_bot_block |
+### T053-T061: Verify Strategies [P] — 3 MVP / 6 DEFERRED to v1.1
+| Task | Strategy | MVP scope? |
+|------|----------|------------|
+| T053 | url_change | ✅ MVP — verifies navigation succeeded |
+| T054 | element_appears | ✅ MVP — verifies DOM action result |
+| T055 | element_text | ✅ MVP — verifies content change |
+| T056 | network_request | ❌ DEFERRED to v1.1 |
+| T057 | no_error_banner | ❌ DEFERRED to v1.1 |
+| T058 | snapshot_diff | ❌ DEFERRED to v1.1 |
+| T059 | custom_js | ❌ DEFERRED to v1.1 |
+| T060 | no_captcha | ❌ DEFERRED to v1.1 (stealth-adjacent; also v1.1 per T007) |
+| T061 | no_bot_block | ❌ DEFERRED to v1.1 (stealth-adjacent; also v1.1 per T007) |
 
-### T062: VerifyEngine (mutation-aware)
+**MVP rationale (per CLAUDE.md §4 + INDEX.md row 3):** the 3 MVP strategies cover the bulk of Phase 5 Browse MVP's verification needs (post-navigation, post-click, post-type). Network / snapshot / captcha / bot detection are advanced and stealth-adjacent — defer alongside the stealth plugin (T007) to v1.1.
+
+### T062: VerifyEngine (mutation-aware) — operates on the 3 MVP strategies (interface accepts the v1.1 strategies as a forward-compat seam)
 ### T063: FailureClassifier
-### T064: ConfidenceScorer (multiplicative)
-### T065: Phase 3 integration test
+### T064: ConfidenceScorer (multiplicative — R4.4)
+### T065: Phase 3 integration test — exercises 3 MVP strategies + VerifyEngine + FailureClassifier + ConfidenceScorer on a browse fixture
 
 ---
 
@@ -307,11 +473,227 @@ governing_rules:
 
 ---
 
+## Phase 4b: Context Capture Layer v1.0 (T4B-001 to T4B-015) — NEW (2026-04-28)
+
+**Spec:** §37 (Context Capture Layer). **Adopts:** items 1-6 from `docs/Improvement/context_capture_layer_spec.md`. **Pre-perception layer** — runs before Phase 5 browse and Phase 7 analyze. **Cost impact:** ~$0.01 per audit (one HTTP fetch + ~5K token ContextProfile).
+
+### T4B-001: ContextProfile Zod schema + provenance fields
+- **dep:** T002, T080 (Drizzle schema)
+- **spec:** §37 §37.2 + REQ-CONTEXT-OUT-001..003
+- **files:** `packages/agent-core/src/context/ContextProfile.ts`
+- **acceptance:** Validate fixture profile. All 5 dimensions validate. Every field is `{value, source, confidence}`. ContextProfile immutable after `Object.freeze`. SHA-256 hash function deterministic.
+
+### T4B-002: URLPatternMatcher
+- **dep:** T4B-001
+- **spec:** §37 §37.1.2 + REQ-CONTEXT-DIM-PAGE-001
+- **files:** `packages/agent-core/src/context/URLPatternMatcher.ts`
+- **acceptance:** Match 30 fixture URLs covering homepage / PDP / PLP / cart / checkout / landing / blog / pricing / comparison. ≥95% accuracy on URL-pattern matchable fixtures. Returns `{value, source: "url_pattern", confidence: 0.9}` on match.
+
+### T4B-003: HtmlFetcher (cheerio + undici, no Playwright)
+- **dep:** T002
+- **spec:** §37 §37.3 REQ-CONTEXT-FLOW-001
+- **files:** `packages/agent-core/src/context/HtmlFetcher.ts`
+- **acceptance:** Fetch 5 sites with realistic UA. Single GET request. 5s timeout. Respects robots.txt (per REQ-SAFETY-005). Cache by URL+ETag. Emits `CONTEXT_FETCH_FAILED` warning on error and gracefully degrades to URL-only inference. **No Playwright dependency.**
+
+### T4B-004: JsonLdParser
+- **dep:** T4B-003
+- **spec:** §37 §37.4
+- **files:** `packages/agent-core/src/context/JsonLdParser.ts`
+- **acceptance:** Parse Product / Service / SoftwareApplication / Organization fixtures. Extract `@type`, `name`, `offers`, `description`. Returns null when no JSON-LD present.
+
+### T4B-005: BusinessArchetypeInferrer
+- **dep:** T4B-001, T4B-004
+- **spec:** §37 §37.1.1 + REQ-CONTEXT-DIM-BUSINESS-001
+- **files:** `packages/agent-core/src/context/BusinessArchetypeInferrer.ts`
+- **acceptance:** Infer on D2C / B2B / SaaS / marketplace / lead_gen / service fixtures. "Add to cart" → D2C confident (≥0.9). "Request demo" → B2B confident. "/mo" + signup → SaaS confident. Mixed signals → low confidence + open_question. Provenance on each output.
+
+### T4B-006: PageTypeInferrer (consolidates §07 §7.4 logic)
+- **dep:** T4B-001, T4B-002, T4B-004
+- **spec:** §37 §37.1.2 + REQ-CONTEXT-DIM-PAGE-001
+- **files:** `packages/agent-core/src/context/PageTypeInferrer.ts`
+- **acceptance:** Infer on 30 fixture URLs + HTML. ≥0.7 confidence on 90% of fixtures. Emits `inferredPageType` shape compatible with §07 §7.4 (backward-compat — existing consumers reading `AnalyzePerception.inferredPageType` still work).
+
+### T4B-007: ConfidenceScorer + ProvenanceAssembler
+- **dep:** T4B-001, T4B-005, T4B-006
+- **spec:** §37 §37.2 REQ-CONTEXT-OUT-001
+- **files:** `packages/agent-core/src/context/ConfidenceScorer.ts`
+- **acceptance:** Score 5-dimension fixture. All fields tagged with `source` ∈ {user, url_pattern, schema_org, copy_inference, layout_inference, default}. Weighted `overall_confidence` ∈ [0, 1]. Confidence thresholds applied: ≥0.9 act / 0.6-0.9 use+flag / <0.6 ask.
+
+### T4B-008: OpenQuestionsBuilder
+- **dep:** T4B-007
+- **spec:** §37 §37.2 REQ-CONTEXT-OUT-002
+- **files:** `packages/agent-core/src/context/OpenQuestionsBuilder.ts`
+- **acceptance:** Build questions for low-confidence fixture. `open_questions[]` populated with `field_path`, human-readable `question`, `blocking: true|false`. Blocking when REQUIRED field has confidence <0.6 or value missing.
+
+### T4B-009: AuditRequest intake schema (extend §18)
+- **dep:** T4B-001
+- **spec:** §18 + REQ-GATEWAY-INTAKE-001..002
+- **files:** `packages/agent-core/src/gateway/AuditRequest.ts` (extend)
+- **acceptance:** Validate intake block. `goal.primary_kpi` REQUIRED — reject without it. `constraints.regulatory` non-empty for regulated verticals (pharma / fintech / gambling / healthcare / legal / insurance). All other intake fields optional.
+
+### T4B-010: CLI clarification prompt
+- **dep:** T4B-008
+- **spec:** §37 §37.3 step 6
+- **files:** `apps/cli/src/contextClarification.ts`
+- **acceptance:** Prompt user via stdin for blocking questions. Validates user answers against ContextProfile schema. Merges answers into ContextProfile. Resumes audit cleanly. Prints non-blocking warnings to stderr. Idempotent — re-running same audit with same answers produces same ContextProfile hash.
+
+### T4B-011: ContextCaptureNode (audit_setup integration)
+- **dep:** T4B-002 through T4B-010, T135 (AuditState — schedule before Phase 8 task)
+- **spec:** §04 audit_setup extension + §37
+- **files:** `packages/agent-core/src/orchestration/nodes/ContextCaptureNode.ts`
+- **acceptance:** Run before audit_setup on test audit. Halts on blocking. Populates `state.context_profile_id` and `state.context_profile_hash`. Pinned to `context_profiles` table. Cleanly resumes after user answers.
+
+### T4B-012: context_profiles table migration
+- **dep:** T070 (PostgreSQL schema)
+- **spec:** §13 + §37
+- **files:** `packages/agent-core/src/db/migrations/0XX_context_profiles.sql` + Drizzle schema
+- **acceptance:** Migration runs cleanly. Append-only enforcement (no UPDATE, no DELETE). SHA-256 hash stored. Foreign key to `audit_runs`. Indexes on `audit_run_id`, `client_id`, `profile_hash`.
+
+### T4B-013: HeuristicLoader extension (consume ContextProfile)
+- **dep:** T4B-001, T106 (HeuristicLoader baseline)
+- **spec:** §09 + §37 §37.5 REQ-CONTEXT-DOWNSTREAM-001
+- **files:** `packages/agent-core/src/analysis/heuristics/HeuristicLoader.ts` (extend)
+- **acceptance:** Load with ContextProfile. Filter by `business.archetype` + `page.type` + `traffic.device_priority` from profile. Returns 12-25 heuristics for typical context. **Phase 4b uses filtering only** — no weight modifiers (deferred to Phase 13b master track).
+
+### T4B-014: Constitution R25 compliance check
+- **dep:** T4B-001 through T4B-013
+- **spec:** Constitution R25 (Context Capture MUST NOT)
+- **files:** `packages/agent-core/tests/constitution/R25.test.ts`
+- **acceptance:** Verify no Playwright import in `packages/agent-core/src/context/*`. No CRO judgment fields (no severity / impact / score) in ContextProfile schema. Provenance present on every output. No silent default — every default value tagged with `source: "default"`.
+
+### T4B-015: Phase 4b integration test
+- **dep:** T4B-001 through T4B-014
+- **spec:** Phase 4b exit gate
+- **files:** `packages/agent-core/tests/integration/context-capture.test.ts`
+- **acceptance:** Run on 5 fixture sites with intake variations: (1) full intake, (2) URL only, (3) regulated vertical without constraints (should reject), (4) low-confidence inference (should produce blocking question), (5) inference fetch fails (should degrade to URL-only). All 5 dimensions populated with provenance. Clarification loop fires on weak signals. Profile hashed and pinned. Audit halts then resumes correctly. R25 compliance verified.
+
+---
+
 ## Phase 5: Browse Mode MVP (T081-T100) — UNCHANGED
 
 ### T081-T091: Graph nodes, edges, system prompt, BrowseGraph — all UNCHANGED
 ### T092-T096: Integration tests (BBC, Amazon, workflow, recovery, budget) — all UNCHANGED
 ### T097-T100: Reserved
+
+---
+
+## Phase 5b: Multi-Viewport + Popup Behavior (T5B-001 to T5B-009) — NEW (2026-04-28)
+
+**Specs:** §07 §7.9.2 (popup behavior fields), §18 (`AuditRequest.viewports`). **Activates:** opt-in mobile audit + popup runtime probing + dark-pattern detection. **Runs:** Week 8-10, after Phase 5, before Phase 6. **Cost impact:** ~2× browse cost when `viewports: ["desktop","mobile"]`; opt-in only.
+
+### T5B-001: AuditRequest.viewports field
+- **dep:** T080 (Phase 4 schema), T091 (BrowseGraph)
+- **spec:** §18 REQ-GATEWAY-AUDITREQ-* + §07 §7.9.2
+- **files:** `packages/agent-core/src/gateway/AuditRequest.ts`
+- **acceptance:** Schema accepts `["desktop"]` and `["desktop","mobile"]`. Zod validates. Default `["desktop"]`. Rejects unknown viewport names.
+
+### T5B-002: ViewportConfigService
+- **dep:** T5B-001
+- **spec:** §07 §7.9.2 (viewport_context)
+- **files:** `packages/agent-core/src/orchestration/ViewportConfigService.ts`
+- **acceptance:** Reads viewports from AuditRequest. Returns ordered list of viewport configs (`width`, `height`, `device_type`).
+
+### T5B-003: MultiViewportOrchestrator
+- **dep:** T5B-002, T091 (BrowseGraph), T117 (DeepPerceiveNode — see Phase 7)
+- **spec:** §07 §7.9.2 multi-viewport
+- **files:** `packages/agent-core/src/orchestration/MultiViewportOrchestrator.ts`
+- **acceptance:** Run perception per viewport on 1 page. Both desktop+mobile perceptions stored separately. Correlation ID matches across viewports. Sequential execution (no parallel browser contexts in MVP).
+
+### T5B-004: ViewportDiffEngine
+- **dep:** T5B-003
+- **spec:** §07 §7.9.2 multi-viewport diff
+- **files:** `packages/agent-core/src/analysis/ViewportDiffEngine.ts`
+- **acceptance:** Compare desktop vs mobile perception. Identifies fold composition diff, CTA visibility diff, sticky element diff. Produces `ViewportDiffFinding` finding type with severity scoring.
+
+### T5B-005: PopupBehaviorProbe
+- **dep:** T1B-004 (PopupPresenceDetector — provides popups[] array to enrich)
+- **spec:** §07 §7.9.2 popup behavior fields
+- **files:** `packages/agent-core/src/browser/PopupBehaviorProbe.ts`
+- **acceptance:** Watch popup trigger on test fixtures (load / time-on-page / scroll / exit-intent). Captures `triggerType` + timing in milliseconds. Updates `popups[]` in-place (mutates from Phase 1b output).
+
+### T5B-006: PopupDismissibilityTester
+- **dep:** T1B-004
+- **spec:** §07 §7.9.2 popup behavior fields
+- **files:** `packages/agent-core/src/browser/PopupDismissibilityTester.ts`
+- **acceptance:** Test escape key + click-outside on detected popups. Updates `popups[].isEscapeDismissible` and `isClickOutsideDismissible` from `null` → `true` / `false`. Restores page state after test.
+
+### T5B-007: DarkPatternDetector
+- **dep:** T5B-005, T5B-006
+- **spec:** §07 §7.9.2 popup quality
+- **files:** `packages/agent-core/src/analysis/DarkPatternDetector.ts`
+- **acceptance:** Detect deceptive close UI / forced-action popup. Flags dark patterns with type tag: `deceptive_close` / `forced_action` / `no_close_button` / `hidden_dismiss`. Catches ≥1 known dark pattern in fixture set.
+
+### T5B-008: Multi-viewport heuristics pack
+- **dep:** T101 (HeuristicSchema)
+- **spec:** §09 + §07 §7.9.2
+- **files:** `heuristics-repo/multi-viewport.json`
+- **acceptance:** Load + Zod validate. 5 new heuristics for mobile-only / desktop-only issues (e.g., "primary CTA hidden below fold on mobile", "sticky CTA covers >40% viewport on mobile"). Tier assigned per heuristic.
+
+### T5B-009: Phase 5b multi-viewport integration test (legacy)
+- **dep:** T5B-001 through T5B-008
+- **spec:** Phase 5b exit gate (multi-viewport portion)
+- **files:** `packages/agent-core/tests/integration/multi-viewport.test.ts`
+- **acceptance:** 1 audit with `viewports: ["desktop","mobile"]`. Findings include mobile-only issues + desktop-only issues + dark-pattern flags. Total cost on 2-viewport audit ≤2× single-viewport baseline. Popup behavior fields (timing, dismissibility) populated for all detected popups.
+
+### T5B-010: HoverTrigger
+- **dep:** T091 (BrowseGraph), T1C-007 (ElementGraph for candidate discovery)
+- **spec:** §20 trigger taxonomy + spec §3.1
+- **files:** `packages/agent-core/src/browser/triggers/HoverTrigger.ts`
+- **acceptance:** Detect `:hover` rules + `aria-haspopup` on test fixture. Fire mouseenter event + dwell. Reveals tooltips and dropdown previews. Settles within 1s.
+
+### T5B-011: ScrollPositionTrigger
+- **dep:** T091, T1C-007
+- **spec:** §20 trigger taxonomy + spec §3.1
+- **files:** `packages/agent-core/src/browser/triggers/ScrollPositionTrigger.ts`
+- **acceptance:** Detect IntersectionObserver patterns + sticky elements. Scroll to Y-coordinates. Captures sticky CTA changes + lazy-loaded content reveal.
+
+### T5B-012: TimeDelayTrigger
+- **dep:** T091
+- **spec:** §20 trigger taxonomy + spec §3.1
+- **files:** `packages/agent-core/src/browser/triggers/TimeDelayTrigger.ts`
+- **acceptance:** Run page for N seconds (default 5s, max 10s). Diff DOM. Treat new nodes as time-triggered. Captures time-delayed banners and announcements.
+
+### T5B-013: ExitIntentTrigger
+- **dep:** T091
+- **spec:** §20 trigger taxonomy + spec §3.1
+- **files:** `packages/agent-core/src/browser/triggers/ExitIntentTrigger.ts`
+- **acceptance:** Search scripts for `mouseleave` listeners on document/body. Simulate mouse to (x, -1). Triggers exit-intent popups. Populates `popups[].triggerType: exit_intent`.
+
+### T5B-014: FormInputTrigger
+- **dep:** T091, T017 (TypingBehavior)
+- **spec:** §20 trigger taxonomy + spec §3.1
+- **files:** `packages/agent-core/src/browser/triggers/FormInputTrigger.ts`
+- **acceptance:** Type / select on `<select>` + variant pickers + quantity + address fields. Captures variant-driven price/availability changes.
+
+### T5B-015: TriggerCandidateDiscovery
+- **dep:** T5B-010 through T5B-014, T1C-007 (ElementGraph)
+- **spec:** §20 + spec §3.2 + §3.3 priority ordering
+- **files:** `packages/agent-core/src/browser/triggers/TriggerCandidateDiscovery.ts`
+- **acceptance:** Pull all interactive_nodes from ax_tree + add hover/scroll/time/exit candidates. Returns prioritized candidate list ordered: variant > tabs > accordions > modals > cart > sticky > hover > carousels.
+
+### T5B-016: CookieBannerDetector
+- **dep:** T091
+- **spec:** spec §4.4
+- **files:** `packages/agent-core/src/browser/CookieBannerDetector.ts`
+- **acceptance:** Detect OneTrust + Cookiebot + TrustArc by selector signature. Generic detection: fixed-position element covering >20% of fold with "cookie" text. Returns banner descriptor with selector + library + dismissibility metadata.
+
+### T5B-017: CookieBannerPolicy
+- **dep:** T5B-016, T5B-018
+- **spec:** spec §4.4 + §11.1.1 robots/ToS
+- **files:** `packages/agent-core/src/browser/CookieBannerPolicy.ts`
+- **acceptance:** Execute `dismiss` (auto-click accept or reject) or `preserve` (keep banner for analysis) per AuditRequest.cookie_policy. `block` mode rejected with structured error (consent breakage). Default = `dismiss`. Emit `COOKIE_BANNER_BLOCKING_FOLD` warning if banner covers >40% of fold and not dismissed.
+
+### T5B-018: AuditRequest.cookie_policy field
+- **dep:** T5B-001 (AuditRequest.viewports)
+- **spec:** §18 AuditRequest + spec §4.4
+- **files:** `packages/agent-core/src/gateway/AuditRequest.ts` (extend)
+- **acceptance:** Schema accepts `dismiss | preserve`. Zod validates. Default `dismiss`. Rejects `block` value with descriptive error.
+
+### T5B-019: Phase 5b full integration test (multi-viewport + trigger taxonomy + cookie policy)
+- **dep:** T5B-001 through T5B-018
+- **spec:** Phase 5b extended exit gate
+- **files:** `packages/agent-core/tests/integration/phase5b-full.test.ts`
+- **acceptance:** Run 1 audit with `viewports:["desktop","mobile"]`, all 8 trigger types active, both cookie policies tested. Findings include: mobile-only / desktop-only issues + dark patterns + hover-revealed microcopy + exit-intent popups + time-delayed banners. Cost ≤2× single-viewport baseline. All warnings types emit on appropriate fixtures.
 
 ---
 
