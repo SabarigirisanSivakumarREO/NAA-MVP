@@ -2,9 +2,9 @@
 title: Neural MVP — Phases Index
 artifact_type: index
 status: approved
-version: 1.2
+version: 1.3
 created: 2026-04-22
-updated: 2026-04-28
+updated: 2026-04-29
 owner: engineering lead
 governing_rules:
   - Constitution R17-R21
@@ -14,7 +14,7 @@ generated_by: pnpm spec:index    # Auto-regenerated when phase folders or sub-ph
 
 # Phases Index — Neural MVP v1.0
 
-> **Summary (~100 tokens):** Master index of MVP phases — Phase 0 (Setup) and Phase 0b (LLM-assisted heuristic authoring) seed the project; Phases 1 → 9 sequentially deliver perception, MCP tools, verification, safety + infra + cost, browse, heuristic KB, analysis, orchestrator, and delivery. **v1.2 (2026-04-28 Session 4):** Phase 0b + Phase 7 + Phase 8 spec corpus shipped (spec/plan/tasks/impact/README/checklist each). tasks-v2.md patched v2.3.2 → v2.3.3 (Phase 0b section + T103-T105 counts reduced to 15/10/5 per F-012 v1.2). **v1.1 (2026-04-28 Session 3):** four NEW sub-phases landed — 1b (Perception Extensions v2.4), 1c (PerceptionBundle Envelope v2.5), 4b (Context Capture Layer v1.0), 5b (Multi-Viewport + Trigger Taxonomy + Cookie Policy). Phase 4 + Phase 6 refreshed for §11.1.1 robots/ToS + ContextProfile filter dependencies. Load this file first when starting or picking up a task. Do NOT load all phase files — use the decision table to find the one you need.
+> **Summary (~100 tokens):** Master index of MVP phases — Phase 0 (Setup) and Phase 0b (LLM-assisted heuristic authoring) seed the project; Phases 1 → 9 sequentially deliver perception, MCP tools, verification, safety + infra + cost, browse, heuristic KB, analysis, orchestrator, and delivery. **★ v1.3 (2026-04-29 Session 5): Phase 9 spec corpus shipped — MVP SPEC COMPLETE ★** all 15 phase folders (0, 0b, 1, 1b, 1c, 2, 3, 4, 4b, 5, 5b, 6, 7, 8, 9) are spec-shipped; implementation can start at Phase 0. **v1.2 (2026-04-28 Session 4):** Phase 0b + Phase 7 + Phase 8 spec corpus shipped. tasks-v2.md patched v2.3.2 → v2.3.3 (Phase 0b section + T103-T105 counts reduced to 15/10/5 per F-012 v1.2). **v1.1 (2026-04-28 Session 3):** four NEW sub-phases landed — 1b (Perception Extensions v2.4), 1c (PerceptionBundle Envelope v2.5), 4b (Context Capture Layer v1.0), 5b (Multi-Viewport + Trigger Taxonomy + Cookie Policy). Phase 4 + Phase 6 refreshed for §11.1.1 robots/ToS + ContextProfile filter dependencies. Load this file first when starting or picking up a task. Do NOT load all phase files — use the decision table to find the one you need.
 
 > **Rule:** When working on a task, read this index, identify the phase, then load only `phase-<N>-<name>/README.md` + `spec.md` + `tasks.md` for that phase (plus cited REQ-IDs from architecture specs).
 
@@ -38,10 +38,37 @@ generated_by: pnpm spec:index    # Auto-regenerated when phase folders or sub-ph
 | 6 | Heuristic KB Engine | ⚪ not started | M6.1-M6.11 (T101, T102, T106-T112) — refreshed v0.3 | `phase-6-heuristics/` | 4, 0b, 4b (T4B-013 contract) | 7 |
 | **7** | **Analysis Pipeline** | ⚪ not started — spec shipped v0.1 | M7.1-M7.22 (T113-T134) | `phase-7-analysis/` | 5, 6, 1c, 4b | 8 |
 | **8** | **Orchestrator + Cross-Page** | ⚪ not started — spec shipped v0.1 | M8.1-M8.21 (T135-T155) | `phase-8-orchestrator/` | 7, 4b (T4B-011) | 9 |
-| 9 | Foundations + Delivery | ⚪ not started | M9.1-M9.28 | `phase-9-delivery/` (pending) | 8 | ★ MVP |
+| **9** | **Foundations + Delivery** ★ MVP SPEC COMPLETE ★ | ⚪ not started — spec shipped v0.1 | T156-T175 + T239-T244 + T245-T249 + T256-T257 + T260-T261 (35 tasks) | `phase-9-delivery/` | 8, 7, 6, 4b, 4, 0b | ★ MVP shippable for first external pilot (with v1.1 R6.2 AES at-rest hardening) |
 
 **Status legend:** ⚪ not started · 🟡 in progress · 🟢 complete · 🔴 blocked
-**Bold rows** = NEW sub-phases added in v1.1 (2026-04-28 Session 3) OR phases with spec corpus shipped in v1.2 (2026-04-28 Session 4)
+**Bold rows** = NEW sub-phases added in v1.1 (2026-04-28 Session 3) OR phases with spec corpus shipped in v1.2 (2026-04-28 Session 4) / v1.3 (2026-04-29 Session 5)
+
+---
+
+## ★ v1.3 changes (2026-04-29 Session 5) — MVP SPEC COMPLETE ★
+
+Phase 9 spec corpus shipped (spec/plan/tasks/impact/README/checklist each):
+
+| Phase | Status | Key surface | Risk |
+|---|---|---|---|
+| **9** — Foundations + Delivery | spec corpus shipped — ★ MVP SPEC COMPLETE ★ | T156-T175 master foundations (AuditRequest contract; Gateway sync MVP; **T160 SnapshotBuilder REPLACES Phase 8 T145 scaffold**; TemperatureGuard; AccessModeMiddleware; WarmupManager; StoreNode + AnnotateNode extensions; 4D ScoringPipeline + IMPACT_MATRIX + EFFORT_MAP; Suppression; Next.js 15 + shadcn + Tailwind + Clerk consultant dashboard 4 pages) + T245-T249 delivery (ExecutiveSummary 1 LLM call $0.10 cap GR-007 enforced; ActionPlan deterministic 4-quadrant; branded PDF Playwright `page.pdf()` 8 sections ≤5MB R2) + T256-T257 DiscoveryStrategy (Sitemap + Manual MVP; Nav-stub deferred) + T260-T261 NotificationAdapter (Resend) + T239-T244 observability (Pino + 22-event audit_events taxonomy + heuristic_health_metrics view + alerting + admin ops dashboard LAST) | **HIGH** — T160 supersedes Phase 8 T145 scaffold; **R6 channels 3 + 4 first runtime activation** (Hono API + Next.js render — heuristic body NEVER serialized); ExecutiveSummary GR-007 retry-then-fallback; AccessModeMiddleware fail-secure default; ★ MVP SPEC COMPLETE gate ★ |
+
+### MVP spec corpus state (15 phase folders shipped; 0% implemented)
+
+After Session 5: **all 15 phase folders are spec-shipped** — 0, 0b, 1, 1b, 1c, 2, 3, 4, 4b, 5, 5b, 6, 7, 8, 9. Implementation can start at Phase 0. After Phase 9 implementation ships → MVP is shippable for first external pilot (with v1.1 R6.2 AES-256-GCM at-rest hardening added BEFORE pilot per PRD §3.2).
+
+### tasks-v2.md drift status (this session)
+
+No drift found in Phase 9 sections — task IDs T156-T175 + T239-T244 + T245-T249 + T256-T257 + T260-T261 are canonical in tasks-v2.md v2.3.3; phase-9-delivery folder is a scoped view referencing them verbatim.
+
+### Punch-list candidates (v2.3.4 — NOT applied this session)
+
+- Add discrete T-IDs for `r6-channel-3.test.ts` + `r6-channel-4.test.ts` conformance tests (currently folded into AC-36)
+- Add discrete T-ID for ExecutiveSummary GR-007 retry-then-fallback test (currently folded into AC-22)
+- Add discrete T-ID for GR-012 benchmark validation (carry-over from v1.2 punch-list — currently folded into Phase 7 T130 acceptance)
+- Add discrete T-ID for cross-page PatternDetector (carry-over from v1.2 — currently folded into Phase 8 T139 acceptance)
+- Constitution R22.6 stale xref: PRD §10.1 + R13 cite "(R10)" for temperature=0; should cite R13 directly (carry-over from Session 3)
+- Phase 2 "28 vs 29 MCP tools" mismatch in impact.md + plan.md (carry-over from Session 2)
 
 ---
 
