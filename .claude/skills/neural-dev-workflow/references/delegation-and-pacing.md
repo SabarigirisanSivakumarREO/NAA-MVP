@@ -60,10 +60,11 @@ Three buckets. Pick ONE per task BEFORE starting.
 - Reproducibility-snapshot schema changes (R10 — any drift is load-bearing)
 
 **Neural examples:**
-- Deciding the 14 v2.3 `AnalyzePerception` enrichments
-- Designing the two-store pattern (§24)
-- Authoring a new heuristic with benchmark
-- Writing a Constitution rule
+- Architecture decisions like the perception layer v2.4/v2.5 envelope (Phase 1b/1c) or context capture layer v3.0 (Phase 4b)
+- Designing the two-store pattern (§24 / Phase 9 AccessModeMiddleware)
+- Authoring a new heuristic with benchmark + provenance (R15.3.1 / Phase 0b)
+- Writing a Constitution rule (R22.2 provenance required)
+- Any change touching shared contracts listed in R20 (AuditState, Finding lifecycle, AnalyzePerception, adapter interfaces, DB schema, MCP tool interfaces, grounding rule interfaces)
 
 **Review bar:** You wrote it. Nothing to review from a subagent.
 

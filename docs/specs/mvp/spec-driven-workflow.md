@@ -2,7 +2,7 @@
 title: Neural MVP — Spec-Driven Workflow + Versioning
 artifact_type: spec
 status: approved
-version: 1.1
+version: 1.2
 created: 2026-04-24
 updated: 2026-05-01
 owner: engineering lead
@@ -25,6 +25,18 @@ governing_rules:
   - Constitution R22 (The Ratchet)
 
 delta:
+  v1_2:
+    new: []
+    changed:
+      - §12.1 Spec Kit integration diagram — neural-dev-workflow row reframed as /speckit.implement WITH .specify/extensions.yml hooks (before_implement → /neural-dev-workflow-brief; after_implement → /neural-dev-workflow-pr); replaces stale "neural-dev-workflow skill executes (NOT /speckit.implement)" line per Round 6 layered model
+    impacted:
+      - .specify/extensions.yml (Round 6 hook registration: neural-dev-workflow installed; before_implement + after_implement entries added alongside existing git commit hooks)
+      - .claude/skills/neural-dev-workflow/SKILL.md (Round 6 sync — Integration section added)
+      - .claude/skills/neural-dev-workflow-brief/SKILL.md + neural-dev-workflow-pr/SKILL.md (Round 6 — new sub-skills as hook command bodies)
+      - docs/specs/mvp/README.md v2.1 → v2.2 (Round 6 kickoff-prompt sync)
+      - docs/specs/mvp/phases/INDEX.md v1.5 → v1.6 (Round 6 changelog entry)
+    unchanged:
+      - All other §12.x bodies (12.2 version-bump rules, 12.3 cross-doc sync, 12.5 context management, 12.6-12.10 lifecycle/delta/rollup/impact/matrix)
   v1_1:
     new:
       - §12.1 Spec Kit integration — diagram reframed to per-phase pattern (was root-level spec.md/plan.md/tasks.md generation; now per-phase folder authoring via /speckit.specify+plan+tasks)
@@ -78,7 +90,11 @@ PRD.md  +  tasks-v2.md  +  architecture.md / testing-strategy.md / risks.md
 phase review (judgment)  → APPROVE / REVISE / RE-SPEC via templates/phase-review-prompt.md
     │
     ▼  (status: draft → approved on spec.md / plan.md / tasks.md / impact.md)
-neural-dev-workflow skill → executes implementation tasks (NOT /speckit.implement)
+/speckit.implement   → orchestrates phase mechanics (Setup → Tests → Core → Integration → Polish)
+                       WITH .specify/extensions.yml hooks:
+                         before_implement → /neural-dev-workflow-brief (Phase Brief + Kill criteria + R17.4 verify + comprehension-debt pacing)
+                         after_implement  → /neural-dev-workflow-pr (PR Contract + Spec Coverage + R17 lifecycle bumps + R19 rollup + INDEX.md flip)
+                       Per-task within the loop: neural-dev-workflow skill auto-invokes via Skill tool routing
     │
     ▼  (at phase exit per R19 + CLAUDE.md §8c)
 phase-N-current.md rollup → compressed system state for Phase N+1 to read first

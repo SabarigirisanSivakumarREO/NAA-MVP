@@ -2,13 +2,13 @@
 title: Neural MVP — Index + Reading Order
 artifact_type: index
 status: approved
-version: 2.1
+version: 2.2
 created: 2026-04-07
 updated: 2026-05-01
 owner: engineering lead
 authors: [REO Digital team, Claude]
 
-supersedes: v2.0 (2026-05-01 Round 1 full rewrite); v1.0 (2026-04-07 pre-Session 3)
+supersedes: v2.1 (2026-05-01 Round 5 session-bootstrap kickoff); v2.0 (2026-05-01 Round 1 full rewrite); v1.0 (2026-04-07 pre-Session 3)
 supersededBy: null
 
 derived_from:
@@ -25,6 +25,19 @@ breaking: false
 affected_contracts: []
 
 delta:
+  v2_2:
+    new: []
+    changed:
+      - "## Session bootstrap (kickoff prompt)" — STANDING DIRECTIVES block updated for Round 6 layered model: /speckit.implement orchestrates phase mechanics WITH .specify/extensions.yml hooks (before_implement → /neural-dev-workflow-brief; after_implement → /neural-dev-workflow-pr); neural-dev-workflow skill auto-invokes per task within the loop. Replaces stale "NOT /speckit.implement" guidance.
+    impacted:
+      - .specify/extensions.yml (Round 6 hook registration)
+      - .claude/skills/neural-dev-workflow/SKILL.md (Round 6 — integration section + softened "When NOT to invoke")
+      - .claude/skills/neural-dev-workflow-brief/SKILL.md (Round 6 — new sub-skill)
+      - .claude/skills/neural-dev-workflow-pr/SKILL.md (Round 6 — new sub-skill)
+      - docs/specs/mvp/spec-driven-workflow.md v1.1 → v1.2 (Round 6 — workflow diagram updated to layered model)
+      - docs/specs/mvp/phases/INDEX.md v1.5 → v1.6 (Round 6 changelog entry)
+    unchanged:
+      - All other sections (Reading order, Document map, MVP scope, DoD, How to use, File structure, Timeline, Source of truth, Maintenance)
   v2_1:
     new:
       - "## Session bootstrap (kickoff prompt)" section added — copy-paste-ready prompt for new Claude sessions starting Phase N implementation work; consolidates Tier 2-5 reading guidance + standing directives into one discoverable block
@@ -225,8 +238,9 @@ ON-DEMAND (load when triggered):
 - tasks-v2.md v2.3.3 — REQ-ID spot-lookup (NOT full read)
 
 STANDING DIRECTIVES:
-- neural-dev-workflow skill for implementation (NOT /speckit.implement) — operationalizes R22-R23 + PRD §10.9 PR Contract
-- speckit-* skills for spec authoring only (per-phase folders under phases/, not root)
+- /speckit.implement orchestrates phase mechanics (sequential task execution, [P] parallel markers, mark - [x]) WITH neural-dev-workflow hooks for per-task discipline (Brief, Kill criteria, comprehension-debt pacing, PR Contract). Hooks defined in .specify/extensions.yml: before_implement → /neural-dev-workflow-brief; after_implement → /neural-dev-workflow-pr.
+- speckit-* skills for spec authoring (per-phase folders under phases/, not root)
+- neural-dev-workflow skill auto-invokes per task within /speckit.implement loop via Skill tool routing (description match)
 - TodoWrite for multi-step task tracking
 - §8 self-check before commit (CLAUDE.md): re-read AC → 11-step verification → mark - [ ] → - [x] in phase tasks.md → commit format `<type>(<scope>): <TaskID> <desc> (<REQ-ID>)`
 - pnpm lint && pnpm typecheck && pnpm test before every commit

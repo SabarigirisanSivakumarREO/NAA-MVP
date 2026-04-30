@@ -1,4 +1,8 @@
-installed: []
+installed:
+  - id: neural-dev-workflow
+    version: 1.0.0
+    description: "Neural per-task discipline (Brief, Kill criteria, PR Contract, comprehension-debt pacing) layered on /speckit.implement phase mechanics via before_implement + after_implement hooks"
+    registered: 2026-05-01
 settings:
   auto_execute_hooks: true
 hooks:
@@ -43,6 +47,13 @@ hooks:
     description: Auto-commit before task generation
     condition: null
   before_implement:
+  - extension: neural-dev-workflow
+    command: neural.dev.workflow.brief
+    enabled: true
+    optional: false
+    prompt: Apply phase-level Brief + Kill criteria + R17.4 verification before /speckit.implement?
+    description: Layer per-task discipline (Brief, Kill criteria, comprehension-debt pacing) on /speckit.implement phase mechanics
+    condition: null
   - extension: git
     command: speckit.git.commit
     enabled: true
@@ -115,6 +126,13 @@ hooks:
     description: Auto-commit after task generation
     condition: null
   after_implement:
+  - extension: neural-dev-workflow
+    command: neural.dev.workflow.pr
+    enabled: true
+    optional: false
+    prompt: Draft phase-level PR Contract + Spec Coverage + R17 lifecycle bumps + R19 rollup after /speckit.implement?
+    description: Draft PR Contract + Spec Coverage; bump R17 lifecycle (approved → implemented); scaffold R19 phase-N-current rollup; flip INDEX.md status
+    condition: null
   - extension: git
     command: speckit.git.commit
     enabled: true

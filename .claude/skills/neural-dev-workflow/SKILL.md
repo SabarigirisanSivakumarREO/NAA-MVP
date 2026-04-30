@@ -1,6 +1,6 @@
 ---
 name: neural-dev-workflow
-description: Use when actively building Neural (implementing a task from docs/specs/mvp/phases/, writing a PR body, dispatching subagents via Agent tool, or reviewing subagent output). Applies AI-orchestration patterns synthesized from Addy Osmani's agentic-engineering corpus — Ralph Loop, five-layer harness, PR Contract, kill criteria, comprehension-debt pacing, Two-Agent Verification. Do NOT invoke for spec authoring (use speckit-* skills) or exploratory reading (use Explore agent).
+description: Use when actively building Neural (implementing a task from docs/specs/mvp/phases/, writing a PR body, dispatching subagents via Agent tool, or reviewing subagent output). Applies AI-orchestration patterns synthesized from Addy Osmani's agentic-engineering corpus — Ralph Loop, five-layer harness, PR Contract, kill criteria, comprehension-debt pacing, Two-Agent Verification. Layers ON TOP of /speckit.implement via .specify/extensions.yml hooks (before_implement → /neural-dev-workflow-brief; after_implement → /neural-dev-workflow-pr). Do NOT invoke for spec authoring (use speckit-* skills) or exploratory reading (use Explore agent).
 ---
 
 # Neural Dev Workflow
@@ -13,10 +13,13 @@ Runtime playbook for AI-assisted development on Neural. Every pattern here trace
 - Any Agent tool dispatch (subagent work)
 - Any PR body drafting
 - Any review round after subagent output lands
+- **Inside `/speckit.implement`** — auto-invoked at phase boundaries via `.specify/extensions.yml` hooks (`/neural-dev-workflow-brief` before; `/neural-dev-workflow-pr` after). See "Integration with /speckit.implement" below.
 
 ## When NOT to invoke
 
-- Spec authoring → `speckit-specify`, `speckit-plan`, `speckit-tasks`
+- Spec authoring → `speckit-specify`, `speckit-plan`, `speckit-tasks`, `speckit-clarify`, `speckit-checklist`, `speckit-constitution`
+- R17.4 phase review → `templates/phase-review-prompt.md` (centralized; CLAUDE.md §8d)
+- Mechanical cross-artifact consistency → `/speckit.analyze` (run on ONE phase at a time per CLAUDE.md §8c JIT pattern)
 - Code exploration → `Explore` agent directly
 - Debugging → `superpowers:systematic-debugging`
 - Brainstorming new features → `superpowers:brainstorming`
@@ -92,9 +95,27 @@ Required sections, in this order:
 - Model-tier routing on Neural's `evaluate` / `self_critique` / `evaluate_interactive` nodes (breaks R10 reproducibility)
 - Carrying trust across domains — a subagent reliable on `grounding/` is not automatically reliable on `browser-runtime/`
 
+## Integration with /speckit.implement (layered model)
+
+`/speckit.implement` and this skill are **layered, not exclusive**. /speckit.implement orchestrates phase mechanics (read tasks.md, find prerequisites, execute Setup → Tests → Core → Integration → Polish in dependency order, mark `- [x]`). This skill governs per-task discipline (Brief, Kill criteria, comprehension-debt pacing, PR Contract). They compose via `.specify/extensions.yml` hooks:
+
+| Hook | Slash command | What it does |
+|---|---|---|
+| `before_implement` | `/neural-dev-workflow-brief` | Phase-level Brief + Kill criteria + comprehension-debt pacing check + R17.4 verification (status: approved) |
+| `after_implement` | `/neural-dev-workflow-pr` | Phase-level PR Contract + Spec Coverage + R17 lifecycle bumps + R19 phase rollup scaffold + INDEX.md status flip |
+
+Within each `/speckit.implement` task loop, this skill auto-invokes per task because each task description matches the skill's `description:` frontmatter (Skill tool routing).
+
+**Practical path TODAY:** if the `.specify/scripts/powershell/` feature-dir resolution doesn't yet recognize phase folders, fall back to natural-language prompt + skill auto-routing per task (Phase 0 has 5 tasks — manageable manually). Full /speckit.implement orchestration becomes the default once Phase 9 ships `pnpm spec:*` scripts.
+
 ## Cross-references
 
-- `CLAUDE.md` §9 — sub-agent dispatch policy (operational companion)
-- `docs/specs/mvp/constitution.md` R22–R23 — Ratchet + Kill criteria (rule-level)
-- `docs/specs/mvp/PRD.md` §10.9–§10.10 — PR Contract + Comprehension-debt pacing (canonical)
+- `CLAUDE.md` §1 (reading order) + §8 (self-check) + §8c (per-phase artifact maintenance) + §8d (R17.4 review gate) + §9 (sub-agent dispatch policy)
+- `docs/specs/mvp/README.md` v2.1 (entry point + session bootstrap kickoff prompt)
+- `docs/specs/mvp/constitution.md` v1.3 R22–R23 — Ratchet + Kill criteria (rule-level)
+- `docs/specs/mvp/PRD.md` v1.2.1 §10.9–§10.10 — PR Contract + Comprehension-debt pacing (canonical)
+- `docs/specs/mvp/spec-driven-workflow.md` v1.1 §12.1 — per-phase Spec Kit flow
+- `docs/specs/mvp/templates/phase-review-prompt.md` v1.0 — R17.4 review (centralized; do NOT duplicate per-phase)
+- `docs/specs/mvp/implementation-roadmap.md` v0.3 — walking-skeleton 12-week plan
 - `docs/engineering-practices/ai-orchestration-research-2026-04-24.md` — source of truth (every pattern traces here)
+- `.specify/extensions.yml` — hook registration for /speckit.implement integration

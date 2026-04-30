@@ -166,6 +166,7 @@ These were captured in `phase-0b-heuristics/review-notes.md` and the v0.3 delta 
    ```
 
 2. **Then start Phase 0 implementation** — T-PHASE0-TEST first (R3.1 TDD), then T001-T005. Use neural-dev-workflow skill (NOT /speckit.implement). One-task-per-prompt per CLAUDE.md §10.7.
+   > **Note (superseded 2026-05-01 by Round 6):** The "NOT /speckit.implement" guidance was reversed when Round 6 wired `/speckit.implement` to neural-dev-workflow via `.specify/extensions.yml` hooks (`before_implement` → `/neural-dev-workflow-brief`; `after_implement` → `/neural-dev-workflow-pr`). Both compose; use them together. See README.md v2.1 + spec-driven-workflow.md v1.1 + skill files for the current model.
 
 3. **Phase 0b infrastructure** (T0B-001..T0B-005) can run in parallel with Phase 0 work.
 

@@ -2,7 +2,7 @@
 title: Neural MVP — Phases Index
 artifact_type: index
 status: approved
-version: 1.5
+version: 1.6
 created: 2026-04-22
 updated: 2026-05-01
 owner: engineering lead
@@ -81,6 +81,48 @@ No drift found in Phase 9 sections — task IDs T156-T175 + T239-T244 + T245-T24
 **Phase 1 v0.3 polish:** 8 analyze findings (M1-M4 + L1-L2 + L5-L6) applied across `phase-1-perception/{spec,plan,tasks,impact}.md`. Mechanical fixes only — no AC-NN / R-NN / SC-NNN ID changes (R18 append-only preserved). 2 carry-over items (L3, L4) added to v2.3.4 punch-list above. R17.4 review APPROVED with conditions C1 BINDING + C2/C3 OPTIONAL per [`phase-1-perception/review-notes.md`](phase-1-perception/review-notes.md) v1.0; status bumped to `approved`.
 
 **Phase 6 v0.4 catch-up polish:** 4 analyze findings (H1 + H2 + H3 + M1) applied as a single v0.4 sync across `phase-6-heuristics/{spec,plan,tasks,impact}.md`. Catch-up consolidates two pending updates that never reached plan/impact: (a) v0.2 Pino redaction-pattern → BenchmarkSchema mapping; (b) v0.3 contract surface for T4B-013 + AC-11 + R-09 + REQ-CONTEXT-DOWNSTREAM-001 + manifest selectors (`archetype` / `page_type` / `device`). H1 closes the R6 enforcement gap in T-PHASE6-LOGGER (3 wrong-syntax paths → 6 correct paths matching spec.md:101 authoritative list). Versions: spec.md v0.3→v0.4; plan.md v0.2→v0.4 (skip v0.3 for catch-up); tasks.md v0.3→v0.4; impact.md v0.1→v0.4 (skip v0.2/v0.3 for catch-up). 2 carry-over items (L1, L3) added to v2.3.4 punch-list above. R17.4 review pending.
+
+---
+
+## v1.6 changes (2026-05-01 — Round 6: /speckit.implement ↔ neural-dev-workflow hook integration)
+
+Wires the layered model: `/speckit.implement` orchestrates phase mechanics; `neural-dev-workflow` injects per-task discipline. The two compose via `.specify/extensions.yml` hooks at phase boundaries. **First substantive (non-doc-hygiene) round** in the 2026-05-01 sync — adds new files (sub-skills + extension registration) and changes execution behavior.
+
+### Files modified (Round 6)
+
+| File | Change | Purpose |
+|---|---|---|
+| `.specify/extensions.yml` | `installed:` list expanded to register `neural-dev-workflow` v1.0.0; `before_implement` + `after_implement` hook lists extended (added `neural.dev.workflow.brief` + `neural.dev.workflow.pr` alongside existing git commit hooks) | Wire the integration |
+| `.claude/skills/neural-dev-workflow-brief/SKILL.md` | **New file** | `before_implement` hook command: phase-level Brief + Kill criteria + R17.4 verification + comprehension-debt pacing pre-check |
+| `.claude/skills/neural-dev-workflow-pr/SKILL.md` | **New file** | `after_implement` hook command: PR Contract draft + Spec Coverage + R17 lifecycle bumps (`approved → implemented`) + R19 phase rollup scaffold + INDEX.md status flip + final validation pass |
+| `.claude/skills/neural-dev-workflow/SKILL.md` | Frontmatter `description:` updated to mention layered model + hooks; "When NOT to invoke" clarified (`/speckit.implement` allowed via hooks; speckit-analyze separated; phase-review-prompt separated); new "## Integration with /speckit.implement (layered model)" section added; cross-references expanded | Sync skill description with layered model |
+| `.claude/skills/neural-dev-workflow/references/harness-layers.md` | Context layer: R1-R23 → R1-R26; constitution v1.3 cited; sibling docs (architecture / testing-strategy / risks / spec-driven-workflow / implementation-roadmap / README v2.1) added; Knowledge layer: dead `archive/2026-04-gap-analyses/` ref replaced with `sessions/` + `risks.md`; Coordination layer: R19 phase rollups + R20 impact.md + R17.4 phase-review templates + hook integration added | Sync with Round 1-5 corpus |
+| `.claude/skills/neural-dev-workflow/references/delegation-and-pacing.md` | Bucket 3 examples: dropped "v2.3 AnalyzePerception enrichments" (corpus moved); added current phase-shipped examples (perception v2.4/v2.5 envelope, context capture v3.0, two-store pattern, heuristic provenance per R15.3.1, Constitution rules with R22.2 provenance, R20 shared-contract changes) | Sync with Round 1-5 corpus |
+| `docs/specs/mvp/README.md` v2.1 → v2.2 | Session-bootstrap kickoff-prompt STANDING DIRECTIVES block reframed for layered model | Sync |
+| `docs/specs/mvp/spec-driven-workflow.md` v1.1 → v1.2 | §12.1 Spec Kit integration diagram updated to show `/speckit.implement` WITH hooks instead of "neural-dev-workflow (NOT /speckit.implement)" | Sync |
+| `docs/specs/mvp/sessions/session-2026-04-30-handover.md` | Note appended at "start Phase 0 implementation" line documenting Round 6 supersession of "NOT /speckit.implement" guidance | Preserve historical accuracy + flag supersession |
+| `docs/specs/mvp/phases/INDEX.md` v1.5 → v1.6 | This changelog entry | Self-reference |
+
+### What `/speckit.implement` does now (post-Round-6)
+
+1. User invokes `/speckit.implement` (or it's invoked by another command)
+2. Spec Kit reads `.specify/extensions.yml` → finds `before_implement` hook list → fires hooks in order:
+   - `neural.dev.workflow.brief` (mandatory; R17.4 gate verification + Phase Brief + Kill criteria + comprehension-debt check) — STOPs if phase not approved
+   - `speckit.git.commit` (optional; user prompt to commit outstanding changes)
+3. Spec Kit Outline §3-§9 executes — task-by-task implementation. The `neural-dev-workflow` skill auto-invokes per task via Skill tool routing because each task description matches the skill's `description:` frontmatter.
+4. Spec Kit fires `after_implement` hook list:
+   - `neural.dev.workflow.pr` (mandatory; final validation + R17 lifecycle bumps + R19 rollup scaffold + INDEX.md flip + PR Contract draft + Spec Coverage)
+   - `speckit.git.commit` (optional; user prompt to commit final changes)
+
+### Known limitations (post-Round-6)
+
+- `.specify/scripts/powershell/check-prerequisites.ps1` may not yet recognize the `phases/phase-<N>-<name>/` folder convention as a feature dir. If `/speckit.implement` fails to resolve a feature dir for Phase 0, fall back to natural-language prompt + skill auto-routing per task (Phase 0 is 5 tasks — manageable manually).
+- Full end-to-end automation lands when Phase 9 ships `pnpm spec:matrix` + `spec:rollup` + `spec:size` + `spec:validate` + `spec:index` + `spec:pack` per `scripts/README.md`.
+- The 4 phase-plan drafts (Phase 2/3/4/5) at `(R1-R23)` carry-over from Round 3 will self-heal via JIT analyze when each phase polishes pre-implementation.
+
+### Outcome (post-Round-6)
+
+`/speckit.implement` is now the canonical command for phase implementation. neural-dev-workflow discipline is automatically applied at phase boundaries via hooks + per task via skill auto-routing. The layered model is documented end-to-end across CLAUDE.md, README v2.2, spec-driven-workflow v1.2, and the three neural-dev-workflow skill files. **Phase 0 implementation can now begin via `/speckit.implement` — fall back to manual per-task prompts if feature-dir resolution fails.**
 
 ---
 
