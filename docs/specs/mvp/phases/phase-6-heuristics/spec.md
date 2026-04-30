@@ -2,9 +2,9 @@
 title: Phase 6 — Heuristic KB Engine
 artifact_type: spec
 status: draft
-version: 0.3
+version: 0.4
 created: 2026-04-27
-updated: 2026-04-28
+updated: 2026-04-30
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -53,6 +53,7 @@ delta:
   changed:
     - v0.1 → v0.2 — analyze-driven xref + redaction-pattern polish
     - v0.2 → v0.3 — adds T4B-013 ContextProfile filter integration (REQ-CONTEXT-DOWNSTREAM-001); coordinated with Phase 4b
+    - v0.3 → v0.4 — Session 7 /speckit.analyze polish — M1 (R10→R13 stale xref for temperature=0 in Constitution Alignment Check); coordinated with parallel plan.md v0.2→v0.4 catch-up (which absorbs v0.3 content + M1 + H3) and impact.md v0.1→v0.4 catch-up (which absorbs v0.2 redaction polish + v0.3 contract surface + H2) and tasks.md v0.3→v0.4 (which absorbs H1 — T-PHASE6-LOGGER 6-path Pino redaction config to match spec.md:101 authoritative list). No AC-NN/R-NN/SC-NNN ID changes (R18 append-only preserved).
   impacted:
     - Constitution R6.1-R6.4 — first runtime enforcement of the **logs channel**; full multi-channel enforcement spans Phase 6/7/8/9
     - Constitution R15.3 — schema enforces benchmark + provenance presence; loader rejects heuristics missing either
@@ -224,7 +225,7 @@ See impact.md.
 - [x] R6.2 AES-256-GCM at rest — interface ready; concrete deferred to v1.1 per PRD §3.2 (intentional, not violation)
 - [x] R7.1/R7.2/R7.4 — N/A (no DB writes in Phase 6 — KB is in-memory)
 - [x] R9 adapter — HeuristicLoader + DecryptionAdapter (4th and 5th adapter categories)
-- [x] R10 temperature — N/A (no LLM in Phase 6)
+- [x] R13 Forbidden Patterns: temperature=0 invariant on evaluate/self_critique/evaluate_interactive (constitution.md §13 line 411; `(R10)` was a stale xref per note_on_stale_xref) — N/A (no LLM in Phase 6)
 - [x] R15.3 benchmark + provenance — schema enforces both as required
 - [x] R20 impact.md — REQUIRED, MEDIUM risk, 7 contracts; authored
 - [x] R23 kill criteria — default + per-task on T106 (HeuristicLoader — R6 IP boundary critical) + T107 (filter — must match §9.6 reduction targets)

@@ -2,18 +2,20 @@
 title: Impact Analysis — Phase 6 Heuristic KB Engine (7 contracts; first R6 runtime enforcement)
 artifact_type: impact
 status: draft
-version: 0.1
+version: 0.4
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-30
 owner: engineering lead
 
 supersedes: null
 supersededBy: null
 
 derived_from:
-  - docs/specs/mvp/phases/phase-6-heuristics/spec.md
-  - docs/specs/mvp/phases/phase-6-heuristics/plan.md
+  - docs/specs/mvp/phases/phase-6-heuristics/spec.md (v0.4)
+  - docs/specs/mvp/phases/phase-6-heuristics/plan.md (v0.4)
   - docs/specs/final-architecture/09-heuristic-kb.md
+  - docs/specs/final-architecture/37-context-capture-layer.md §37.5 (REQ-CONTEXT-DOWNSTREAM-001 — v0.4 catch-up)
+  - docs/specs/mvp/phases/phase-4b-context-capture/spec.md (T4B-013 — v0.4 catch-up)
 
 req_ids:
   - REQ-HK-001
@@ -22,6 +24,7 @@ req_ids:
   - REQ-HK-EXT-050
   - REQ-HK-020a
   - REQ-HK-020b
+  - REQ-CONTEXT-DOWNSTREAM-001          # v0.4 catch-up — loadForContext extension
 
 breaking: false
 risk_level: medium
@@ -39,9 +42,20 @@ delta:
   new:
     - Phase 6 first runtime activation of R6 IP protection
     - 4th + 5th adapter categories (HeuristicLoader, DecryptionAdapter)
-  changed: []
-  impacted: []
-  unchanged: []
+    - v0.4 catch-up — Pino redaction-pattern → BenchmarkSchema mapping section (was missed in v0.2 sync; mirrors spec.md:101 / plan.md:171 Phase 0 Research item 3)
+    - v0.4 catch-up — `HeuristicSchemaExtended` schema sketch updated with v0.3 manifest selector fields (`archetype`, `page_type`, `device`) for ContextProfile-aware filtering (AC-11 / T4B-013)
+    - v0.4 catch-up — `HeuristicLoader` interface sketch updated with `loadForContext(profile: ContextProfile)` signature; implementation deliverable owned by Phase 4b T4B-013
+    - v0.4 catch-up — Forward Contract section adds Phase 4b (T4B-013) sub-section between Phase 7 + Phase 0b
+    - v0.4 catch-up — `REQ-CONTEXT-DOWNSTREAM-001` added to req_ids (was missed in v0.3 sync)
+  changed:
+    - v0.1 → v0.4 catch-up — Session 7 /speckit.analyze polish absorbed three pending updates that never reached this impact.md: (a) v0.2 Pino redaction-pattern → BenchmarkSchema discriminated-union mapping; (b) v0.3 contract surface for T4B-013 + AC-11 + R-09 + manifest selectors; (c) v0.4 H2 fix (HeuristicSchemaExtended sketch + HeuristicLoader interface stale shapes — would have left Phase 4b T4B-013 implementer reading wrong contracts). Coordinated with spec.md v0.3→v0.4 (M1), plan.md v0.2→v0.4 catch-up (M1 + v0.3 sync + H3), tasks.md v0.3→v0.4 (H1 redaction-path fix). No scope changes — pure documentation catch-up against decisions already locked in spec/tasks. R20 Migration plan unchanged (still Not applicable — additive). risk_level unchanged (still MEDIUM).
+  impacted:
+    - spec.md, plan.md, tasks.md (all v0.4 in same Session 7 sync)
+    - Phase 4b T4B-013 — implementer reads this impact.md v0.4 Forward Contract section for the loadForContext signature + manifest selector contract
+  unchanged:
+    - All v0.1 sections preserved (Why R20 applies, Affected modules, Affected contracts schemas EXCEPT HeuristicSchemaExtended + HeuristicLoader, Migration plan, Risk level + mitigations, Verification, Provenance, Approval)
+    - HeuristicSchemaBase / DecryptionAdapter / HeuristicKnowledgeBase / HeuristicFilter sketches unchanged
+    - 7 affected_contracts list unchanged
 
 governing_rules:
   - Constitution R6 (focal)
@@ -119,14 +133,30 @@ export const HeuristicSchemaExtended = HeuristicSchemaBase.extend({
   effort_category: z.enum(['content', 'design', 'engineering']).default('content'),
   preferred_states: z.array(StatePatternSchema).optional(),
   status: z.enum(['active', 'archived']).default('active'),
+
+  // v0.4 catch-up (originally v0.3 contract addition; was missing from v0.1 sketch) — manifest
+  // selectors for ContextProfile-aware filtering (AC-11 / R-09 / REQ-CONTEXT-DOWNSTREAM-001).
+  // Phase 4b T4B-013 owns implementation; Phase 6 owns the schema field reservation.
+  // Absent fields default to "applies to all" — no selector means no filter narrowing.
+  archetype: z.array(z.string()).optional(),       // e.g., ['D2C', 'SaaS', 'B2B', 'lead_gen']
+  page_type: z.array(z.string()).optional(),       // e.g., ['PDP', 'pricing', 'comparison', 'landing', 'checkout']
+  device: z.array(z.enum(['desktop', 'mobile', 'balanced'])).optional(),
 }).strict();
 ```
+
+**Field provenance:** the existing `business_types` + `page_types` (plural) on `HeuristicSchemaBase` remain the Stage 1/Stage 2 filter inputs for `filterByBusinessType` + `filterByPageType`. The v0.3+ `archetype` / `page_type` (singular) / `device` are NEW manifest selectors used by `loadForContext()` for ContextProfile-aware filtering — finer-grained than the existing two-stage filter and complementary, not replacing.
 
 ### `HeuristicLoader` (NEW adapter)
 
 ```ts
 export interface HeuristicLoader {
   loadAll(): Promise<HeuristicKnowledgeBase>;
+
+  // v0.4 catch-up (originally v0.3 contract addition) — ContextProfile-aware filter
+  // (AC-11 / R-09 / REQ-CONTEXT-DOWNSTREAM-001). Phase 6 owns the interface signature;
+  // Phase 4b T4B-013 owns the implementation deliverable. Returns 12-25 heuristics for
+  // typical contexts (filter ONLY — no weight modifiers; Phase 13b master adds weights).
+  loadForContext(profile: ContextProfile): Promise<ReadonlyArray<HeuristicExtended>>;
 }
 
 export class FileSystemHeuristicLoader implements HeuristicLoader {
@@ -140,6 +170,12 @@ export class FileSystemHeuristicLoader implements HeuristicLoader {
     // R6 enforcement: log only file paths, IDs, counts — never body text
     // ...
   }
+
+  // loadForContext() implementation lands in Phase 4b T4B-013 — composes existing
+  // filterByBusinessType + filterByPageType + matches profile.business.archetype against
+  // heuristic.archetype manifest, profile.page.type against heuristic.page_type manifest,
+  // profile.traffic.device_priority against heuristic.device manifest.
+  loadForContext(profile: ContextProfile): Promise<ReadonlyArray<HeuristicExtended>>;
 }
 ```
 
@@ -175,7 +211,26 @@ export function filterByPageType(stage1: ReadonlyArray<HeuristicExtended>, pageT
 export function prioritizeHeuristics(stage2: ReadonlyArray<HeuristicExtended>, cap: number): ReadonlyArray<HeuristicExtended>;
 ```
 
-## Forward Contract — Phase 7 + Phase 0b
+## Pino redaction-pattern → BenchmarkSchema mapping (v0.4 catch-up — was missed in v0.2 sync)
+
+The Pino redaction config registered in `T-PHASE6-LOGGER` (per tasks.md v0.4) covers the heuristic IP surface across the discriminated-union BenchmarkSchema shape. Mapping (mirrors spec.md:101 / plan.md:171 authoritative):
+
+| Redact path | What it covers | Branch / source |
+|---|---|---|
+| `*.body` | Heuristic body text (the canonical IP — "what the heuristic teaches") | All heuristics; HeuristicSchemaBase.body |
+| `*.benchmark.value` | Quantitative measurement value (e.g., "30%" cart-recovery rate) | BenchmarkSchema quantitative branch |
+| `*.benchmark.metric` | Metric label that contextualizes the value (e.g., "cart-abandonment-rate") | BenchmarkSchema quantitative branch |
+| `*.benchmark.unit` | Unit of measurement (revealing units leaks IP context — e.g., currency, %, seconds) | BenchmarkSchema quantitative branch |
+| `*.benchmark.standard_text` | Qualitative reference text (e.g., "matches Baymard's checkout-friction taxonomy") | BenchmarkSchema qualitative branch |
+| `*.provenance.citation_text` | Heuristic's canonical excerpt from source — counts as IP | ProvenanceSchema |
+
+**NOT redacted** (public metadata — safe to log for debugging): `*.provenance.source_url`, `*.provenance.verified_by`, `*.provenance.verified_date`, `*.provenance.draft_model`. These are auditable provenance fields; log emission is intentional for R15.3 traceability.
+
+**Syntax note:** the discriminated-union BenchmarkSchema flattens via Zod, so paths target `*.benchmark.value` (correct), NOT `*.benchmark.*.value` (wrong wildcard middle — would not match the actual emitted shape). T-PHASE6-LOGGER tasks.md v0.4 fix corrects this; the conformance test `r6-ip-boundary.test.ts` asserts each path independently against fixtures from BOTH benchmark branches.
+
+---
+
+## Forward Contract — Phase 7 + Phase 4b + Phase 0b
 
 ### Phase 7 (T117 EvaluateNode)
 
@@ -201,6 +256,36 @@ const userMessage = composeEvaluatePrompt({ analyzePerception, heuristics: top30
 - Filter function signatures LOCKED.
 - HeuristicSchemaExtended fields LOCKED; new fields are optional with defaults (additive only).
 - HeuristicLoader interface LOCKED.
+
+### Phase 4b (T4B-013 — Context Capture Layer ContextProfile filter; v0.4 catch-up)
+
+```ts
+// Phase 4b imports (T4B-013):
+import {
+  HeuristicLoader,
+  HeuristicExtended,
+} from '@neural/agent-core/analysis/heuristics';
+import { ContextProfile } from '@neural/agent-core/context-capture';
+
+// T4B-013 implementation (lives in Phase 4b deliverable):
+class ContextAwareHeuristicLoader implements HeuristicLoader {
+  constructor(private readonly base: HeuristicLoader) {}
+
+  loadAll() { return this.base.loadAll(); }
+
+  async loadForContext(profile: ContextProfile): Promise<ReadonlyArray<HeuristicExtended>> {
+    const kb = await this.base.loadAll();
+    // matches profile.business.archetype against heuristic.archetype manifest
+    // matches profile.page.type against heuristic.page_type manifest
+    // matches profile.traffic.device_priority against heuristic.device manifest
+    // returns 12-25 heuristics for typical contexts (per spec.md AC-11 examples:
+    //   D2C/PDP/mobile, SaaS/pricing/desktop, B2B/comparison/balanced, lead_gen/landing/mobile)
+    // FILTER ONLY — no weight modifiers (Phase 13b master adds weights).
+  }
+}
+```
+
+**Phase 4b T4B-013 owns the implementation deliverable + conformance test (`tests/conformance/heuristic-loader-context-filter.test.ts` per spec.md AC-11 path).** Phase 6 v0.4 owns: (a) the interface signature in `loader.ts`; (b) the schema field reservation (`archetype`, `page_type`, `device`) in `HeuristicSchemaExtended`; (c) this Forward Contract sub-section. Phase 4b implementer reads this document for the contract surface.
 
 ### Phase 0b (separate session)
 

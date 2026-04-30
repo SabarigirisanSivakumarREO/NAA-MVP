@@ -2,7 +2,7 @@
 title: Tasks — Phase 6 Heuristic KB Engine
 artifact_type: tasks
 status: draft
-version: 0.3
+version: 0.4
 created: 2026-04-27
 updated: 2026-04-30
 owner: engineering lead
@@ -39,6 +39,7 @@ delta:
   changed:
     - v0.1 → v0.2 — adds T4B-013 dependency notes; HeuristicSchemaExtended manifest selectors
     - v0.2 → v0.3 — added Cross-phase note at top pointing readers to phase-0b-heuristics/tasks.md for T103/T104/T105 (engine vs content split made explicit; analyze L5 finding from Phase 0b /speckit.analyze pass — spans phases since T103-T105 are owned by Phase 0b but referenced in Phase 6)
+    - v0.3 → v0.4 — Session 7 /speckit.analyze polish — H1 fix: T-PHASE6-LOGGER (Phase 2 Foundational, line 115) now registers the full 6-path Pino redaction config matching spec.md:101 authoritative list — `['*.body', '*.benchmark.value', '*.benchmark.standard_text', '*.benchmark.unit', '*.benchmark.metric', '*.provenance.citation_text']` — closing the R6 enforcement gap that the prior 3-path with wrong wildcard syntax (`*.benchmark.*.value` etc) would have left open. Frontmatter sync with parallel spec.md v0.3→v0.4 (M1) + plan.md v0.2→v0.4 catch-up (M1 + v0.3 sync + H3) + impact.md v0.1→v0.4 catch-up (v0.2 + v0.3 + H2). No AC-NN/R-NN/SC-NNN ID changes; T101-T112 + T-PHASE6-* task bodies preserved verbatim except T-PHASE6-LOGGER redaction-path list.
   impacted:
     - Phase 4b T4B-013 — drives the loadForContext() implementation; lands AFTER Phase 6 baseline ships
     - Phase 0b heuristic authoring — heuristic manifests now MUST include archetype/page_type/device selectors
@@ -112,7 +113,7 @@ T106 + T107 carry extended kill criteria.
 ## Phase 2 — Foundational
 
 - [ ] **T-PHASE6-TESTS [P] [SETUP]** Author 10 conformance tests + Phase 6 integration test FIRST. AC-01..AC-10 FAIL initially.
-- [ ] **T-PHASE6-LOGGER [SETUP]** Modify `observability/logger.ts` to register `heuristic_loader_session_id`, `kb_size`, `filter_stage` correlation fields + Pino redaction patterns for `*.body`, `*.benchmark.*.value`, `*.benchmark.*.standard_text`.
+- [ ] **T-PHASE6-LOGGER [SETUP]** Modify `observability/logger.ts` to register `heuristic_loader_session_id`, `kb_size`, `filter_stage` correlation fields **+ the full 6-path Pino redaction config** mapping to BenchmarkSchema discriminated-union shape (per spec.md:101 / plan.md:171 authoritative list): `['*.body', '*.benchmark.value', '*.benchmark.standard_text', '*.benchmark.unit', '*.benchmark.metric', '*.provenance.citation_text']`. Note the syntax: paths target the discriminated-union FLAT shape (`*.benchmark.value`, NOT `*.benchmark.*.value`). `*.body` redacts heuristic body text; `*.benchmark.value` covers the quantitative branch's measurement; `*.benchmark.standard_text` covers the qualitative branch's reference text; `*.benchmark.unit` + `*.benchmark.metric` cover the quantitative branch's IP context (revealing units leaks); `*.provenance.citation_text` is the heuristic's canonical excerpt. Provenance fields `source_url` / `verified_by` / `verified_date` / `draft_model` are NOT redacted (public metadata). **R6 enforcement is the focal rule for this phase — every path here must be present, exactly as listed, before T106 lands.** Conformance test in `tests/conformance/r6-ip-boundary.test.ts` (T-PHASE6-TESTS) asserts each path independently with both quantitative and qualitative benchmark fixtures.
 - [ ] **T-PHASE6-FIXTURES [P] [SETUP]** Author synthetic test heuristics in `tests/fixtures/heuristics/`: 30 valid (10 each Baymard / Nielsen / Cialdini test) + 3 invalid (missing benchmark, missing provenance, malformed JSON). All fixtures use plausible but obviously-fake content (e.g., body text marked "TEST FIXTURE — not a real heuristic").
 
 ---

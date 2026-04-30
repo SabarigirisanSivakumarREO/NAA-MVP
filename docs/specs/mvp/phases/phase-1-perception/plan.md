@@ -1,7 +1,7 @@
 ---
 title: Implementation Plan — Phase 1 Browser Perception
 artifact_type: plan
-status: draft
+status: approved
 version: 0.3
 created: 2026-04-27
 updated: 2026-04-30

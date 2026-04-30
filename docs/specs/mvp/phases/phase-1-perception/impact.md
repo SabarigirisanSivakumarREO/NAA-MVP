@@ -1,7 +1,7 @@
 ---
 title: Impact Analysis — Phase 1 Browser Perception (BrowserEngine adapter + PageStateModel)
 artifact_type: impact
-status: draft
+status: approved
 version: 0.3
 created: 2026-04-27
 updated: 2026-04-30

@@ -71,12 +71,16 @@ No drift found in Phase 9 sections — task IDs T156-T175 + T239-T244 + T245-T24
 - Phase 2 "28 vs 29 MCP tools" mismatch in impact.md + plan.md (carry-over from Session 2)
 - **(NEW Session 7 / Phase 1 analyze L3)** Phase 1 polish task IDs (`T-PHASE1-TESTS`, `T-PHASE1-DOC`, `T-PHASE1-LOGGER`, `T-PHASE1-ADAPTERS-README`, `T-PHASE1-ROLLUP`) defined in `phase-1-perception/tasks.md` but absent from canonical `tasks-v2.md` Phase 1 section. Add to v2.3.4 alongside T006-T015 (and apply same retroactive treatment to Phase 0's `T-PHASE0-TEST` + Phase 0b's `T-SKELETON-001..010` if not already in v2.3.4 scope).
 - **(NEW Session 7 / Phase 1 analyze L4)** `phase-1-perception/{spec,plan,tasks}.md` cite `tasks-v2 v2.3.1` (the version when T007 reduction landed) but canonical version is now v2.3.3 per Session 4 patch. Bump citation to `v2.3.3` (or `v2.3.1 — T007 reduction; current corpus v2.3.3`) when v2.3.4 lands.
+- **(NEW Session 7 / Phase 6 analyze L1)** Phase 6 polish task IDs (`T-PHASE6-TESTS`, `T-PHASE6-LOGGER`, `T-PHASE6-FIXTURES`, `T-PHASE6-DOC`, `T-PHASE6-ROLLUP`) defined in `phase-6-heuristics/tasks.md` but absent from canonical `tasks-v2.md` Phase 6 section. Same retroactive treatment as Phase 1 carry-over (above) — bundle when v2.3.4 lands.
+- **(NEW Session 7 / Phase 6 analyze L3)** `phase-6-heuristics/tasks.md` derived_from cites "T4B-013 v0.2 extension" / "T4B-013 — v0.2 extension" terminology that was correct at v0.2 but is now mid-version (artifact at v0.4). Cosmetic: rephrase to "T4B-013 — extension landed v0.2; carried in v0.4+" when v2.3.4 lands.
 
 ---
 
 ## v1.4 changes (2026-04-30 Session 7)
 
-Phase 1 v0.3 polish landed: 8 analyze findings (M1-M4 + L1-L2 + L5-L6) applied across `phase-1-perception/{spec,plan,tasks,impact}.md`. Mechanical fixes only — no AC-NN / R-NN / SC-NNN ID changes (R18 append-only preserved). 2 carry-over items (L3, L4) added to v2.3.4 punch-list above. Phase 1 now ready for R17.4 phase review per CLAUDE.md §8d.
+**Phase 1 v0.3 polish:** 8 analyze findings (M1-M4 + L1-L2 + L5-L6) applied across `phase-1-perception/{spec,plan,tasks,impact}.md`. Mechanical fixes only — no AC-NN / R-NN / SC-NNN ID changes (R18 append-only preserved). 2 carry-over items (L3, L4) added to v2.3.4 punch-list above. R17.4 review APPROVED with conditions C1 BINDING + C2/C3 OPTIONAL per [`phase-1-perception/review-notes.md`](phase-1-perception/review-notes.md) v1.0; status bumped to `approved`.
+
+**Phase 6 v0.4 catch-up polish:** 4 analyze findings (H1 + H2 + H3 + M1) applied as a single v0.4 sync across `phase-6-heuristics/{spec,plan,tasks,impact}.md`. Catch-up consolidates two pending updates that never reached plan/impact: (a) v0.2 Pino redaction-pattern → BenchmarkSchema mapping; (b) v0.3 contract surface for T4B-013 + AC-11 + R-09 + REQ-CONTEXT-DOWNSTREAM-001 + manifest selectors (`archetype` / `page_type` / `device`). H1 closes the R6 enforcement gap in T-PHASE6-LOGGER (3 wrong-syntax paths → 6 correct paths matching spec.md:101 authoritative list). Versions: spec.md v0.3→v0.4; plan.md v0.2→v0.4 (skip v0.3 for catch-up); tasks.md v0.3→v0.4; impact.md v0.1→v0.4 (skip v0.2/v0.3 for catch-up). 2 carry-over items (L1, L3) added to v2.3.4 punch-list above. R17.4 review pending.
 
 ---
 

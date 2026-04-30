@@ -2,46 +2,69 @@
 title: MVP Engineering Constitution
 artifact_type: constitution
 status: approved
-version: 1.2
+version: 1.3
 created: 2026-04-22
-updated: 2026-04-24
+updated: 2026-05-01
 owner: engineering lead
 authors: [REO Digital team, Claude]
 reviewers: [REO Digital team]
 
-supersedes: v1.1
+supersedes: v1.2
 supersededBy: null
 
 derived_from:
   - docs/engineering-practices/ai-orchestration-research-2026-04-24.md (R22-R23 provenance)
+  - docs/Improvement/perception_layer_spec.md (R24 perception MUST-NOT, v2.5)
+  - docs/Improvement/context_capture_layer_spec.md (R25 context capture MUST-NOT, v3.0)
+  - docs/specs/final-architecture/§20-state-graph.md (R26 state exploration MUST-NOT, v3.1)
 
-req_ids: []  # Constitution defines rules R1-R23, not REQ-IDs
+req_ids: []  # Constitution defines rules R1-R26, not REQ-IDs
 
 impact_analysis: null
 breaking: false
 affected_contracts: []
 
 delta:
-  new:
-    - R22 The Ratchet — Rules Trace to Failures
-    - R23 Kill Criteria Before Task Start
-    - R22.5 — Retroactive audit record (good-spec review Option B, 2026-04-24) for R3, R5, R6, R7, R9, R10, R11, R13
-    - R22.6 — Flagged stale cross-reference; temperature=0 lacks explicit rule codification (punch-list for v1.3)
-    - R15.3.1 — `provenance` block fields for heuristics (2026-04-26)
-    - R15.3.2 — Human verification mandatory for LLM-drafted heuristics (2026-04-26)
-    - R15.3.3 — LLM-drafted heuristic content is still IP per R6 (2026-04-26)
-    - R17 lifecycle frontmatter on this constitution file itself (was missing; self-compliance fix)
-  changed:
-    - R3, R5, R6, R7, R9, R10, R11, R13 now carry `why:` provenance blocks (retroactive audit per R22.2)
-    - R15.3 expanded 2026-04-26 — benchmark + provenance both required for Zod validation
-  impacted:
-    - docs/specs/mvp/PRD.md §10.9 (PR Contract references R23)
-    - docs/specs/mvp/PRD.md §10.10 (Pacing references R22)
-    - CLAUDE.md §7 (boundaries updated)
-    - .claude/skills/neural-dev-workflow/ (new skill operationalizing R22-R23)
-  unchanged:
-    - R1 (Source of Truth), R2 (Type Safety), R4 (Browser Agent), R8 (Cost & Safety), R12 (Definition of Done), R14 (Cost Accountability), R15 (Quality Gates), R16 (When to Stop and Ask) — retain grandfather status per R22.4; audit on next amendment
-    - R17-R21 (v1.1 SDD infrastructure) — PR-reviewed at introduction; treat approval PR as implicit provenance
+  v1_3:
+    new:
+      - Frontmatter version 1.2 → 1.3; updated 2026-05-01 (metadata-only sync — body R1-R26 was already complete; frontmatter + Summary + R22.4 grandfather list + req_ids comment all said R1-R23)
+      - derived_from expanded to cite R24 / R25 / R26 source specs (perception v2.5, context capture v3.0, state exploration v3.1)
+    changed:
+      - req_ids comment "R1-R23" → "R1-R26"
+      - Summary line "R1-R23" → "R1-R26"
+      - R22.4 grandfather paragraph clarified — R24 / R25 / R26 added post-v1.2 via architecture amendments (perception layer v2.5, context capture v3.0, state exploration v3.1); each carries section-internal provenance (the architecture spec it derives from); they are NOT R22.4 grandfathers (which apply only to pre-R22 rules)
+      - R22.6 — punch-list deferral updated v1.3 → v1.4 with rationale (codifying temperature=0 as a new top-level rule mid-MVP requires R22.2 provenance research and would ripple to every phase plan; R13 "NEVER `temperature ≠ 0` on evaluate / self_critique / evaluate_interactive" + TemperatureGuard adapter enforcement is sufficient through MVP; new top-level rule lands post-MVP in v1.4)
+    impacted:
+      - .specify/memory/constitution.md (re-synced 2026-05-01)
+      - docs/specs/mvp/architecture.md (line 262 R1-R23 → R1-R26 + project-structure tree per-phase fix Round 3)
+      - docs/specs/mvp/README.md v2.0 (Round 1 — already cites R1-R26)
+      - CLAUDE.md (Round 1 §1 step 2 — already cites R1-R26)
+    unchanged:
+      - All rule content R1-R26 (no body edits — metadata sync only)
+      - R22.5 retroactive audit record
+      - All `why:` provenance blocks added 2026-04-24
+      - R15.3 + R15.3.1 + R15.3.2 + R15.3.3 (heuristic provenance + verification rules)
+  v1_2:
+    new:
+      - R22 The Ratchet — Rules Trace to Failures
+      - R23 Kill Criteria Before Task Start
+      - R22.5 — Retroactive audit record (good-spec review Option B, 2026-04-24) for R3, R5, R6, R7, R9, R10, R11, R13
+      - R22.6 — Flagged stale cross-reference; temperature=0 lacks explicit rule codification (originally punch-listed for v1.3; deferred to v1.4 in this v1_3 delta)
+      - R15.3.1 — `provenance` block fields for heuristics (2026-04-26)
+      - R15.3.2 — Human verification mandatory for LLM-drafted heuristics (2026-04-26)
+      - R15.3.3 — LLM-drafted heuristic content is still IP per R6 (2026-04-26)
+      - R17 lifecycle frontmatter on this constitution file itself (was missing; self-compliance fix)
+    changed:
+      - R3, R5, R6, R7, R9, R10, R11, R13 now carry `why:` provenance blocks (retroactive audit per R22.2)
+      - R15.3 expanded 2026-04-26 — benchmark + provenance both required for Zod validation
+    impacted:
+      - docs/specs/mvp/PRD.md §10.9 (PR Contract references R23)
+      - docs/specs/mvp/PRD.md §10.10 (Pacing references R22)
+      - CLAUDE.md §7 (boundaries updated)
+      - .claude/skills/neural-dev-workflow/ (new skill operationalizing R22-R23)
+    unchanged:
+      - R1 (Source of Truth), R2 (Type Safety), R4 (Browser Agent), R8 (Cost & Safety), R12 (Definition of Done), R14 (Cost Accountability), R15 (Quality Gates), R16 (When to Stop and Ask) — retain grandfather status per R22.4; audit on next amendment
+      - R17-R21 (v1.1 SDD infrastructure) — PR-reviewed at introduction; treat approval PR as implicit provenance
 
 governing_rules:
   - Constitution R17 (Lifecycle)
@@ -51,7 +74,7 @@ governing_rules:
 
 # MVP Engineering Constitution
 
-> **Summary (~100 tokens — agent reads this first):** Non-negotiable engineering rules R1-R23 for Neural MVP. Override order: user instructions > constitution > default behavior. R1-R21 are grandfathered (predate R22 Ratchet provenance rule). Every future rule requires a `why:` provenance block citing a specific failure or research source per R22.2. R17 governs artifact lifecycle states; R18 requires delta blocks on every update; R19 mandates phase rollups; R20 requires impact analysis for shared-contract changes; R21 auto-generates a spec-to-code traceability matrix; R22 ratchets rule hygiene; R23 requires pre-task kill criteria.
+> **Summary (~110 tokens — agent reads this first):** Non-negotiable engineering rules R1-R26 for Neural MVP. Override order: user instructions > constitution > default behavior. R1-R21 are grandfathered (predate R22 Ratchet provenance rule). Every future rule requires a `why:` provenance block citing a specific failure or research source per R22.2. R17 governs artifact lifecycle states; R18 requires delta blocks on every update; R19 mandates phase rollups; R20 requires impact analysis for shared-contract changes; R21 auto-generates a spec-to-code traceability matrix; R22 ratchets rule hygiene; R23 requires pre-task kill criteria; R24 / R25 / R26 are layer-specific MUST-NOTs for perception (v2.5) / context capture (v3.0) / state exploration (v3.1) — each carries section-internal architecture-spec provenance.
 
 ## Non-Negotiable Rules for Implementation
 
@@ -635,11 +658,11 @@ why:
 
 **RULE 22.3:** Quarterly review of `constitution.md` + `CLAUDE.md` SHALL remove any rule whose `why:` provenance has become stale (failure no longer reproduces, research superseded, context no longer applies). Dead rules are worse than missing rules — they train Claude Code to tune out the rule set.
 
-**RULE 22.4:** This Ratchet principle applies prospectively. Rules R1–R21 were initially exempt from the `why:` provenance requirement (they predate R22) but any FUTURE amendment, clarification, or additional rule MUST carry provenance.
+**RULE 22.4:** This Ratchet principle applies prospectively. Rules R1–R21 were initially exempt from the `why:` provenance requirement (they predate R22) but any FUTURE amendment, clarification, or additional rule MUST carry provenance. **Note (2026-05-01, v1.3):** R24 / R25 / R26 (added post-v1.2 via architecture amendments — perception layer v2.5, context capture v3.0, state exploration v3.1) are NOT R22.4 grandfathers; each carries section-internal provenance pointing to its source architecture spec (see frontmatter `derived_from`).
 
 **RULE 22.5 (Retroactive audit, 2026-04-24 per good-spec review Option B):** A targeted retroactive `why:` audit was performed on the 8 most-referenced rules — **R3** (TDD), **R5** (Analysis Agent, covering R5.1/R5.3/R5.6/R5.7), **R6** (Heuristic IP Protection), **R7** (Database & Storage, covering R7.4 append-only), **R9** (Loose Coupling), **R10** (Code Quality), **R11** (Spec-Driven Development), **R13** (Forbidden Patterns). These rules now carry provenance blocks (see each section). Remaining grandfathered rules — R1 (Source of Truth), R2 (Type Safety), R4 (Browser Agent), R8 (Cost & Safety), R12 (Definition of Done), R14 (Cost Accountability), R15 (Quality Gates), R16 (When to Stop and Ask) — retain R22.4 grandfather status; audit them individually when their text is next amended (R22.2 requires provenance on amendment). R17–R21 codified current SDD practice in v1.1 and were approved under PR review at introduction; treat that PR as their implicit provenance source.
 
-**RULE 22.6 (Stale cross-reference flagged by retroactive audit):** R10 Code Quality does NOT codify temperature=0 on `evaluate / self_critique / evaluate_interactive`, despite PRD §10.1 ALWAYS list and R13 NEVER list both citing "(R10)" for this invariant. The temperature=0 rule lives only as a forbidden pattern in R13 + an enforcement requirement at `TemperatureGuard` (adapter boundary, R9). Codify temperature=0 as its own Constitution rule in v1.3 — candidate: promote from R13 into a new top-level rule "Reproducibility Guarantees." Tracked as post-audit punch-list item.
+**RULE 22.6 (Stale cross-reference flagged by retroactive audit):** R10 Code Quality does NOT codify temperature=0 on `evaluate / self_critique / evaluate_interactive`, despite PRD §10.1 ALWAYS list and R13 NEVER list both citing "(R10)" for this invariant. The temperature=0 rule lives only as a forbidden pattern in R13 + an enforcement requirement at `TemperatureGuard` (adapter boundary, R9). **Originally punch-listed for v1.3; deferred to v1.4 on 2026-05-01.** Rationale: codifying temperature=0 as a new top-level rule mid-MVP requires R22.2 provenance research and would ripple to every phase plan currently in `status: draft`. R13 NEVER-list entry + TemperatureGuard adapter enforcement is sufficient through MVP shipment. Promote from R13 into a new top-level rule "Reproducibility Guarantees" in v1.4 once MVP ships and the rules can be re-audited holistically (R22.3 quarterly review pattern).
 
 ---
 

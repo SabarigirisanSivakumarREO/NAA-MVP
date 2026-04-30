@@ -2,9 +2,9 @@
 title: Neural MVP — Spec-Driven Workflow + Versioning
 artifact_type: spec
 status: approved
-version: 1.0
+version: 1.1
 created: 2026-04-24
-updated: 2026-04-24
+updated: 2026-05-01
 owner: engineering lead
 authors: [REO Digital team, Claude]
 
@@ -14,6 +14,7 @@ supersededBy: null
 derived_from:
   - docs/specs/mvp/PRD.md (v1.2 §12 — extracted)
   - docs/specs/mvp/constitution.md R17-R21 (lifecycle, delta, rollup, impact, matrix)
+  - docs/specs/mvp/phases/INDEX.md v1.4 (per-phase decision table — Sessions 4-5 realization of §12.5.2)
 
 governing_rules:
   - Constitution R17 (Lifecycle States)
@@ -24,36 +25,66 @@ governing_rules:
   - Constitution R22 (The Ratchet)
 
 delta:
-  new:
-    - File created by extracting PRD §12 to separate spec-driven-workflow doc (good-spec review Option A, 2026-04-24)
-  changed: []
-  impacted:
-    - docs/specs/mvp/PRD.md §12 (replaced with pointer)
-  unchanged:
-    - Subsection numbering (12.1-12.10) preserved for cross-ref stability
+  v1_1:
+    new:
+      - §12.1 Spec Kit integration — diagram reframed to per-phase pattern (was root-level spec.md/plan.md/tasks.md generation; now per-phase folder authoring via /speckit.specify+plan+tasks)
+      - §12.3 Cross-doc synchronization — table updated to identify per-phase regeneration target via INDEX.md
+      - §12.5.1 rule #3 — "Spec Kit `tasks.md`" → "phases/phase-<N>-<name>/tasks.md" cross-referencing tasks-v2.md
+      - §12.5.2 Per-phase spec summary — reframed from "to be generated" to "REALIZED" via phases/phase-<N>-<name>/README.md + phases/INDEX.md v1.4 (Sessions 4-5)
+      - §12.5.4 Spec summarization pipeline — split into "current state" (manual + per-phase READMEs) and "v1.2 target" (auto-regen scripts at scripts/README.md)
+      - §12.6 R17.4 phase-review gate cross-reference added (CLAUDE.md §8d + centralized templates)
+      - Cross-references expanded — R23-R26, PRD §10.6/§10.9/§10.10, CLAUDE.md §8c+§8d, README.md, scripts/README.md
+    changed:
+      - Summary line refreshed for per-phase pattern
+    impacted:
+      - CLAUDE.md (Round 1 §1 reading order sync companion edit on 2026-05-01)
+      - docs/specs/mvp/README.md (Round 1 v1.0 → v2.0 entry-point rewrite on 2026-05-01)
+    unchanged:
+      - Subsection numbering preserved (12.1-12.10) per R18 append-only
+      - §12.2 version-bump triggers (minor / scope / breaking)
+      - §12.6-§12.10 lifecycle / delta / rollup / impact / matrix bodies
+  v1_0:
+    new:
+      - File created by extracting PRD §12 to separate spec-driven-workflow doc (good-spec review Option A, 2026-04-24)
+    changed: []
+    impacted:
+      - docs/specs/mvp/PRD.md §12 (replaced with pointer)
+    unchanged:
+      - Subsection numbering (12.1-12.10) preserved for cross-ref stability
 ---
 
 # Neural MVP — Spec-Driven Workflow + Versioning
 
-> **Summary (~100 tokens — agent reads this first):** Spec Kit CLI gated progression (PRD → /speckit.specify → /speckit.plan → /speckit.tasks → /speckit.analyze → /speckit.implement), semantic version bump rules, cross-doc synchronization, update process, context-management discipline (load only relevant section; target <20K tokens per task prompt), lifecycle states (R17), delta-based updates (R18), phase rollups (R19), impact analysis for cross-cutting changes (R20), and auto-generated spec-to-code traceability matrix (R21).
+> **Summary (~110 tokens — agent reads this first):** Spec Kit CLI gated progression authored **per-phase** under `phases/phase-<N>-<name>/` (PRD + tasks-v2.md → /speckit.specify+plan+tasks per phase → /speckit.analyze per phase → R17.4 review → status: approved → implementation via `neural-dev-workflow` skill, not /speckit.implement). Semantic version bump rules, cross-doc synchronization, update process, context-management discipline (load only relevant section; target <20K tokens per task prompt), lifecycle states (R17), delta-based updates (R18), phase rollups (R19), impact analysis for cross-cutting changes (R20), and auto-generated spec-to-code traceability matrix (R21). For phase-by-phase R17 lifecycle bumps + R17.4 review gate, see CLAUDE.md §8c-§8d.
 
 ### 12.1 Spec Kit integration
 
-The workflow follows GitHub Spec Kit's gated progression. This PRD is the input; Spec Kit CLI produces the downstream artifacts.
+The workflow follows GitHub Spec Kit's gated progression but authored **per-phase** — there are NO root-level `spec.md` / `plan.md` / `tasks.md` in this corpus. The PRD + `tasks-v2.md` catalog feed each phase folder; Spec Kit commands operate on one phase at a time.
 
 ```
-PRD.md (this document)
-    │  (run Spec Kit CLI)
+PRD.md  +  tasks-v2.md  +  architecture.md / testing-strategy.md / risks.md
+    │
+    │  (per phase, in canonical order: 0 → 0b → 1 → 1b → 1c → 2 → 3 → 4 → 4b → 5 → 5b → 6 → 7 → 8 → 9)
     ▼
-/speckit.constitution   → updates docs/specs/mvp/constitution.md if needed
-/speckit.specify        → generates docs/specs/mvp/spec.md from this PRD
-/speckit.plan           → generates docs/specs/mvp/plan.md from spec.md + tech stack in §6.4
-/speckit.tasks          → generates docs/specs/mvp/tasks.md from plan.md
-/speckit.analyze        → cross-artifact consistency check
-/speckit.implement      → executes tasks (or hand off to Claude Code + superpowers skills)
+/speckit.constitution    → updates constitution.md when rule changes are needed (rare)
+/speckit.specify         → generates phases/phase-<N>-<name>/spec.md
+/speckit.plan            → generates phases/phase-<N>-<name>/plan.md
+/speckit.tasks           → generates phases/phase-<N>-<name>/tasks.md  (cross-references tasks-v2.md task IDs)
+/speckit.clarify         → fills underspecified areas with up-to-5 targeted questions
+/speckit.checklist       → generates phases/phase-<N>-<name>/checklists/requirements.md
+    │
+    ▼  (R17.4 gate before implementation per CLAUDE.md §8d)
+/speckit.analyze         → mechanical cross-artifact consistency on THIS phase only
+phase review (judgment)  → APPROVE / REVISE / RE-SPEC via templates/phase-review-prompt.md
+    │
+    ▼  (status: draft → approved on spec.md / plan.md / tasks.md / impact.md)
+neural-dev-workflow skill → executes implementation tasks (NOT /speckit.implement)
+    │
+    ▼  (at phase exit per R19 + CLAUDE.md §8c)
+phase-N-current.md rollup → compressed system state for Phase N+1 to read first
 ```
 
-**Never skip a gate.** If a gate reveals ambiguity, return to the previous artifact and fix before proceeding.
+**Never skip a gate.** If a gate reveals ambiguity, return to the previous artifact and fix before proceeding. Run `/speckit.analyze` and the phase review on **one phase at a time** — never bulk-analyze across phases (CLAUDE.md §8c JIT pattern: earlier phases may force changes that ripple).
 
 ### 12.2 Version bump rules
 
@@ -72,16 +103,17 @@ Bump triggers:
 
 ### 12.3 Cross-doc synchronization
 
-When this PRD changes, check for downstream sync:
+When this PRD changes, check for downstream sync. All `spec.md` / `plan.md` / `tasks.md` references below are **per-phase** under `phases/phase-<N>-<name>/` — identify which phase(s) the change touches via `phases/INDEX.md` decision table, then regenerate only those phase folders.
 
 | This PRD changes | Sync to |
 |---|---|
-| Scope (§3.1) | Regenerate `spec.md` via `/speckit.specify` |
-| Tech stack (architecture.md §6.4) | Regenerate `plan.md` via `/speckit.plan` |
-| Functional req (§4) | Regenerate `spec.md` + `tasks.md` |
-| Boundaries (§10) | Update `CLAUDE.md` §7 + `constitution.md` if new non-negotiable |
-| Commands (§8) | Update `CLAUDE.md` §3 |
+| Scope (§3.1) | Regenerate affected phase's `spec.md` via `/speckit.specify` (typically Phase 9 for MVP-COMPLETE gates; identify all phases touched via INDEX.md) |
+| Tech stack (architecture.md §6.4) | Regenerate affected phase's `plan.md` via `/speckit.plan` (typically Phase 0 + the phase first activating the changed dependency) |
+| Functional req (§4) | Regenerate affected phase's `spec.md` + `tasks.md`; bump `tasks-v2.md` if the change adds / removes / renumbers tasks |
+| Boundaries (§10) | Update `CLAUDE.md` §7 + `constitution.md` if new non-negotiable rule (R22 provenance block required) |
+| Commands (§8) | Update `CLAUDE.md` §3 + (if a new pnpm script) `scripts/README.md` |
 | Domain knowledge (§11) | Update `examples.md` |
+| Architecture / testing / risks / workflow content (PRD §6/§9/§12/§15) | Update sibling files `architecture.md` / `testing-strategy.md` / `spec-driven-workflow.md` / `risks.md` per the extraction supersession; bump R18 delta on the sibling |
 
 ### 12.4 Update process
 
@@ -98,7 +130,7 @@ This PRD is now sharded across multiple sibling files (architecture.md, testing-
 When Claude Code works on a task, the prompt MUST include:
 1. **PRD §10** (Claude Code Operational Boundaries) — always
 2. **`constitution.md`** — always (it's short)
-3. **The task** from Spec Kit `tasks.md` — always
+3. **The task** from `phases/phase-<N>-<name>/tasks.md` — always (cross-reference `tasks-v2.md` v2.3.3 for the master-plan REQ-IDs)
 4. **Only the spec section(s) cited by the task's REQ-IDs** — use file-structure map in `architecture.md` §6.5
 5. **Relevant `examples.md` section** if a pattern exists (grounding, findings, heuristics)
 6. **Relevant PRD component section (§7.N)** matching the workspace being touched
@@ -108,18 +140,20 @@ When Claude Code works on a task, the prompt MUST include:
 - Unrelated architecture specs (e.g., don't give dashboard tasks §20 state-exploration spec)
 - `PROJECT_BRIEF.md` for implementation tasks (it's for LLM analysis / gap analysis; strategic, not operational)
 
-#### 12.5.2 Per-phase spec summary (to be generated)
+#### 12.5.2 Per-phase spec summary (REALIZED — `phases/phase-<N>-<name>/README.md` + `phases/INDEX.md` v1.4)
 
-For each phase in Spec Kit `tasks.md`, maintain a concise phase summary (~200-400 tokens) that captures:
-- Phase goal (1 sentence)
-- List of tasks in phase (IDs + 1-line descriptions)
-- Required specs (REQ-IDs with file paths)
-- Exit criteria
-- Common pitfalls for this phase (from `examples.md`)
+The per-phase summary pattern this section originally proposed has been **realized** as concrete artifacts shipped in Sessions 4-5 (2026-04-28..2026-04-29):
 
-**Script (planned):** `pnpm spec:summarize --phase <N>` generates `docs/specs/mvp/phase-summaries/phase-<N>.md` from `tasks.md` + referenced specs. Target post-MVP but can be manual until then.
+| Originally proposed | Realized as |
+|---|---|
+| `phase-summaries/phase-<N>.md` ~200-400 tokens | `phases/phase-<N>-<name>/README.md` (~150 tokens each) — phase goal, scope, dependencies, exit criteria |
+| Master phase decision table | [`phases/INDEX.md`](phases/INDEX.md) v1.4 — phase status, tasks, depends-on, blocks, risk |
+| Required specs / REQ-ID map | Per-phase `spec.md` cites REQ-IDs from `final-architecture/`; per-phase `tasks.md` cross-references `tasks-v2.md` task IDs |
+| Common pitfalls | Per-phase `impact.md` (when shared contracts touched per R20) + cross-references to [`examples.md`](examples.md) §8 BAD-finding patterns |
 
-**Usage:** when starting a task in Phase N, load `phase-<N>.md` as the phase-level context instead of the entire PRD + master plan.
+**Usage:** when starting a task in Phase N, load `phases/phase-<N>-<name>/README.md` first (per CLAUDE.md §1 step 6), then the relevant `spec.md` / `tasks.md` section. Do NOT load the full PRD or all 15 phase folders.
+
+**Still target state (v1.2):** `pnpm spec:summarize --phase <N>` to auto-generate the README from spec.md + tasks.md (currently hand-authored per phase). See `scripts/README.md` for the full stub set.
 
 #### 12.5.3 Context-management tooling options
 
@@ -136,19 +170,27 @@ For MVP: manual discipline per §12.5.1.
 
 **Recommendation:** start with Context7 (free, already available) for external library docs. Add pgvector RAG in v1.2 when the spec corpus + golden test library grow. Don't over-engineer context management before the MVP ships.
 
-#### 12.5.4 Spec summarization pipeline (target state, v1.2)
+#### 12.5.4 Spec summarization pipeline (current state + v1.2 target)
+
+**Current state (2026-05-01) — manual + per-phase READMEs realize the bulk of this:**
 
 ```
-docs/specs/final-architecture/§NN-<name>.md              (source of truth, 500-1500 lines each)
+docs/specs/final-architecture/§NN-<name>.md          (source of truth, 500-1500 lines each)
    │
-   ▼ (summarization script, prompts Claude Sonnet 4)
-docs/specs/mvp/phase-summaries/phase-<N>.md              (200-400 tokens, auto-regenerated)
+   ▼ (hand-authored per phase + /speckit.specify, .plan, .tasks)
+phases/phase-<N>-<name>/{README,spec,plan,tasks}.md  (README ~150 tokens; spec/plan/tasks <500 lines each)
    │
-   ▼ (Spec Kit tasks.md references phase summary)
-Claude Code prompt context                                (compact, targeted)
+   ▼ (per-phase tasks.md references tasks-v2.md task IDs which carry REQ-IDs)
+Claude Code prompt context                            (compact, targeted; <20K tokens)
 ```
 
-Until that pipeline exists, the rule is manual discipline: load only what §12.5.1 says to load.
+**v1.2 target — auto-regeneration via Phase 9 scripts (currently stubs at `scripts/README.md`):**
+
+- `pnpm spec:pack --phase <N>` — concatenate `constitution.md` + PRD §10 + phase README + phase spec + cited REQ-ID excerpts + relevant `examples.md` sections into `phases/phase-<N>-<name>/context-pack.md` (~10K tokens cap)
+- `pnpm spec:summarize --phase <N>` — regenerate phase README from spec.md + tasks.md
+- `pnpm spec:matrix` — auto-generate `spec-to-code-matrix.md` from spec corpus + source code + tests (R21)
+
+Until those scripts ship: manual discipline per §12.5.1, hand-authored phase READMEs, no `context-pack.md` files yet.
 
 ### 12.6 Lifecycle states (Constitution R17)
 
@@ -164,6 +206,8 @@ Every spec artifact carries a `status:` field in YAML frontmatter. Allowed state
 - `verified → superseded`: newer version replaces it (the new version carries `supersedes:` pointer)
 
 Enforcement: `pnpm spec:validate` (stub; full implementation Phase 9) checks frontmatter on every PR.
+
+**R17.4 review gate (`validated → approved`):** Engineering lead review BEFORE bumping `status: draft → approved` on a phase's artifacts. Distinct from `/speckit.analyze` (mechanical) — the review is **judgment** (doom check, design soundness, kill-criteria realism). Centralized templates: [`templates/phase-review-prompt.md`](templates/phase-review-prompt.md) v1.0 + [`templates/phase-review-report.template.md`](templates/phase-review-report.template.md) v1.0. Recommendation: **APPROVE** / **REVISE** / **RE-SPEC**. See CLAUDE.md §8d for the order-of-gates protocol (`/speckit.analyze` first → resolve CRITICAL/HIGH → phase review → bump status).
 
 ### 12.7 Delta-based updates (Constitution R18)
 
@@ -220,8 +264,17 @@ The matrix is read-only reference — never hand-edited (Rule 21.5). Changes flo
 ## Cross-references
 
 - Constitution R17-R22 (lifecycle, delta, rollup, impact, matrix, Ratchet)
+- Constitution R23 (Kill criteria — required pre-task per phase plan)
+- Constitution R24 / R25 / R26 (Perception / Context Capture / State Exploration MUST-NOTs)
 - PRD §10 (Claude Code operational boundaries — workflow consumers)
-- PRD §10.7 (modular prompt rule — context budget <20K tokens)
-- `docs/specs/mvp/templates/` (all five R17-R21 template files)
-- `docs/specs/mvp/phases/INDEX.md` (phase navigation)
+- PRD §10.6 (Agent self-verification against acceptance criteria — Spec Coverage section in PR body)
+- PRD §10.7 (modular prompt rule — context budget <20K tokens per task)
+- PRD §10.9 (PR Contract — 4-block format)
+- PRD §10.10 (Comprehension-debt pacing)
+- CLAUDE.md §8c (per-phase artifact maintenance — R17 lifecycle bumps + INDEX.md status flip)
+- CLAUDE.md §8d (R17.4 phase review gate — order of gates)
+- `docs/specs/mvp/README.md` v2.0 (entry point + document map)
+- `docs/specs/mvp/templates/` (R17-R21 templates + centralized phase-review-prompt + report)
+- `docs/specs/mvp/phases/INDEX.md` v1.4 (phase decision table — realizes §12.5.2)
+- `docs/specs/mvp/scripts/README.md` (6 stub scripts; full impl Phase 9)
 - `.specify/workflows/speckit/workflow.yml` (Spec Kit CLI command registry)

@@ -2,9 +2,9 @@
 title: Implementation Plan — Phase 6 Heuristic KB Engine
 artifact_type: plan
 status: draft
-version: 0.2
+version: 0.4
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-30
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -16,7 +16,9 @@ derived_from:
   - docs/specs/mvp/phases/phase-6-heuristics/spec.md
   - docs/specs/mvp/phases/phase-6-heuristics/impact.md
   - docs/specs/mvp/architecture.md (§6.4, §6.5)
-  - docs/specs/mvp/constitution.md (R5.4/R5.5, R6, R9, R15.3)
+  - docs/specs/mvp/constitution.md (R5.4/R5.5, R6, R9, R13, R15.3)
+  - docs/specs/final-architecture/37-context-capture-layer.md §37.5 (REQ-CONTEXT-DOWNSTREAM-001 — v0.4 catch-up)
+  - docs/specs/mvp/phases/phase-4b-context-capture/spec.md (T4B-013 — v0.4 catch-up)
 
 req_ids:
   - REQ-HK-001
@@ -25,6 +27,7 @@ req_ids:
   - REQ-HK-EXT-050
   - REQ-HK-020a
   - REQ-HK-020b
+  - REQ-CONTEXT-DOWNSTREAM-001          # v0.4 catch-up — loadForContext extension
 
 impact_analysis: docs/specs/mvp/phases/phase-6-heuristics/impact.md
 breaking: false
@@ -42,10 +45,20 @@ delta:
     - First plan with R6 IP-boundary as runtime concern
     - 9 MVP engine tasks; T103-T105 deferred to Phase 0b
     - v0.2 — Phase 0 research item 3 details Pino redaction patterns mapped to BenchmarkSchema (analyze finding F006)
+    - v0.4 catch-up — Phase 1 Design item 6 (NEW) documents the `loadForContext()` seam + manifest selector contract surface; Phase 4b T4B-013 named as the implementation deliverable owner
+    - v0.4 catch-up — `REQ-CONTEXT-DOWNSTREAM-001` added to req_ids (was missed in v0.3 sync)
+    - v0.4 catch-up — Constitution R13 added to derived_from (previously only R5.4/R5.5, R6, R9, R15.3 — R13 governs forbidden patterns including temperature=0)
   changed:
     - v0.1 → v0.2 — Pino redaction pattern specification tightened
-  impacted: []
-  unchanged: []
+    - v0.2 → v0.4 catch-up — Session 7 /speckit.analyze polish absorbed two pending updates that never reached this plan: (a) v0.3 spec/tasks update for T4B-013 + AC-11 + R-09 + REQ-CONTEXT-DOWNSTREAM-001 + manifest selectors (`archetype` / `page_type` / `device`); (b) v0.4 M1 fix (R10→R13 stale xref for temperature=0 in Constitution Check). Coordinated with parallel spec.md v0.3→v0.4 (M1), tasks.md v0.3→v0.4 (H1 redaction-path fix), and impact.md v0.1→v0.4 catch-up (H2). No scope changes — pure documentation sync against decisions already locked in spec/tasks.
+  impacted:
+    - spec.md, tasks.md, impact.md — all bumped to v0.4 in same Session 7 sync
+    - Phase 4b T4B-013 — implementer reads this plan + impact.md v0.4 Forward Contract for the loadForContext signature
+  unchanged:
+    - 9 MVP engine task list (T101, T102, T106-T112) — body unchanged
+    - Phase 0 Research items 1-5 (Pino redaction pattern at item 3 unchanged from v0.2)
+    - Project Structure (paths in §6.5)
+    - Constitution Check checklist body (only R10→R13 line edited per M1)
 
 governing_rules:
   - Constitution R5.4/R5.5, R6, R9, R15.3, R17, R20, R23
@@ -92,7 +105,7 @@ Phase 6 builds the heuristic engine: schema-level validation gate (R15.3 enforce
 - [x] R6.2 — interface ready; concrete v1.1
 - [x] R7.* — N/A (no DB)
 - [x] R9 — HeuristicLoader + DecryptionAdapter (4th + 5th adapter categories)
-- [x] R10 — N/A (no LLM in Phase 6)
+- [x] R13 Forbidden Patterns: temperature=0 invariant on evaluate/self_critique/evaluate_interactive (constitution.md §13 line 411; `(R10)` was a stale xref per note_on_stale_xref) — N/A (no LLM in Phase 6)
 - [x] R15.3 — schema enforces benchmark + provenance (both required)
 - [x] R20 impact.md — REQUIRED, MEDIUM risk; authored
 - [x] R23 kill criteria — default + per-task on T106 + T107
@@ -183,6 +196,7 @@ packages/agent-core/tests/
 3. **R6 logging discipline** — every log line emitted by `loader.ts` references heuristic by `id`; never body text. Code review enforces; Pino redaction is safety net.
 4. **Pure functions for filter** — `filterByBusinessType` etc. are stateless; KB is the only state holder.
 5. **TierValidator** — pure function; reads `category` field + applies tier-classification map (Tier 1: visual/structural, Tier 2: content/persuasion, Tier 3: subjective).
+6. **`loadForContext()` seam (v0.4 catch-up — AC-11 / R-09 / REQ-CONTEXT-DOWNSTREAM-001):** `HeuristicLoader` interface gains a second method, `loadForContext(profile: ContextProfile): Promise<ReadonlyArray<HeuristicExtended>>`. The interface is defined in Phase 6 (`analysis/heuristics/loader.ts`); **the implementation deliverable lives in Phase 4b T4B-013** which composes the existing two-stage `filterByBusinessType` + `filterByPageType` over a ContextProfile-aware entry point. Phase 6 v0.4 owns: (a) the interface signature; (b) the schema field reservation in `HeuristicSchemaExtended` for `archetype` / `page_type` / `device` manifest selectors (T101 acceptance covers this as AC-11 partial); (c) the contract surface documented in impact.md Forward Contract section. Filter logic is pure — no weight modifiers in MVP (Phase 13b master adds weights). Returns 12-25 heuristics for typical contexts (D2C/PDP/mobile, SaaS/pricing/desktop, B2B/comparison/balanced, lead_gen/landing/mobile per spec.md AC-11). `loadAll()` remains the canonical entry point for synthetic-fixture testing in Phase 6's own integration test (T112); `loadForContext()` is exercised in Phase 4b's conformance tests.
 
 ---
 
