@@ -1,10 +1,10 @@
 ---
 title: Implementation Plan — Phase 0 Setup
 artifact_type: plan
-status: draft
-version: 0.2
+status: approved
+version: 0.3
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-04-30
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -16,7 +16,7 @@ derived_from:
   - docs/specs/mvp/phases/phase-0-setup/spec.md (the spec this plan implements)
   - docs/specs/mvp/architecture.md §6.4 (tech stack — no overrides allowed)
   - docs/specs/mvp/architecture.md §6.5 (project structure — file decisions)
-  - docs/specs/mvp/constitution.md (R1-R23)
+  - docs/specs/mvp/constitution.md (R1-R26)
   - docs/specs/mvp/testing-strategy.md (§9.6 conformance pattern)
   - docs/specs/mvp/risks.md (§15 risk register)
 
@@ -34,6 +34,7 @@ delta:
     - v0.2 — R10.6 CLI exception explicitly echoed in Constitution Check section (analyze finding F12)
   changed:
     - v0.1 → v0.2 applied analyze-driven fixes (F1, F12); no design changes
+    - v0.2 → v0.3 applied 1 analyze-driven fix (L2 — derived_from R1-R23 → R1-R26 + Complexity Tracking "23 rules" → "26 rules" with R24-R26 layer-MUST-NOT N/A note); status bumped draft → approved (R17.4 engineering lead sign-off via 2026-04-30 session)
   impacted: []
   unchanged:
     - Tech stack table, Project Structure narrative, Approval Gates
@@ -257,7 +258,7 @@ Phase 0 design is config + skeleton, not domain modeling. The minimal design dec
 
 ## Complexity Tracking
 
-**None — plan respects all 23 Constitution rules.**
+**None — plan respects all 26 Constitution rules** (R1-R23 universal + R24-R26 layer-specific MUST-NOTs; R24-R26 are trivially N/A in Phase 0 since perception, context capture, and state exploration layers don't exist yet).
 
 No violations to justify. No `why:` provenance overrides needed.
 

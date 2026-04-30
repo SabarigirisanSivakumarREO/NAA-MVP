@@ -1,10 +1,10 @@
 ---
 title: Tasks — Phase 0 Setup
 artifact_type: tasks
-status: draft
-version: 0.2
+status: approved
+version: 0.3
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-04-30
 owner: engineering lead
 authors: [Claude (drafter)]
 
@@ -28,6 +28,7 @@ delta:
     - v0.2 — Dependency graph now explicitly shows T-PHASE0-TEST as the TDD prerequisite preceding T001 (analyze finding F11)
   changed:
     - v0.1 → v0.2 dependency graph reordered to make TDD ordering visible (no task body changes)
+    - v0.2 → v0.3 — status bumped draft → approved (R17.4 engineering lead sign-off via 2026-04-30 session); no task body changes
   impacted: []
   unchanged:
     - T001..T005 acceptance criteria, file lists, kill criteria block

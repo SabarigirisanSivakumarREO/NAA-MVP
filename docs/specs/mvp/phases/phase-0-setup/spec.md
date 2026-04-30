@@ -1,10 +1,10 @@
 ---
 title: Phase 0 — Setup
 artifact_type: spec
-status: draft
-version: 0.2
+status: approved
+version: 0.3
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-04-30
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -14,7 +14,7 @@ supersededBy: null
 
 derived_from:
   - docs/specs/mvp/PRD.md (canonical product requirements; F-001 through F-006)
-  - docs/specs/mvp/constitution.md (R1-R23 non-negotiable rules)
+  - docs/specs/mvp/constitution.md (R1-R26 non-negotiable rules)
   - docs/specs/mvp/architecture.md (§6.4 tech stack, §6.5 file locations)
   - docs/specs/mvp/tasks-v2.md (T001-T005 verbatim)
   - docs/specs/mvp/phases/phase-0-setup/README.md (phase summary + exit criteria)
@@ -33,6 +33,7 @@ delta:
     - v0.2 — R-06 row now traces to implementing task T002 (analyze finding F18)
   changed:
     - v0.1 → v0.2 applied 5 polish fixes from /speckit.analyze report (F1, F3, F11, F12, F18) without changing AC-NN IDs (R18 append-only preserved)
+    - v0.2 → v0.3 applied 3 analyze-driven fixes (M1 SC-003 lint clause deferred to Phase 4 ESLint scope; M2 NF-Phase0-02 marked observation-only; L2 R1-R23 → R1-R26 in Mandatory References + derived_from + R24-R26 layer-MUST-NOT N/A note); status bumped draft → approved (R17.4 engineering lead sign-off via 2026-04-30 session)
   impacted: []
   unchanged:
     - AC-01..AC-05 IDs and acceptance scenarios (R18 append-only)
@@ -58,7 +59,7 @@ governing_rules:
 
 ## Mandatory References (Spec Kit MUST read these BEFORE drafting)
 
-1. `docs/specs/mvp/constitution.md` — Rules R1-R23 are non-negotiable. Phase 0 introduces no analysis logic, so R5/R6 (analysis IP) are trivially satisfied; R9 (adapter pattern), R10 (code quality), R11 (spec-driven), R17-R23 (lifecycle/rollup/impact/traceability/Ratchet/Kill) all apply.
+1. `docs/specs/mvp/constitution.md` — Rules R1-R26 are non-negotiable. Phase 0 introduces no analysis logic, so R5/R6 (analysis IP) are trivially satisfied; R9 (adapter pattern), R10 (code quality), R11 (spec-driven), R17-R23 (lifecycle/rollup/impact/traceability/Ratchet/Kill) all apply. R24-R26 (perception / context-capture / state-exploration MUST-NOTs) are layer-specific and N/A in Phase 0 — those layers don't exist yet.
 2. `docs/specs/mvp/PRD.md` — F-001 through F-006 cover the foundation and CLI command surface. NF-001..NF-010 not yet observable in Phase 0 (no audits run yet).
 3. `docs/specs/mvp/architecture.md` — §6.4 tech stack pins (TypeScript 5, Node 22 LTS, Turborepo 2, pnpm 9, Postgres 16 + pgvector, Vitest, Pino) — do NOT propose alternatives. §6.5 file location decision tree.
 4. `docs/specs/mvp/tasks-v2.md` — T001-T005 verbatim acceptance criteria; this spec MUST NOT renumber.
@@ -141,7 +142,7 @@ A new engineer clones the Neural repository, follows the README, and reaches a s
 | ID | Metric | Target | Cites PRD NF-NNN | Measurement method |
 |----|--------|--------|------------------|--------------------|
 | NF-Phase0-01 | Time to green local environment from `git clone` | < 30 minutes on standard developer hardware (M-series Mac or equivalent) | (new — Phase 0 specific; rolls into NF-009 developer experience) | manual stopwatch on first onboarding; subsequent `tests/acceptance/phase-0-setup.spec.ts` validates command sequence |
-| NF-Phase0-02 | TypeScript compile time for `pnpm build` | < 30 seconds on cold cache | (new — Phase 0 specific) | Turborepo timing output |
+| NF-Phase0-02 | TypeScript compile time for `pnpm build` | < 30 seconds on cold cache (observation-only target — no automated gate in Phase 0; revisit if cold builds exceed 60s) | (new — Phase 0 specific) | Turborepo timing output (manual observation; not asserted by acceptance test) |
 | NF-Phase0-03 | Postgres container healthy after `docker-compose up -d` | < 30 seconds | (new — Phase 0 specific) | docker healthcheck status |
 
 ---
@@ -156,7 +157,7 @@ Phase 0 introduces NO domain entities (no Zod schemas, no DB tables, no LLM cont
 
 - **SC-001:** A new engineer can `git clone` the repo and reach the Phase 0 exit-criterion green state in under 30 minutes (NF-Phase0-01).
 - **SC-002:** All five exit criteria (AC-01 through AC-05) pass on a fresh clone via the Phase 0 acceptance test.
-- **SC-003:** Zero TypeScript compilation errors across the workspace; zero lint warnings of severity ≥ "error".
+- **SC-003:** Zero TypeScript compilation errors across the workspace. (Lint coverage is Phase 4 scope — ESLint configuration lands in T073 alongside the LLM adapter cornerstone; lint gates apply from Phase 4 forward.)
 - **SC-004:** The `adapters/` boundary is in place from day one — when later phases add LLM/Browser/Storage code, it lands inside `adapters/` automatically because that's the only path that exists.
 
 ---
