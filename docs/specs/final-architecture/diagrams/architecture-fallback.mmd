@@ -1,0 +1,243 @@
+%% Neural — AI CRO Audit Platform · High-Level Architecture (Mermaid fallback)
+%% Audience: business stakeholders, product owners, CRO consultants, QA, leadership.
+%% Mirrors architecture-interactive.html. Use this where Plotly cannot render.
+
+flowchart TB
+    %% ============== STYLES ==============
+    classDef trigger     fill:#e0f2fe,stroke:#0EA5E9,color:#0c4a6e,rx:8,ry:8
+    classDef contract    fill:#f1f5f9,stroke:#475569,color:#1e293b,rx:8,ry:8
+    classDef orch        fill:#dbeafe,stroke:#2563EB,color:#1e3a8a,rx:8,ry:8
+    classDef browser     fill:#cffafe,stroke:#06B6D4,color:#155e75,rx:8,ry:8
+    classDef state       fill:#ccfbf1,stroke:#14B8A6,color:#115e59,rx:8,ry:8
+    classDef evidence    fill:#d1fae5,stroke:#10B981,color:#065f46,rx:8,ry:8
+    classDef heuristic   fill:#fef3c7,stroke:#F59E0B,color:#78350f,rx:8,ry:8
+    classDef ai          fill:#ede9fe,stroke:#7C3AED,color:#4c1d95,rx:8,ry:8
+    classDef insight     fill:#fae8ff,stroke:#C026D3,color:#701a75,rx:8,ry:8
+    classDef report      fill:#dcfce7,stroke:#16A34A,color:#14532d,rx:8,ry:8
+    classDef storage     fill:#f5f5f4,stroke:#78716C,color:#292524,rx:8,ry:8
+    classDef review      fill:#ffedd5,stroke:#F97316,color:#7c2d12,rx:8,ry:8
+    classDef learning    fill:#fce7f3,stroke:#BE185D,color:#831843,rx:8,ry:8
+    classDef future      fill:#f3f4f6,stroke:#6B7280,color:#1f2937,rx:8,ry:8
+
+    %% ============== LAYER 1 — User / Trigger ==============
+    subgraph L1[" 1 · User / Trigger "]
+      direction LR
+      T1["Consultant Trigger"]
+      T2["URL Discovery"]
+      T3["Audit Template"]
+    end
+
+    %% ============== LAYER 2 — Audit Contract ==============
+    subgraph L2[" 2 · Audit Contract "]
+      direction LR
+      C1["Client Profile"]
+      C2["Business Type & Persona"]
+      C3["URL List & Page Types"]
+      C4["Success Criteria"]
+    end
+
+    %% ============== LAYER 3 — Orchestration ==============
+    subgraph L3[" 3 · Orchestration "]
+      direction LR
+      O1["Audit Planner"]
+      O2["Page Queue Manager"]
+      O3["Workflow Controller"]
+      O4["Retry & Recovery"]
+    end
+
+    %% ============== LAYER 4 — Browser Perception ==============
+    subgraph L4[" 4 · Browser Perception "]
+      direction LR
+      B1["Browser Agent"]
+      B2["Cookie & Overlay Handler"]
+      B3["Screenshot Capture"]
+      B4["DOM & Accessibility Tree"]
+      B5["Multi-Viewport Capture"]
+    end
+
+    %% ============== LAYER 5 — Dynamic State ==============
+    subgraph L5[" 5 · Dynamic State Coverage "]
+      direction LR
+      D1["Initial Page State"]
+      D2["Scroll & Lazy-load States"]
+      D3["Interaction States"]
+      D4["State Coordinator"]
+    end
+
+    %% ============== LAYER 6 — Evidence Packaging ==============
+    subgraph L6[" 6 · Evidence Packaging "]
+      direction LR
+      E1["Screenshot Library"]
+      E2["DOM Evidence"]
+      E3["Annotated Visuals"]
+      E4["Reproducibility Snapshot"]
+    end
+
+    %% ============== LAYER 7 — Heuristics Knowledge ==============
+    subgraph L7[" 7 · Heuristics Knowledge "]
+      direction TB
+      H1["CRO Heuristic Library<br/>(30 rules)"]
+      H2["Business & Page Rules"]
+      H3["Persona & Funnel Rules"]
+      H4["Two-Stage Filter"]
+      H1 --> H4
+      H2 --> H4
+      H3 --> H4
+    end
+
+    %% ============== LAYER 8 — AI Analysis ==============
+    subgraph L8[" 8 · AI Analysis "]
+      direction LR
+      A1["Page Understanding"]
+      A7["AI-Driven Discovery<br/>(open-ended, novel findings)"]
+      A2["Heuristic Evaluation<br/>(rule-driven)"]
+      A3["Self-Critique"]
+      A4["Fact-Check (Grounding)"]
+      A5["Evidence Annotation"]
+      A6["Cross-Page Patterns"]
+    end
+
+    %% ============== LAYER 9 — Insight Generation ==============
+    subgraph L9[" 9 · Insight Generation "]
+      direction LR
+      I1["CRO Issues"]
+      I2["Hypothesis Pipeline"]
+      I3["Prioritized Recommendations"]
+      I4["Executive Summary"]
+    end
+
+    %% ============== LAYER 12 — Human Review ==============
+    subgraph L12[" 12 · Human Review "]
+      direction LR
+      R1["Review Prep"]
+      R2["Consultant Approval"]
+      R3["Manual Override"]
+    end
+
+    %% ============== LAYER 10 — Reporting ==============
+    subgraph L10[" 10 · Reporting "]
+      direction LR
+      P1["Stakeholder 1-Pager"]
+      P2["Consultant Report"]
+      P3["PDF Output"]
+      P4["Dashboard View"]
+    end
+
+    %% ============== LAYER 11 — Storage & Observability ==============
+    subgraph L11[" 11 · Storage & Observability "]
+      direction TB
+      S1["Audit Database"]
+      S2["Object Storage"]
+      S3["LLM Cost Log"]
+      S4["Activity Logs"]
+      S5["Progress Events"]
+    end
+
+    %% ============== LAYER 13 — Learning Loop (post-MVP) ==============
+    subgraph L13[" 13 · Learning Loop &nbsp;<i>(v1.1+)</i> "]
+      direction LR
+      L1["Audit Outcomes Archive"]
+      L2["Edit & Feedback Patterns"]
+      L3["Heuristic Improvement Service"]
+    end
+
+    %% ============== LAYER 14 — Roadmap & Future ==============
+    subgraph L14[" 14 · Roadmap & Future "]
+      direction LR
+      F1["Phased Roadmap<br/>(10 phases · 263 tasks)"]
+      F2["Spec Kit Harness<br/>(/speckit.*)"]
+      F3["Deferred Features<br/>(stealth, multi-tenant, GPT-4o)"]
+    end
+
+    %% ============== EDGES — happy path ==============
+    T1 --> C1 & C2 & C3 & C4
+    T2 --> C3
+    T3 --> C2 & C4
+
+    C1 & C2 & C3 & C4 --> O1
+    O1 --> O2 --> O3
+    O3 -.retry.-> O4
+    O4 -.recover.-> O3
+
+    O3 --> B1
+    B1 --> B2
+    B2 --> B3 & B4
+    B1 --> B5
+    B5 --> B3 & B4
+
+    B3 --> D1
+    B4 --> D1
+    D1 --> D2 & D3
+    D2 --> D4
+    D3 --> D4
+    D4 --> A1
+
+    B3 --> E1
+    B4 --> E2
+    D2 --> E2
+    D3 --> E2
+    E1 --> E3
+    E2 --> E3
+    O3 --> E4
+
+    H4 --> A2
+    E1 --> A1
+    E2 --> A1
+    C2 --> A1
+
+    A1 --> A2 --> A3 --> A4 --> A5
+    A1 --> A7
+    A7 --> A3
+    A4 -.verify.-> B4
+    A5 --> A6
+    A5 --> I1
+    A6 --> I1
+
+    I1 --> I2 --> I3
+    I1 --> I4
+    I3 --> I4
+
+    I1 & I3 & I4 --> R1
+    R1 --> R2
+    R3 -.override.-> R2
+    R2 --> P1 & P2
+
+    P1 --> P3 & P4
+    P2 --> P3 & P4
+
+    %% Cross-cutting infra (dotted)
+    A1 -.-> S3
+    A2 -.-> S3
+    A3 -.-> S3
+    A7 -.-> S3
+    A5 -.-> S1
+    E4 -.-> S1
+    B3 -.-> S2
+    P3 -.-> S2
+    O3 -.-> S4
+    O4 -.-> S4
+    O3 -.-> S5
+    S5 -.-> P4
+
+    %% Learning loop (post-MVP, dashed pink feedback)
+    P4 -.feedback.-> L1
+    R2 -.edits.-> L2
+    L1 -.outcomes.-> L3
+    L2 -.patterns.-> L3
+    L3 -.proposed updates.-> H1
+
+    %% ============== CLASS ASSIGNMENT ==============
+    class T1,T2,T3 trigger
+    class C1,C2,C3,C4 contract
+    class O1,O2,O3,O4 orch
+    class B1,B2,B3,B4,B5 browser
+    class D1,D2,D3,D4 state
+    class E1,E2,E3,E4 evidence
+    class H1,H2,H3,H4 heuristic
+    class A1,A2,A3,A4,A5,A6,A7 ai
+    class I1,I2,I3,I4 insight
+    class P1,P2,P3,P4 report
+    class S1,S2,S3,S4,S5 storage
+    class R1,R2,R3 review
+    class L1,L2,L3 learning
+    class F1,F2,F3 future

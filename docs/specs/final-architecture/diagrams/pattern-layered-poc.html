@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layered Architecture · POC · Neural Engineering View</title>
+<style>
+:root{
+  --bg:#f7f8fa;--panel:#fff;--text:#0f172a;--muted:#64748b;
+  --border:#e2e8f0;--accent:#2563eb;--shadow:0 8px 24px rgba(15,23,42,.08);
+  --c-control:#1F2937;--c-data:#2563EB;--c-evidence:#0D9488;
+  --c-analysis:#7C3AED;--c-report:#16A34A;--c-feedback:#F97316;
+  --c-infra:#9CA3AF;--c-safety:#DC2626;
+  --part-a:#2563EB;--part-b:#7C3AED;--part-c:#C026D3;--part-d:#16A34A;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.55}
+header{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--border);padding:12px 24px;z-index:50;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+header h1{font-size:16px;margin:0;font-weight:600}
+header p{margin:1px 0 0;color:var(--muted);font-size:12px}
+header nav{display:flex;gap:8px;align-items:center}
+header nav a,header nav button{padding:6px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);text-decoration:none;background:white;cursor:pointer;font-family:inherit}
+header nav a:hover,header nav button:hover{border-color:var(--accent);color:var(--accent)}
+.poc-banner{background:#fef3c7;border-bottom:1px solid #fde68a;padding:8px 24px;font-size:12.5px;color:#713f12;text-align:center}
+.poc-banner b{color:#78350f}
+
+main{padding:0;height:calc(100vh - 90px);overflow:hidden;display:grid;grid-template-columns:1fr 0;transition:grid-template-columns .25s}
+main.drawer-open{grid-template-columns:1fr 480px}
+#diagram-wrap{overflow:auto;background:white;position:relative}
+svg#diagram{display:block;background:white}
+
+/* SVG element styles */
+.part-band{fill:#f8fafc}
+.part-band.alt{fill:#fafbfd}
+.part-header-bar{cursor:pointer}
+.part-header-text{font-weight:700;font-size:13px;fill:#334155;dominant-baseline:middle}
+.part-scope-text{font-size:11px;fill:#64748b;dominant-baseline:middle}
+.part-divider{stroke:#cbd5e1;stroke-width:1.5;stroke-dasharray:2 4}
+
+.layer-row-bg{fill:transparent}
+.layer-label{font-size:11px;font-weight:600;fill:#334155;dominant-baseline:middle}
+.layer-sublabel{font-size:10px;fill:#94a3b8;dominant-baseline:middle}
+.layer-separator{stroke:#f1f5f9;stroke-width:1}
+
+.node-rect{stroke-width:1.5;rx:6;ry:6;cursor:pointer;transition:.15s}
+.node-rect:hover{filter:drop-shadow(0 4px 8px rgba(15,23,42,.15))}
+.node-label{font-size:11.5px;font-weight:600;fill:#0f172a;text-anchor:middle;pointer-events:none}
+.node-id{font-size:9px;fill:#64748b;text-anchor:start;pointer-events:none;font-family:'SF Mono','Consolas',monospace}
+
+.edge-path{fill:none;stroke-width:1.5;pointer-events:none}
+.edge-path.flow-control{stroke:var(--c-control)}
+.edge-path.flow-data{stroke:var(--c-data)}
+.edge-path.flow-analysis{stroke:var(--c-analysis);stroke-width:2}
+.edge-path.flow-evidence{stroke:var(--c-evidence)}
+.edge-path.flow-report{stroke:var(--c-report);stroke-width:2}
+.edge-path.flow-feedback{stroke:var(--c-feedback);stroke-dasharray:5 4}
+.edge-path.flow-infra{stroke:var(--c-infra);stroke-dasharray:2 3;opacity:.6}
+.edge-path.flow-safety{stroke:var(--c-safety)}
+
+.side-rail-bg{fill:#fff7ed;stroke:#fed7aa;stroke-width:1}
+.side-rail-header{font-size:11px;font-weight:700;fill:#9a3412;text-anchor:middle}
+.rail-section-label{font-size:10px;font-weight:600;fill:#9a3412;dominant-baseline:middle}
+
+.legend-box{fill:white;stroke:var(--border);stroke-width:1;rx:6;ry:6}
+
+/* Drawer */
+aside#drawer{background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;padding:0}
+aside#drawer.empty .placeholder{padding:80px 32px;text-align:center;color:var(--muted)}
+.panel-header{padding:18px 22px 12px;border-bottom:1px solid var(--border);position:relative}
+.panel-header .layer-pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:600;color:white;margin-bottom:6px}
+.panel-header h2{font-size:17px;margin:0;font-weight:600}
+.panel-header .subtitle{color:var(--muted);margin:5px 0 0;font-size:12.5px}
+.panel-header .meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.panel-header .meta span{font-size:10.5px;padding:2px 7px;border-radius:4px;background:#f1f5f9;color:#475569;border:1px solid var(--border);font-family:'SF Mono','Consolas',monospace}
+.panel-header .close{position:absolute;top:14px;right:16px;background:none;border:0;font-size:22px;color:var(--muted);cursor:pointer;line-height:1}
+.panel-body{padding:6px 22px 28px}
+.panel-body section{margin:16px 0}
+.panel-body section h3{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px;font-weight:600}
+.panel-body ul{margin:0;padding-left:16px}
+.panel-body li{margin:2px 0;font-size:13px}
+.panel-body .why{background:#fef9c3;border-left:3px solid #ca8a04;padding:9px 12px;border-radius:5px;font-size:12.5px;color:#713f12}
+.panel-body .example{background:#eff6ff;border-left:3px solid var(--accent);padding:9px 12px;border-radius:5px;font-size:12.5px;color:#1e3a8a}
+.deps{display:flex;flex-direction:column;gap:5px}
+.dep{padding:7px 10px;background:#f8fafc;border:1px solid var(--border);border-radius:5px;font-size:12px}
+.dep .dep-name{font-weight:600}
+.dep .dep-type{display:inline-block;font-size:9.5px;padding:1px 5px;border-radius:3px;background:#e2e8f0;color:#475569;margin-right:5px;text-transform:uppercase;font-family:'SF Mono','Consolas',monospace}
+.dep .dep-reason{color:var(--muted);font-size:11.5px;margin-top:2px}
+.internal{padding:12px;background:#f8fafc;border-radius:6px;border:1px solid var(--border)}
+.internal-summary{font-size:12px;color:#334155;margin-bottom:8px}
+.internal-components{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.internal-component{display:flex;gap:10px;padding:5px 9px;background:white;border:1px solid var(--border);border-radius:4px}
+.internal-component .ic-name{font-weight:600;font-size:11.5px;flex-shrink:0;min-width:130px}
+.internal-component .ic-role{color:var(--muted);font-size:11.5px}
+.internal-flow{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:#475569;font-family:'SF Mono','Consolas',monospace}
+.internal-flow .if-step{padding:2px 7px;background:white;border-left:2px solid var(--accent);border-radius:2px}
+.connected{display:flex;flex-wrap:wrap;gap:5px}
+.connected button{padding:3px 9px;border-radius:5px;background:#f1f5f9;border:1px solid var(--border);font-size:11.5px;cursor:pointer;color:var(--text)}
+.connected button:hover{background:#e2e8f0}
+.source-files{display:flex;flex-direction:column;gap:3px}
+.source-files code{background:#f1f5f9;padding:3px 7px;border-radius:3px;font-size:11px;color:#334155;word-break:break-all}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Layered Architecture — POC</h1>
+    <p>16-node subset · custom SVG · strict layer banding · orthogonal edges · side rail for cross-cutting</p>
+  </div>
+  <nav>
+    <a href="pattern-comparison.html">← All patterns</a>
+    <a href="architecture-business.html">Business view</a>
+  </nav>
+</header>
+
+<div class="poc-banner">
+  <b>POC for sign-off.</b> If this layout pattern is right, I'll replicate it for all ~145 nodes — one layer per turn. Click any node to confirm the drawer behavior is unchanged.
+</div>
+
+<main id="main">
+  <div id="diagram-wrap">
+    <svg id="diagram" width="1480" height="780" viewBox="0 0 1480 780"></svg>
+  </div>
+  <aside id="drawer" class="empty">
+    <div class="placeholder">
+      <div style="font-weight:500;color:#0f172a">Click any node</div>
+      <div style="font-size:12.5px;margin-top:4px">Drawer schema is identical to the business view.</div>
+    </div>
+  </aside>
+</main>
+
+<script>
+/* =========================================================
+   DATA — full drawer data for the 16-node subset
+   (verbatim from architecture-business.html)
+========================================================= */
+const NODES = [
+  // ---- PART A — Agent Internals ----
+  // Layer 1 — Trigger & Discovery
+  {id:"T1",label:"Trigger Gateway",part:"A",partLabel:"Agent Internals",layer:1,layerLabel:"Trigger & Discovery",
+    purpose:"Single entry point that normalizes 5 channels (CLI, MCP read, MCP write, Dashboard, Scheduler) into one AuditRequest.",
+    what_happens:["Channel adapter receives the request","Auth Resolver verifies identity (Clerk)","Validator checks shape with Zod","Idempotency check (24h window)","Rate limiter enforces per-client concurrency","Reproducibility snapshot is created BEFORE workflow start","Temporal AuditWorkflow is started"],
+    inputs:["URL list","Business type","Audit template","Optional intake (KPI, constraints)"],
+    outputs:["Validated AuditRequest","Reproducibility snapshot id","Temporal workflow id"],
+    dependencies:[
+      {type:"service",name:"Clerk Auth",reason:"Resolves consultant/client identity"},
+      {type:"service",name:"Temporal",reason:"Starts the durable AuditWorkflow"},
+      {type:"data",name:"Reproducibility Snapshot Builder",reason:"Pins model + prompt + heuristic versions"}
+    ],
+    internal_architecture:{
+      summary:"5 channel adapters + auth + validate + rate limit + snapshot, then start Temporal.",
+      components:[
+        {name:"CLI Adapter",role:"JSON via stdin"},
+        {name:"MCP Read Adapter",role:"Read-only audit retrieval"},
+        {name:"MCP Write Adapter",role:"Phase 11+ write actions"},
+        {name:"Dashboard Adapter",role:"Clerk session, Phase 6+"},
+        {name:"Scheduler Adapter",role:"Temporal Schedules, Phase 13"},
+        {name:"Auth Resolver",role:"Verify identity via Clerk"},
+        {name:"Validator",role:"Zod schema enforcement"},
+        {name:"Idempotency Check",role:"24h dedupe window"},
+        {name:"Rate Limiter",role:"Per-client concurrency = 1 default"},
+        {name:"Webhook Delivery + DLQ",role:"Outbound with exponential backoff"}
+      ],
+      internal_flow:["Channel → Auth → Validate → Idempotency → Rate Limit","→ Reproducibility Snapshot (pinned)","→ Temporal AuditWorkflow.start()","→ Webhook ack to caller"]
+    },
+    why_matters:"One disciplined door for every audit. Predictable cost, reproducible results, no double-runs.",
+    example:"A consultant runs `pnpm cro:audit --urls site.com --business-type ecommerce`. Gateway validates, pins versions, starts the durable workflow.",
+    connected_to:["O2"],
+    source_files:["docs/specs/final-architecture/18-trigger-gateway.md","docs/specs/final-architecture/25-reproducibility.md"]},
+
+  {id:"T2",label:"Discovery (7 stages)",part:"A",partLabel:"Agent Internals",layer:1,layerLabel:"Trigger & Discovery",
+    purpose:"Template-first page discovery — clusters URLs by structural fingerprint, classifies templates, picks representatives.",
+    what_happens:["Acquire seeds (sitemap or shallow crawl, 500 URL cap)","Shallow fetch HTML for each","Apply exclusion filter","Cluster by structural fingerprint (HDBSCAN)","Classify templates (1 batched LLM call)","Pick representative pages","Synthesize workflows (funnel paths)"],
+    inputs:["Seed URL","AuditRequest.scope.templates","ClientProfile"],
+    outputs:["DiscoveryResult: templates[], key_pages[], workflows[], work_queue[]"],
+    dependencies:[
+      {type:"service",name:"Shallow Fetch",reason:"undici/node-fetch, respects robots.txt, 5s timeout"},
+      {type:"service",name:"HDBSCAN clusterer",reason:"Deterministic, no k pre-specified"},
+      {type:"service",name:"LLM classifier",reason:"1 batched call, <0.5 confidence → 'other'"}
+    ],
+    internal_architecture:{
+      summary:"7-stage deterministic + 1 LLM call. ~$0.05, 5 min hard cap.",
+      components:[
+        {name:"Stage 1 · Seed Acquisition",role:"Sitemap parse or seed list"},
+        {name:"Stage 2 · Shallow Fetch",role:"Fast HTML pull, robots-aware"},
+        {name:"Stage 3 · Exclusion Filter",role:"Drop login/admin/cart-API"},
+        {name:"Stage 4 · Template Clustering",role:"HDBSCAN on structural fingerprint"},
+        {name:"Stage 5 · Template Classification",role:"1 LLM batched call"},
+        {name:"Stage 6 · Representative Selection",role:"~1 page per template"},
+        {name:"Stage 7 · Workflow Synthesis",role:"Funnel path detection"}
+      ],
+      internal_flow:["Seeds → Fetch → Exclude → Cluster → Classify → Representatives → Workflows","→ work_queue[] feeds AuditGraph"]
+    },
+    why_matters:"Replaces blind crawling. Bounds cost, surfaces only the pages that matter.",
+    example:"site.com → home + 3 PLP + 5 PDP + cart + checkout → 6 templates → 10 representatives + 1 funnel.",
+    connected_to:["O2"],
+    source_files:["docs/specs/final-architecture/19-discovery-and-templates.md"]},
+
+  // Layer 2 — Orchestration
+  {id:"O2",label:"AuditGraph Outer",part:"A",partLabel:"Agent Internals",layer:2,layerLabel:"Orchestration",
+    purpose:"LangGraph outer graph: audit_setup → page_router → cross_page_analyze → audit_complete.",
+    what_happens:["audit_setup builds page queue","page_router dispatches each page","cross_page_analyze emits patterns/consistency/funnel findings","audit_complete rolls up + summary + plan"],
+    inputs:["AuditRequest + ContextProfile + DiscoveryResult"],
+    outputs:["Findings, ExecutiveSummary, ActionPlan"],
+    dependencies:[
+      {type:"service",name:"BrowseGraph subgraph",reason:"Per-page browse"},
+      {type:"service",name:"AnalyzeGraph subgraph",reason:"Per-page analysis"},
+      {type:"service",name:"WorkflowOrchestrator",reason:"Funnel traversal (Phase 9)"}
+    ],
+    internal_architecture:{
+      summary:"4 outer nodes + 3 routing functions. Wraps two inner subgraphs (browse/analyze). Hard cap 50 pages/audit.",
+      components:[
+        {name:"audit_setup",role:"Build queue, init AuditState"},
+        {name:"page_router",role:"Dispatch to subgraphs per page"},
+        {name:"cross_page_analyze",role:"v2.2 NEW pattern + consistency + funnel"},
+        {name:"audit_complete",role:"Rollups + ExecSummary + ActionPlan"},
+        {name:"routePageRouter",role:"Choose next page or proceed"},
+        {name:"routeAfterBrowse",role:"Continue or skip page"},
+        {name:"routeAfterAnalyze",role:"Continue or escalate"}
+      ],
+      internal_flow:["audit_setup → page_router → (BrowseGraph + AnalyzeGraph) → page_router (next)","→ cross_page_analyze → audit_complete"]
+    },
+    why_matters:"One predictable graph for every audit. Cross-page findings happen in their own dedicated step.",
+    example:"6-page audit: setup → page 1..6 → cross-page → complete.",
+    connected_to:["O3","O4","S4"],
+    source_files:["docs/specs/final-architecture/04-orchestration.md"]},
+
+  {id:"O3",label:"BrowseGraph",part:"A",partLabel:"Agent Internals",layer:2,layerLabel:"Orchestration",
+    purpose:"Per-page browse via 10-node LangGraph. MVP runs 5 nodes; full graph adds memory + safety_gate + reflect + HITL.",
+    what_happens:["MVP path: perceive → reason → act → verify → output","Full path adds: classify_task, load_memory, safety_gate, reflect, hitl"],
+    inputs:["URL","Browse mode (A/B/C)"],
+    outputs:["PageStateModel + screenshots + verified actions"],
+    dependencies:[
+      {type:"service",name:"MCP Tool Server",reason:"28 tools available"},
+      {type:"service",name:"Verification Engine",reason:"Confirms each action effect"},
+      {type:"service",name:"Safety Controls",reason:"ActionClassifier on every call"}
+    ],
+    internal_architecture:{
+      summary:"10 nodes, 8 internal layers, 3 modes. MVP defaults to Mode B (Guided Agent, ~$0.10/step).",
+      components:[
+        {name:"perceive",role:"Capture PageStateModel (MVP)"},
+        {name:"reason",role:"LLM picks next action (MVP)"},
+        {name:"act",role:"Execute MCP tool call (MVP)"},
+        {name:"verify",role:"Confirm via 1 of 9 strategies (MVP)"},
+        {name:"output",role:"Emit result + cleanup (MVP)"},
+        {name:"classify_task / load_memory / safety_gate / reflect / hitl",role:"Deferred extensions"}
+      ],
+      internal_flow:["perceive → reason → act → verify → output","Modes: A Deterministic | B Guided (MVP default) | C Computer-Use"]
+    },
+    why_matters:"Same 5-node MVP graph evolves to 10-node full graph without rewrite.",
+    example:"Loads /checkout in Mode B; perceive → reason picks browser_click on CTA → act → verify (element_appears) → output.",
+    connected_to:["B1"],
+    source_files:["docs/specs/final-architecture/06-browse-mode.md"]},
+
+  {id:"O4",label:"AnalyzeGraph",part:"A",partLabel:"Agent Internals",layer:2,layerLabel:"Orchestration",
+    purpose:"Per-page 5-step pipeline: deep_perceive → evaluate → self_critique → ground → annotate_and_store.",
+    what_happens:["DeepPerceive enriches PageStateModel for analysis","Evaluate runs heuristic shortlist via LLM (temp=0)","Self-Critique (separate persona, ~30% FP reduction)","Ground runs 9 deterministic GR rules","Annotate attaches evidence + Store persists"],
+    inputs:["PageStateModel","Filtered heuristics","ContextProfile","Persona"],
+    outputs:["Grounded findings","RejectedFindings (silent)"],
+    dependencies:[
+      {type:"service",name:"LLM Adapter",reason:"Anthropic Claude Sonnet 4 primary"},
+      {type:"service",name:"TemperatureGuard",reason:"R10 enforced — temp=0"},
+      {type:"service",name:"Pre-call Budget Gate",reason:"Skip if budget tight"}
+    ],
+    internal_architecture:{
+      summary:"5 nodes + AnalysisState + CostTracker + PerceptionQualityGate + PageSignals emission.",
+      components:[
+        {name:"DeepPerceive",role:"Persona-aware re-read"},
+        {name:"Evaluate",role:"LLM applies each heuristic (temp=0)"},
+        {name:"SelfCritique",role:"Separate persona LLM"},
+        {name:"Ground",role:"9 GR rules"},
+        {name:"Annotate + Store",role:"Sharp pin overlay + DB persist"}
+      ],
+      internal_flow:["DeepPerceive → Evaluate → SelfCritique → Ground → Annotate+Store"]
+    },
+    why_matters:"Three-layer hallucination filter (LLM → critique → grounding) yields findings that hold up in client meetings.",
+    example:"Evaluate flags 'CTA below fold mobile' → SelfCritique keeps it → Ground confirms via GR-002 → Annotate adds boxed screenshot.",
+    connected_to:["H1","A5"],
+    source_files:["docs/specs/final-architecture/07-analyze-mode.md"]},
+
+  // Layer 3 — Tools
+  {id:"B1",label:"MCP Tools (28)",part:"A",partLabel:"Agent Internals",layer:3,layerLabel:"Tools & Knowledge",
+    purpose:"Curated tool catalog: 23 browse + 5 analysis. Every call is safety-classified before execution.",
+    what_happens:["Tool call from LLM agent","ActionClassifier assigns class (safe/caution/sensitive/blocked)","DomainPolicy + NavigationGuard cross-check","Execute via Playwright","Verify outcome"],
+    inputs:["Tool call (typed via Zod)"],
+    outputs:["Typed tool result"],
+    dependencies:[
+      {type:"service",name:"Playwright",reason:"Browser engine"},
+      {type:"service",name:"ActionClassifier",reason:"Deterministic safety classification"},
+      {type:"service",name:"VerifyEngine",reason:"Confirms action effect"}
+    ],
+    internal_architecture:{
+      summary:"4 nav + 3 perception + 8 interaction + 1 tab + 2 data + 2 discovery + 2 control + 1 HITL + 1 restricted (browse) + 5 analysis tools.",
+      components:[
+        {name:"Navigation (4)",role:"navigate, go_back, go_forward, reload"},
+        {name:"Perception (3)",role:"get_state, screenshot, get_metadata"},
+        {name:"Interaction (8)",role:"click, click_coords, type, scroll, select, hover, press_key, upload"},
+        {name:"Data + Discovery + Control (6)",role:"extract, download, find_by_text, get_network, wait_for, agent_complete"},
+        {name:"HITL + Restricted (2)",role:"agent_request_human (deferred), browser_evaluate (sandboxed)"},
+        {name:"Analysis (5)",role:"page_get_element_info, page_get_performance, page_screenshot_full, page_annotate_screenshot, page_analyze"}
+      ],
+      internal_flow:["Tool call → ActionClassifier → DomainPolicy → NavigationGuard → execute → VerifyEngine"]
+    },
+    why_matters:"Agent's whole power surface in one place. Safety classification is graph-level, not LLM-discretionary.",
+    example:"`browser_click` on PDP CTA: classified 'caution' → policy OK → execute via ghost-cursor → verify element_appears.",
+    connected_to:[],
+    source_files:["docs/specs/final-architecture/08-tool-manifest.md"]},
+
+  {id:"H1",label:"Heuristic KB (100)",part:"A",partLabel:"Agent Internals",layer:3,layerLabel:"Tools & Knowledge",
+    purpose:"Private 100-heuristic knowledge base. Encrypted at rest. Filtered to ~30 per page.",
+    what_happens:["Load encrypted heuristics at startup","Validate against schema","Apply overlay chain (base < brand < learned < client)","Two-stage filter delivers ~15-30 per page"],
+    inputs:["Edits by team","Brand overlays","Learned adjustments (Phase 12+)"],
+    outputs:["filtered_heuristics[] (15-30/page)"],
+    dependencies:[
+      {type:"service",name:"DecryptionAdapter",reason:"AES-256-GCM at rest"},
+      {type:"data",name:"Constitution Rule 9",reason:"Heuristics never exposed to client"}
+    ],
+    internal_architecture:{
+      summary:"100 heuristics: 50 Baymard + 35 Nielsen + 15 Cialdini. Tier ratio 42/42/16.",
+      components:[
+        {name:"Tier 1",role:"42% — Visual >75% reliability"},
+        {name:"Tier 2",role:"42% — Medium ~60%"},
+        {name:"Tier 3",role:"16% — Emotional <40%"},
+        {name:"Two-Stage Filter",role:"Stage 1 business → 60-70 / Stage 2 page → 15-20 / cap 30"},
+        {name:"Overlay System",role:"base < brand < learned < client (client wins)"},
+        {name:"4-Phase Evolution",role:"JSON → tagged JSON → pgvector → learned"}
+      ],
+      internal_flow:["Encrypted JSON → Decrypt → Validate → apply overlays → page-aware filter → ~30 heuristics"]
+    },
+    why_matters:"Encodes consultancy IP. The product gets smarter with use.",
+    example:"PDP audit: 100 → 65 (filter by 'ecommerce') → 22 (filter by 'PDP') → cap 22.",
+    connected_to:[],
+    source_files:["docs/specs/final-architecture/09-heuristic-kb.md"]},
+
+  // Layer 4 — Findings
+  {id:"A5",label:"Annotate + Store",part:"A",partLabel:"Agent Internals",layer:4,layerLabel:"Findings & Output",
+    purpose:"Bundle evidence + persist finding. Atomic + scope hierarchy.",
+    what_happens:["Pull screenshot crop","Pull DOM snippet","Run page_annotate_screenshot","Persist finding row + evidence row + screenshot ref","R6 IP-protection check"],
+    inputs:["GroundedFinding","Evidence library"],
+    outputs:["Persisted finding (atomic scope)"],
+    dependencies:[
+      {type:"service",name:"Sharp annotator",reason:"page_annotate_screenshot"},
+      {type:"data",name:"§13 findings table",reason:"DB persist"}
+    ],
+    internal_architecture:{
+      summary:"Finding scope hierarchy: atomic → page → template → workflow → audit.",
+      components:[
+        {name:"Annotate sub-step",role:"Sharp pin overlay"},
+        {name:"Store sub-step",role:"INSERT findings + evidence + screenshot ref"},
+        {name:"R6 LangSmith filter",role:"Heuristic body never in trace"}
+      ],
+      internal_flow:["finding → screenshot crop + DOM snippet → annotate → DB insert (atomic scope)"]
+    },
+    why_matters:"Every recommendation comes with a paper trail.",
+    example:"Finding stored with annotated mobile screenshot + button HTML + heuristic_id reference.",
+    connected_to:["I1","S1","S2"],
+    source_files:["docs/specs/final-architecture/07-analyze-mode.md","docs/specs/final-architecture/23-findings-engine-extended.md"]},
+
+  {id:"I1",label:"Findings Engine",part:"A",partLabel:"Agent Internals",layer:4,layerLabel:"Findings & Output",
+    purpose:"Final issue list. 5 scopes: atomic, page, template, workflow, audit.",
+    what_happens:["Aggregate findings","Apply Suppression (confidence <0.3, exact dupes, empty evidence)","Apply Deduplication","Promote to higher scope where applicable"],
+    inputs:["Annotated findings","Patterns"],
+    outputs:["ScoredFinding[]"],
+    dependencies:[{type:"service",name:"ScoringPipeline",reason:"Deterministic 4D scoring"}],
+    internal_architecture:{
+      summary:"§23 Findings Engine Extended. Deterministic 4D scoring.",
+      components:[
+        {name:"Atomic / Page / Template / Workflow / Audit scope",role:"Hierarchy"},
+        {name:"Suppression",role:"confidence <0.3 / exact dupes / empty evidence"},
+        {name:"Deduplication",role:"State / page / semantic"},
+        {name:"4D Scoring",role:"priority = severity×2 + impact×1.5 + confidence − effort×0.5"}
+      ],
+      internal_flow:["findings → suppress → dedupe → score → promote scope → ScoredFinding[]"]
+    },
+    why_matters:"Single source for everything wrong. Dedup avoids consultant fatigue.",
+    example:"3 atomic findings on similar buttons across 5 PDPs → 1 template-scope finding.",
+    connected_to:["I3"],
+    source_files:["docs/specs/final-architecture/23-findings-engine-extended.md"]},
+
+  {id:"I3",label:"ActionPlan (4 quadrants)",part:"A",partLabel:"Agent Internals",layer:4,layerLabel:"Findings & Output",
+    purpose:"Deterministic prioritization into 4 quadrants. Bucketing is NOT LLM.",
+    what_happens:["For each finding: lookup business_impact","Lookup effort_category","Bucket by (impact, effort)"],
+    inputs:["ScoredFinding[]"],
+    outputs:["ActionPlan with 4 quadrants"],
+    dependencies:[
+      {type:"data",name:"impact_matrix",reason:"page_type × funnel_position lookup"},
+      {type:"data",name:"effort_map",reason:"Effort category mapping"}
+    ],
+    internal_architecture:{
+      summary:"Deterministic. Versioned scoring config — NOT in AuditState.",
+      components:[
+        {name:"Quick Wins",role:"high impact + low effort"},
+        {name:"Strategic",role:"high impact + high effort"},
+        {name:"Incremental",role:"low impact + low effort"},
+        {name:"Deprioritized",role:"low impact + high effort"}
+      ],
+      internal_flow:["finding → impact lookup → effort lookup → quadrant assignment"]
+    },
+    why_matters:"Clients leave with a roadmap, not a wishlist.",
+    example:"Trust-badge fix: high impact (PDP × decision) + low effort → Quick Win.",
+    connected_to:[],
+    source_files:["docs/specs/final-architecture/35-report-generation.md"]},
+
+  // ---- PART D — Cross-cutting (rendered in side rail) ----
+  {id:"SC1",label:"Safety Controls (13)",part:"D",partLabel:"Cross-Cutting",layer:15,layerLabel:"Safety & Cost",rail:true,railSection:"Safety / Cost",
+    purpose:"§11 — 13 deterministic controls protecting browser actions and audit safety.",
+    what_happens:["ActionClassifier on every tool call","DomainPolicy + NavigationGuard cross-check","RobotsTxtValidator + FormSubmissionGuard","CircuitBreaker per domain","Rate limiters at 3 layers"],
+    inputs:["Every browser action"],
+    outputs:["Allow / log / block / terminate decision"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"13 controls — graph-level, NOT LLM-discretionary. Hard-block payment forms.",
+      components:[
+        {name:"ActionClassifier",role:"safe / caution / sensitive / blocked"},
+        {name:"DomainPolicy",role:"denylist / allowlist / default"},
+        {name:"NavigationGuard",role:"Pre + post-recovery (go_back if JS-triggered)"},
+        {name:"RobotsTxtValidator + FormSubmissionGuard",role:"Hard-block payment/purchase, no override"},
+        {name:"CircuitBreaker",role:"3 fails / 1hr block per domain"},
+        {name:"3 Rate Limiters",role:"Browse, Analysis, LLM"},
+        {name:"BudgetEnforcer + LLMCallLogger + PreCallBudgetGate",role:"Cost runtime"},
+        {name:"Failover",role:"Claude → GPT-4o per call"}
+      ],
+      internal_flow:["tool call → ActionClassifier → DomainPolicy → NavigationGuard → execute or block"]
+    },
+    why_matters:"Agent can never accidentally submit a payment form. Audit costs are bounded.",
+    example:"Click on 'Submit Payment' → FormSubmissionGuard hard-block → audit_event 'safety_blocked'.",
+    connected_to:["B1"],
+    source_files:["docs/specs/final-architecture/11-safety-cost.md"]},
+
+  {id:"SC2",label:"Cost Gates (18)",part:"D",partLabel:"Cross-Cutting",layer:15,layerLabel:"Safety & Cost",rail:true,railSection:"Safety / Cost",
+    purpose:"§26 — 18 distinct cost gates from pre-flight estimation through runtime gates to kill-switch.",
+    what_happens:["Pre-flight estimate per item","Runtime gates before each LLM call","Post-call tracker","Kill-switch via Temporal","Early-stop detector"],
+    inputs:["Cost estimates + LLM call records"],
+    outputs:["proceed / skip / abort decision"],
+    dependencies:[{type:"service",name:"Temporal",reason:"Kill-switch cancellation"}],
+    internal_architecture:{
+      summary:"5 budget gates + 9 runtime gates + post-call tracker + kill-switch + early-stop.",
+      components:[
+        {name:"Pre-flight Estimator",role:"Estimate browse + exploration + analysis"},
+        {name:"5 Budget Gates",role:"audit, discovery, page, exploration, workflow"},
+        {name:"9 Runtime Gates",role:"dequeue, browse, LLM, explore, evaluate, critique, workflow"},
+        {name:"Post-Call Cost Tracker",role:"Update running totals"},
+        {name:"Kill-Switch",role:"haltClient / haltGlobal / haltAudit"},
+        {name:"Early-Stop Detector",role:"Budget <10% + ≥70% templates done"}
+      ],
+      internal_flow:["estimate → 5 budget gates → 9 runtime gates → call → tracker → kill-switch / early-stop"]
+    },
+    why_matters:"Per-item budgets are CAPS not allocations. Predictable cost per audit.",
+    example:"Page #5 estimate $2.40 > remaining $1.80 → skip page, mark 'budget_exceeded'.",
+    connected_to:["O4"],
+    source_files:["docs/specs/final-architecture/26-cost-and-guardrails.md"]},
+
+  {id:"SC4",label:"Temporal Durable",part:"D",partLabel:"Cross-Cutting",layer:15,layerLabel:"Safety & Cost",rail:true,railSection:"Durable",
+    purpose:"Durable outer orchestration. AuditWorkflow + 9 activities. LangGraph nested as inner subgraphs.",
+    what_happens:["Temporal owns audit lifecycle","9 activities wrap LangGraph + DB ops","Heartbeat 10s","continueAsNew at 40K events / 40MB"],
+    inputs:["AuditRequest"],
+    outputs:["AuditResult"],
+    dependencies:[{type:"service",name:"Temporal server",reason:"Phase 6 deployment"}],
+    internal_architecture:{
+      summary:"Two task queues: audit-orchestration + audit-execution. Activity retry = fresh session.",
+      components:[
+        {name:"AuditWorkflow",role:"Temporal workflow class"},
+        {name:"resolveClient + loadReproducibilitySnapshot",role:"Bootstrap activities"},
+        {name:"runDiscovery + runPageOrchestrator + runWorkflowOrchestrator",role:"Execution activities"},
+        {name:"runRollupAndScoring + runCrossPageConsistency",role:"Aggregation activities"},
+        {name:"applyReviewGate + finalizeAudit",role:"Finalization activities"}
+      ],
+      internal_flow:["AuditWorkflow.start() → 9 activities sequenced","each activity has timeout + heartbeat","retry → fresh session"]
+    },
+    why_matters:"Crash-resistant audits. No bespoke recovery code.",
+    example:"Worker dies mid-page → Temporal re-runs runPageOrchestrator from scratch on new worker.",
+    connected_to:["O2"],
+    source_files:["docs/specs/final-architecture/27-durable-orchestration.md"]},
+
+  {id:"S1",label:"Internal / Published",part:"D",partLabel:"Cross-Cutting",layer:11,layerLabel:"Storage & Observability",rail:true,railSection:"Storage",
+    purpose:"§24 Two-Store Pattern. Internal findings table for consultants; published_findings VIEW for clients.",
+    what_happens:["Findings written to internal table","Consultant queries with app.access_mode='internal'","Client queries with app.access_mode='published_only'"],
+    inputs:["Findings, edits, rollups"],
+    outputs:["Queryable rows (RLS + access-mode gated)"],
+    dependencies:[
+      {type:"service",name:"Postgres + RLS",reason:"Per-client isolation"},
+      {type:"data",name:"AccessModeMiddleware",reason:"Per-transaction SET LOCAL"}
+    ],
+    internal_architecture:{
+      summary:"40 tables total. View for client; materialized in Phase 10 if p95 latency >500ms.",
+      components:[
+        {name:"§13.1 base (12 tables)",role:"clients, audit_runs, findings, finding_edits, ..."},
+        {name:"§13.6 extensions (15 tables)",role:"templates, page_states, evidence, hypotheses, ..."},
+        {name:"§13.7 v2.2 (3 + 1 view)",role:"llm_call_log, audit_events, heuristic_health_metrics, published_findings view"},
+        {name:"AccessModeMiddleware",role:"SET LOCAL per transaction; published_only fail-secure"},
+        {name:"Heuristic content rule",role:"NEVER stored in findings — only heuristic_id"}
+      ],
+      internal_flow:["write: findings table → publish_status update → published view auto-filters","read: middleware sets access_mode → query","RLS: app.client_id session var → filter rows"]
+    },
+    why_matters:"Heuristic IP protected. Per-client isolation. No accidental client exposure.",
+    example:"Internal: 47 findings. Client view: 31 published findings (no heuristic_id, no full evidence).",
+    connected_to:[],
+    source_files:["docs/specs/final-architecture/13-data-layer.md","docs/specs/final-architecture/24-two-store-pattern.md"]},
+
+  {id:"S2",label:"R2 Storage",part:"D",partLabel:"Cross-Cutting",layer:11,layerLabel:"Storage & Observability",rail:true,railSection:"Storage",
+    purpose:"Stores screenshots, PDFs, raw artifacts.",
+    what_happens:["Save with audit-scoped key","Return signed URL"],
+    inputs:["Screenshots, PDFs"],
+    outputs:["File links"],
+    dependencies:[{type:"service",name:"Cloudflare R2",reason:"Blob storage; LocalDisk fallback dev"}],
+    internal_architecture:{
+      summary:"Adapter pattern (StorageAdapter interface).",
+      components:[
+        {name:"R2Adapter",role:"Production"},
+        {name:"LocalDiskStorage",role:"Dev fallback"},
+        {name:"Signed URL generator",role:"Time-limited access"}
+      ],
+      internal_flow:["upload → /audits/{audit_run_id}/{kind}/{key} → signed URL"]
+    },
+    why_matters:"Cheap scalable storage. PDFs and screenshots out of Postgres.",
+    example:"/audits/4321/state_0/desktop.png · 240KB.",
+    connected_to:[],
+    source_files:["docs/specs/final-architecture/13-data-layer.md"]},
+
+  {id:"S4",label:"Audit Events + Pino",part:"D",partLabel:"Cross-Cutting",layer:11,layerLabel:"Storage & Observability",rail:true,railSection:"Observability",
+    purpose:"3-layer observability. Pino logs, audit_events (22 types), metrics + alerts (Phase 9).",
+    what_happens:["Pino structured JSON logs (no console.log)","audit_events table append (22 named types)","metrics derived (Phase 9)","7 alerting rules"],
+    inputs:["Log calls + state transitions"],
+    outputs:["Searchable logs + events + alerts"],
+    dependencies:[{type:"service",name:"LangSmith",reason:"trace_id correlation"}],
+    internal_architecture:{
+      summary:"22 AuditEventType. 7 alerts (audit stuck, grounding high, heuristic health low, cost overrun, llm errors, failure cluster).",
+      components:[
+        {name:"Pino logger",role:"JSON, audit_run_id + page_url + node_name + heuristic_id + trace_id"},
+        {name:"audit_events table",role:"Append-only, 90d retention"},
+        {name:"22 AuditEventTypes",role:"audit_started, finding_produced, grounding_rejected, ..."},
+        {name:"HeuristicHealthMetrics",role:"Materialized view; flags health_score <0.3"},
+        {name:"7 alert rules",role:"Debounced per audit_run_id"}
+      ],
+      internal_flow:["log/event → Pino + audit_events → metrics view → alerts (debounced) → ops dashboard"]
+    },
+    why_matters:"Bugs diagnosed in minutes. Heuristic health auto-flags rewrites.",
+    example:"audit_event 'grounding_rejected' for HEU-09 across 18 audits → health_score 0.22 → flagged.",
+    connected_to:[],
+    source_files:["docs/specs/final-architecture/34-observability.md"]}
+];
+
+const EDGES = [
+  {from:"T1",to:"O2",flow:"control"},
+  {from:"T2",to:"O2",flow:"data"},
+  {from:"O2",to:"O3",flow:"control"},
+  {from:"O2",to:"O4",flow:"control"},
+  {from:"O3",to:"B1",flow:"control"},
+  {from:"O4",to:"H1",flow:"data"},
+  {from:"O4",to:"A5",flow:"analysis"},
+  {from:"A5",to:"I1",flow:"analysis"},
+  {from:"I1",to:"I3",flow:"analysis"},
+  // Cross to side rail
+  {from:"A5",to:"S1",flow:"infra"},
+  {from:"A5",to:"S2",flow:"infra"},
+  {from:"O2",to:"S4",flow:"infra"},
+  // Side rail crossing back into main
+  {from:"SC1",to:"B1",flow:"safety"},
+  {from:"SC2",to:"O4",flow:"safety"},
+  {from:"SC4",to:"O2",flow:"safety"}
+];
+
+const PART_META = {
+  A:{label:"Part A — Agent Internals",scope:"§01–§17 · Phases 1–8 (MVP)",color:"#2563EB",alt:false},
+  B:{label:"Part B — Platform Extensions",scope:"§18–§30 · Phases 9–14",color:"#7C3AED",alt:true},
+  C:{label:"Part C — Agent Composition",scope:"§33, §33a · Phases 10–13",color:"#C026D3",alt:false},
+  D:{label:"Part D — Cross-Cutting",scope:"§34–§37 · Phases 4b, 12–16",color:"#16A34A",alt:true}
+};
+
+/* =========================================================
+   LAYOUT — strict layered banding with explicit gutters
+========================================================= */
+const LAYOUT = {
+  // canvas
+  canvasW:1480,
+  // left margin: layer label column
+  layerLabelW:170, layerLabelPad:14,
+  // main area
+  mainStartX:182, mainEndX:1140,
+  // node sizing
+  nodeW:158, nodeH:50, nodeGapX:24,
+  // layer band sizing — JUST enough for nodes + 10px padding
+  layerH:70,
+  // explicit gutter row between layers — for orthogonal edge routing only
+  gutterH:28,
+  // part band sizing
+  partHeaderH:36, partGap:18,
+  // side rail
+  railStartX:1180, railEndX:1460, railNodeW:130, railNodeH:50,
+  railSectionLabelH:18, railSectionGapY:16,
+  // bridge channel — vertical lane between main canvas and side rail (edges queue here)
+  bridgeX:1158,
+  // top/bottom padding
+  topPad:14,
+  // fan-out spacing on node edges
+  fanSpacing:14
+};
+
+/* =========================================================
+   LAYOUT COMPUTATION
+   Layout grammar:  partHeader → [layer + gutter] × N → bottomGutter
+   Every gutter is an explicit y-band reserved for edge routing.
+   Nodes are NEVER placed in gutter rows.
+========================================================= */
+function computePositions(){
+  const L=LAYOUT;
+  const positions={};
+  const gutters={};   // gutters[`above_${layerKey}`] = y_mid; gutters[`below_${layerKey}`] = y_mid
+
+  // ---- Main canvas: Part A ----
+  const partANodes = NODES.filter(n=>!n.rail);
+  const partALayerOrder = [];
+  partANodes.forEach(n=>{ if(!partALayerOrder.find(l=>l.layer===n.layer)) partALayerOrder.push({layer:n.layer,layerLabel:n.layerLabel,part:n.part}); });
+
+  let y = L.topPad;
+  positions.__partAHeader = {x:8,y:y,w:L.canvasW-16,h:L.partHeaderH};
+  y += L.partHeaderH + 8;
+
+  // Top gutter for Part A (edges entering Layer 1 from above, e.g. rail→Layer1)
+  positions[`__gutter_top_partA`] = {y:y, h:L.gutterH, mid:y + L.gutterH/2};
+  y += L.gutterH;
+
+  partALayerOrder.forEach((layerInfo, idx)=>{
+    const layerY = y;
+    const layerKey = n_layerKey(layerInfo);
+    const nodesInLayer = partANodes.filter(n=>n.layer===layerInfo.layer);
+    const totalW = nodesInLayer.length * L.nodeW + (nodesInLayer.length-1) * L.nodeGapX;
+    const startX = L.mainStartX + Math.max(0,((L.mainEndX - L.mainStartX) - totalW) / 2 - 60);
+    nodesInLayer.forEach((n,i)=>{
+      positions[n.id]={
+        x: startX + i*(L.nodeW + L.nodeGapX),
+        y: layerY + (L.layerH - L.nodeH)/2,
+        w: L.nodeW, h: L.nodeH,
+        layerY: layerY, layerH: L.layerH,
+        layerLabel: n.layerLabel,
+        layerKey: layerKey,
+        layerColumn: i,
+        layerSize: nodesInLayer.length
+      };
+    });
+    positions[`__layer_${layerKey}`] = {y:layerY,h:L.layerH,label:layerInfo.layerLabel,layerNum:layerInfo.layer};
+    y += L.layerH;
+
+    // Gutter below this layer (also "above next layer")
+    const gutterY = y;
+    positions[`__gutter_below_${layerKey}`] = {y:gutterY, h:L.gutterH, mid:gutterY + L.gutterH/2};
+    y += L.gutterH;
+  });
+
+  positions.__partAEnd = y;
+
+  // ---- Side rail ----
+  const railNodes = NODES.filter(n=>n.rail);
+  const sections = [];
+  railNodes.forEach(n=>{
+    let s = sections.find(s=>s.label===n.railSection);
+    if(!s){ s={label:n.railSection,nodes:[]}; sections.push(s); }
+    s.nodes.push(n);
+  });
+  positions.__rail = {x:L.railStartX-12, y:L.topPad, w:(L.railEndX - L.railStartX)+24, h:positions.__partAEnd - L.topPad};
+  positions.__railHeader = {x:(L.railStartX+L.railEndX)/2, y:L.topPad+22};
+
+  let ry = L.topPad + L.partHeaderH + 8;
+  sections.forEach(sec=>{
+    positions[`__rail_section_${sec.label}`] = {x:L.railStartX+10, y:ry, label:sec.label};
+    ry += L.railSectionLabelH;
+    sec.nodes.forEach(n=>{
+      const railNodeX = L.railStartX + ((L.railEndX - L.railStartX) - L.railNodeW)/2;
+      positions[n.id] = {
+        x: railNodeX,
+        y: ry,
+        w: L.railNodeW, h: L.railNodeH,
+        rail: true,
+        railSection: sec.label
+      };
+      ry += L.railNodeH + 10;
+    });
+    ry += L.railSectionGapY;
+  });
+
+  // ---- Edge metadata: fan-out + gutter lane allocation ----
+  const exits = {}, entries = {};
+  NODES.forEach(n=>{
+    exits[n.id]   = {right:[], bottom:[], left:[], top:[]};
+    entries[n.id] = {left:[], top:[], right:[], bottom:[]};
+  });
+
+  EDGES.forEach((e, idx)=>{
+    const s = positions[e.from], t = positions[e.to];
+    if(!s || !t) return;
+    exits[e.from][inferExitSide(s, t)].push(idx);
+    entries[e.to][inferEntrySide(s, t)].push(idx);
+  });
+  positions.__exits = exits;
+  positions.__entries = entries;
+
+  // Lane allocation: prevent horizontal-segment overlap in shared gutters.
+  // Each edge picks 1-2 gutters it horizontally traverses.
+  // Rightward edges → top lanes; leftward edges → bottom lanes.
+  const traffic = {};   // traffic[gutterKey] = [{edgeIdx, dir, sortKey}]
+  EDGES.forEach((e, idx)=>{
+    const s = positions[e.from], t = positions[e.to];
+    if(!s || !t) return;
+    const usage = horizontalUsage(e, s, t, positions);
+    usage.forEach(u=>{
+      if(!traffic[u.gutterKey]) traffic[u.gutterKey] = [];
+      traffic[u.gutterKey].push({edgeIdx:idx, dir:u.dir, sortKey:u.sortKey});
+    });
+  });
+
+  const lanes = {};   // lanes[edgeIdx] = {gutterKey: laneY}
+  Object.keys(traffic).forEach(gKey=>{
+    const gutter = positions[gKey]; if(!gutter) return;
+    const list = traffic[gKey];
+    const rightward = list.filter(x=>x.dir==="right").sort((a,b)=>a.sortKey - b.sortKey);
+    const leftward  = list.filter(x=>x.dir==="left").sort((a,b)=>a.sortKey - b.sortKey);
+    // 5 lanes per direction max within 28px gutter
+    rightward.forEach((x,i)=>{
+      const laneY = gutter.y + 6 + (i % 4) * 5;
+      if(!lanes[x.edgeIdx]) lanes[x.edgeIdx] = {};
+      lanes[x.edgeIdx][gKey] = laneY;
+    });
+    leftward.forEach((x,i)=>{
+      const laneY = gutter.y + gutter.h - 6 - (i % 4) * 5;
+      if(!lanes[x.edgeIdx]) lanes[x.edgeIdx] = {};
+      lanes[x.edgeIdx][gKey] = laneY;
+    });
+  });
+  positions.__lanes = lanes;
+
+  return positions;
+}
+
+// For edge e, compute which gutters it horizontally traverses + direction.
+// sortKey is used to order edges within a gutter so longer / leftmost ones get outer lanes.
+function horizontalUsage(e, s, t, positions){
+  const out = [];
+  if (s.rail && !t.rail){
+    // Rail → main: traverses gutter ABOVE target's layer, direction LEFT (from bridge to target)
+    const gutterKey = "__gutter_" + gutterAboveKeyOf(t, positions);
+    out.push({gutterKey, dir:"left", sortKey: t.x});
+    return out;
+  }
+  if (!s.rail && t.rail){
+    // Main → rail: traverses gutter BELOW source's layer, direction RIGHT (from source column to bridge)
+    out.push({gutterKey:`__gutter_below_${s.layerKey}`, dir:"right", sortKey: s.x});
+    return out;
+  }
+  if (s.layerKey === t.layerKey){
+    const adjacent = Math.abs((s.x + s.w) - t.x) < (LAYOUT.nodeGapX + 8) && t.x > s.x;
+    if (adjacent) return [];
+    out.push({gutterKey:`__gutter_below_${s.layerKey}`, dir: t.x > s.x ? "right" : "left", sortKey: Math.min(s.x, t.x)});
+    return out;
+  }
+  if (s.layerY < t.layerY){
+    out.push({gutterKey:`__gutter_below_${s.layerKey}`, dir: t.x > s.x ? "right" : "left", sortKey: Math.min(s.x, t.x)});
+    return out;
+  }
+  out.push({gutterKey:`__gutter_below_${t.layerKey}`, dir: t.x > s.x ? "right" : "left", sortKey: Math.min(s.x, t.x)});
+  return out;
+}
+
+function n_layerKey(li){return `${li.part}_${li.layer}`}
+
+function inferExitSide(s, t){
+  // Decide whether source's edge exits via right or bottom.
+  if (s.rail && !t.rail) return "left";   // rail nodes always exit left
+  if (!s.rail && t.rail) return "bottom"; // main→rail edges exit downward into a gutter
+  // intra-layer adjacent: exit right
+  if (Math.abs(s.layerY - t.layerY) < 5) return "right";
+  // inter-layer top-down: exit bottom
+  if (s.layerY < t.layerY) return "bottom";
+  return "top";
+}
+function inferEntrySide(s, t){
+  if (s.rail && !t.rail) return "top";    // rail→main enters target from top via gutter
+  if (!s.rail && t.rail) return "left";
+  if (Math.abs(s.layerY - t.layerY) < 5) return "left";
+  if (s.layerY < t.layerY) return "top";
+  return "bottom";
+}
+
+/* =========================================================
+   EDGE PATH COMPUTATION
+   Uses explicit gutters + bridge channel + fan-out indices.
+   Routing rules:
+   1. Intra-layer adjacent  : straight horizontal between right→left, at node y_center.
+   2. Intra-layer non-adj   : dip into gutter below source's layer, travel, climb up.
+   3. Inter-layer (top-down): exit source.bottom → gutter below source's layer
+                              → horizontal in gutter → target's column → enter target.top.
+   4. Main → Rail           : exit source.bottom → gutter below source's layer
+                              → bridgeX vertical channel → enter rail target's left.
+   5. Rail → Main           : exit rail source.left → bridgeX vertical channel
+                              → gutter above target's layer → enter target.top.
+   Fan-out: when a node has N outgoing edges via the same side, exit points are
+   spread across that side at fanSpacing apart (centered on the node center).
+========================================================= */
+function edgePath(s, t, edgeIdx, positions, sId, tId){
+  const L = LAYOUT;
+  const exitSide  = inferExitSide(s, t);
+  const entrySide = inferEntrySide(s, t);
+
+  // Fan-out: where on the source's exit side does this edge leave?
+  const exitArr  = positions.__exits[sId][exitSide];
+  const entryArr = positions.__entries[tId][entrySide];
+
+  const sExitPos  = sideExitPoint(s, exitSide,  exitArr.indexOf(edgeIdx),  exitArr.length);
+  const tEntryPos = sideExitPoint(t, entrySide, entryArr.indexOf(edgeIdx), entryArr.length);
+
+  const laneFor = (gutterKey)=>{
+    const lane = positions.__lanes?.[edgeIdx]?.[gutterKey];
+    if (lane !== undefined) return lane;
+    return positions[gutterKey]?.mid;
+  };
+
+  // ----- CASE: rail → main -----
+  if (s.rail && !t.rail){
+    const gutterKey = `__gutter_${gutterAboveKeyOf(t, positions)}`;
+    const gy = laneFor(gutterKey);
+    return `M ${sExitPos.x} ${sExitPos.y} H ${L.bridgeX} V ${gy} H ${tEntryPos.x} V ${tEntryPos.y}`;
+  }
+
+  // ----- CASE: main → rail -----
+  if (!s.rail && t.rail){
+    const gutterKey = `__gutter_below_${s.layerKey}`;
+    const gy = laneFor(gutterKey);
+    return `M ${sExitPos.x} ${sExitPos.y} V ${gy} H ${L.bridgeX} V ${tEntryPos.y} H ${tEntryPos.x}`;
+  }
+
+  // ----- CASE: within main canvas -----
+  if (s.layerKey === t.layerKey){
+    const adjacent = Math.abs((s.x + s.w) - t.x) < (L.nodeGapX + 8) && t.x > s.x;
+    if (adjacent){
+      return `M ${s.x + s.w} ${s.y + s.h/2} H ${t.x}`;
+    }
+    const gutterKey = `__gutter_below_${s.layerKey}`;
+    const gy = laneFor(gutterKey);
+    const sCy = s.y + s.h/2, tCy = t.y + t.h/2;
+    const exitX = s.x + s.w + 6, entryX = t.x - 6;
+    return `M ${s.x + s.w} ${sCy} H ${exitX} V ${gy} H ${entryX} V ${tCy} H ${t.x}`;
+  }
+
+  // Inter-layer top-down
+  if (s.layerY < t.layerY){
+    const gutterKey = `__gutter_below_${s.layerKey}`;
+    const gy = laneFor(gutterKey);
+    return `M ${sExitPos.x} ${sExitPos.y} V ${gy} H ${tEntryPos.x} V ${tEntryPos.y}`;
+  }
+
+  // Inter-layer bottom-up (rare)
+  const gutterKey = `__gutter_below_${t.layerKey}`;
+  const gy = laneFor(gutterKey);
+  return `M ${sExitPos.x} ${s.y} V ${gy} H ${tEntryPos.x} V ${t.y + t.h}`;
+}
+
+// Where on a side does a given edge dock? Spread across the side.
+function sideExitPoint(node, side, idx, total){
+  const L = LAYOUT;
+  const span = (total > 1) ? Math.min((total-1) * L.fanSpacing, node.w * 0.7) : 0;
+  const offset = (total > 1) ? -span/2 + idx * (span / (total-1)) : 0;
+  switch(side){
+    case "right":  return {x: node.x + node.w, y: node.y + node.h/2 + offset};
+    case "left":   return {x: node.x,           y: node.y + node.h/2 + offset};
+    case "top":    return {x: node.x + node.w/2 + offset, y: node.y};
+    case "bottom": return {x: node.x + node.w/2 + offset, y: node.y + node.h};
+  }
+}
+
+function gutterAboveKeyOf(t, positions){
+  // For target t in main canvas, return the gutter key just ABOVE its layer.
+  // First layer's "above gutter" is "top_partA"; otherwise it's the gutter below the previous layer.
+  const layerKey = t.layerKey;
+  const allLayerKeys = Object.keys(positions).filter(k=>k.startsWith("__layer_")).map(k=>k.replace("__layer_",""));
+  const idx = allLayerKeys.indexOf(layerKey);
+  if (idx <= 0) return "top_partA";
+  const prev = allLayerKeys[idx-1];
+  return `below_${prev}`;
+}
+
+function _findId(pos, positions){
+  // reverse lookup: find node id whose position object === pos
+  return Object.keys(positions).find(k=>positions[k]===pos);
+}
+
+/* =========================================================
+   RENDER
+========================================================= */
+function render(){
+  const svg = document.getElementById("diagram");
+  // Marker refX=10 makes the arrow tip land exactly at the path endpoint
+  svg.innerHTML = `
+    <defs>
+      ${["control","data","analysis","infra","safety","evidence","report","feedback"].map(ft=>`
+        <marker id="arrow-${ft}" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="${getCSS('--c-'+ft)}"/>
+        </marker>
+      `).join("")}
+    </defs>
+  `;
+
+  const pos = computePositions();
+
+  // --- Part A band background ---
+  const phA = pos.__partAHeader;
+  appendSVG(svg, `<rect class="part-band" x="${phA.x}" y="${phA.y}" width="${phA.w}" height="${pos.__partAEnd - phA.y}" rx="8" ry="8"/>`);
+
+  // --- Gutter shading (very faint - confirms routing zones) ---
+  const showGutters = window.location.hash === "#debug";
+  Object.keys(pos).filter(k=>k.startsWith("__gutter_")).forEach(k=>{
+    const g = pos[k];
+    if(showGutters){
+      appendSVG(svg, `<rect x="${LAYOUT.mainStartX-2}" y="${g.y}" width="${LAYOUT.mainEndX-LAYOUT.mainStartX+2}" height="${g.h}" fill="#fef3c7" opacity="0.45"/>`);
+    }
+  });
+  // Bridge channel (very faint)
+  if(showGutters){
+    appendSVG(svg, `<rect x="${LAYOUT.bridgeX-6}" y="${pos.__partAHeader.y+pos.__partAHeader.h+4}" width="12" height="${pos.__partAEnd - pos.__partAHeader.y - pos.__partAHeader.h - 8}" fill="#dbeafe" opacity="0.5"/>`);
+  }
+
+  // --- Part A header bar ---
+  appendSVG(svg, `<rect class="part-header-bar" x="${phA.x}" y="${phA.y}" width="${phA.w}" height="${phA.h}" rx="8" ry="8" fill="${PART_META.A.color}" opacity="0.10"/>`);
+  appendSVG(svg, `<rect x="${phA.x}" y="${phA.y}" width="6" height="${phA.h}" fill="${PART_META.A.color}" rx="3" ry="3"/>`);
+  appendSVG(svg, `<text class="part-header-text" x="${phA.x+18}" y="${phA.y+phA.h/2}">${PART_META.A.label}</text>`);
+  appendSVG(svg, `<text class="part-scope-text" x="${phA.x+220}" y="${phA.y+phA.h/2}">${PART_META.A.scope}</text>`);
+
+  // --- Layer labels & separators ---
+  const layerKeys = Object.keys(pos).filter(k=>k.startsWith("__layer_"));
+  layerKeys.forEach(k=>{
+    const L = pos[k];
+    appendSVG(svg, `<line class="layer-separator" x1="${LAYOUT.mainStartX-2}" y1="${L.y+L.h}" x2="${LAYOUT.mainEndX}" y2="${L.y+L.h}"/>`);
+    appendSVG(svg, `<text class="layer-label" x="${LAYOUT.layerLabelPad}" y="${L.y + L.h/2 - 5}">${L.label}</text>`);
+    appendSVG(svg, `<text class="layer-sublabel" x="${LAYOUT.layerLabelPad}" y="${L.y + L.h/2 + 9}">Layer ${L.layerNum}</text>`);
+  });
+
+  // --- Side rail background ---
+  const r = pos.__rail;
+  appendSVG(svg, `<rect class="side-rail-bg" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="8" ry="8"/>`);
+  appendSVG(svg, `<text class="side-rail-header" x="${pos.__railHeader.x}" y="${pos.__railHeader.y}">Cross-Cutting (Part D)</text>`);
+
+  Object.keys(pos).filter(k=>k.startsWith("__rail_section_")).forEach(k=>{
+    const sec = pos[k];
+    appendSVG(svg, `<text class="rail-section-label" x="${sec.x}" y="${sec.y+12}">━ ${sec.label}</text>`);
+  });
+
+  // --- Edges (before nodes so nodes overlap edge tips visually) ---
+  EDGES.forEach((e, idx)=>{
+    const s = pos[e.from], t = pos[e.to];
+    if(!s || !t) return;
+    const path = edgePath(s, t, idx, pos, e.from, e.to);
+    appendSVG(svg, `<path class="edge-path flow-${e.flow}" d="${path}" marker-end="url(#arrow-${e.flow})"/>`);
+  });
+
+  // --- Nodes ---
+  NODES.forEach(n=>{
+    const p = pos[n.id]; if(!p) return;
+    const partColor = PART_META[n.part].color;
+    const fillBg = `rgba(${hexToRgb(partColor)},0.10)`;
+    appendSVG(svg, `
+      <g data-node-id="${n.id}" style="cursor:pointer">
+        <rect class="node-rect" x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" fill="${fillBg}" stroke="${partColor}"/>
+        <text class="node-id" x="${p.x+8}" y="${p.y+12}">${n.id}</text>
+        <text class="node-label" x="${p.x+p.w/2}" y="${p.y+p.h/2 + 8}">${n.label}</text>
+      </g>
+    `);
+  });
+
+  svg.querySelectorAll("g[data-node-id]").forEach(g=>{
+    g.addEventListener("click",()=>showDrawer(g.getAttribute("data-node-id")));
+  });
+
+  // --- Legend ---
+  const lgY = pos.__partAEnd + 18;
+  appendSVG(svg, `<rect class="legend-box" x="14" y="${lgY}" width="820" height="34"/>`);
+  let lgX = 32;
+  const flows = [
+    {ft:"control",label:"control"},
+    {ft:"data",label:"data"},
+    {ft:"analysis",label:"analysis"},
+    {ft:"infra",label:"infra"},
+    {ft:"safety",label:"safety"}
+  ];
+  flows.forEach(f=>{
+    appendSVG(svg, `<line x1="${lgX}" y1="${lgY+17}" x2="${lgX+30}" y2="${lgY+17}" class="edge-path flow-${f.ft}" marker-end="url(#arrow-${f.ft})"/>`);
+    appendSVG(svg, `<text x="${lgX+40}" y="${lgY+21}" font-size="11" fill="#475569">${f.label}</text>`);
+    lgX += 115;
+  });
+  appendSVG(svg, `<text x="${lgX+10}" y="${lgY+21}" font-size="11" fill="#94a3b8">add #debug to URL to highlight gutters</text>`);
+
+  const totalH = lgY + 70;
+  svg.setAttribute("height", totalH);
+  svg.setAttribute("width", LAYOUT.canvasW);
+  svg.setAttribute("viewBox", `0 0 ${LAYOUT.canvasW} ${totalH}`);
+}
+
+function appendSVG(parent, html){
+  const wrapper = document.createElementNS("http://www.w3.org/2000/svg","g");
+  wrapper.innerHTML = html;
+  while(wrapper.firstChild) parent.appendChild(wrapper.firstChild);
+}
+function getCSS(varName){
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+function hexToRgb(h){
+  h = h.replace("#","");
+  return `${parseInt(h.substr(0,2),16)},${parseInt(h.substr(2,2),16)},${parseInt(h.substr(4,2),16)}`;
+}
+
+/* =========================================================
+   DRAWER (identical to business view)
+========================================================= */
+function showDrawer(id){
+  const n = NODES.find(x=>x.id===id); if(!n) return;
+  const drawer = document.getElementById("drawer");
+  const main = document.getElementById("main");
+  const partColor = PART_META[n.part].color;
+  const inbound = EDGES.filter(e=>e.to===id).map(e=>e.from);
+  const outbound = EDGES.filter(e=>e.from===id).map(e=>e.to);
+
+  const depsHTML = (n.dependencies||[]).map(d=>`
+    <div class="dep">
+      <div><span class="dep-type">${d.type}</span><span class="dep-name">${d.name}</span></div>
+      <div class="dep-reason">${d.reason}</div>
+    </div>`).join("");
+
+  const ia = n.internal_architecture||{};
+  const compsHTML = (ia.components||[]).map(c=>`
+    <div class="internal-component">
+      <div class="ic-name">${c.name}</div>
+      <div class="ic-role">${c.role}</div>
+    </div>`).join("");
+  const flowHTML = (ia.internal_flow||[]).map(f=>`<div class="if-step">${f}</div>`).join("");
+
+  drawer.classList.remove("empty");
+  main.classList.add("drawer-open");
+  drawer.innerHTML = `
+    <div class="panel-header">
+      <button class="close" onclick="closeDrawer()">×</button>
+      <span class="layer-pill" style="background:${partColor}">${n.partLabel} · ${n.layerLabel}</span>
+      <h2>${n.label}</h2>
+      <p class="subtitle">${n.purpose}</p>
+      <div class="meta"><span>id: ${n.id}</span><span>layer: ${n.layer}</span></div>
+    </div>
+    <div class="panel-body">
+      <section><h3>Why this matters</h3><div class="why">${n.why_matters}</div></section>
+      <section><h3>Internal architecture</h3>
+        <div class="internal">
+          <div class="internal-summary">${ia.summary||""}</div>
+          ${compsHTML?`<div class="internal-components">${compsHTML}</div>`:""}
+          ${flowHTML?`<div class="internal-flow">${flowHTML}</div>`:""}
+        </div>
+      </section>
+      <section><h3>What happens</h3><ul>${(n.what_happens||[]).map(s=>`<li>${s}</li>`).join("")}</ul></section>
+      <section><h3>Inputs</h3><ul>${(n.inputs||[]).map(s=>`<li>${s}</li>`).join("")}</ul></section>
+      <section><h3>Outputs</h3><ul>${(n.outputs||[]).map(s=>`<li>${s}</li>`).join("")}</ul></section>
+      <section><h3>Dependencies</h3>${depsHTML?`<div class="deps">${depsHTML}</div>`:"<p style='color:var(--muted);font-size:12px'>None.</p>"}</section>
+      <section><h3>Real example</h3><div class="example">${n.example}</div></section>
+      ${(inbound.length||outbound.length)?`<section><h3>Connected components</h3><div class="connected">
+        ${inbound.map(i=>`<button onclick="showDrawer('${i}')">← ${NODES.find(x=>x.id===i)?.label||i}</button>`).join("")}
+        ${outbound.map(o=>`<button onclick="showDrawer('${o}')">${NODES.find(x=>x.id===o)?.label||o} →</button>`).join("")}
+      </div></section>`:""}
+      <section><h3>Source specs</h3><div class="source-files">${(n.source_files||[]).map(f=>`<code>${f}</code>`).join("")}</div></section>
+    </div>`;
+  drawer.scrollTop = 0;
+}
+function closeDrawer(){
+  document.getElementById("drawer").classList.add("empty");
+  document.getElementById("main").classList.remove("drawer-open");
+  document.getElementById("drawer").innerHTML = `<div class="placeholder"><div style="font-weight:500;color:#0f172a">Click any node</div><div style="font-size:12.5px;margin-top:4px">Drawer schema is identical to the business view.</div></div>`;
+}
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDrawer(); });
+
+render();
+</script>
+</body>
+</html>

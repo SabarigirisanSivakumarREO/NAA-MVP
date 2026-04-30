@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neural MVP — Implementation Roadmap</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  code, pre, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  /* Smooth scroll */
+  html { scroll-behavior: smooth; }
+
+  /* Pulsing animation for transitioning state */
+  @keyframes pulse-trans {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6); }
+    50%      { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+  }
+  .pulse-amber { animation: pulse-trans 2s infinite; }
+
+  /* Glow effect for risk gates */
+  .glow-rose   { box-shadow: 0 0 24px -4px rgba(244, 63, 94, 0.4); }
+  .glow-emerald{ box-shadow: 0 0 24px -4px rgba(52, 211, 153, 0.5); }
+  .glow-violet { box-shadow: 0 0 32px -4px rgba(168, 85, 247, 0.5); }
+
+  /* Timeline track */
+  .timeline-line {
+    background: linear-gradient(90deg,
+      rgb(56, 189, 248) 0%,
+      rgb(56, 189, 248) 33%,
+      rgb(245, 158, 11) 33%,
+      rgb(245, 158, 11) 50%,
+      rgb(244, 63, 94) 50%,
+      rgb(244, 63, 94) 58%,
+      rgb(52, 211, 153) 58%,
+      rgb(52, 211, 153) 75%,
+      rgb(168, 85, 247) 75%,
+      rgb(168, 85, 247) 100%);
+  }
+
+  /* Matrix cell hover */
+  .matrix-cell { transition: all 0.15s ease; }
+  .matrix-cell:hover { transform: scale(1.15); z-index: 10; }
+
+  /* Tooltip */
+  .tooltip { pointer-events: none; opacity: 0; transition: opacity 0.15s ease; }
+  .has-tooltip:hover .tooltip { opacity: 1; }
+
+  /* Progress bar shimmer */
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .progress-shimmer {
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
+  }
+
+  /* Sticky nav backdrop blur */
+  .nav-blur { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+  /* Smooth accordion */
+  .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+  .accordion-content.open { max-height: 5000px; transition: max-height 0.5s ease-in; }
+
+  /* Card hover lift */
+  .card-lift { transition: all 0.2s ease; }
+  .card-lift:hover { transform: translateY(-2px); }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, rgb(56, 189, 248) 0%, rgb(168, 85, 247) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: rgb(15, 23, 42); }
+  ::-webkit-scrollbar-thumb { background: rgb(51, 65, 85); border-radius: 5px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgb(71, 85, 105); }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased">
+
+<!-- ─────────────────────────────────────────────────────── -->
+<!-- STICKY NAV                                                -->
+<!-- ─────────────────────────────────────────────────────── -->
+<nav class="sticky top-0 z-50 nav-blur bg-slate-950/80 border-b border-slate-800">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center text-slate-950 font-bold">N</div>
+      <span class="font-semibold tracking-tight">Neural MVP Tracker</span>
+      <span class="text-xs text-slate-500 mono">v0.3 · walking-skeleton</span>
+    </div>
+    <div class="hidden md:flex items-center gap-1 text-sm">
+      <a href="#overview" class="px-3 py-1.5 rounded-md hover:bg-slate-800 transition">Overview</a>
+      <a href="#timeline" class="px-3 py-1.5 rounded-md hover:bg-slate-800 transition">Timeline</a>
+      <a href="#matrix" class="px-3 py-1.5 rounded-md hover:bg-slate-800 transition">Matrix</a>
+      <a href="#demos" class="px-3 py-1.5 rounded-md hover:bg-slate-800 transition">Demos</a>
+      <a href="#gates" class="px-3 py-1.5 rounded-md hover:bg-slate-800 transition">Risk gates</a>
+      <a href="#tracker" class="px-3 py-1.5 rounded-md hover:bg-slate-800 transition">Tracker</a>
+    </div>
+    <div id="overall-progress-mini" class="hidden md:flex items-center gap-2 text-xs">
+      <div class="w-32 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+        <div id="mini-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 transition-all" style="width: 0%"></div>
+      </div>
+      <span id="mini-progress-label" class="text-slate-400 mono">0%</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<!-- HERO / OVERVIEW                                            -->
+<!-- ─────────────────────────────────────────────────────── -->
+<section id="overview" class="max-w-7xl mx-auto px-6 pt-16 pb-12">
+  <div class="mb-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-400">
+    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+    <span>Implementation status: 0% — ready to start Week 1</span>
+  </div>
+  <h1 class="text-5xl md:text-6xl font-bold tracking-tight mb-4">
+    <span class="gradient-text">Neural MVP</span><br>
+    Implementation Roadmap
+  </h1>
+  <p class="text-lg text-slate-400 max-w-3xl mb-10">
+    Walking-skeleton plan: Week 1 ships a stubbed end-to-end pipeline. Each subsequent week, one stub becomes real.
+    Stakeholders run the same <code class="text-cyan-400 bg-slate-900 px-2 py-0.5 rounded text-base">pnpm cro:audit</code>
+    every Wednesday — output gets more real each week.
+  </p>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="card-lift bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <div class="text-3xl font-bold text-cyan-400 mono">12</div>
+      <div class="text-sm text-slate-400 mt-1">weeks</div>
+    </div>
+    <div class="card-lift bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <div class="text-3xl font-bold text-violet-400 mono">263</div>
+      <div class="text-sm text-slate-400 mt-1">canonical tasks</div>
+    </div>
+    <div class="card-lift bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <div class="text-3xl font-bold text-rose-400 mono">4</div>
+      <div class="text-sm text-slate-400 mt-1">risk gates</div>
+    </div>
+    <div class="card-lift bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <div class="text-3xl font-bold text-emerald-400 mono">10</div>
+      <div class="text-sm text-slate-400 mt-1">stubs to de-stub</div>
+    </div>
+  </div>
+
+  <!-- Status Legend -->
+  <div class="mt-10 flex flex-wrap items-center gap-6 p-4 bg-slate-900/50 border border-slate-800 rounded-xl">
+    <div class="text-sm font-medium text-slate-300">Legend:</div>
+    <div class="flex items-center gap-2">
+      <div class="w-3 h-3 rounded-full bg-slate-700 border border-slate-600"></div>
+      <span class="text-sm text-slate-400">Stub / not present</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-3 h-3 rounded-full bg-amber-500 pulse-amber"></div>
+      <span class="text-sm text-slate-400">Transitioning this week</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+      <span class="text-sm text-slate-400">Real / de-stubbed</span>
+    </div>
+    <div class="flex items-center gap-2 ml-auto">
+      <span class="text-rose-400">★</span><span class="text-sm text-slate-400">risk gate</span>
+      <span class="text-emerald-400 ml-3">★★</span><span class="text-sm text-slate-400">MVP COMPLETE</span>
+      <span class="text-violet-400 ml-3">★★★</span><span class="text-sm text-slate-400">SPEC COMPLETE</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<!-- TIMELINE                                                   -->
+<!-- ─────────────────────────────────────────────────────── -->
+<section id="timeline" class="max-w-7xl mx-auto px-6 py-12">
+  <div class="flex items-baseline justify-between mb-8">
+    <h2 class="text-3xl font-bold">Timeline</h2>
+    <span class="text-sm text-slate-500">12-week story arc</span>
+  </div>
+
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8">
+    <!-- Timeline track -->
+    <div class="relative">
+      <!-- Phase labels above -->
+      <div class="grid grid-cols-12 gap-2 text-xs text-slate-500 mb-3">
+        <div class="col-span-4 text-cyan-400 font-medium">Foundation</div>
+        <div class="col-span-3 text-amber-400 font-medium">Analytical Apex</div>
+        <div class="col-span-2 text-emerald-400 font-medium">MVP Complete</div>
+        <div class="col-span-3 text-violet-400 font-medium">Delivery</div>
+      </div>
+
+      <!-- Track line -->
+      <div class="h-1.5 timeline-line rounded-full mb-3"></div>
+
+      <!-- Week dots + labels -->
+      <div class="grid grid-cols-12 gap-2">
+        <!-- Week 1 -->
+        <div class="flex flex-col items-center -mt-3">
+          <div class="w-4 h-4 rounded-full bg-cyan-400 border-2 border-slate-950"></div>
+          <div class="text-xs mono text-slate-400 mt-2">W1</div>
+          <div class="text-[10px] text-slate-500 mt-1 text-center">Setup</div>
+        </div>
+        <!-- Week 2 -->
+        <div class="flex flex-col items-center -mt-3">
+          <div class="w-4 h-4 rounded-full bg-cyan-400 border-2 border-slate-950"></div>
+          <div class="text-xs mono text-slate-400 mt-2">W2</div>
+          <div class="text-[10px] text-slate-500 mt-1 text-center">Browser</div>
+        </div>
+        <!-- Week 3 -->
+        <div class="flex flex-col items-center -mt-3">
+          <div class="w-4 h-4 rounded-full bg-cyan-400 border-2 border-slate-950"></div>
+          <div class="text-xs mono text-slate-400 mt-2">W3</div>
+          <div class="text-[10px] text-slate-500 mt-1 text-center">DB</div>
+        </div>
+        <!-- Week 4 -->
+        <div class="flex flex-col items-center -mt-3">
+          <div class="w-4 h-4 rounded-full bg-cyan-400 border-2 border-slate-950"></div>
+          <div class="text-xs mono text-slate-400 mt-2">W4</div>
+          <div class="text-[10px] text-slate-500 mt-1 text-center">Heuristics</div>
+        </div>
+        <!-- Week 5 ★ -->
+        <div class="flex flex-col items-center -mt-4">
+          <div class="w-6 h-6 rounded-full bg-rose-500 border-2 border-slate-950 glow-rose flex items-center justify-center text-xs">★</div>
+          <div class="text-xs mono text-rose-400 mt-1 font-semibold">W5</div>
+          <div class="text-[10px] text-rose-300 mt-1 text-center font-medium">First Claude</div>
+        </div>
+        <!-- Week 6 -->
+        <div class="flex flex-col items-center -mt-3">
+          <div class="w-4 h-4 rounded-full bg-amber-500 border-2 border-slate-950"></div>
+          <div class="text-xs mono text-slate-400 mt-2">W6</div>
+          <div class="text-[10px] text-slate-500 mt-1 text-center">Critique</div>
+        </div>
+        <!-- Week 7 ★ -->
+        <div class="flex flex-col items-center -mt-4">
+          <div class="w-6 h-6 rounded-full bg-rose-500 border-2 border-slate-950 glow-rose flex items-center justify-center text-xs">★</div>
+          <div class="text-xs mono text-rose-400 mt-1 font-semibold">W7</div>
+          <div class="text-[10px] text-rose-300 mt-1 text-center font-medium">First grounded</div>
+        </div>
+        <!-- Week 8 -->
+        <div class="flex flex-col items-center -mt-3">
+          <div class="w-4 h-4 rounded-full bg-amber-500 border-2 border-slate-950"></div>
+          <div class="text-xs mono text-slate-400 mt-2">W8</div>
+          <div class="text-[10px] text-slate-500 mt-1 text-center">Multi-page</div>
+        </div>
+        <!-- Week 9 ★★ -->
+        <div class="flex flex-col items-center -mt-4">
+          <div class="w-6 h-6 rounded-full bg-emerald-400 border-2 border-slate-950 glow-emerald flex items-center justify-center text-[10px] text-slate-950 font-bold">★★</div>
+          <div class="text-xs mono text-emerald-400 mt-1 font-semibold">W9</div>
+          <div class="text-[10px] text-emerald-300 mt-1 text-center font-medium">MVP COMPLETE</div>
+        </div>
+        <!-- Week 10 -->
+        <div class="flex flex-col items-center -mt-3">
+          <div class="w-4 h-4 rounded-full bg-violet-400 border-2 border-slate-950"></div>
+          <div class="text-xs mono text-slate-400 mt-2">W10</div>
+          <div class="text-[10px] text-slate-500 mt-1 text-center">PDF</div>
+        </div>
+        <!-- Week 11 -->
+        <div class="flex flex-col items-center -mt-3">
+          <div class="w-4 h-4 rounded-full bg-violet-400 border-2 border-slate-950"></div>
+          <div class="text-xs mono text-slate-400 mt-2">W11</div>
+          <div class="text-[10px] text-slate-500 mt-1 text-center">Dashboard</div>
+        </div>
+        <!-- Week 12 ★★★ -->
+        <div class="flex flex-col items-center -mt-4">
+          <div class="w-7 h-7 rounded-full bg-violet-500 border-2 border-slate-950 glow-violet flex items-center justify-center text-[9px] font-bold">★★★</div>
+          <div class="text-xs mono text-violet-400 mt-1 font-semibold">W12</div>
+          <div class="text-[10px] text-violet-300 mt-1 text-center font-medium">SPEC COMPLETE</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase summaries below -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-12">
+      <div class="border-l-2 border-cyan-400 pl-4">
+        <div class="text-cyan-400 text-sm font-semibold mb-1">Foundation · W1-W4</div>
+        <div class="text-xs text-slate-400">Skeleton ships, browser real, DB real, heuristics real. R6 first runtime activation week 4.</div>
+      </div>
+      <div class="border-l-2 border-amber-400 pl-4">
+        <div class="text-amber-400 text-sm font-semibold mb-1">Analytical Apex · W5-W7</div>
+        <div class="text-xs text-slate-400">First Claude evaluate (★ wk 5), self-critique (wk 6), first grounded finding (★ wk 7). Two risk gates here.</div>
+      </div>
+      <div class="border-l-2 border-emerald-400 pl-4">
+        <div class="text-emerald-400 text-sm font-semibold mb-1">MVP Complete · W8-W9</div>
+        <div class="text-xs text-slate-400">Multi-page audit lands (wk 8). T148/T149/T150 acceptance ★★ (wk 9) on example.com / amazon.in / bbc.com.</div>
+      </div>
+      <div class="border-l-2 border-violet-400 pl-4">
+        <div class="text-violet-400 text-sm font-semibold mb-1">Delivery · W10-W12</div>
+        <div class="text-xs text-slate-400">Branded PDF (wk 10), dashboard + email + warm-up (wk 11), T175 acceptance ★★★ + ops dashboard (wk 12).</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<!-- CAPABILITY MATRIX                                         -->
+<!-- ─────────────────────────────────────────────────────── -->
+<section id="matrix" class="max-w-7xl mx-auto px-6 py-12">
+  <div class="flex items-baseline justify-between mb-8">
+    <h2 class="text-3xl font-bold">Capability Progression Matrix</h2>
+    <span class="text-sm text-slate-500">12 layers × 12 weeks · click any cell for details</span>
+  </div>
+
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 overflow-x-auto">
+    <div id="matrix-grid" class="min-w-[900px]"></div>
+  </div>
+
+  <div id="matrix-detail" class="mt-4 hidden bg-slate-900 border border-slate-800 rounded-xl p-5">
+    <div class="flex items-start justify-between mb-3">
+      <div>
+        <div id="md-title" class="text-lg font-semibold"></div>
+        <div id="md-week" class="text-sm text-slate-500 mono"></div>
+      </div>
+      <button onclick="document.getElementById('matrix-detail').classList.add('hidden')" class="text-slate-500 hover:text-slate-300">✕</button>
+    </div>
+    <div id="md-status" class="inline-block text-xs px-2 py-1 rounded-md mono mb-3"></div>
+    <div id="md-content" class="text-sm text-slate-300"></div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<!-- DEMO EVOLUTION                                            -->
+<!-- ─────────────────────────────────────────────────────── -->
+<section id="demos" class="max-w-7xl mx-auto px-6 py-12">
+  <div class="flex items-baseline justify-between mb-8">
+    <h2 class="text-3xl font-bold">Demo Evolution</h2>
+    <span class="text-sm text-slate-500">Same command every Wednesday — output gets more real</span>
+  </div>
+
+  <div id="demo-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<!-- RISK GATES                                                -->
+<!-- ─────────────────────────────────────────────────────── -->
+<section id="gates" class="max-w-7xl mx-auto px-6 py-12">
+  <div class="flex items-baseline justify-between mb-8">
+    <h2 class="text-3xl font-bold">Critical Risk Gates</h2>
+    <span class="text-sm text-slate-500">4 decision points across the 12 weeks</span>
+  </div>
+
+  <div id="gates-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<!-- LIVE TRACKER                                              -->
+<!-- ─────────────────────────────────────────────────────── -->
+<section id="tracker" class="max-w-7xl mx-auto px-6 py-12">
+  <div class="flex items-baseline justify-between mb-2">
+    <h2 class="text-3xl font-bold">Live Progress Tracker</h2>
+    <button onclick="resetTracker()" class="text-xs text-slate-500 hover:text-rose-400 mono transition">Reset all</button>
+  </div>
+  <p class="text-sm text-slate-500 mb-6">Check tasks as they ship — state persists in your browser. Use this as the daily operating doc.</p>
+
+  <!-- Overall progress -->
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-6">
+    <div class="flex items-baseline justify-between mb-3">
+      <div class="text-sm font-medium">Overall MVP progress</div>
+      <div class="text-2xl font-bold mono"><span id="overall-pct">0</span>%</div>
+    </div>
+    <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+      <div id="overall-bar" class="h-full bg-gradient-to-r from-cyan-400 via-amber-400 via-emerald-400 to-violet-500 progress-shimmer transition-all" style="width: 0%; background-image: linear-gradient(90deg, #22d3ee, #f59e0b, #34d399, #a855f7, #22d3ee);"></div>
+    </div>
+    <div class="flex items-center justify-between mt-3 text-xs text-slate-500">
+      <span><span id="completed-count">0</span> of <span id="total-count">0</span> tasks complete</span>
+      <span class="mono"><span id="current-week-label">Week 1 not started</span></span>
+    </div>
+  </div>
+
+  <!-- Per-week accordions -->
+  <div id="tracker-grid" class="space-y-3"></div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<!-- FOOTER                                                    -->
+<!-- ─────────────────────────────────────────────────────── -->
+<footer class="max-w-7xl mx-auto px-6 py-12 mt-12 border-t border-slate-800">
+  <div class="grid md:grid-cols-3 gap-8 text-sm">
+    <div>
+      <div class="font-semibold mb-3 text-slate-300">Canonical sources</div>
+      <ul class="space-y-1 text-slate-500">
+        <li><a href="implementation-roadmap.md" class="hover:text-cyan-400 transition">implementation-roadmap.md v0.3</a></li>
+        <li><a href="implementation-roadmap-visual.md" class="hover:text-cyan-400 transition">implementation-roadmap-visual.md v0.1</a></li>
+        <li><a href="phases/INDEX.md" class="hover:text-cyan-400 transition">phases/INDEX.md v1.3</a></li>
+        <li><a href="constitution.md" class="hover:text-cyan-400 transition">constitution.md (R1-R26)</a></li>
+        <li><a href="PRD.md" class="hover:text-cyan-400 transition">PRD.md v1.0.1</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="font-semibold mb-3 text-slate-300">Constitution invariants</div>
+      <ul class="space-y-1 text-slate-500">
+        <li><span class="mono text-rose-400">R5.3 + GR-007</span> — no conversion predictions (applies to stubs)</li>
+        <li><span class="mono text-rose-400">R6</span> — heuristic IP boundary (applies to stubs)</li>
+        <li><span class="mono text-rose-400">R10/R13</span> — temperature=0 from week 5</li>
+        <li><span class="mono text-rose-400">R20</span> — impact.md for stub→real on shared contracts</li>
+        <li><span class="mono text-rose-400">R23</span> — kill criteria per slice</li>
+      </ul>
+    </div>
+    <div>
+      <div class="font-semibold mb-3 text-slate-300">Status</div>
+      <div class="text-slate-500">Project: 0% implemented · spec corpus complete (15/15 phases) · Phase 0 ready to start</div>
+      <div class="text-slate-500 mt-2 text-xs mono">Generated 2026-04-29 · For visual tracking only — canonical source of truth is the markdown roadmap</div>
+    </div>
+  </div>
+</footer>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<!-- DATA + RENDER                                             -->
+<!-- ─────────────────────────────────────────────────────── -->
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════
+// states: 's'=stub | 't'=transitioning | 'r'=real
+
+const layers = [
+  { name: "CLI Skeleton",            states: ['r','r','r','r','r','r','r','t','r','r','r','r'],
+    detail: "Orchestrator wraps audit pipeline. Refactored wk 8 to wrap AuditGraph.invoke(). Stays real through wk 12." },
+  { name: "Browser + Perception",    states: ['t','r','r','r','r','r','r','r','r','r','r','r'],
+    detail: "T-SKELETON-002 → real BrowserManager + ContextAssembler in wk 2 (Phase 1 T006-T015)." },
+  { name: "DB Persistence",          states: ['s','s','t','r','r','r','r','r','t','r','t','r'],
+    detail: "Three-stage promotion: wk 3 basic Phase 4 write, wk 9 Phase 7 T132 (grounding lifecycle), wk 11 T164 (two-store warm-up aware)." },
+  { name: "Heuristic Engine",        states: ['s','s','s','t','r','r','r','r','r','r','r','r'],
+    detail: "T-SKELETON-003 → real HeuristicLoader in wk 4. R6 IP boundary first runtime activation." },
+  { name: "Claude Evaluate",         states: ['s','s','s','s','t','r','r','r','r','r','r','r'],
+    detail: "T-SKELETON-004 → real EvaluateNode + DeepPerceiveNode in wk 5. R10/R13 + R14.1 + R6 LangSmith first runtime. ★ FIRST RISK GATE." },
+  { name: "Self-Critique",           states: ['s','s','s','s','s','t','r','r','r','r','r','r'],
+    detail: "T-SKELETON-005 → real SelfCritiqueNode in wk 6. R5.6 separate LLM call activated." },
+  { name: "Evidence Grounding",      states: ['s','s','s','s','s','s','t','r','r','r','r','r'],
+    detail: "T-SKELETON-006 → real EvidenceGrounder in wk 7. 9 grounding rules + GR-012 benchmark validation. ★ SECOND RISK GATE." },
+  { name: "Multi-page Orchestration",states: ['s','s','s','s','s','s','s','t','r','r','r','r'],
+    detail: "Phase 5 BrowseGraph + Phase 8 AuditGraph compile in wk 8. PostgresCheckpointer resume verified." },
+  { name: "Annotation",              states: ['s','s','s','s','s','s','s','s','t','r','r','r'],
+    detail: "T-SKELETON-007 → real AnnotateNode (T131) in wk 9. Sharp severity-color overlay + non-overlapping pins." },
+  { name: "Branded PDF",             states: ['s','s','s','s','s','s','s','s','s','t','r','r'],
+    detail: "T-SKELETON-009 → real Report (T245-T249) in wk 10. ExecutiveSummary + ActionPlan + 8-section PDF via Playwright page.pdf()." },
+  { name: "Dashboard + Email",       states: ['s','s','s','s','s','s','s','s','s','s','t','r'],
+    detail: "Phase 9 Block B (T169-T173) + NotificationAdapter (T260-T261) in wk 11. R6 channels 3+4 first runtime activation." },
+  { name: "Ops Dashboard + Obs",     states: ['s','s','s','s','s','s','s','s','s','s','s','t'],
+    detail: "Phase 9 Block E (T239-T243) + T244 ops dashboard in wk 12. 22-event audit_events taxonomy + heuristic health metrics + alerting." },
+];
+
+const weeks = [
+  { num:1,  label:"Setup",       gate:null,  color:"cyan",    bgClass:"bg-cyan-400" },
+  { num:2,  label:"Browser",     gate:null,  color:"cyan",    bgClass:"bg-cyan-400" },
+  { num:3,  label:"DB",          gate:null,  color:"cyan",    bgClass:"bg-cyan-400" },
+  { num:4,  label:"Heuristics",  gate:null,  color:"cyan",    bgClass:"bg-cyan-400" },
+  { num:5,  label:"First Claude",gate:"★",   color:"rose",    bgClass:"bg-rose-500" },
+  { num:6,  label:"Critique",    gate:null,  color:"amber",   bgClass:"bg-amber-500" },
+  { num:7,  label:"First Ground",gate:"★",   color:"rose",    bgClass:"bg-rose-500" },
+  { num:8,  label:"Multi-page",  gate:null,  color:"amber",   bgClass:"bg-amber-500" },
+  { num:9,  label:"T148-T150",   gate:"★★",  color:"emerald", bgClass:"bg-emerald-400" },
+  { num:10, label:"PDF",         gate:null,  color:"violet",  bgClass:"bg-violet-400" },
+  { num:11, label:"Dashboard",   gate:null,  color:"violet",  bgClass:"bg-violet-400" },
+  { num:12, label:"T175",        gate:"★★★", color:"violet",  bgClass:"bg-violet-500" },
+];
+
+const demos = [
+  { wk:1,  title:"Stubbed pipeline", gate:null,
+    cmd:"pnpm cro:audit --url=https://example.com",
+    output:"Fake but Neural-shaped finding written to ./out/example-com-audit.txt — 'this is the output shape we'll make real'." },
+  { wk:2,  title:"Real browser", gate:null,
+    cmd:"pnpm cro:audit --url=https://example.com",
+    output:"Real Chromium opens; AX-tree captured (47 nodes); PageStateModel ≤ 1500 tokens. Pipeline downstream still stubbed." },
+  { wk:3,  title:"Real DB persistence", gate:null,
+    cmd:"pnpm cro:audit --url=https://amazon.in",
+    output:"Real Postgres rows in audit_runs + audit_events. RLS enforces (cross-client query → 0 rows). ScreenshotStorage active." },
+  { wk:4,  title:"Real heuristic engine", gate:null,
+    cmd:"pnpm cro:audit --url=https://example.com --show-heuristics",
+    output:"Real Baymard heuristics loaded; pipes IDs (NOT body) into still-stubbed evaluate. R6 transport spy: 0 body fragments in logs." },
+  { wk:5,  title:"First REAL Claude", gate:"★",
+    cmd:"pnpm cro:audit --url=https://example.com --no-critique --no-ground",
+    output:"First REAL Claude raw findings. LangSmith trace: heuristic IDs visible, body REDACTED. llm_call_log: temp=0, R10 active." },
+  { wk:6,  title:"Real self-critique", gate:null,
+    cmd:"pnpm cro:audit --url=https://example.com --no-ground",
+    output:"Critique runs as separate LLM call (R5.6). llm_call_log shows 2 rows per page. KEEP/REVISE/DOWNGRADE/REJECT verdicts visible." },
+  { wk:7,  title:"First grounded finding", gate:"★",
+    cmd:"pnpm cro:audit --url=https://example.com",
+    output:"Full 3-filter pipeline live. 5 raw → 4 critiqued → 3 grounded (1 rejected by GR-001, 1 by GR-007). FIRST REAL grounded finding." },
+  { wk:8,  title:"Multi-page audit", gate:null,
+    cmd:"pnpm cro:audit --url=https://example.com --pages 3",
+    output:"3-page audit through real BrowseGraph + AnalysisGraph. Per-page audit_events stream. Verify-engine + multiplicative confidence-decay active." },
+  { wk:9,  title:"T148-T150 acceptance", gate:"★★",
+    cmd:"pnpm cro:audit --url https://example.com --pages 3 --output ./test-output",
+    output:"★★ MVP COMPLETE GATE ★★ — example.com + amazon.in + bbc.com all green. ≥3 grounded findings, ≥1 rejected, cost <$5, time <15min." },
+  { wk:10, title:"Branded PDF", gate:null,
+    cmd:"pnpm cro:audit --url=https://bbc.com --pages 2 --output ./out",
+    output:"PDF emerges in ./out/bbc-com-report.pdf — 8 sections, REO Digital branded, ≤5MB, render <30s. ExecutiveSummary GR-007 enforced." },
+  { wk:11, title:"Dashboard + email + warm-up", gate:null,
+    cmd:"(via dashboard at /console + CLI)",
+    output:"Consultant logs in (Clerk auth), reviews held findings, edits → finding_edits row. Email fires via Resend. R6 channels 3+4 conformance verified." },
+  { wk:12, title:"T175 + ops dashboard", gate:"★★★",
+    cmd:"pnpm cro:audit --url=https://bbc.com --pages 2 --output ./out",
+    output:"★★★ MVP SPEC COMPLETE ★★★ — T175 final acceptance + 22-event taxonomy + R6 channels 3+4 + ops dashboard at /console/admin/operations." },
+];
+
+const gates = [
+  { wk:5, level:"★", title:"First Claude evaluate",
+    color:"rose",
+    catches:[
+      "Claude returns 0 findings → prompt template broken",
+      "Claude returns 50 findings → filter not tight enough",
+      "Banned phrasing leaks → R5.3 prompt instruction insufficient",
+      "Hallucinated element refs → catches before grounding rules"
+    ],
+    activations:["R10 TemperatureGuard", "R14.1 atomic LLM logging", "R6 LangSmith trace channel"],
+    decision:"After demo: continue, fix prompts, or escalate"
+  },
+  { wk:7, level:"★", title:"First grounded finding",
+    color:"rose",
+    catches:[
+      "Grounding rejects 0% → rules too lenient",
+      "Grounding rejects 95% → rules too strict",
+      "GR-007 false positives on legitimate findings",
+      "Finding lifecycle DB schema mismatch"
+    ],
+    activations:["Full 3-filter pipeline (CoT → critique → grounding)", "9 grounding rules + GR-012 benchmark validation", "Finding lifecycle (raw→critiqued→grounded/rejected)"],
+    decision:"After demo: ship to wk 8, OR pause and tune rules"
+  },
+  { wk:9, level:"★★", title:"MVP COMPLETE Gate",
+    color:"emerald",
+    catches:[
+      "T148 example.com — ≥3 grounded findings, ≥1 rejected, cost <$5, time <15min",
+      "T149 amazon.in — anti-bot graceful (degraded acceptance OK)",
+      "T150 bbc.com — 3 pages successfully audited",
+      "PostgresCheckpointer resume — zero duplicate LLM calls"
+    ],
+    activations:["Browse mode on real sites", "Cross-page PatternDetector (F-014)", "Cost stays under budget (R8.1 + R8.2 + R14.4)", "Reproducibility snapshot persisted (F-015 foundation)"],
+    decision:"AC-21 satisfied → MVP COMPLETE; ready for Phase 9 delivery layer"
+  },
+  { wk:12, level:"★★★", title:"MVP SPEC COMPLETE Gate",
+    color:"violet",
+    catches:[
+      "T175 bbc.com 2-page foundations acceptance",
+      "All 22 audit_event types emit on a single end-to-end run",
+      "R6 channels 3+4 conformance — zero heuristic body fingerprint",
+      "Reproducibility snapshot composes 6 versions (T160 supersedes T145)"
+    ],
+    activations:["All 4 R6 channels live (Pino + LangSmith + Hono API + Next render)", "Branded PDF + dashboard + email + warm-up + ops dashboard", "AC-37 ★★★ MVP SPEC COMPLETE ★★★"],
+    decision:"MVP SHIPPABLE for first external pilot (with v1.1 R6.2 AES-at-rest hardening added BEFORE pilot per PRD §3.2)"
+  },
+];
+
+const trackerData = [
+  { wk:1, label:"Foundation — Skeleton ships", color:"cyan", tasks:[
+    "T-PHASE0-TEST authored, all ACs FAIL",
+    "T001-T005 Phase 0 setup complete",
+    "T0B-001..003, T0B-005 Phase 0b infra",
+    "T014 PageStateModel schema (forward-pulled)",
+    "T101 HeuristicSchemaExtended (forward-pulled)",
+    "T-SKELETON-001..010 stubs landed",
+    "Phase 0 acceptance test green",
+  ]},
+  { wk:2, label:"Browser foundation real", color:"cyan", tasks:[
+    "T006-T015 Phase 1 in full (T-PHASE1-TESTS first per R3.1)",
+    "T-SKELETON-002 → real BrowserManager + ContextAssembler",
+    "Behavior tests un-skipped: browser launch, AX-tree, screenshot, token cap",
+    "D1 demo recorded",
+    "phase-1-current.md rollup committed",
+  ]},
+  { wk:3, label:"DB persistence real", color:"cyan", tasks:[
+    "Phase 4 partial (T070, T071, T072, T074, T075, T076)",
+    "T-SKELETON-008 → basic Phase 4 PostgresStorage write (stage 1 of 3)",
+    "RLS conformance test green (cross-client query returns 0 rows)",
+    "Append-only trigger conformance test green",
+    "R20 impact.md filed (DB schema + RLS surface)",
+  ]},
+  { wk:4, label:"Heuristic engine real ★ R6 first runtime", color:"cyan", tasks:[
+    "Phase 6 in full (T101-T112)",
+    "T080 + T080a (Phase 4 finish + RobotsChecker)",
+    "T103 partial (~10 of 15 Baymard heuristics)",
+    "T0B-004 lint CLI (now unblocked by T101)",
+    "T-SKELETON-003 → real HeuristicLoader",
+    "R6 transport spy verifies zero body fragments in Pino logs",
+    "R20 impact.md filed (HeuristicLoader interface)",
+  ]},
+  { wk:5, label:"First Claude evaluate ★ FIRST RISK GATE", color:"rose", tasks:[
+    "T066-T069 (Phase 4 safety pillar)",
+    "T073 (LLMAdapter + AnthropicAdapter + TemperatureGuard + BudgetGate)",
+    "Phase 2 minimum (T-PHASE2-*, T019, T024, T025, T046, T048, T049)",
+    "Phase 4b minimum (T4B-001..T4B-007 + T4B-013)",
+    "T113-T119 (Phase 7 Block A + Block B start)",
+    "T104 (Phase 0b Nielsen ~10)",
+    "T-SKELETON-004 → real EvaluateNode + DeepPerceiveNode",
+    "D3 demo: ★ first risk gate ★ — does Claude produce useful findings?",
+    "Failure-mode review: 0 findings? 50 findings? banned phrasing?",
+    "R20 impact.md filed (LLMAdapter activation + EvaluateNode behavior)",
+  ]},
+  { wk:6, label:"Real self-critique", color:"amber", tasks:[
+    "T120 + T121 (R5.6 separate LLM call)",
+    "T103 finish + T105 (Phase 0b complete — 30-heuristic pack)",
+    "T-SKELETON-005 → real SelfCritiqueNode",
+    "llm_call_log shows 2 rows per page (verifies R5.6)",
+    "Demo: critique verdicts visible (KEEP/REVISE/DOWNGRADE/REJECT)",
+  ]},
+  { wk:7, label:"First grounded finding ★ SECOND RISK GATE", color:"rose", tasks:[
+    "T122-T130 (8 grounding rules + GR-012 in T130)",
+    "T-SKELETON-006 → real EvidenceGrounder",
+    "Failure-mode review: rejection rate sane (5-20% per NF-003)?",
+    "First REAL grounded finding to terminal",
+    "All 9 grounding rule conformance tests green",
+  ]},
+  { wk:8, label:"Multi-page audit", color:"amber", tasks:[
+    "Phase 3 in full (T051-T065)",
+    "Phase 5 in full (T081-T096)",
+    "Phase 8 Block A (T135-T142)",
+    "T-SKELETON-001 refactored to wrap AuditGraph.invoke()",
+    "Phase 5 integration tests green (T092-T096)",
+    "R20 impact.md filed (AuditState extension)",
+  ]},
+  { wk:9, label:"T148-T150 ★★ MVP COMPLETE GATE", color:"emerald", tasks:[
+    "Phase 7 finish (T131-T134)",
+    "Phase 8 Block B (T143-T147)",
+    "T148 example.com 3-page audit green",
+    "T149 amazon.in 3-page audit green (or degraded acceptance)",
+    "T150 bbc.com 3-page audit green",
+    "PostgresCheckpointer resume verified",
+    "T-SKELETON-007 → real AnnotateNode (T131)",
+    "T-SKELETON-008 promoted to T132 (grounding lifecycle, stage 2 of 3)",
+    "Phase 5b multi-viewport (T5B-001..T5B-009)",
+    "phase-7-current.md + phase-8-current.md rollups committed",
+  ]},
+  { wk:10, label:"Branded PDF emerges", color:"violet", tasks:[
+    "Phase 9 Block A (T156-T159, T161, T162, T165-T168)",
+    "Phase 9 Block C delivery (T245-T249)",
+    "T-SKELETON-009 → real Report (PDF pipeline)",
+    "PDF size ≤5MB, render <30s",
+    "ExecutiveSummary GR-007 retry-then-fallback verified",
+    "Phase 5b triggers (T5B-010..T5B-015)",
+    "R20 impact.md filed (Report contract; R6 channels 3+4)",
+  ]},
+  { wk:11, label:"Dashboard + warm-up + email", color:"violet", tasks:[
+    "T160 SnapshotBuilder (REPLACES Phase 8 T145 scaffold)",
+    "T163 + T164 (warm-up + extended StoreNode — stage 3 of 3)",
+    "Phase 9 Block B dashboard (T169-T173)",
+    "T256 + T257 (DiscoveryStrategy)",
+    "T260 + T261 (NotificationAdapter via Resend)",
+    "Phase 5b cookie (T5B-016..T5B-019)",
+    "Phase 8 T148-T150 RE-RUN under T160 SnapshotBuilder",
+    "R6 channels 3+4 conformance test green (zero body fingerprint)",
+    "R20 impact.md filed (T160 supersession + AccessModeMiddleware fail-secure)",
+  ]},
+  { wk:12, label:"T175 + ops dashboard ★★★ MVP SPEC COMPLETE", color:"violet", tasks:[
+    "T239-T243 (Phase 9 Block E observability)",
+    "T174 (Phase 9 integration test)",
+    "T175 acceptance test on bbc.com 2-page green",
+    "T244 ops dashboard (built LAST per REQ-DELIVERY-OPS-003)",
+    "All 22 audit_event types emit on single end-to-end run",
+    "AC-37 ★★★ MVP SPEC COMPLETE ★★★ gate satisfied",
+    "phase-9-current.md rollup committed (final MVP rollup)",
+  ]},
+];
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: capability matrix
+// ═══════════════════════════════════════════════════════════
+function renderMatrix() {
+  const grid = document.getElementById('matrix-grid');
+  let html = '';
+
+  // Header row
+  html += `<div class="grid gap-1 mb-1" style="grid-template-columns: 220px repeat(12, 1fr);">`;
+  html += `<div class="text-xs text-slate-500 mono pr-2">Layer / Week</div>`;
+  weeks.forEach(w => {
+    const gateCls = w.gate === '★' ? 'text-rose-400' : w.gate === '★★' ? 'text-emerald-400' : w.gate === '★★★' ? 'text-violet-400' : 'text-slate-400';
+    html += `<div class="text-center text-xs mono ${gateCls}">W${w.num}${w.gate ? ' ' + w.gate : ''}</div>`;
+  });
+  html += `</div>`;
+
+  // Body rows
+  layers.forEach((layer, rowIdx) => {
+    html += `<div class="grid gap-1 mb-1 items-center" style="grid-template-columns: 220px repeat(12, 1fr);">`;
+    html += `<div class="text-sm text-slate-300 pr-2 font-medium">${rowIdx + 1}. ${layer.name}</div>`;
+    layer.states.forEach((s, colIdx) => {
+      const cellClass = s === 'r' ? 'bg-emerald-400 hover:bg-emerald-300' :
+                        s === 't' ? 'bg-amber-500 pulse-amber hover:bg-amber-400' :
+                                    'bg-slate-700/50 hover:bg-slate-600';
+      const label = s === 'r' ? 'Real' : s === 't' ? 'Transitioning' : 'Stub';
+      html += `<button class="matrix-cell w-full h-7 rounded ${cellClass} cursor-pointer relative has-tooltip"
+                       onclick="showCellDetail(${rowIdx}, ${colIdx})"
+                       data-row="${rowIdx}" data-col="${colIdx}">
+                <span class="tooltip absolute -top-9 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-700 text-xs px-2 py-1 rounded whitespace-nowrap z-20">
+                  W${colIdx+1} · ${label}
+                </span>
+              </button>`;
+    });
+    html += `</div>`;
+  });
+
+  grid.innerHTML = html;
+}
+
+function showCellDetail(rowIdx, colIdx) {
+  const layer = layers[rowIdx];
+  const week = weeks[colIdx];
+  const state = layer.states[colIdx];
+  const stateName = state === 'r' ? 'REAL' : state === 't' ? 'TRANSITIONING THIS WEEK' : 'STUB / NOT PRESENT';
+  const stateClass = state === 'r' ? 'bg-emerald-500/20 text-emerald-400' :
+                     state === 't' ? 'bg-amber-500/20 text-amber-400' :
+                                     'bg-slate-700/50 text-slate-400';
+
+  document.getElementById('md-title').textContent = layer.name;
+  document.getElementById('md-week').textContent = `Week ${week.num} — ${week.label}${week.gate ? ' ' + week.gate : ''}`;
+  document.getElementById('md-status').textContent = stateName;
+  document.getElementById('md-status').className = `inline-block text-xs px-2 py-1 rounded-md mono mb-3 ${stateClass}`;
+  document.getElementById('md-content').textContent = layer.detail;
+  document.getElementById('matrix-detail').classList.remove('hidden');
+  document.getElementById('matrix-detail').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: demo evolution cards
+// ═══════════════════════════════════════════════════════════
+function renderDemos() {
+  const grid = document.getElementById('demo-grid');
+  let html = '';
+  demos.forEach(d => {
+    const gateCls = d.gate === '★' ? 'border-rose-500/50 bg-rose-500/5' :
+                    d.gate === '★★' ? 'border-emerald-400/50 bg-emerald-400/5' :
+                    d.gate === '★★★' ? 'border-violet-500/50 bg-violet-500/5' :
+                    'border-slate-800 bg-slate-900';
+    const gateBadge = d.gate ?
+      `<span class="text-${d.gate === '★' ? 'rose' : d.gate === '★★' ? 'emerald' : 'violet'}-400 font-bold">${d.gate}</span>` : '';
+
+    html += `<div class="card-lift ${gateCls} border rounded-xl p-5">
+      <div class="flex items-baseline justify-between mb-3">
+        <div class="text-xs mono text-slate-500">Week ${d.wk}</div>
+        ${gateBadge}
+      </div>
+      <div class="text-base font-semibold mb-3">${d.title}</div>
+      <div class="bg-slate-950 border border-slate-800 rounded-md p-2 mb-3 mono text-xs text-cyan-400 overflow-x-auto whitespace-nowrap">$ ${d.cmd}</div>
+      <div class="text-sm text-slate-400 leading-relaxed">${d.output}</div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: risk gates
+// ═══════════════════════════════════════════════════════════
+function renderGates() {
+  const grid = document.getElementById('gates-grid');
+  let html = '';
+  gates.forEach(g => {
+    const colorMap = {
+      rose:   { border:'border-rose-500/40', glow:'glow-rose', text:'text-rose-400' },
+      emerald:{ border:'border-emerald-400/40', glow:'glow-emerald', text:'text-emerald-400' },
+      violet: { border:'border-violet-500/40', glow:'glow-violet', text:'text-violet-400' },
+    };
+    const c = colorMap[g.color];
+    html += `<div class="${c.border} ${c.glow} bg-slate-900/80 border-2 rounded-2xl p-6">
+      <div class="flex items-center gap-3 mb-1">
+        <span class="${c.text} text-xl font-bold">${g.level}</span>
+        <span class="text-xs mono text-slate-500">Week ${g.wk}</span>
+      </div>
+      <div class="text-xl font-semibold mb-4">${g.title}</div>
+
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-2 font-semibold">First-time activations</div>
+      <ul class="space-y-1 mb-4">
+        ${g.activations.map(a => `<li class="text-sm text-slate-300 flex gap-2"><span class="${c.text}">→</span><span>${a}</span></li>`).join('')}
+      </ul>
+
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-2 font-semibold">Failure modes this catches</div>
+      <ul class="space-y-1 mb-4">
+        ${g.catches.map(f => `<li class="text-sm text-slate-400 flex gap-2"><span class="text-slate-600">×</span><span>${f}</span></li>`).join('')}
+      </ul>
+
+      <div class="text-xs uppercase tracking-wider text-slate-500 mb-2 font-semibold">Decision after demo</div>
+      <div class="text-sm ${c.text} font-medium">${g.decision}</div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER: live tracker
+// ═══════════════════════════════════════════════════════════
+const STORAGE_KEY = 'neural-mvp-tracker-state';
+
+function loadTrackerState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+
+function saveTrackerState(state) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch (e) { console.warn('Cannot persist tracker state', e); }
+}
+
+function renderTracker() {
+  const grid = document.getElementById('tracker-grid');
+  const state = loadTrackerState();
+  const colorMap = {
+    cyan:    { border:'border-cyan-400/30', accent:'text-cyan-400', bar:'bg-cyan-400' },
+    amber:   { border:'border-amber-400/30', accent:'text-amber-400', bar:'bg-amber-400' },
+    rose:    { border:'border-rose-500/30', accent:'text-rose-400', bar:'bg-rose-500' },
+    emerald: { border:'border-emerald-400/30', accent:'text-emerald-400', bar:'bg-emerald-400' },
+    violet:  { border:'border-violet-400/30', accent:'text-violet-400', bar:'bg-violet-400' },
+  };
+  let html = '';
+  trackerData.forEach((wk, wkIdx) => {
+    const c = colorMap[wk.color];
+    const wkState = state[`w${wk.wk}`] || {};
+    const completed = wk.tasks.filter((_, i) => wkState[i]).length;
+    const total = wk.tasks.length;
+    const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+    html += `<div class="bg-slate-900 border ${c.border} rounded-xl overflow-hidden">
+      <button onclick="toggleWeek(${wk.wk})" class="w-full p-4 flex items-center gap-4 hover:bg-slate-800/50 transition text-left">
+        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-slate-800 ${c.accent} flex items-center justify-center font-bold mono">W${wk.wk}</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-slate-100 truncate">${wk.label}</div>
+          <div class="flex items-center gap-3 mt-1.5">
+            <div class="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full ${c.bar} transition-all" style="width: ${pct}%"></div>
+            </div>
+            <div class="text-xs mono text-slate-500 flex-shrink-0">${completed}/${total} · ${pct}%</div>
+          </div>
+        </div>
+        <svg class="w-5 h-5 text-slate-500 transition-transform" id="chevron-w${wk.wk}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div class="accordion-content" id="content-w${wk.wk}">
+        <div class="px-4 pb-4 space-y-2">
+          ${wk.tasks.map((t, i) => {
+            const checked = wkState[i] ? 'checked' : '';
+            return `<label class="flex items-start gap-3 p-2 hover:bg-slate-800/50 rounded cursor-pointer transition">
+              <input type="checkbox" ${checked} onchange="toggleTask(${wk.wk}, ${i}, this.checked)"
+                     class="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900">
+              <span class="text-sm text-slate-300 flex-1 ${checked ? 'line-through opacity-50' : ''}" id="task-w${wk.wk}-${i}">${t}</span>
+            </label>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+  updateOverallProgress();
+}
+
+function toggleWeek(wkNum) {
+  const content = document.getElementById(`content-w${wkNum}`);
+  const chevron = document.getElementById(`chevron-w${wkNum}`);
+  content.classList.toggle('open');
+  chevron.style.transform = content.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+function toggleTask(wkNum, taskIdx, checked) {
+  const state = loadTrackerState();
+  if (!state[`w${wkNum}`]) state[`w${wkNum}`] = {};
+  state[`w${wkNum}`][taskIdx] = checked;
+  saveTrackerState(state);
+
+  // Update strikethrough
+  const taskEl = document.getElementById(`task-w${wkNum}-${taskIdx}`);
+  if (checked) taskEl.classList.add('line-through', 'opacity-50');
+  else         taskEl.classList.remove('line-through', 'opacity-50');
+
+  // Re-render to update progress bars (lightweight: just the affected week)
+  renderTracker();
+  // Ensure the toggled week stays open after re-render
+  const content = document.getElementById(`content-w${wkNum}`);
+  const chevron = document.getElementById(`chevron-w${wkNum}`);
+  if (content) {
+    content.classList.add('open');
+    if (chevron) chevron.style.transform = 'rotate(180deg)';
+  }
+}
+
+function updateOverallProgress() {
+  const state = loadTrackerState();
+  let completed = 0, total = 0, lastCompletedWk = 0;
+  trackerData.forEach(wk => {
+    const wkState = state[`w${wk.wk}`] || {};
+    const wkCompleted = wk.tasks.filter((_, i) => wkState[i]).length;
+    total += wk.tasks.length;
+    completed += wkCompleted;
+    if (wkCompleted === wk.tasks.length && wk.tasks.length > 0) lastCompletedWk = wk.wk;
+  });
+  const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+  document.getElementById('overall-pct').textContent = pct;
+  document.getElementById('overall-bar').style.width = pct + '%';
+  document.getElementById('completed-count').textContent = completed;
+  document.getElementById('total-count').textContent = total;
+  document.getElementById('mini-progress-bar').style.width = pct + '%';
+  document.getElementById('mini-progress-label').textContent = pct + '%';
+
+  const currentWk = lastCompletedWk + 1;
+  const label = lastCompletedWk === 0 ? 'Week 1 not started' :
+                lastCompletedWk === 12 ? '★★★ MVP SPEC COMPLETE' :
+                `Week ${lastCompletedWk} done · Week ${currentWk} in progress`;
+  document.getElementById('current-week-label').textContent = label;
+}
+
+function resetTracker() {
+  if (confirm('Reset all tracker progress? This cannot be undone.')) {
+    localStorage.removeItem(STORAGE_KEY);
+    renderTracker();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderMatrix();
+  renderDemos();
+  renderGates();
+  renderTracker();
+});
+</script>
+
+</body>
+</html>

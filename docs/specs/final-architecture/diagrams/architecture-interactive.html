@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neural — AI CRO Audit Platform · Architecture</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --text:#0f172a; --muted:#64748b;
+  --border:#e2e8f0; --accent:#2563eb; --shadow:0 8px 24px rgba(15,23,42,.08);
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;
+}
+header{
+  padding:14px 24px;background:var(--panel);border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;
+}
+header .brand h1{font-size:17px;margin:0;font-weight:600;letter-spacing:-.01em}
+header .brand p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.toolbar input,.toolbar select{
+  padding:7px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;
+  background:white;color:var(--text);outline:none;
+}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--accent)}
+.toolbar input{width:200px}
+.legend{display:flex;gap:14px;align-items:center;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px}
+.legend-swatch{width:18px;height:2px;border-radius:1px}
+main{display:grid;grid-template-columns:1fr 440px;height:calc(100vh - 76px);min-height:680px}
+#diagram{background:white;border-right:1px solid var(--border);position:relative}
+aside{background:var(--panel);overflow-y:auto;padding:0;border-left:1px solid var(--border)}
+aside.empty .placeholder{
+  color:var(--muted);text-align:center;padding:80px 32px;display:flex;flex-direction:column;
+  align-items:center;gap:12px;
+}
+aside.empty .placeholder svg{opacity:.45}
+.panel-header{
+  padding:20px 24px 12px;border-bottom:1px solid var(--border);position:relative;
+}
+.panel-header .layer-pill{
+  display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;
+  font-weight:600;color:white;margin-bottom:8px;letter-spacing:.02em;
+}
+.panel-header h2{font-size:18px;margin:0;font-weight:600;letter-spacing:-.01em}
+.panel-header .subtitle{color:var(--muted);margin:4px 0 0;font-size:12.5px}
+.panel-header .close{
+  position:absolute;top:16px;right:18px;background:none;border:0;font-size:20px;
+  color:var(--muted);cursor:pointer;line-height:1;
+}
+.panel-header .close:hover{color:var(--text)}
+.panel-body{padding:8px 24px 32px}
+.panel-body section{margin:18px 0}
+.panel-body section h3{
+  font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--muted);margin:0 0 6px;font-weight:600;
+}
+.panel-body section p{margin:0}
+.panel-body section ul{margin:0;padding-left:18px}
+.panel-body section li{margin:3px 0}
+.panel-body .example{
+  background:#f8fafc;border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;
+  font-size:13px;color:#334155;
+}
+.panel-body .why{
+  background:#fef9c3;border-left:3px solid #ca8a04;padding:10px 14px;border-radius:6px;
+  font-size:13px;color:#713f12;
+}
+.connected{display:flex;flex-wrap:wrap;gap:6px}
+.connected button{
+  padding:4px 10px;border-radius:6px;background:#f1f5f9;color:var(--text);
+  border:1px solid var(--border);font-size:12px;cursor:pointer;transition:.15s;
+}
+.connected button:hover{background:#e2e8f0;border-color:#cbd5e1}
+.source-files{display:flex;flex-direction:column;gap:4px}
+.source-files code{
+  background:#f1f5f9;padding:4px 8px;border-radius:4px;font-size:11.5px;
+  color:#334155;word-break:break-all;
+}
+.flow-mini{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;
+  background:#f8fafc;border-radius:8px;flex-wrap:wrap;
+}
+.flow-mini .step{
+  background:white;padding:5px 10px;border-radius:6px;border:1px solid var(--border);
+  font-size:12px;font-weight:500;
+}
+.flow-mini .arrow{color:var(--muted);font-size:14px}
+@media (max-width:1100px){
+  main{grid-template-columns:1fr}
+  aside{position:fixed;right:0;top:76px;bottom:0;width:100%;max-width:480px;display:none;box-shadow:var(--shadow)}
+  aside.open{display:block}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>Neural — AI CRO Audit Platform</h1>
+    <p>How an audit flows from a single click to a branded PDF · 14 layers · 57 components · click any node</p>
+  </div>
+  <div class="toolbar">
+    <input id="search" type="text" placeholder="Search components…" aria-label="Search">
+    <select id="view" aria-label="Diagram view">
+      <option value="all">Full architecture</option>
+      <option value="business">Business overview</option>
+      <option value="cro">CRO analysis funnel</option>
+    </select>
+  </div>
+</header>
+<main>
+  <div id="diagram"></div>
+  <aside id="panel" class="empty">
+    <div class="placeholder">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M9 11l3 3 3-3M12 14V3M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+      </svg>
+      <div>
+        <div style="font-size:14px;font-weight:500;color:var(--text)">Click any component</div>
+        <div style="font-size:12.5px;margin-top:4px">to see what it does, what it produces, and why it matters.</div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<script>
+/* ========= DATA ========= */
+const LAYERS = [
+  {id:1,  name:"User / Trigger",          color:"#0EA5E9", short:"Where audits start"},
+  {id:2,  name:"Audit Contract",          color:"#475569", short:"What we agree to audit"},
+  {id:3,  name:"Orchestration",           color:"#2563EB", short:"Coordinates the audit"},
+  {id:4,  name:"Browser Perception",      color:"#06B6D4", short:"How we see the page"},
+  {id:5,  name:"Dynamic State Coverage",  color:"#14B8A6", short:"Hidden views of the page"},
+  {id:6,  name:"Evidence Packaging",      color:"#10B981", short:"Proof for every finding"},
+  {id:7,  name:"Heuristics Knowledge",    color:"#F59E0B", short:"30 expert CRO rules"},
+  {id:8,  name:"AI Analysis",             color:"#7C3AED", short:"AI applies expert rules"},
+  {id:9,  name:"Insight Generation",      color:"#C026D3", short:"Issues to hypotheses"},
+  {id:10, name:"Reporting",               color:"#16A34A", short:"Polished deliverables"},
+  {id:11, name:"Storage & Observability", color:"#78716C", short:"Where data lives"},
+  {id:12, name:"Human Review",            color:"#F97316", short:"Consultant signs off"},
+  {id:13, name:"Learning Loop (v1.1+)",   color:"#BE185D", short:"Audits make heuristics smarter"},
+  {id:14, name:"Roadmap & Future",        color:"#6B7280", short:"How this scales"}
+];
+const layerById = Object.fromEntries(LAYERS.map(l => [l.id, l]));
+
+const NODES = [
+  {id:"T1",label:"Consultant Trigger",layer:1,x:3,y:11.5,purpose:"The friendly front door for an audit.",what_happens:["A consultant types the audit command or clicks Start in the dashboard.","The system collects the URL list and business type.","A new audit run is queued."],inputs:["Starting URL or list","Business type"],outputs:["Validated audit request"],why_matters:"One-click start. No config drama for the consultant.",example:"A consultant runs an audit on https://example-shop.com using the 'ecommerce' template.",connected_to:["C1","C2","C3","C4"],source_files:["docs/specs/final-architecture/18-trigger-gateway.md"]},
+  {id:"T2",label:"URL Discovery",layer:1,x:6,y:11.5,purpose:"Finds the right pages on the website to audit.",what_happens:["Reads the sitemap or crawls the site.","Picks representative pages (home, category, product, cart).","Caps the page count to fit budget."],inputs:["Seed URL","Audit template"],outputs:["Curated URL list with page-type tags"],why_matters:"Removes the manual work of choosing which pages to audit.",example:"Given example-shop.com, picks home + 2 categories + 2 product pages + cart + checkout.",connected_to:["C3"],source_files:["docs/specs/final-architecture/19-discovery-and-templates.md"]},
+  {id:"T3",label:"Audit Template",layer:1,x:9,y:11.5,purpose:"Pre-built audit recipes by business type.",what_happens:["Maps a business type to a default persona, page mix, and heuristic group.","Provides sensible defaults so audits don't need hand-tuning."],inputs:["Business type"],outputs:["Audit configuration profile"],why_matters:"Consultants get a smart starting point every time.",example:"Choosing 'ecommerce' loads the 'shopper' persona and the e-com heuristic pack.",connected_to:["C2","C4"],source_files:["docs/specs/final-architecture/19-discovery-and-templates.md"]},
+
+  {id:"C1",label:"Client Profile",layer:2,x:2,y:10.3,purpose:"Identifies who the audit is for.",what_happens:["Captures client name, brand context, sensitive constraints."],inputs:["Consultant input"],outputs:["Client profile record"],why_matters:"Per-client context shapes findings and allows billing.",example:"Audit tagged to client 'Acme Corp', region IN.",connected_to:["O1"],source_files:["docs/specs/final-architecture/05-unified-state.md"]},
+  {id:"C2",label:"Business Type & Persona",layer:2,x:4.5,y:10.3,purpose:"Tells the system who the audit is for (the buyer).",what_happens:["Sets a target persona used by AI prompts.","Adjusts heuristic emphasis to that persona."],inputs:["Business type from trigger"],outputs:["Persona profile"],why_matters:"Findings reflect a real buyer, not a generic visitor.",example:"'Ecommerce → time-pressed mobile shopper'.",connected_to:["O1","A1"],source_files:["docs/specs/final-architecture/19-discovery-and-templates.md","docs/specs/mvp/phases/phase-7-analysis/spec.md"]},
+  {id:"C3",label:"URL List & Page Types",layer:2,x:7,y:10.3,purpose:"Locks in which pages will be audited and their roles.",what_happens:["Tags each URL as home / category / product / cart / etc."],inputs:["Curated URLs"],outputs:["Typed URL list"],why_matters:"Page-type drives which heuristics apply.",example:"Tag /products/shoe-1 as 'product detail page'.",connected_to:["O1"],source_files:["docs/specs/final-architecture/19-discovery-and-templates.md"]},
+  {id:"C4",label:"Success Criteria",layer:2,x:9.5,y:10.3,purpose:"Defines what 'done' looks like for this audit.",what_happens:["Sets budget, page count, severity thresholds."],inputs:["Audit template","Consultant overrides"],outputs:["Acceptance criteria for the run"],why_matters:"Predictable scope and predictable cost.",example:"Cap = $15 per audit, top 10 findings only.",connected_to:["O1"],source_files:["docs/specs/final-architecture/26-cost-and-guardrails.md"]},
+
+  {id:"O1",label:"Audit Planner",layer:3,x:2,y:9.1,purpose:"Turns a request into an executable audit plan.",what_happens:["Builds the page list and the order of work.","Allocates budget per page."],inputs:["Audit contract"],outputs:["Audit plan"],why_matters:"Every audit follows the same disciplined plan.",example:"Plan: 6 pages × 3 viewports, $2.50 budget per page.",connected_to:["O2"],source_files:["docs/specs/final-architecture/04-orchestration.md"]},
+  {id:"O2",label:"Page Queue Manager",layer:3,x:4.5,y:9.1,purpose:"Schedules pages one by one so the system stays sane.",what_happens:["Pulls the next page from the queue.","Hands off to the workflow controller."],inputs:["Audit plan"],outputs:["Per-page job"],why_matters:"Predictable, parallel-safe execution.",example:"Audit of 6 pages becomes 6 queued jobs.",connected_to:["O3"],source_files:["docs/specs/final-architecture/27-durable-orchestration.md"]},
+  {id:"O3",label:"Workflow Controller",layer:3,x:7,y:9.1,purpose:"The conductor — runs each audit step in the right order.",what_happens:["Walks through browse → analyze → score → store.","Saves progress at every step.","Pauses for human review when needed."],inputs:["Per-page job"],outputs:["Audit progress + checkpoints"],why_matters:"Audits run reliably end-to-end and survive crashes.",example:"If the AI step fails, the controller retries without re-loading the browser.",connected_to:["B1","S4","S5","R1","E4"],source_files:["docs/specs/final-architecture/04-orchestration.md","docs/specs/final-architecture/21-workflow-orchestration.md","docs/specs/mvp/phases/phase-8-orchestrator/spec.md"]},
+  {id:"O4",label:"Retry & Recovery",layer:3,x:9.5,y:9.1,purpose:"Catches failures and tries again sensibly.",what_happens:["Detects timeouts, crashes, transient errors.","Reruns failed steps with backoff."],inputs:["Failed step"],outputs:["Healed run state"],why_matters:"One bad page never sinks the whole audit.",example:"A 504 from a slow product page is retried twice before being skipped.",connected_to:["O3","S4"],source_files:["docs/specs/final-architecture/27-durable-orchestration.md","docs/specs/final-architecture/15-failure-modes.md"]},
+
+  {id:"B1",label:"Browser Agent",layer:4,x:1.5,y:7.9,purpose:"Opens and controls a real browser to visit a page.",what_happens:["Launches Chromium under Playwright.","Loads the URL with safe defaults."],inputs:["URL"],outputs:["Live browser session"],why_matters:"Audits use a real browser, not a stripped-down crawler.",example:"Loads /checkout exactly as a real customer would.",connected_to:["B2","B5"],source_files:["docs/specs/AI_Browser_Agent_Architecture_v3.1.md","docs/specs/mvp/phases/phase-5-browse-mvp/spec.md"]},
+  {id:"B2",label:"Cookie & Overlay Handler",layer:4,x:3.5,y:7.9,purpose:"Closes pop-ups, banners, and chat widgets.",what_happens:["Detects cookie consent, modals, chat widgets.","Dismisses them politely."],inputs:["Live page"],outputs:["Clean page"],why_matters:"Audits are not corrupted by overlays.",example:"Cookie banner closed before the screenshot is taken.",connected_to:["B3","B4"],source_files:["docs/specs/mvp/phases/phase-5b-multi-viewport-triggers-cookie/spec.md"]},
+  {id:"B3",label:"Screenshot Capture",layer:4,x:5.5,y:7.9,purpose:"Takes pictures of the page.",what_happens:["Captures full-page and viewport screenshots."],inputs:["Clean page"],outputs:["PNG screenshots"],why_matters:"Visual evidence for every finding.",example:"Screenshot of the product detail page on mobile.",connected_to:["E1","D1","S2"],source_files:["docs/specs/final-architecture/06-browse-mode.md"]},
+  {id:"B4",label:"DOM & Accessibility Tree",layer:4,x:7.5,y:7.9,purpose:"Reads the page structure the way a screen reader would.",what_happens:["Pulls the DOM and the accessibility tree.","Filters out ad and decoration noise."],inputs:["Clean page"],outputs:["Structured page model"],why_matters:"Findings are anchored to real on-page elements.",example:"Builds a clean tree of headings, buttons, forms.",connected_to:["E2","D1"],source_files:["docs/specs/mvp/phases/phase-1-perception/spec.md"]},
+  {id:"B5",label:"Multi-Viewport Capture",layer:4,x:9.5,y:7.9,purpose:"Repeats capture at desktop, tablet, and mobile sizes.",what_happens:["Resizes the viewport.","Re-runs screenshot and DOM capture."],inputs:["Live page"],outputs:["Per-size captures"],why_matters:"Mobile-only conversion blockers don't slip through.",example:"Catches a CTA hidden under a mobile sticky banner.",connected_to:["B3","B4"],source_files:["docs/specs/mvp/phases/phase-5b-multi-viewport-triggers-cookie/spec.md"]},
+
+  {id:"D1",label:"Initial Page State",layer:5,x:2.5,y:6.7,purpose:"Captures the page as it first loads.",what_happens:["First-paint snapshot of structure and visuals."],inputs:["Clean page"],outputs:["Initial state record"],why_matters:"Baseline for comparing later states.",example:"Stores the home-page hero before any interaction.",connected_to:["D2","D3"],source_files:["docs/specs/final-architecture/20-state-exploration.md"]},
+  {id:"D2",label:"Scroll & Lazy-load States",layer:5,x:5,y:6.7,purpose:"Scrolls the page so lazy content appears.",what_happens:["Scrolls to bottom in steps.","Triggers lazy-loaded sections.","Captures each segment."],inputs:["Initial state"],outputs:["Scroll-state records"],why_matters:"Content hidden until you scroll is still audited.",example:"Catches a testimonial section that loads only after scroll.",connected_to:["D4","E2"],source_files:["docs/specs/final-architecture/20-state-exploration.md"]},
+  {id:"D3",label:"Interaction States",layer:5,x:7.5,y:6.7,purpose:"Opens hidden views — modals, accordions, filters.",what_happens:["Clicks safe interactive elements.","Captures the resulting state."],inputs:["Initial state"],outputs:["Interaction-state records"],why_matters:"Issues hidden behind clicks are surfaced.",example:"Opens the size-filter panel on a product list and audits it.",connected_to:["D4","E2"],source_files:["docs/specs/final-architecture/20-state-exploration.md","docs/specs/final-architecture/32-interactive-analysis.md"]},
+  {id:"D4",label:"State Coordinator",layer:5,x:10,y:6.7,purpose:"Decides which states are worth analyzing.",what_happens:["Scores each state for conversion impact.","Selects a smart subset."],inputs:["All state records"],outputs:["Selected states for analysis"],why_matters:"Avoids wasting AI cost on low-value states.",example:"Skips the empty 'help' modal; analyzes the filter panel.",connected_to:["A1"],source_files:["docs/specs/final-architecture/31-state-aware-analysis.md"]},
+
+  {id:"E1",label:"Screenshot Library",layer:6,x:2,y:5.5,purpose:"Stores every screenshot per state and per viewport.",what_happens:["Saves images and links to findings."],inputs:["Captured screenshots"],outputs:["Indexed screenshot library"],why_matters:"Reports can show real evidence, not assertions.",example:"Mobile screenshot of the broken checkout button.",connected_to:["A1","E3","S2"],source_files:["docs/specs/final-architecture/37-context-capture-layer.md"]},
+  {id:"E2",label:"DOM Evidence",layer:6,x:4.5,y:5.5,purpose:"Stores the structural snippet behind each finding.",what_happens:["Records the relevant DOM and AX-tree fragment."],inputs:["Page model + finding context"],outputs:["DOM evidence record"],why_matters:"Engineers can trace findings to actual code.",example:"Captures the button HTML for a low-contrast CTA finding.",connected_to:["A1","E3","S1"],source_files:["docs/specs/final-architecture/37-context-capture-layer.md"]},
+  {id:"E3",label:"Annotated Visuals",layer:6,x:7,y:5.5,purpose:"Draws boxes and labels on screenshots.",what_happens:["Marks the offending element on the screenshot.","Adds short captions."],inputs:["Screenshot + element coordinates"],outputs:["Annotated image"],why_matters:"Clients see exactly what's wrong at a glance.",example:"A red box around a hard-to-find search input.",connected_to:["A5","P3"],source_files:["docs/specs/final-architecture/14-delivery-layer.md","docs/specs/final-architecture/35-report-generation.md"]},
+  {id:"E4",label:"Reproducibility Snapshot",layer:6,x:9.5,y:5.5,purpose:"Pins exactly how the audit was run.",what_happens:["Records model name, prompt hash, heuristic versions, browser version."],inputs:["Run config"],outputs:["Immutable run snapshot"],why_matters:"We can re-run any audit and explain the result.",example:"Audit #4321 ran with claude-sonnet-4-2026-03 and heuristics v1.4.",connected_to:["S1"],source_files:["docs/specs/final-architecture/25-reproducibility.md"]},
+
+  {id:"H1",label:"CRO Heuristic Library",layer:7,x:-0.5,y:4.9,purpose:"The 30 expert CRO rules.",what_happens:["Each rule defines one common conversion problem and how to spot it.","Rules are private IP, never shared with clients."],inputs:["Heuristic edits by the team"],outputs:["Rule library"],why_matters:"The team's expertise shows up in every audit.",example:"Rule HEU-09: 'Primary CTA must be visible without scrolling on mobile'.",connected_to:["H4"],source_files:["docs/specs/final-architecture/09-heuristic-kb.md","docs/specs/mvp/phases/phase-0b-heuristics/spec.md"]},
+  {id:"H2",label:"Business & Page Rules",layer:7,x:-0.5,y:4.4,purpose:"Maps rules to business and page types.",what_happens:["Tells the filter which rules apply where."],inputs:["Audit template","Page type tags"],outputs:["Rule-applicability map"],why_matters:"B2B SaaS pages don't get e-commerce rules.",example:"'Add-to-cart trust badges' rule only on product pages.",connected_to:["H4"],source_files:["docs/specs/final-architecture/09-heuristic-kb.md"]},
+  {id:"H3",label:"Persona & Funnel Rules",layer:7,x:-0.5,y:3.9,purpose:"Weights rules by persona and funnel stage.",what_happens:["Boosts trust rules at checkout, awareness rules at top of funnel."],inputs:["Persona","Funnel stage"],outputs:["Rule-weighting profile"],why_matters:"Findings are prioritized for the right buyer at the right stage.",example:"Trust signals weighted higher on checkout for first-time buyers.",connected_to:["H4"],source_files:["docs/specs/final-architecture/09-heuristic-kb.md","docs/specs/final-architecture/22-heuristic-retrieval-evolution.md"]},
+  {id:"H4",label:"Two-Stage Filter",layer:7,x:0.7,y:4.3,purpose:"Picks only the rules that matter for this page.",what_happens:["Stage 1: rule-based pre-filter on page type and persona.","Stage 2: similarity match against rule descriptions."],inputs:["Page model","Persona","All rules"],outputs:["Shortlist of relevant rules"],why_matters:"Cuts AI cost and noise.",example:"From 30 rules → 8 relevant rules for this product page.",connected_to:["A2"],source_files:["docs/specs/final-architecture/22-heuristic-retrieval-evolution.md","docs/specs/mvp/phases/phase-6-heuristics/spec.md"]},
+
+  {id:"A1",label:"Page Understanding",layer:8,x:2,y:4.3,purpose:"AI re-reads the page through the buyer's eyes.",what_happens:["Combines page model + screenshots + persona.","Builds a higher-level understanding."],inputs:["Page model","Screenshots","Persona"],outputs:["Deep perception"],why_matters:"Findings start from a buyer's lens, not a developer's.",example:"Notes that the hero copy is jargon-heavy for a first-time visitor.",connected_to:["A2","S3"],source_files:["docs/specs/final-architecture/07-analyze-mode.md","docs/specs/mvp/phases/phase-7-analysis/spec.md"]},
+  {id:"A2",label:"Heuristic Evaluation",layer:8,x:3.7,y:4.3,purpose:"Applies each shortlisted rule to the page.",what_happens:["For each rule, the AI checks the page.","Returns pass / warn / fail with rationale."],inputs:["Deep perception","Rule shortlist"],outputs:["Draft findings"],why_matters:"Surfaces the issues a senior consultant would flag.",example:"Rule HEU-09 fails: CTA below the fold on mobile.",connected_to:["A3","S3"],source_files:["docs/specs/final-architecture/07-analyze-mode.md"]},
+  {id:"A3",label:"Self-Critique",layer:8,x:5.4,y:4.3,purpose:"AI challenges its own draft findings.",what_happens:["A second AI persona reviews each draft.","Drops weak or hallucinated findings."],inputs:["Draft findings"],outputs:["Refined findings"],why_matters:"Higher signal-to-noise. Fewer false positives.",example:"Drops a 'low contrast' claim that was actually fine.",connected_to:["A4","S3"],source_files:["docs/specs/final-architecture/07-analyze-mode.md","docs/specs/mvp/constitution.md"]},
+  {id:"A4",label:"Fact-Check (Grounding)",layer:8,x:7.1,y:4.3,purpose:"Code-level verification of every finding.",what_happens:["Runs deterministic checks against the live page.","Drops findings that don't pass.","10+ grounding rules in MVP."],inputs:["Refined findings","Live page"],outputs:["Grounded findings"],why_matters:"Findings are anchored to facts, not AI opinion.",example:"Confirms the CTA's contrast ratio is actually 2.1, below the 4.5 threshold.",connected_to:["A5"],source_files:["docs/specs/mvp/phases/phase-7-analysis/spec.md"]},
+  {id:"A5",label:"Evidence Annotation",layer:8,x:8.8,y:4.3,purpose:"Attaches evidence to each finding.",what_happens:["Pulls the right screenshot region.","Pulls the DOM snippet.","Bundles them with the finding."],inputs:["Grounded findings","Evidence library"],outputs:["Annotated findings"],why_matters:"Every recommendation comes with a paper trail.",example:"Finding bundled with annotated mobile screenshot + button HTML.",connected_to:["A6","I1","S1"],source_files:["docs/specs/final-architecture/23-findings-engine-extended.md"]},
+  {id:"A6",label:"Cross-Page Patterns",layer:8,x:10.5,y:4.3,purpose:"Finds issues that repeat site-wide.",what_happens:["Groups similar findings across pages.","Promotes them to site-wide patterns."],inputs:["All annotated findings"],outputs:["Pattern findings"],why_matters:"Clients hear about systemic issues, not one-off bugs.",example:"All product pages have weak trust badges → site-wide pattern.",connected_to:["I1"],source_files:["docs/specs/mvp/phases/phase-7-analysis/spec.md"]},
+  {id:"A7",label:"AI-Driven Discovery",layer:8,x:2.85,y:4.85,purpose:"Catches issues the rule library doesn't yet cover.",what_happens:["AI re-reads the page free of any rule shortlist.","Surfaces findings from its general CRO and UX knowledge.","Tags every finding as 'novel' so the consultant reviews them carefully."],inputs:["Deep perception","Persona"],outputs:["Novel draft findings (tagged for human attention)"],why_matters:"The system is not boxed in by what the rule library already knows. Consultant-approved novels become future heuristics — the library grows with use.",example:"AI flags awkward checkout microcopy that no existing rule describes. Consultant approves it. The Heuristic Improvement Service later promotes it into a new rule.",connected_to:["A3","S3"],source_files:["docs/specs/final-architecture/07-analyze-mode.md","docs/specs/mvp/phases/phase-7-analysis/spec.md"]},
+
+  {id:"I1",label:"CRO Issues",layer:9,x:2.5,y:3.1,purpose:"Final list of validated issues from the audit.",what_happens:["Aggregates per-page and cross-page findings.","Removes duplicates."],inputs:["Annotated findings","Patterns"],outputs:["Issue list"],why_matters:"Single source for everything wrong with the site.",example:"12 issues across 6 pages.",connected_to:["I2","I4","R1"],source_files:["docs/specs/final-architecture/23-findings-engine-extended.md"]},
+  {id:"I2",label:"Hypothesis Pipeline",layer:9,x:5,y:3.1,purpose:"Frames each issue as a testable hypothesis.",what_happens:["Drafts 'if we change X, then Y will improve' statements."],inputs:["Issues"],outputs:["Hypotheses"],why_matters:"Audits become A/B-test-ready, not just observation lists.",example:"'If we move trust badges above the CTA, mobile conversion will improve.'",connected_to:["I3"],source_files:["docs/specs/final-architecture/29-hypothesis-pipeline.md"]},
+  {id:"I3",label:"Prioritized Recommendations",layer:9,x:7.5,y:3.1,purpose:"Sorts hypotheses by impact and effort.",what_happens:["Applies 4D scoring + impact and effort matrices.","Outputs a sequenced action plan."],inputs:["Hypotheses"],outputs:["Prioritized recommendations"],why_matters:"Clients leave with a roadmap, not a wishlist.",example:"Top 3 quick wins this sprint, 2 medium-effort items next.",connected_to:["I4","R1"],source_files:["docs/specs/final-architecture/14-delivery-layer.md","docs/specs/mvp/phases/phase-9-delivery/spec.md"]},
+  {id:"I4",label:"Executive Summary",layer:9,x:10,y:3.1,purpose:"1-page summary for the CEO or marketing lead.",what_happens:["Picks the top findings.","Writes a short narrative."],inputs:["Issues","Recommendations"],outputs:["Summary text"],why_matters:"Stakeholders grasp the audit in 60 seconds.",example:"'Mobile conversion is leaking at checkout. Three fixes recommended.'",connected_to:["R1"],source_files:["docs/specs/mvp/phases/phase-9-delivery/spec.md"]},
+
+  {id:"R1",label:"Review Prep",layer:12,x:3,y:1.9,purpose:"Gets the audit ready for consultant review.",what_happens:["Groups findings by page and theme.","Flags low-confidence findings for closer attention."],inputs:["Issues + recommendations + summary"],outputs:["Reviewable audit packet"],why_matters:"Consultants spend time on judgement, not triage.",example:"Highlights a low-confidence trust-badge finding for human eye.",connected_to:["R2"],source_files:["docs/specs/final-architecture/12-review-gate.md"]},
+  {id:"R2",label:"Consultant Approval",layer:12,x:6,y:1.9,purpose:"The hard pause before any audit ships.",what_happens:["Audit is presented in the dashboard.","Consultant approves, edits, or rejects findings."],inputs:["Reviewable packet"],outputs:["Approved audit"],why_matters:"Every audit is human-approved. Brand-safe.",example:"Consultant removes one false positive, adjusts severity, approves.",connected_to:["P1","P2"],source_files:["docs/specs/final-architecture/12-review-gate.md"]},
+  {id:"R3",label:"Manual Override",layer:12,x:9,y:1.9,purpose:"Lets the consultant edit findings or add new ones.",what_happens:["Edits finding text, severity, evidence.","Adds custom findings."],inputs:["Consultant edits"],outputs:["Override deltas"],why_matters:"Human expertise is preserved in the deliverable.",example:"Consultant adds a brand-context finding the AI missed.",connected_to:["R2"],source_files:["docs/specs/final-architecture/12-review-gate.md"]},
+
+  {id:"P1",label:"Stakeholder 1-Pager",layer:10,x:2,y:0.7,purpose:"The 1-page version for executives.",what_happens:["Renders the executive summary in a friendly format."],inputs:["Approved audit"],outputs:["Stakeholder PDF page"],why_matters:"C-level reads in 60 seconds.",example:"Sent to the CMO before the kickoff meeting.",connected_to:["P3","P4"],source_files:["docs/specs/mvp/phases/phase-9-delivery/spec.md"]},
+  {id:"P2",label:"Consultant Report",layer:10,x:4.5,y:0.7,purpose:"The full report with findings, evidence, and recommendations.",what_happens:["Renders all findings, screenshots, scores, and the action plan."],inputs:["Approved audit"],outputs:["Detailed report"],why_matters:"The deliverable consultants present in client meetings.",example:"30-page report with annotated screenshots per finding.",connected_to:["P3","P4"],source_files:["docs/specs/mvp/phases/phase-9-delivery/spec.md"]},
+  {id:"P3",label:"PDF Output",layer:10,x:7,y:0.7,purpose:"Generates a branded, share-ready PDF.",what_happens:["Renders HTML and exports to PDF.","Stores PDF in object storage."],inputs:["Stakeholder + consultant pages"],outputs:["PDF file with signed URL"],why_matters:"Polished, offline-ready deliverable.",example:"Acme-CRO-Audit-2026-04.pdf, 18 MB.",connected_to:["S2"],source_files:["docs/specs/final-architecture/35-report-generation.md"]},
+  {id:"P4",label:"Dashboard View",layer:10,x:9.5,y:0.7,purpose:"Web view of the audit for the consultant team.",what_happens:["Lists audits, findings, evidence.","Allows export and re-share."],inputs:["Audit data"],outputs:["Dashboard render"],why_matters:"Central operating surface for the team.",example:"Consultant filters all audits by client and exports.",connected_to:["S1"],source_files:["docs/specs/final-architecture/14-delivery-layer.md"]},
+
+  {id:"S1",label:"Audit Database",layer:11,x:12,y:10,purpose:"Stores all audits, findings, scores, and links.",what_happens:["Writes records using Postgres.","Per-client data is isolated."],inputs:["Audit data writes"],outputs:["Queryable records"],why_matters:"No audit is ever lost.",example:"Query: 'all checkout findings across our last 50 audits'.",connected_to:[],source_files:["docs/specs/final-architecture/13-data-layer.md","docs/specs/final-architecture/24-two-store-pattern.md"]},
+  {id:"S2",label:"Object Storage",layer:11,x:12,y:8,purpose:"Stores screenshots, PDFs, and raw artifacts.",what_happens:["Saves files with audit-scoped keys.","Returns signed URLs."],inputs:["Screenshots, PDFs"],outputs:["File links"],why_matters:"Cheaper, scalable storage for large blobs.",example:"All audit screenshots saved in R2 under /audits/4321/.",connected_to:[],source_files:["docs/specs/final-architecture/13-data-layer.md"]},
+  {id:"S3",label:"LLM Cost Log",layer:11,x:12,y:6,purpose:"Append-only record of every AI call.",what_happens:["Logs prompt hash, tokens, cost, model, latency.","Never updated or deleted."],inputs:["AI call metadata"],outputs:["Cost reports"],why_matters:"Per-client billing transparency and budget enforcement.",example:"Audit #4321 cost $11.40, 96% inside budget.",connected_to:[],source_files:["docs/specs/final-architecture/26-cost-and-guardrails.md"]},
+  {id:"S4",label:"Activity Logs",layer:11,x:12,y:4,purpose:"Structured logs for every audit step.",what_happens:["Writes JSON logs with audit ID and step.","Streams to a log aggregator."],inputs:["Log calls"],outputs:["Searchable logs"],why_matters:"Bugs are diagnosed in minutes.",example:"Find every audit that timed out on step 'fact-check'.",connected_to:[],source_files:["docs/specs/final-architecture/34-observability.md"]},
+  {id:"S5",label:"Progress Events",layer:11,x:12,y:2,purpose:"Live event stream for the dashboard.",what_happens:["Emits start, page-done, audit-done events."],inputs:["Audit lifecycle events"],outputs:["Live event stream"],why_matters:"Consultants see live progress, not a spinner.",example:"Dashboard shows 4 of 6 pages complete.",connected_to:["P4"],source_files:["docs/specs/final-architecture/34-observability.md"]},
+
+  {id:"L1",label:"Audit Outcomes Archive",layer:13,x:4,y:-0.7,purpose:"Stores approved audits for later study.",what_happens:["Approved audits are tagged and archived.","Outcomes link to consultant edits made during review.","AI-discovered findings outside the rule library are flagged 'novel' for follow-up."],inputs:["Approved audit","Consultant edits","Novel-finding flags"],outputs:["Outcome records (with novel tags)"],why_matters:"Provides the raw data the learning service needs — including the novel findings that will become tomorrow's rules.",example:"Audit #4321 archived with note: 'consultant approved 1 novel finding on checkout microcopy'.",connected_to:["L3"],source_files:["docs/specs/final-architecture/28-learning-service.md","docs/specs/final-architecture/13-data-layer.md"]},
+  {id:"L2",label:"Edit & Feedback Patterns",layer:13,x:6.5,y:-0.7,purpose:"Tracks how consultants change AI findings over time.",what_happens:["Captures every edit and override during review.","Aggregates patterns across audits."],inputs:["Consultant approvals and overrides"],outputs:["Edit-pattern signals"],why_matters:"Tells us which heuristics under-fire or over-fire in the real world.",example:"'Mobile CTA visibility' rule was edited up in 18% of audits → suggest threshold tightening.",connected_to:["L3"],source_files:["docs/specs/final-architecture/28-learning-service.md"]},
+  {id:"L3",label:"Heuristic Improvement Service",layer:13,x:9,y:-0.7,purpose:"Proposes heuristic updates and brand-new rules based on real audits.",what_happens:["Reads the outcome archive and edit patterns.","Promotes consultant-approved novel findings into draft new rules.","Suggests edits to existing rules where edit-patterns show systematic drift.","Versioned, approved changes flow back into the rule library."],inputs:["Outcomes","Edit patterns","Approved novel findings"],outputs:["Heuristic change proposals (edits + brand-new rules)"],why_matters:"The product gets smarter with use, not stale. Today's AI-discovered finding becomes tomorrow's heuristic.",example:"After 50 audits, suggests tightening the 'mobile CTA visibility' threshold AND adds a new rule for 'checkout microcopy clarity' from approved novel findings.",connected_to:["H1"],source_files:["docs/specs/final-architecture/28-learning-service.md","docs/specs/final-architecture/22-heuristic-retrieval-evolution.md"]},
+
+  {id:"F1",label:"Phased Roadmap",layer:14,x:3,y:-2,purpose:"How Neural will be built — 10 phases, 263 tasks.",what_happens:["Each phase has spec, plan, tasks, impact, and exit criteria.","Phases gate on each other so quality stays high."],inputs:["PRD","Architecture decisions"],outputs:["Phase folders and task lists"],why_matters:"Predictable, gated delivery.",example:"Phase 7 covers AI analysis. Phase 9 covers reporting. Each ships independently.",connected_to:[],source_files:["docs/specs/final-architecture/16-implementation-phases.md","docs/specs/mvp/phases/INDEX.md","docs/specs/mvp/tasks-v2.md"]},
+  {id:"F2",label:"Spec Kit Harness",layer:14,x:6,y:-2,purpose:"Keeps specs and code in sync as the product evolves.",what_happens:["/speckit.* commands regenerate spec, plan, and tasks from the PRD.","Every artifact is lifecycle-tagged (draft → validated → approved → implemented)."],inputs:["PRD edits"],outputs:["Regenerated spec artifacts"],why_matters:"Specs never rot away from the codebase.",example:"When the PRD changes, /speckit.tasks regenerates the task list automatically.",connected_to:[],source_files:["docs/specs/mvp/spec-driven-workflow.md",".specify/workflows/speckit/workflow.yml"]},
+  {id:"F3",label:"Deferred Features",layer:14,x:9,y:-2,purpose:"What's coming after MVP.",what_happens:["Features are listed in PRD non-goals.","Pulled into v1.1+ planning when ready."],inputs:["Stakeholder requests","Market signals"],outputs:["Future roadmap items"],why_matters:"Disciplined scope today, clear path tomorrow.",example:"v1.1: stealth browser + full learning loop · v1.2: GPT-4o fallback · v1.3: multi-tenant.",connected_to:[],source_files:["docs/specs/mvp/PRD.md","docs/specs/mvp/risks.md"]}
+];
+const nodeById = Object.fromEntries(NODES.map(n => [n.id, n]));
+
+const FLOW_TYPES = {
+  control:  {color:"#1F2937", dash:"solid",  width:1.5, label:"Triggering & coordination"},
+  data:     {color:"#2563EB", dash:"solid",  width:1.5, label:"Domain object hand-off"},
+  evidence: {color:"#0D9488", dash:"solid",  width:1.5, label:"Screenshots / DOM / traces"},
+  analysis: {color:"#7C3AED", dash:"solid",  width:2.0, label:"AI-derived outputs"},
+  report:   {color:"#16A34A", dash:"solid",  width:2.0, label:"Deliverable rendering"},
+  feedback: {color:"#F97316", dash:"dash",   width:1.5, label:"Approvals & retries"},
+  infra:    {color:"#9CA3AF", dash:"dot",    width:1.0, label:"Storage / observability"}
+};
+
+const EDGES = [
+  ["T1","C1","control"],["T1","C2","control"],["T1","C3","control"],["T1","C4","control"],
+  ["T2","C3","data"],["T3","C2","data"],["T3","C4","data"],
+  ["C1","O1","data"],["C2","O1","data"],["C3","O1","data"],["C4","O1","data"],
+  ["O1","O2","control"],["O2","O3","control"],["O3","O4","feedback"],["O4","O3","feedback"],
+  ["O3","B1","control"],
+  ["B1","B2","control"],["B2","B3","control"],["B2","B4","control"],
+  ["B1","B5","control"],["B5","B3","control"],["B5","B4","control"],
+  ["B3","D1","data"],["B4","D1","data"],
+  ["D1","D2","control"],["D1","D3","control"],
+  ["D2","D4","data"],["D3","D4","data"],["D4","A1","data"],
+  ["B3","E1","evidence"],["B4","E2","evidence"],
+  ["D2","E2","evidence"],["D3","E2","evidence"],
+  ["E1","E3","evidence"],["E2","E3","evidence"],
+  ["O3","E4","control"],
+  ["H1","H4","data"],["H2","H4","data"],["H3","H4","data"],["H4","A2","data"],
+  ["E1","A1","evidence"],["E2","A1","evidence"],["C2","A1","data"],
+  ["A1","A2","analysis"],["A2","A3","analysis"],["A3","A4","analysis"],
+  ["A1","A7","analysis"],["A7","A3","analysis"],["A7","S3","infra"],
+  ["A4","B4","feedback"],["A4","A5","analysis"],
+  ["A5","A6","analysis"],["A5","I1","analysis"],["A6","I1","analysis"],
+  ["I1","I2","analysis"],["I2","I3","analysis"],
+  ["I1","I4","analysis"],["I3","I4","analysis"],
+  ["I4","R1","data"],["I3","R1","data"],["I1","R1","data"],
+  ["R1","R2","data"],["R3","R2","feedback"],
+  ["R2","P1","report"],["R2","P2","report"],
+  ["P1","P3","report"],["P2","P3","report"],["P1","P4","report"],["P2","P4","report"],
+  ["E4","S1","infra"],["A5","S1","infra"],
+  ["P3","S2","infra"],["B3","S2","infra"],
+  ["A2","S3","infra"],["A3","S3","infra"],["A1","S3","infra"],
+  ["O3","S4","infra"],["O4","S4","infra"],
+  ["O3","S5","infra"],["S5","P4","infra"],
+
+  // Learning loop (post-MVP, dashed feedback)
+  ["P4","L1","feedback"],
+  ["R2","L2","feedback"],
+  ["L1","L3","feedback"],
+  ["L2","L3","feedback"],
+  ["L3","H1","feedback"]
+].map(([from,to,flow_type]) => ({from,to,flow_type}));
+
+/* ========= VIEW DEFINITIONS ========= */
+const VIEWS = {
+  all:      { layers: [1,2,3,4,5,6,7,8,9,10,11,12,13,14] },
+  business: { layers: [1,2,7,8,9,12,10,13,14] },
+  cro:      { layers: [4,5,6,7,8,9,12,10,13] }
+};
+
+/* ========= RENDERING ========= */
+const PLOT_DIV = document.getElementById('diagram');
+const PANEL    = document.getElementById('panel');
+
+function buildLayerBands(visibleLayers){
+  const bandColor = "rgba(0,0,0,.025)";
+  const shapes = [];
+  const annotations = [];
+  const minX = -1.4, maxX = 13.4;
+  const layerY = {
+    1: 11.5, 2: 10.3, 3: 9.1, 4: 7.9, 5: 6.7, 6: 5.5,
+    7: 4.4, 8: 4.3, 9: 3.1, 12: 1.9, 10: 0.7, 11: 6
+  };
+  // Background tints per visible layer band
+  visibleLayers.forEach(lid => {
+    const layer = layerById[lid];
+    if(!layer) return;
+    const ys = NODES.filter(n=>n.layer===lid).map(n=>n.y);
+    if(!ys.length) return;
+    const yMin = Math.min(...ys) - 0.45;
+    const yMax = Math.max(...ys) + 0.45;
+    const xs = NODES.filter(n=>n.layer===lid).map(n=>n.x);
+    let xMin = Math.min(...xs) - 0.7;
+    let xMax = Math.max(...xs) + 0.7;
+    if(lid===11){ xMin = 11.3; xMax = 13.0; }
+    if(lid===7){ xMin = -1.3; xMax = 1.3; }
+    shapes.push({
+      type:"rect", xref:"x", yref:"y",
+      x0:xMin, x1:xMax, y0:yMin, y1:yMax,
+      fillcolor: hexToRgba(layer.color, 0.06),
+      line:{color: hexToRgba(layer.color,0.20), width:1},
+      layer:"below"
+    });
+    annotations.push({
+      x: xMin + 0.05, y: yMax - 0.05,
+      xref:"x", yref:"y",
+      text:`<b>${layer.id}. ${layer.name}</b>`,
+      showarrow:false, xanchor:"left", yanchor:"top",
+      font:{size:11, color:layer.color, family:"Segoe UI, sans-serif"}
+    });
+  });
+  return {shapes, annotations};
+}
+
+function hexToRgba(hex, alpha){
+  const h = hex.replace("#","");
+  const r = parseInt(h.substr(0,2),16);
+  const g = parseInt(h.substr(2,2),16);
+  const b = parseInt(h.substr(4,2),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function buildEdgeAnnotations(visibleNodeIds){
+  return EDGES
+    .filter(e => visibleNodeIds.has(e.from) && visibleNodeIds.has(e.to))
+    .map(e => {
+      const s = nodeById[e.from], t = nodeById[e.to];
+      const ft = FLOW_TYPES[e.flow_type];
+      return {
+        x: t.x, y: t.y, ax: s.x, ay: s.y,
+        xref:"x", yref:"y", axref:"x", ayref:"y",
+        showarrow:true, arrowhead:3, arrowsize:1, arrowwidth:ft.width,
+        arrowcolor:ft.color, opacity: e.flow_type==='infra' ? 0.45 : 0.85,
+        standoff:14, startstandoff:14
+      };
+    });
+}
+
+function buildNodeTrace(visibleNodes){
+  return {
+    type:"scatter", mode:"markers+text",
+    x: visibleNodes.map(n=>n.x),
+    y: visibleNodes.map(n=>n.y),
+    text: visibleNodes.map(n=>n.label),
+    customdata: visibleNodes.map(n=>n.id),
+    textposition:"middle center",
+    textfont:{size:11, color:"#0f172a", family:"Segoe UI, sans-serif"},
+    marker:{
+      size: visibleNodes.map(n=> isKeyNode(n.id) ? 60 : 48),
+      color: visibleNodes.map(n=> hexToRgba(layerById[n.layer].color, 0.18)),
+      line:{
+        width: visibleNodes.map(n=> isKeyNode(n.id) ? 2.5 : 1.5),
+        color: visibleNodes.map(n=> layerById[n.layer].color)
+      },
+      symbol:"square",
+      opacity: 1
+    },
+    hovertemplate:"<b>%{text}</b><br><i>click for details</i><extra></extra>",
+    hoverlabel:{bgcolor:"white", bordercolor:"#cbd5e1", font:{size:12}}
+  };
+}
+
+function isKeyNode(id){
+  return ["O3","B1","D4","H4","A2","A4","A7","R2","I3","P3","L3"].includes(id);
+}
+
+function renderDiagram(viewKey){
+  const view = VIEWS[viewKey] || VIEWS.all;
+  const visibleLayers = new Set(view.layers);
+  const visibleNodes = NODES.filter(n => visibleLayers.has(n.layer));
+  const visibleNodeIds = new Set(visibleNodes.map(n=>n.id));
+
+  const bands = buildLayerBands(view.layers);
+  const edgeArrows = buildEdgeAnnotations(visibleNodeIds);
+  const nodeTrace = buildNodeTrace(visibleNodes);
+
+  const layout = {
+    margin:{t:20, l:30, r:30, b:30},
+    showlegend:false,
+    plot_bgcolor:"white",
+    paper_bgcolor:"white",
+    xaxis:{visible:false, range:[-2, 14], fixedrange:false, showgrid:false, zeroline:false},
+    yaxis:{visible:false, range:[-2.7, 12.5], fixedrange:false, showgrid:false, zeroline:false, scaleanchor:"x", scaleratio:0.5},
+    shapes: bands.shapes,
+    annotations: [...bands.annotations, ...edgeArrows],
+    dragmode:"pan",
+    hovermode:"closest"
+  };
+
+  const config = {
+    responsive:true,
+    displaylogo:false,
+    scrollZoom:true,
+    modeBarButtonsToRemove:["lasso2d","select2d","autoScale2d"]
+  };
+
+  Plotly.newPlot(PLOT_DIV, [nodeTrace], layout, config);
+  PLOT_DIV.removeAllListeners?.("plotly_click");
+  PLOT_DIV.on("plotly_click", evt => {
+    const id = evt.points?.[0]?.customdata;
+    if(id) showDetail(id);
+  });
+}
+
+/* ========= DETAIL PANEL ========= */
+function showDetail(id){
+  const n = nodeById[id];
+  if(!n) return;
+  const layer = layerById[n.layer];
+  const inbound = EDGES.filter(e=>e.to===id).map(e=>e.from);
+  const outbound = EDGES.filter(e=>e.from===id).map(e=>e.to);
+  const sources = (n.source_files||[]).map(f=>`<code>${f}</code>`).join("");
+
+  PANEL.classList.remove("empty");
+  PANEL.classList.add("open");
+  PANEL.innerHTML = `
+    <div class="panel-header">
+      <button class="close" aria-label="Close">×</button>
+      <span class="layer-pill" style="background:${layer.color}">${layer.id}. ${layer.name}</span>
+      <h2>${n.label}</h2>
+      <p class="subtitle">${n.purpose}</p>
+    </div>
+    <div class="panel-body">
+      <section>
+        <h3>Why this matters</h3>
+        <div class="why">${n.why_matters}</div>
+      </section>
+      <section>
+        <h3>What happens here</h3>
+        <ul>${n.what_happens.map(s=>`<li>${s}</li>`).join("")}</ul>
+      </section>
+      <section>
+        <h3>Inputs</h3>
+        <ul>${n.inputs.map(s=>`<li>${s}</li>`).join("")}</ul>
+      </section>
+      <section>
+        <h3>Outputs</h3>
+        <ul>${n.outputs.map(s=>`<li>${s}</li>`).join("")}</ul>
+      </section>
+      <section>
+        <h3>Real example</h3>
+        <div class="example">${n.example}</div>
+      </section>
+      ${inbound.length || outbound.length ? `
+      <section>
+        <h3>Connected components</h3>
+        <div class="connected">
+          ${inbound.map(i => `<button data-id="${i}" title="Upstream: ${nodeById[i]?.label}">← ${nodeById[i]?.label||i}</button>`).join("")}
+          ${outbound.map(o => `<button data-id="${o}" title="Downstream: ${nodeById[o]?.label}">${nodeById[o]?.label||o} →</button>`).join("")}
+        </div>
+      </section>` : ""}
+      ${sources ? `
+      <section>
+        <h3>Source specs</h3>
+        <div class="source-files">${sources}</div>
+      </section>` : ""}
+    </div>
+  `;
+  PANEL.querySelector(".close").onclick = () => closeDetail();
+  PANEL.querySelectorAll(".connected button").forEach(btn => {
+    btn.onclick = () => showDetail(btn.dataset.id);
+  });
+  PANEL.scrollTop = 0;
+}
+
+function closeDetail(){
+  PANEL.classList.add("empty");
+  PANEL.classList.remove("open");
+  PANEL.innerHTML = `
+    <div class="placeholder">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.4">
+        <path d="M9 11l3 3 3-3M12 14V3M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+      </svg>
+      <div>
+        <div style="font-size:14px;font-weight:500;color:#0f172a">Click any component</div>
+        <div style="font-size:12.5px;margin-top:4px;color:#64748b">to see what it does, what it produces, and why it matters.</div>
+      </div>
+    </div>`;
+}
+
+/* ========= TOOLBAR ========= */
+document.getElementById("view").addEventListener("change", e => renderDiagram(e.target.value));
+document.getElementById("search").addEventListener("input", e => {
+  const q = e.target.value.toLowerCase().trim();
+  if(!q){ renderDiagram(document.getElementById("view").value); return; }
+  const hit = NODES.find(n => n.label.toLowerCase().includes(q) || n.id.toLowerCase()===q);
+  if(hit) showDetail(hit.id);
+});
+document.addEventListener("keydown", e => {
+  if(e.key === "Escape") closeDetail();
+  if(e.key === "/") {
+    const s = document.getElementById("search");
+    if(document.activeElement !== s){ e.preventDefault(); s.focus(); }
+  }
+});
+
+/* ========= INITIAL RENDER ========= */
+renderDiagram("all");
+</script>
+</body>
+</html>

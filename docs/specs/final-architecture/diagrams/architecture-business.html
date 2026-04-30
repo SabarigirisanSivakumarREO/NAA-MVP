@@ -1,0 +1,1547 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neural — AI CRO Audit Platform · Business Architecture</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js" charset="utf-8"></script>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --text:#0f172a; --muted:#64748b;
+  --border:#e2e8f0; --accent:#2563eb; --shadow:0 8px 24px rgba(15,23,42,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55}
+header{padding:14px 24px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+header .brand h1{font-size:17px;margin:0;font-weight:600}
+header .brand p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.toolbar input,.toolbar select{padding:7px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:white;color:var(--text);outline:none}
+.toolbar input{width:200px}
+.toolbar a{padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:white;color:var(--text);text-decoration:none}
+.toolbar a:hover{border-color:var(--accent);color:var(--accent)}
+main{display:grid;grid-template-columns:1fr 480px;height:calc(100vh - 76px);min-height:680px}
+#diagram{background:white;border-right:1px solid var(--border)}
+aside{background:var(--panel);overflow-y:auto;padding:0;border-left:1px solid var(--border)}
+aside.empty .placeholder{color:var(--muted);text-align:center;padding:80px 32px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.panel-header{padding:20px 24px 14px;border-bottom:1px solid var(--border);position:relative}
+.panel-header .layer-pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;color:white;margin-bottom:8px}
+.panel-header h2{font-size:18px;margin:0;font-weight:600}
+.panel-header .subtitle{color:var(--muted);margin:6px 0 0;font-size:13px}
+.panel-header .meta{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.panel-header .meta span{font-size:11px;padding:2px 8px;border-radius:4px;background:#f1f5f9;color:#475569;border:1px solid var(--border)}
+.panel-header .close{position:absolute;top:16px;right:18px;background:none;border:0;font-size:22px;color:var(--muted);cursor:pointer;line-height:1}
+.panel-body{padding:8px 24px 32px}
+.panel-body section{margin:18px 0}
+.panel-body section h3{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px;font-weight:600}
+.panel-body section p{margin:0}
+.panel-body section ul{margin:0;padding-left:18px}
+.panel-body section li{margin:3px 0}
+.panel-body .why{background:#fef9c3;border-left:3px solid #ca8a04;padding:10px 14px;border-radius:6px;font-size:13px;color:#713f12}
+.panel-body .example{background:#eff6ff;border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;font-size:13px;color:#1e3a8a}
+.deps{display:flex;flex-direction:column;gap:6px}
+.dep{padding:8px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:6px;font-size:12.5px}
+.dep .dep-name{font-weight:600;color:#0f172a}
+.dep .dep-type{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;background:#e2e8f0;color:#475569;margin-right:6px;text-transform:uppercase}
+.dep .dep-reason{color:var(--muted);font-size:12px;margin-top:2px}
+.internal{padding:14px;background:#f8fafc;border-radius:8px;border:1px solid var(--border)}
+.internal-summary{font-size:12.5px;color:#334155;margin-bottom:10px}
+.internal-components{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.internal-component{display:flex;gap:10px;padding:6px 10px;background:white;border:1px solid var(--border);border-radius:5px}
+.internal-component .ic-name{font-weight:600;color:#0f172a;font-size:12px;flex-shrink:0;min-width:140px}
+.internal-component .ic-role{color:var(--muted);font-size:12px}
+.internal-flow{display:flex;flex-direction:column;gap:3px;font-size:12px;color:#475569;font-family:'SF Mono','Monaco',monospace}
+.internal-flow .if-step{padding:3px 8px;background:white;border-left:2px solid var(--accent);border-radius:3px}
+.connected{display:flex;flex-wrap:wrap;gap:6px}
+.connected button{padding:4px 10px;border-radius:6px;background:#f1f5f9;color:var(--text);border:1px solid var(--border);font-size:12px;cursor:pointer}
+.connected button:hover{background:#e2e8f0}
+.source-files{display:flex;flex-direction:column;gap:4px}
+.source-files code{background:#f1f5f9;padding:4px 8px;border-radius:4px;font-size:11.5px;color:#334155;word-break:break-all}
+@media (max-width:1100px){main{grid-template-columns:1fr}aside{position:fixed;right:0;top:76px;bottom:0;width:100%;max-width:520px;display:none;box-shadow:var(--shadow)}aside.open{display:block}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>Neural — AI CRO Audit Platform</h1>
+    <p>Business view · 14 layers · click any component to see what it does · <a href="architecture-engineering.html" style="color:var(--accent);text-decoration:none">⇨ Engineering view</a></p>
+  </div>
+  <div class="toolbar">
+    <input id="search" type="text" placeholder="Search components…">
+    <select id="view"><option value="all">All layers</option><option value="business">Stakeholder simplified</option><option value="cro">CRO funnel</option></select>
+  </div>
+</header>
+<main>
+  <div id="diagram"></div>
+  <aside id="panel" class="empty">
+    <div class="placeholder">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.4"><path d="M9 11l3 3 3-3M12 14V3M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+      <div><div style="font-size:14px;font-weight:500;color:#0f172a">Click any component</div><div style="font-size:12.5px;margin-top:4px;color:#64748b">Drawer shows purpose · inputs · outputs · dependencies · internal architecture.</div></div>
+    </div>
+  </aside>
+</main>
+<script>
+const LAYERS = [
+  {id:1,name:"User / Trigger",color:"#0EA5E9"},
+  {id:2,name:"Context Capture (§37, Phase 4b)",color:"#475569"},
+  {id:3,name:"Orchestration (3-tier)",color:"#2563EB"},
+  {id:4,name:"Browser Perception",color:"#06B6D4"},
+  {id:5,name:"Dynamic State Coverage",color:"#14B8A6"},
+  {id:6,name:"Evidence Packaging",color:"#10B981"},
+  {id:7,name:"Heuristics Knowledge",color:"#F59E0B"},
+  {id:8,name:"AI Analysis",color:"#7C3AED"},
+  {id:9,name:"Insight Generation",color:"#C026D3"},
+  {id:10,name:"Reporting & Delivery",color:"#16A34A"},
+  {id:11,name:"Storage & Observability",color:"#78716C"},
+  {id:12,name:"Human Review",color:"#F97316"},
+  {id:13,name:"Learning Loop (v1.1+)",color:"#BE185D"},
+  {id:14,name:"Roadmap & Future",color:"#6B7280"},
+  {id:15,name:"Safety / Cost / Failure",color:"#DC2626"},
+  {id:16,name:"Quality & Adapters",color:"#0891B2"}
+];
+const layerById=Object.fromEntries(LAYERS.map(l=>[l.id,l]));
+
+const NODES = [
+  {id:"T1",label:"Trigger Gateway",layer:1,x:3,y:11.5,
+    purpose:"Single entry point that normalizes 5 channels (CLI, MCP read, MCP write, Dashboard, Scheduler) into one AuditRequest.",
+    what_happens:["Channel adapter receives the request","Auth Resolver verifies identity (Clerk)","Validator checks shape with Zod","Idempotency check (24h window)","Rate limiter enforces per-client concurrency","Reproducibility snapshot is created BEFORE workflow start","Temporal AuditWorkflow is started"],
+    inputs:["URL list","Business type","Audit template","Optional intake (KPI, constraints)"],
+    outputs:["Validated AuditRequest","Reproducibility snapshot id","Temporal workflow id"],
+    dependencies:[
+      {type:"service",name:"Clerk Auth",reason:"Resolves consultant/client identity"},
+      {type:"service",name:"Temporal",reason:"Starts the durable AuditWorkflow"},
+      {type:"data",name:"Reproducibility Snapshot Builder",reason:"Pins model + prompt + heuristic versions"}
+    ],
+    internal_architecture:{
+      summary:"5 channel adapters + auth + validate + rate limit + snapshot, then start Temporal.",
+      components:[
+        {name:"CLI Adapter",role:"JSON via stdin"},
+        {name:"MCP Read Adapter",role:"Read-only audit retrieval"},
+        {name:"MCP Write Adapter",role:"Phase 11+ write actions"},
+        {name:"Dashboard Adapter",role:"Clerk session, Phase 6+"},
+        {name:"Scheduler Adapter",role:"Temporal Schedules, Phase 13"},
+        {name:"Auth Resolver",role:"Verify identity via Clerk"},
+        {name:"Validator",role:"Zod schema enforcement"},
+        {name:"Idempotency Check",role:"24h dedupe window"},
+        {name:"Rate Limiter",role:"Per-client concurrency = 1 default"},
+        {name:"Webhook Delivery + DLQ",role:"Outbound with exponential backoff"}
+      ],
+      internal_flow:["Channel → Auth → Validate → Idempotency → Rate Limit","→ Reproducibility Snapshot (pinned)","→ Temporal AuditWorkflow.start()","→ Webhook ack to caller"]
+    },
+    why_matters:"One disciplined door for every audit. Predictable cost, reproducible results, no double-runs.",
+    example:"A consultant runs `pnpm cro:audit --urls site.com --business-type ecommerce`. Gateway validates, pins versions, starts the durable workflow.",
+    connected_to:["C1","O1","E4"],
+    source_files:["docs/specs/final-architecture/18-trigger-gateway.md","docs/specs/final-architecture/25-reproducibility.md"]},
+
+  {id:"T2",label:"Discovery Pipeline (7 stages)",layer:1,x:6,y:11.5,
+    purpose:"Template-first page discovery — clusters URLs by structural fingerprint, classifies templates, picks representatives.",
+    what_happens:["Acquire seeds (sitemap or shallow crawl, 500 URL cap)","Shallow fetch HTML for each","Apply exclusion filter","Cluster by structural fingerprint (HDBSCAN)","Classify templates (1 batched LLM call)","Pick representative pages","Synthesize workflows (funnel paths)"],
+    inputs:["Seed URL","AuditRequest.scope.templates","ClientProfile"],
+    outputs:["DiscoveryResult: templates[], key_pages[], workflows[], work_queue[]"],
+    dependencies:[
+      {type:"service",name:"Shallow Fetch",reason:"undici/node-fetch, respects robots.txt, 5s timeout"},
+      {type:"service",name:"HDBSCAN clusterer",reason:"Deterministic, no k pre-specified"},
+      {type:"service",name:"LLM classifier",reason:"1 batched call, <0.5 confidence → 'other'"}
+    ],
+    internal_architecture:{
+      summary:"7-stage deterministic + 1 LLM call. ~$0.05, 5 min hard cap.",
+      components:[
+        {name:"Stage 1 · Seed Acquisition",role:"Sitemap parse or seed list"},
+        {name:"Stage 2 · Shallow Fetch",role:"Fast HTML pull, robots-aware"},
+        {name:"Stage 3 · Exclusion Filter",role:"Drop login/admin/cart-API"},
+        {name:"Stage 4 · Template Clustering",role:"HDBSCAN on structural fingerprint (CSS classes excluded)"},
+        {name:"Stage 5 · Template Classification",role:"1 LLM batched call, default 'other' if <0.5 confidence"},
+        {name:"Stage 6 · Representative Selection",role:"~1 page per template"},
+        {name:"Stage 7 · Workflow Synthesis",role:"Funnel path detection per business type"}
+      ],
+      internal_flow:["Seeds → Fetch → Exclude → Cluster → Classify → Representatives → Workflows","→ work_queue[] feeds AuditGraph"]
+    },
+    why_matters:"Replaces blind crawling. Bounds cost, surfaces only the pages that matter.",
+    example:"site.com → home + 3 PLP + 5 PDP + cart + checkout → 6 templates → 10 representatives + 1 funnel.",
+    connected_to:["C1","O1"],
+    source_files:["docs/specs/final-architecture/19-discovery-and-templates.md"]},
+
+  {id:"T3",label:"Audit Template Library",layer:1,x:9,y:11.5,
+    purpose:"Pre-built audit recipes per business type (defaults persona + page mix + heuristic group).",
+    what_happens:["Map business type to default persona","Default heuristic group","Default page templates"],
+    inputs:["Business type"],
+    outputs:["Template-driven defaults"],
+    dependencies:[{type:"data",name:"§09 heuristic groups",reason:"Selects which group applies"}],
+    internal_architecture:{
+      summary:"Static config table per business archetype.",
+      components:[
+        {name:"ecommerce template",role:"Shopper persona, e-com heuristics"},
+        {name:"saas template",role:"Decision-maker persona, B2B heuristics"},
+        {name:"lead-gen template",role:"Service-buyer persona"},
+        {name:"content template",role:"Reader persona"}
+      ],
+      internal_flow:["business_type → template lookup → persona + heuristic_group + page_mix"]
+    },
+    why_matters:"Removes hand-tuning per audit.",
+    example:"'ecommerce' loads shopper persona, e-com heuristic pack, PDP+PLP+Cart page mix.",
+    connected_to:["C1"],
+    source_files:["docs/specs/final-architecture/19-discovery-and-templates.md"]},
+
+  {id:"C1",label:"ContextProfile (§37)",layer:2,x:6,y:10.3,
+    purpose:"Pre-perception context capture — 5 dimensions × {value, source, confidence}, blocking gate on missing required fields.",
+    what_happens:["Parse user intake (CLI prompt or dashboard form)","URL pattern + JSON-LD inference","CTA + pricing copy inference","Per-field provenance + confidence scoring","Open-questions emitted if confidence < 0.6","Blocking gate on missing primary_kpi or regulated-vertical constraints"],
+    inputs:["AuditRequest","Optional intake form","URL","Optional HTML fetch"],
+    outputs:["ContextProfile (immutable, hashed)","open_questions[]","blocking flag"],
+    dependencies:[
+      {type:"service",name:"undici/node-fetch",reason:"Single HTML inference fetch (NOT Playwright)"},
+      {type:"data",name:"JSON-LD parser",reason:"Schema.org type extraction"},
+      {type:"data",name:"Reproducibility Snapshot",reason:"Profile hash pinned"}
+    ],
+    internal_architecture:{
+      summary:"5 dimensions, each field carries {value, source, confidence}. Phase 4b MVP. Phase 13b adds Schwartz awareness, decision_style, weight modifiers.",
+      components:[
+        {name:"Business",role:"archetype, aov_tier, cadence, vertical"},
+        {name:"Page",role:"type, funnel_stage, job, is_indexed"},
+        {name:"Audience",role:"buyer, awareness_level, decision_style, sophistication"},
+        {name:"Traffic",role:"primary_sources, device_priority, mobile_share, geo, locale"},
+        {name:"Goal",role:"primary_kpi (REQUIRED), secondary_kpis, baseline, target_lift, constraints"},
+        {name:"Inference Pipeline",role:"URL > JSON-LD > pricing > CTA > TLD > magnitude"},
+        {name:"Open-Questions Loop",role:"Block audit if blocking=true"}
+      ],
+      internal_flow:["Intake + URL fetch → 6 inference sources","→ Per-field {value, source, confidence}","→ Confidence ≥0.9 act / 0.6-0.9 flag / <0.6 open_question","→ Blocking? → halt audit_setup"]
+    },
+    why_matters:"Findings are persona-aware and constraint-aware. Regulated verticals can't ship without compliance constraints.",
+    example:"site.com → archetype=B2B-SaaS (0.92, schema_org), primary_kpi=lead_volume (0.6, user-supplied), regulatory=[] (open_question if vertical=fintech).",
+    connected_to:["O1","A1"],
+    source_files:["docs/specs/final-architecture/37-context-capture-layer.md"]},
+
+  {id:"O1",label:"Trigger → AuditWorkflow Handoff",layer:3,x:2,y:9.1,
+    purpose:"Temporal AuditWorkflow.start() boundary — converts validated request into a durable, resumable run.",
+    what_happens:["Reads ReproducibilitySnapshot from gateway","Creates audit_runs DB row","Starts AuditWorkflow on Temporal"],
+    inputs:["AuditRequest","ReproducibilitySnapshot id","ContextProfile id"],
+    outputs:["audit_run_id","Temporal workflow handle"],
+    dependencies:[{type:"service",name:"Temporal",reason:"Outer durable orchestration layer"}],
+    internal_architecture:{
+      summary:"Thin handoff. Temporal owns retries, heartbeats, cancellation.",
+      components:[
+        {name:"resolveClient activity",role:"Lookup client_id, RLS context"},
+        {name:"loadReproducibilitySnapshot activity",role:"Reads pinned versions"},
+        {name:"AuditWorkflow.start()",role:"Begin durable run"}
+      ],
+      internal_flow:["Gateway → resolveClient → loadReproducibilitySnapshot → AuditWorkflow.start()"]
+    },
+    why_matters:"All retries/resumes/cancellations live in Temporal — no bespoke recovery code.",
+    example:"audit_run_id = UUID, Temporal workflow_id = audit-{audit_run_id}.",
+    connected_to:["O2"],
+    source_files:["docs/specs/final-architecture/27-durable-orchestration.md"]},
+
+  {id:"O2",label:"AuditGraph Outer (§04)",layer:3,x:4.8,y:9.1,
+    purpose:"LangGraph outer graph: audit_setup → page_router → cross_page_analyze → audit_complete.",
+    what_happens:["audit_setup: build page queue, attach context","page_router: dispatch each page to BrowseGraph + AnalyzeGraph","cross_page_analyze: PageSignals → patterns + consistency + funnel findings (v2.2 NEW)","audit_complete: rollups, exec summary, action plan"],
+    inputs:["AuditRequest + ContextProfile + DiscoveryResult"],
+    outputs:["Findings, ExecutiveSummary, ActionPlan"],
+    dependencies:[
+      {type:"service",name:"BrowseGraph subgraph",reason:"Per-page browse"},
+      {type:"service",name:"AnalyzeGraph subgraph",reason:"Per-page analysis"},
+      {type:"service",name:"WorkflowOrchestrator",reason:"Funnel traversal (Phase 9)"}
+    ],
+    internal_architecture:{
+      summary:"4 outer nodes + 3 routing functions. Wraps two inner subgraphs (browse/analyze). Hard cap 50 pages/audit.",
+      components:[
+        {name:"audit_setup",role:"Build queue, init AuditState"},
+        {name:"page_router",role:"Dispatch to subgraphs per page"},
+        {name:"cross_page_analyze",role:"v2.2 NEW: pattern + consistency + funnel findings"},
+        {name:"audit_complete",role:"Rollups + ExecSummary + ActionPlan + finalize"},
+        {name:"routePageRouter",role:"Choose next page or proceed"},
+        {name:"routeAfterBrowse",role:"Continue or skip page"},
+        {name:"routeAfterAnalyze",role:"Continue or escalate"}
+      ],
+      internal_flow:["audit_setup → page_router → (BrowseGraph + AnalyzeGraph) → page_router (next)","→ cross_page_analyze → audit_complete"]
+    },
+    why_matters:"One predictable graph for every audit. Cross-page findings happen in their own dedicated step.",
+    example:"6-page audit: setup → page 1..6 → cross-page → complete.",
+    connected_to:["O3","O4","X1"],
+    source_files:["docs/specs/final-architecture/04-orchestration.md"]},
+
+  {id:"O3",label:"BrowseGraph Subgraph (§06)",layer:3,x:7.5,y:9.1,
+    purpose:"Per-page browse via 10-node LangGraph. MVP runs 5 nodes; full graph adds memory + safety_gate + reflect + HITL.",
+    what_happens:["MVP path: perceive → reason → act → verify → output","Full path adds: classify_task, load_memory, safety_gate, reflect, hitl"],
+    inputs:["URL", "Browse mode (A/B/C)"],
+    outputs:["PageStateModel + screenshots + verified actions"],
+    dependencies:[
+      {type:"service",name:"MCP Tool Server",reason:"28 tools available"},
+      {type:"service",name:"Verification Engine",reason:"Confirms each action effect"},
+      {type:"service",name:"Safety Controls",reason:"ActionClassifier on every call"}
+    ],
+    internal_architecture:{
+      summary:"10 nodes, 8 internal layers, 3 modes. MVP defaults to Mode B (Guided Agent, ~$0.10/step). Multiplicative confidence decay.",
+      components:[
+        {name:"perceive",role:"Capture PageStateModel (MVP)"},
+        {name:"reason",role:"LLM picks next action (MVP)"},
+        {name:"act",role:"Execute MCP tool call (MVP)"},
+        {name:"verify",role:"Confirm via 1 of 9 strategies (MVP)"},
+        {name:"output",role:"Emit result + cleanup (MVP)"},
+        {name:"classify_task",role:"Deferred — task routing"},
+        {name:"load_memory",role:"Deferred — 4 memory types"},
+        {name:"safety_gate",role:"Deferred — explicit gate (inline in MVP)"},
+        {name:"reflect",role:"Deferred — replan on failure"},
+        {name:"hitl",role:"Deferred — agent_request_human"}
+      ],
+      internal_flow:["perceive → reason → act → verify → output","Modes: A Deterministic ($0) | B Guided ($0.10/step, MVP default) | C Computer-Use ($0.30/step)","Domain Circuit Breaker: 3 fails → 1hr block","Anti-bot: ghost-cursor + Gaussian typing"]
+    },
+    why_matters:"Same 5-node MVP graph evolves to 10-node full graph without rewrite. Safety enforced at graph level, not LLM discretion.",
+    example:"Loads /checkout in Mode B; perceive → reason picks browser_click on CTA → act → verify (element_appears) → output.",
+    connected_to:["B1","V1","D1","E1"],
+    source_files:["docs/specs/final-architecture/06-browse-mode.md","docs/specs/final-architecture/08-tool-manifest.md"]},
+
+  {id:"O4",label:"AnalyzeGraph Subgraph (§07)",layer:3,x:9.5,y:9.1,
+    purpose:"Per-page 5-step pipeline: deep_perceive → evaluate → self_critique → ground → annotate_and_store.",
+    what_happens:["DeepPerceive enriches the PageStateModel for analysis","Evaluate runs heuristic shortlist via LLM (temp=0)","Self-Critique runs separate persona (~30% FP reduction)","Ground runs 9 deterministic GR rules (MVP)","Annotate attaches evidence + Store persists"],
+    inputs:["PageStateModel","Filtered heuristics","ContextProfile","Persona"],
+    outputs:["Grounded findings","RejectedFindings (silent)"],
+    dependencies:[
+      {type:"service",name:"LLM Adapter",reason:"Anthropic Claude Sonnet 4 (primary), GPT-4o (fallback)"},
+      {type:"service",name:"TemperatureGuard",reason:"R10 enforced — temp=0 on evaluate/critique"},
+      {type:"service",name:"Pre-call Budget Gate",reason:"Skip if budget tight"}
+    ],
+    internal_architecture:{
+      summary:"5 nodes + AnalysisState + CostTracker + PerceptionQualityGate + PageSignals emission.",
+      components:[
+        {name:"DeepPerceive",role:"Persona-aware re-read of page"},
+        {name:"Evaluate",role:"LLM applies each heuristic (temp=0)"},
+        {name:"SelfCritique",role:"Separate persona LLM challenges drafts"},
+        {name:"Ground",role:"9 GR rules: GR-001..GR-008 + GR-012"},
+        {name:"Annotate + Store",role:"Sharp pin overlay + DB persist"},
+        {name:"PerceptionQualityScorer",role:"Gate: <0.3 skip, 0.3-0.6 partial, ≥0.6 full"}
+      ],
+      internal_flow:["DeepPerceive → Evaluate → SelfCritique → Ground → Annotate+Store","Pre-call Budget Gate before each LLM call","TemperatureGuard wraps every LLM call"]
+    },
+    why_matters:"Three-layer hallucination filter (LLM → critique → grounding) yields findings that hold up in client meetings.",
+    example:"Evaluate flags 'CTA below fold mobile' → SelfCritique keeps it → Ground confirms via GR-002 → Annotate adds boxed screenshot.",
+    connected_to:["A1","S3"],
+    source_files:["docs/specs/final-architecture/07-analyze-mode.md"]},
+
+  {id:"B1",label:"MCP Tool Server (28 tools)",layer:4,x:2,y:7.9,
+    purpose:"Curated tool catalog: 23 browse + 5 analysis. Every call is safety-classified before execution.",
+    what_happens:["Tool call from LLM agent","ActionClassifier assigns class (safe/caution/sensitive/blocked)","DomainPolicy + NavigationGuard cross-check","Execute via Playwright","Verify outcome (V1)"],
+    inputs:["Tool call (typed via Zod)"],
+    outputs:["Typed tool result"],
+    dependencies:[
+      {type:"service",name:"Playwright",reason:"Browser engine"},
+      {type:"service",name:"ActionClassifier",reason:"Deterministic safety classification"},
+      {type:"service",name:"VerifyEngine",reason:"Confirms action effect"}
+    ],
+    internal_architecture:{
+      summary:"4 navigation + 3 perception + 8 interaction + 1 tab + 2 data + 2 discovery + 2 control + 1 HITL + 1 restricted (browse) + 5 analysis tools.",
+      components:[
+        {name:"Navigation (4)",role:"navigate, go_back, go_forward, reload"},
+        {name:"Perception (3)",role:"get_state, screenshot, get_metadata"},
+        {name:"Interaction (8)",role:"click, click_coords, type, scroll, select, hover, press_key, upload"},
+        {name:"Tab Management (1)",role:"tab_manage"},
+        {name:"Data (2)",role:"extract, download"},
+        {name:"Discovery (2)",role:"find_by_text, get_network"},
+        {name:"Control (2)",role:"wait_for, agent_complete"},
+        {name:"HITL (1)",role:"agent_request_human (deferred)"},
+        {name:"Restricted (1)",role:"browser_evaluate (sandboxed, blocked on untrusted)"},
+        {name:"Analysis (5)",role:"page_get_element_info, page_get_performance, page_screenshot_full, page_annotate_screenshot, page_analyze (single-call 15-section)"}
+      ],
+      internal_flow:["Tool call → ActionClassifier → DomainPolicy → NavigationGuard → execute → VerifyEngine"]
+    },
+    why_matters:"Agent's whole power surface in one place. Safety classification is graph-level, not LLM-discretionary.",
+    example:"`browser_click` on PDP CTA: classified 'caution' → policy OK → execute via ghost-cursor → verify element_appears.",
+    connected_to:["O3","V1","SC1"],
+    source_files:["docs/specs/final-architecture/08-tool-manifest.md"]},
+
+  {id:"B2",label:"Cookie & Overlay Handler",layer:4,x:4.2,y:7.9,
+    purpose:"Closes pop-ups, banners, chat widgets BEFORE perception captures the page.",
+    what_happens:["Detect overlay patterns","Click dismiss button","Log dismissed overlay"],
+    inputs:["Live page"],
+    outputs:["Clean page"],
+    dependencies:[{type:"data",name:"Overlay pattern library",reason:"Cookie / modal / chat fingerprints"}],
+    internal_architecture:{
+      summary:"Pre-perception runtime per §6.17. Library of common patterns, fuzzy matchers.",
+      components:[
+        {name:"Cookie banner matcher",role:"GDPR / CCPA dismiss"},
+        {name:"Chat widget closer",role:"Intercom / Drift / Zendesk"},
+        {name:"Modal dismisser",role:"Promo modals, exit intent"}
+      ],
+      internal_flow:["page load → match → click dismiss → log → ready for perceive"]
+    },
+    why_matters:"Audits don't fail because of GDPR popups.",
+    example:"GDPR banner closed at /home before screenshot.",
+    connected_to:["O3"],
+    source_files:["docs/specs/final-architecture/06-browse-mode.md"]},
+
+  {id:"B3",label:"PerceptionBundle (v2.5)",layer:4,x:6.4,y:7.9,
+    purpose:"4-channel page model: DOM snapshot + AX tree + visual + layout geometry, fused into ElementGraph.",
+    what_happens:["Capture DOM","Capture AX tree","Capture screenshots","Capture layout geometry","Fuse into ElementGraph"],
+    inputs:["Clean page"],
+    outputs:["PerceptionBundle (with ElementGraph)"],
+    dependencies:[{type:"service",name:"Playwright CDP",reason:"AX tree extraction"}],
+    internal_architecture:{
+      summary:"v2.3 → v2.4 (10 enrichments: pricing, clickTargets, stickyElements, frictionScore...) → v2.5 (PerceptionBundle envelope with ElementGraph fusion).",
+      components:[
+        {name:"DOM Snapshot",role:"Filtered DOM, ad noise stripped"},
+        {name:"AX Tree",role:"Roles, labels, hierarchy"},
+        {name:"Visual Capture",role:"Full-page + viewport screenshots"},
+        {name:"Layout Geometry",role:"Bounding boxes, fold positions"},
+        {name:"ElementGraph",role:"Cross-channel fusion + settle predicate"},
+        {name:"v2.4 Enrichments",role:"pricing, clickTargets, stickyElements, frictionScore (10 fields)"}
+      ],
+      internal_flow:["DOM + AX + Visual + Layout → ElementGraph fusion → PerceptionBundle envelope"]
+    },
+    why_matters:"Findings anchor to a stable, comparable page model. Replaces fragile screenshot-only analysis.",
+    example:"PDP perception bundle: 1 hero + 6 click targets + 1 sticky CTA + frictionScore 0.62.",
+    connected_to:["D1","E1","A1"],
+    source_files:["docs/specs/final-architecture/06-browse-mode.md","docs/specs/final-architecture/07-analyze-mode.md"]},
+
+  {id:"B4",label:"Multi-Viewport Capture",layer:4,x:8.6,y:7.9,
+    purpose:"Re-runs perception at desktop, tablet, mobile.",
+    what_happens:["Resize viewport","Re-run B3","Capture per-viewport bundle"],
+    inputs:["Live page","Viewport list"],
+    outputs:["Per-viewport PerceptionBundle"],
+    dependencies:[{type:"service",name:"Playwright",reason:"Viewport resize"}],
+    internal_architecture:{
+      summary:"Default viewports: 1440 desktop, 768 tablet, 375 mobile.",
+      components:[
+        {name:"Desktop pass",role:"1440px"},
+        {name:"Tablet pass",role:"768px"},
+        {name:"Mobile pass",role:"375px"}
+      ],
+      internal_flow:["For each viewport: resize → B3 capture → tag bundle"]
+    },
+    why_matters:"Catches mobile-only conversion blockers.",
+    example:"Mobile catches sticky-banner covering CTA on /checkout.",
+    connected_to:["B3"],
+    source_files:["docs/specs/final-architecture/06-browse-mode.md"]},
+
+  {id:"V1",label:"Verification Engine (§06)",layer:4,x:10.6,y:7.9,
+    purpose:"Confirms every browser action actually changed the page.",
+    what_happens:["Capture pre-action state","Execute action","Capture post-action state","Run verify strategy","Return success/fail with evidence"],
+    inputs:["ActionContract","Pre/post state"],
+    outputs:["VerifyResult"],
+    dependencies:[{type:"service",name:"MutationMonitor",reason:"Stability signal"}],
+    internal_architecture:{
+      summary:"3 MVP strategies + 6 v1.1 reserved slots. Multiplicative confidence decay (R4.4 — additive math is a kill trigger).",
+      components:[
+        {name:"url_change",role:"MVP — post-navigation"},
+        {name:"element_appears",role:"MVP — DOM + bbox + style (all 3)"},
+        {name:"element_text",role:"MVP — post-content-change"},
+        {name:"network_request",role:"v1.1 — slot reserved"},
+        {name:"no_error_banner",role:"v1.1"},
+        {name:"snapshot_diff",role:"v1.1"},
+        {name:"custom_js",role:"v1.1"},
+        {name:"no_captcha",role:"v1.1 — anti-bot"},
+        {name:"no_bot_block",role:"v1.1 — anti-bot"},
+        {name:"FailureClassifier",role:"Routes to retry/reflect/HITL"},
+        {name:"ConfidenceScorer",role:"Multiplicative-only decay"}
+      ],
+      internal_flow:["pre-state → execute action → post-state → strategy.verify() → ConfidenceScorer.update()"]
+    },
+    why_matters:"Closes the loop on every action so the agent can't believe lies. Multiplicative decay bounds confidence in (0,1).",
+    example:"After click on CTA: element_appears confirms modal opened. Confidence 0.95 × 0.9 = 0.855.",
+    connected_to:["B1","O3"],
+    source_files:["docs/specs/final-architecture/06-browse-mode.md"]},
+
+  {id:"D1",label:"explore_states + StateGraph (§20)",layer:5,x:3,y:6.7,
+    purpose:"2-pass exploration of hidden states (Pass 1 heuristic-primed, Pass 2 bounded-exhaustive with auto-escalation).",
+    what_happens:["Pass 1: collect required states from heuristic.preferred_states","Execute interactions in priority order","Self-restoring (tabs/accordions) sequential, no reload","Destructive (form submit) scheduled last with restoration","Pass 2 if auto-escalation: 12 disclosure rules R1..R12","Meaningful-state detector filters noise (Jaccard tokenized text + 4 thresholds)"],
+    inputs:["Filtered heuristics","Page snapshot","Exploration config (budget, mode, runtime cap)"],
+    outputs:["StateGraph + MultiStatePerception","Storage snapshot per branch","Nondeterminism warnings"],
+    dependencies:[
+      {type:"service",name:"Browser Agent",reason:"Executes interactions"},
+      {type:"data",name:"heuristic.preferred_states",reason:"Pass 1 driver"}
+    ],
+    internal_architecture:{
+      summary:"Phase 7 addition. GR-009 provenance grounding. Phase 1-5 skip entirely (single-state).",
+      components:[
+        {name:"Pass 1 Heuristic-Primed",role:"From heuristic.preferred_states"},
+        {name:"Pass 2 Bounded-Exhaustive",role:"12 disclosure rules R1..R12"},
+        {name:"Self-restoring set",role:"Tabs, accordions, hovers — sequential"},
+        {name:"Destructive set",role:"Form submit, navigation — scheduled last"},
+        {name:"Meaningful-State Detector",role:"Jaccard + 4 thresholds"},
+        {name:"State Reset",role:"reverse_action vs reload+replay (Phase 13)"},
+        {name:"Storage Snapshot Restoration",role:"cookies + localStorage + sessionStorage"},
+        {name:"Nondeterminism Detector",role:"Re-replay first 3 states, hash diff"},
+        {name:"GR-009",role:"Per-state finding provenance"}
+      ],
+      internal_flow:["State 0 → Pass 1 (heuristic-primed)","→ auto-escalation? → Pass 2 (12 rules)","→ Meaningful-state filter","→ StateGraph (≤15 states/page)"]
+    },
+    why_matters:"Surfaces issues hidden behind clicks. Avoids wasting AI cost on low-value states.",
+    example:"PDP: open size filter, open variant selector, open size guide modal → 3 meaningful hidden states analyzed.",
+    connected_to:["A1","E2"],
+    source_files:["docs/specs/final-architecture/20-state-exploration.md"]},
+
+  {id:"E1",label:"Screenshot + DOM Library",layer:6,x:2,y:5.5,
+    purpose:"Stores per-state, per-viewport screenshots and DOM evidence indexed to findings.",
+    what_happens:["Save screenshot with audit-scoped key","Save DOM snippet for finding context","Index by audit_run_id + page_url + state_id"],
+    inputs:["Captured screenshots + DOM snippets"],
+    outputs:["R2 paths + DB references"],
+    dependencies:[{type:"service",name:"R2 Object Storage",reason:"Blob storage"},{type:"data",name:"§13.6 evidence table",reason:"Reference index"}],
+    internal_architecture:{
+      summary:"R2-keyed storage + DB index. Heuristic content NEVER stored alongside.",
+      components:[
+        {name:"ScreenshotStorage",role:"R2 with signed URLs (LocalDisk fallback dev)"},
+        {name:"DOM Evidence Store",role:"§13.6 evidence table"},
+        {name:"Loose-coupled state_ids",role:"TEXT content hashes, not FKs (M9-FIX)"}
+      ],
+      internal_flow:["capture → key by {audit_run_id, page, state, viewport} → R2 + DB"]
+    },
+    why_matters:"Reports show real evidence; engineers can trace findings to actual code.",
+    example:"/audits/4321/state_0/desktop.png + DOM snippet of broken CTA.",
+    connected_to:["A5","P2","S2"],
+    source_files:["docs/specs/final-architecture/13-data-layer.md","docs/specs/final-architecture/37-context-capture-layer.md"]},
+
+  {id:"E2",label:"Annotated Visuals",layer:6,x:5,y:5.5,
+    purpose:"Sharp pin overlay on screenshots for findings.",
+    what_happens:["Receive finding + bounding box","Draw box + caption","Save as new image"],
+    inputs:["Screenshot","Element coordinates","Caption"],
+    outputs:["Annotated image"],
+    dependencies:[{type:"service",name:"Sharp",reason:"Image manipulation"}],
+    internal_architecture:{
+      summary:"page_annotate_screenshot tool. Used in Annotate node (A5) and report generation.",
+      components:[
+        {name:"Pin overlay",role:"Numbered pin per finding"},
+        {name:"Caption layer",role:"Short rationale"},
+        {name:"Severity color",role:"Critical=red, high=orange, medium=yellow"}
+      ],
+      internal_flow:["screenshot + bbox + severity → Sharp.composite → annotated PNG"]
+    },
+    why_matters:"Clients see exactly what's wrong at a glance.",
+    example:"Red box on a 2.1-contrast CTA with caption 'WCAG AA fail'.",
+    connected_to:["A5","P3"],
+    source_files:["docs/specs/final-architecture/14-delivery-layer.md","docs/specs/final-architecture/35-report-generation.md"]},
+
+  {id:"E3",label:"PerceptionQualityScorer",layer:6,x:8,y:5.5,
+    purpose:"Quality gate before analysis — skip pages with too-low perception fidelity.",
+    what_happens:["Score perception (0..1)","<0.3 → skip page","0.3-0.59 → partial Tier 1 only","≥0.6 → full analysis"],
+    inputs:["PerceptionBundle"],
+    outputs:["PerceptionQualityScore","gating decision"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"Quality scoring inputs: visible elements, AX coverage, settle confidence, mutation noise.",
+      components:[
+        {name:"Visibility coverage",role:"% above-fold elements with bbox"},
+        {name:"AX completeness",role:"Roles + labels filled"},
+        {name:"Settle confidence",role:"From mutation monitor"}
+      ],
+      internal_flow:["bundle → 4 sub-scores → weighted → gating decision"]
+    },
+    why_matters:"Bad perception → bad findings. Better to skip than to publish noise.",
+    example:"SPA shell page (≥10 elements, JS bundle >500KB) → quality 0.2 → skip.",
+    connected_to:["O4"],
+    source_files:["docs/specs/final-architecture/07-analyze-mode.md"]},
+
+  {id:"E4",label:"Reproducibility Snapshot (§25)",layer:6,x:10.4,y:5.5,
+    purpose:"Immutable record of HOW an audit was run. Created by Trigger Gateway, not orchestrator.",
+    what_happens:["Pin model_version + 3 prompt_hashes","Pin heuristic_pack_hash + ContextProfile_hash","Pin perception_schema_version + scoring_version","DB trigger raises EXCEPTION on UPDATE/DELETE"],
+    inputs:["Run config from gateway"],
+    outputs:["Immutable reproducibility_snapshot row"],
+    dependencies:[{type:"service",name:"DB immutability trigger",reason:"Hard-enforces no-update"},{type:"service",name:"reo_snapshot_admin role",reason:"Admin escape hatch"}],
+    internal_architecture:{
+      summary:"6 version pins. ≥90% overlap target on rerun = diagnostic, not failure.",
+      components:[
+        {name:"Model pin",role:"e.g., claude-sonnet-4-20250603"},
+        {name:"Prompt hashes",role:"Evaluate, SelfCritique, ExecSummary"},
+        {name:"Heuristic pack hash",role:"Versioned overlay chain"},
+        {name:"ContextProfile hash",role:"Per-audit context"},
+        {name:"Perception schema version",role:"v2.3 / v2.4 / v2.5"},
+        {name:"Scoring version",role:"4D scoring constants"},
+        {name:"OverlapMeasurer",role:"Compute rerun overlap (Phase 8)"},
+        {name:"FindingDiffExplainer",role:"Per-finding diff explanation (Phase 9)"}
+      ],
+      internal_flow:["gateway → SnapshotBuilder.compose() → DB insert (immutable)","→ later: rerun → OverlapMeasurer → DiffExplainer"]
+    },
+    why_matters:"Audits are scientifically reproducible. Deprecated heuristic versions remain loadable forever.",
+    example:"Audit #4321 + claude-sonnet-4-20250603 + heuristics v1.4 + scoring v2 → re-run yields 92% finding overlap.",
+    connected_to:["S1"],
+    source_files:["docs/specs/final-architecture/25-reproducibility.md"]},
+
+  {id:"H1",label:"Heuristic KB (§09)",layer:7,x:-0.5,y:4.9,
+    purpose:"Private 100-heuristic knowledge base. Encrypted at rest. Filtered to ~30 per page.",
+    what_happens:["Load encrypted heuristics at startup","Validate against schema","Apply overlay chain (base < brand < learned < client)","Two-stage filter delivers ~15-30 per page"],
+    inputs:["Edits by team","Brand overlays","Learned adjustments (Phase 12+)"],
+    outputs:["filtered_heuristics[] (15-30/page)"],
+    dependencies:[{type:"service",name:"DecryptionAdapter",reason:"AES-256-GCM at rest, plaintext in memory"},{type:"data",name:"Constitution Rule 9",reason:"Heuristics never exposed to client"}],
+    internal_architecture:{
+      summary:"100 heuristics: 50 Baymard + 35 Nielsen + 15 Cialdini. Tier ratio: 42/42/16. 4-phase evolution: JSON → tagged JSON → pgvector → learned.",
+      components:[
+        {name:"Tier 1",role:"42% — Visual >75% reliability"},
+        {name:"Tier 2",role:"42% — Medium ~60%"},
+        {name:"Tier 3",role:"16% — Emotional <40%"},
+        {name:"Two-Stage Filter",role:"Stage 1 business → 60-70 / Stage 2 page → 15-20 / cap 30"},
+        {name:"Overlay System",role:"base < brand < learned < client (client wins)"},
+        {name:"RuleHeuristicRegistry",role:"Phase 2+: 30-40% rule detectors, confidence ≥0.9"},
+        {name:"DecryptionAdapter",role:"PlaintextDecryptor MVP, AES-256-GCM v1.1"},
+        {name:"4-Phase Evolution",role:"JSON → tagged JSON → pgvector → learned"}
+      ],
+      internal_flow:["Encrypted JSON → Decrypt → Validate → apply overlays → page-aware filter → ~30 heuristics"]
+    },
+    why_matters:"Encodes consultancy IP. The product gets smarter with use.",
+    example:"PDP audit: 100 → 65 (filter by 'ecommerce') → 22 (filter by 'PDP') → cap 22.",
+    connected_to:["O4"],
+    source_files:["docs/specs/final-architecture/09-heuristic-kb.md","docs/specs/final-architecture/22-heuristic-retrieval-evolution.md"]},
+
+  {id:"A1",label:"DeepPerceive",layer:8,x:2,y:4.3,
+    purpose:"Persona-aware re-read of page before evaluation.",
+    what_happens:["Combine PerceptionBundle + persona + ContextProfile","LLM produces deep_perception summary"],
+    inputs:["PerceptionBundle","Persona","ContextProfile"],
+    outputs:["DeepPerception"],
+    dependencies:[{type:"service",name:"LLMAdapter",reason:"Anthropic Claude Sonnet 4"},{type:"service",name:"TemperatureGuard",reason:"temp=0"}],
+    internal_architecture:{
+      summary:"Single LLM call. Reuses Phase 1c PerceptionBundle accessor.",
+      components:[
+        {name:"Bundle accessor",role:"bundleToAnalyzePerception()"},
+        {name:"Persona injection",role:"From ContextProfile"},
+        {name:"LLM call",role:"temp=0, prompt-hashed"}
+      ],
+      internal_flow:["bundle + persona → LLM (temp=0) → DeepPerception"]
+    },
+    why_matters:"Findings start from a buyer's lens, not a developer's.",
+    example:"Hero copy 'enterprise-grade microservices' flagged as jargon for time-pressed shopper persona.",
+    connected_to:["A2","S3"],
+    source_files:["docs/specs/final-architecture/07-analyze-mode.md"]},
+
+  {id:"A2",label:"Evaluate (Static)",layer:8,x:3.7,y:4.3,
+    purpose:"Apply each shortlisted heuristic. MVP = StaticEvaluateStrategy. Phase 11+ = InteractiveEvaluateStrategy via §33 tool injection.",
+    what_happens:["For each heuristic, LLM checks page","Returns pass/warn/fail + rationale","Heuristics injected via user message (NOT system prompt)","Output Zod-validated"],
+    inputs:["DeepPerception","Filtered heuristics"],
+    outputs:["RawFinding[]"],
+    dependencies:[{type:"service",name:"LLMAdapter",reason:"temp=0"},{type:"service",name:"Pre-call Budget Gate",reason:"Skip if budget tight"}],
+    internal_architecture:{
+      summary:"EvaluateStrategy interface (§33a). MVP: StaticEvaluateStrategy. Phase 11+: InteractiveEvaluateStrategy with tool injection.",
+      components:[
+        {name:"StaticEvaluateStrategy",role:"MVP — pure LLM evaluation"},
+        {name:"InteractiveEvaluateStrategy",role:"Phase 11+ — 9 browser + 3 analysis tools injected"},
+        {name:"HeuristicInteractionTracker",role:"Phase 11+ — records interactions per heuristic"},
+        {name:"PersonaContext",role:"Multi-persona iteration"}
+      ],
+      internal_flow:["For each heuristic: LLM call (temp=0) → Zod-validate → RawFinding","Phase 11+: ReAct loop with tool injection if needed"]
+    },
+    why_matters:"Surfaces issues a senior consultant would flag. Same node activates richer behavior in Phase 11 without rewrite.",
+    example:"HEU-09 'mobile CTA above fold' → fail with rationale 'CTA at 2400px, fold at 740px'.",
+    connected_to:["A3","S3"],
+    source_files:["docs/specs/final-architecture/07-analyze-mode.md","docs/specs/final-architecture/33-agent-composition-model.md","docs/specs/final-architecture/33a-composition-integration.md"]},
+
+  {id:"A3",label:"Self-Critique",layer:8,x:5.4,y:4.3,
+    purpose:"Separate LLM persona challenges drafts. ~30% false-positive reduction.",
+    what_happens:["Different persona reviews each draft","KEEP/REVISE/DOWNGRADE/REJECT verdict","Drops weak findings"],
+    inputs:["RawFinding[]"],
+    outputs:["RefinedFinding[]"],
+    dependencies:[{type:"service",name:"LLMAdapter",reason:"Separate persona"},{type:"service",name:"TemperatureGuard",reason:"temp=0"}],
+    internal_architecture:{
+      summary:"R5.6: separate persona, NOT combined. Empirically ~30% FP reduction.",
+      components:[
+        {name:"Critic persona",role:"Skeptical reviewer prompt"},
+        {name:"Verdict types",role:"KEEP / REVISE / DOWNGRADE / REJECT"},
+        {name:"DowngradeRule",role:"Tier-aware demotion"}
+      ],
+      internal_flow:["RawFinding → Critic persona LLM → verdict → keep/modify/drop"]
+    },
+    why_matters:"Higher signal-to-noise. Less manual triage for consultants.",
+    example:"Draft 'low contrast' (Tier 3, no measurement) → REJECT.",
+    connected_to:["A4","S3"],
+    source_files:["docs/specs/final-architecture/07-analyze-mode.md"]},
+
+  {id:"A4",label:"Ground (9 GR rules)",layer:8,x:7.1,y:4.3,
+    purpose:"Code-level verification of every finding. 9 active in MVP.",
+    what_happens:["Run each grounding rule against finding + page","Reject findings that don't pass","Silent rejection (never shown)"],
+    inputs:["RefinedFinding[]","Live page or PerceptionBundle"],
+    outputs:["GroundedFinding[]","RejectedFinding[]"],
+    dependencies:[{type:"data",name:"GR-* rules",reason:"§07 + §31 + §21 grounding rules"}],
+    internal_architecture:{
+      summary:"9 MVP active. GR-009/GR-010/GR-011 phase-gated. GR-007 banned regex strict.",
+      components:[
+        {name:"GR-001",role:"Element exists in perception"},
+        {name:"GR-002",role:"Above/below fold matches bbox"},
+        {name:"GR-003",role:"Form field count matches"},
+        {name:"GR-004",role:"Contrast claims have computed-style data"},
+        {name:"GR-005",role:"heuristic_id in filtered set"},
+        {name:"GR-006",role:"critical/high requires measurable evidence"},
+        {name:"GR-007",role:"NO conversion predictions (regex)"},
+        {name:"GR-008",role:"data_point references real perception section"},
+        {name:"GR-012",role:"Benchmark validation: ±20% quantitative or Levenshtein ≥0.6"},
+        {name:"GR-009",role:"Phase 7+ — per-state provenance"},
+        {name:"GR-010",role:"Phase 9+ — workflow cross-step"},
+        {name:"GR-011",role:"Phase 7+ — per-state evidence (in §33)"}
+      ],
+      internal_flow:["For each finding: each GR rule → pass? → keep / silent reject"]
+    },
+    why_matters:"Findings anchored to facts, not LLM opinion. Conversion predictions banned.",
+    example:"Finding 'CTA contrast 2.1' → GR-004 confirms via computed style → keep.",
+    connected_to:["A5"],
+    source_files:["docs/specs/final-architecture/07-analyze-mode.md"]},
+
+  {id:"A5",label:"Annotate + Store",layer:8,x:8.8,y:4.3,
+    purpose:"Bundle evidence + persist finding. Atomic + scope hierarchy.",
+    what_happens:["Pull screenshot crop","Pull DOM snippet","Run page_annotate_screenshot","Persist finding row + evidence row + screenshot ref","R6 IP-protection check"],
+    inputs:["GroundedFinding","Evidence library"],
+    outputs:["Persisted finding (atomic scope)"],
+    dependencies:[{type:"service",name:"Sharp annotator",reason:"page_annotate_screenshot"},{type:"data",name:"§13 findings table",reason:"DB persist"}],
+    internal_architecture:{
+      summary:"Finding scope hierarchy: atomic → page → template → workflow → audit.",
+      components:[
+        {name:"Annotate sub-step",role:"Sharp pin overlay"},
+        {name:"Store sub-step",role:"INSERT findings + evidence + screenshot ref"},
+        {name:"R6 LangSmith filter",role:"Heuristic body never in trace"}
+      ],
+      internal_flow:["finding → screenshot crop + DOM snippet → annotate → DB insert (atomic scope)"]
+    },
+    why_matters:"Every recommendation comes with a paper trail.",
+    example:"Finding stored with annotated mobile screenshot + button HTML + heuristic_id reference.",
+    connected_to:["X1","R1","S1"],
+    source_files:["docs/specs/final-architecture/07-analyze-mode.md","docs/specs/final-architecture/23-findings-engine-extended.md"]},
+
+  {id:"X1",label:"cross_page_analyze (§04 v2.2)",layer:9,x:2.5,y:3.1,
+    purpose:"Required intermediate step before audit_complete. Aggregates per-page findings into site-wide insight.",
+    what_happens:["Run PatternDetector on all per-page findings","Run ConsistencyAnalyzer on 6 dimensions","Run funnel detection if workflows present"],
+    inputs:["page_signals[]","findings[]","funnel_definition?"],
+    outputs:["pattern_findings[]","consistency_findings[]","funnel_findings[]"],
+    dependencies:[
+      {type:"service",name:"PatternDetector",reason:"Cross-page pattern grouping"},
+      {type:"service",name:"ConsistencyAnalyzer",reason:"6-dimension consistency"},
+      {type:"service",name:"VersionDiffEngine",reason:"Resolved/persisted/new tracking"}
+    ],
+    internal_architecture:{
+      summary:"Three sub-analyzers. v2.2 NEW. Funnel uses lightweight PageSignals not full perception.",
+      components:[
+        {name:"PatternDetector",role:"Group similar findings across pages"},
+        {name:"ConsistencyAnalyzer",role:"6 dims: CTA, nav, color, typography, trust, footer"},
+        {name:"FunnelDetector",role:"Cross-step CRO patterns"},
+        {name:"VersionDiffEngine",role:"Compare findings across audit versions"}
+      ],
+      internal_flow:["page_signals + findings → pattern + consistency + funnel detectors → cross-page findings"]
+    },
+    why_matters:"Clients hear about systemic issues, not one-off bugs. Version tracking shows progress.",
+    example:"All 5 PDPs have weak trust badges → site-wide pattern (severity high).",
+    connected_to:["I1"],
+    source_files:["docs/specs/final-architecture/04-orchestration.md","docs/specs/final-architecture/10-competitor-versioning.md"]},
+
+  {id:"I1",label:"CRO Issues (scoped)",layer:9,x:5,y:3.1,
+    purpose:"Final issue list. 5 scopes: atomic, page, template, workflow, audit.",
+    what_happens:["Aggregate findings","Apply Suppression (confidence <0.3, exact dupes, empty evidence)","Apply Deduplication (states, pages, semantic)","Promote to higher scope where applicable"],
+    inputs:["Annotated findings","Patterns"],
+    outputs:["ScoredFinding[]"],
+    dependencies:[{type:"service",name:"ScoringPipeline",reason:"Deterministic 4D scoring"}],
+    internal_architecture:{
+      summary:"§23 Findings Engine Extended. Deterministic 4D scoring.",
+      components:[
+        {name:"Atomic scope",role:"Single element on single page"},
+        {name:"Page scope",role:"Whole-page issue"},
+        {name:"Template scope",role:">60% of template pages affected"},
+        {name:"Workflow scope",role:"Cross-step funnel issue"},
+        {name:"Audit scope",role:"Site-wide pattern"},
+        {name:"Suppression",role:"confidence <0.3 / exact dupes / empty evidence → rejected"},
+        {name:"Deduplication",role:"State / page / semantic"},
+        {name:"4D Scoring",role:"priority = severity×2 + impact×1.5 + confidence − effort×0.5"}
+      ],
+      internal_flow:["findings → suppress → dedupe → score → promote scope → ScoredFinding[]"]
+    },
+    why_matters:"Single source for everything wrong. Dedup avoids consultant fatigue.",
+    example:"3 atomic findings on similar buttons across 5 PDPs → 1 template-scope finding.",
+    connected_to:["I2","I3","I4","R1"],
+    source_files:["docs/specs/final-architecture/23-findings-engine-extended.md"]},
+
+  {id:"I2",label:"Hypothesis Pipeline (Phase 14)",layer:9,x:7.5,y:3.1,
+    purpose:"Turns findings into testable hypotheses + test plans + variations. All consultant-gated.",
+    what_happens:["HypothesisGenerator drafts hypothesis","TestPlanGenerator computes MDE + sample size (deterministic)","VariationIdeaGenerator drafts UI changes (DRAFT only)"],
+    inputs:["Published findings"],
+    outputs:["hypotheses[] / test_plans[] / variations[]"],
+    dependencies:[{type:"service",name:"LLMAdapter",reason:"Generators"},{type:"data",name:"Published store",reason:"Only published findings feed in"}],
+    internal_architecture:{
+      summary:"3 generators, all draft-until-approved. Phase 14. Code snippets DRAFT only — never auto-deployed.",
+      components:[
+        {name:"HypothesisGenerator",role:"'If we change X, then Y will improve' (LLM)"},
+        {name:"TestPlanGenerator",role:"Primary KPI + MDE + sample size (deterministic)"},
+        {name:"VariationIdeaGenerator",role:"Change list traced to hypothesis variable (LLM, DRAFT)"},
+        {name:"Confidence majority rule",role:"REQ-HYPO-002: >50% sources determine confidence"}
+      ],
+      internal_flow:["published findings → HypothesisGenerator → TestPlanGenerator → VariationIdeaGenerator → consultant review"]
+    },
+    why_matters:"Audits become A/B-test-ready. Max 10 hypotheses per audit.",
+    example:"Trust-badge finding → 'If we move trust badges above CTA, mobile conversion improves' → MDE 0.5%, n=12,400.",
+    connected_to:["I3","R1"],
+    source_files:["docs/specs/final-architecture/29-hypothesis-pipeline.md"]},
+
+  {id:"I3",label:"ActionPlan (4 quadrants)",layer:9,x:10,y:3.1,
+    purpose:"Deterministic prioritization into 4 quadrants. Bucketing is NOT LLM.",
+    what_happens:["For each finding: lookup business_impact (page_type × funnel_position matrix)","Lookup effort_category","Bucket by (impact, effort)"],
+    inputs:["ScoredFinding[]"],
+    outputs:["ActionPlan with 4 quadrants"],
+    dependencies:[{type:"data",name:"impact_matrix",reason:"page_type × funnel_position lookup"},{type:"data",name:"effort_map",reason:"Effort category mapping"}],
+    internal_architecture:{
+      summary:"Deterministic. Versioned scoring config — NOT in AuditState.",
+      components:[
+        {name:"Quick Wins",role:"high impact + low effort"},
+        {name:"Strategic",role:"high impact + high effort"},
+        {name:"Incremental",role:"low impact + low effort"},
+        {name:"Deprioritized",role:"low impact + high effort"}
+      ],
+      internal_flow:["finding → impact lookup → effort lookup → quadrant assignment"]
+    },
+    why_matters:"Clients leave with a roadmap, not a wishlist.",
+    example:"Trust-badge fix: high impact (PDP × decision) + low effort (template change) → Quick Win.",
+    connected_to:["R1","P1","P2"],
+    source_files:["docs/specs/final-architecture/14-delivery-layer.md","docs/specs/final-architecture/35-report-generation.md"]},
+
+  {id:"I4",label:"Executive Summary",layer:9,x:11.6,y:3.1,
+    purpose:"1-page summary with deterministic overall score (A-F grade) + top 5 findings.",
+    what_happens:["Compute overall_score = 100 − (critical×15 + high×8 + medium×3 + low×1)","Map to grade A-F","Pick top 5 by priority","One LLM call ($0.10 max) for recommended_next_steps"],
+    inputs:["ScoredFinding[]"],
+    outputs:["ExecutiveSummary"],
+    dependencies:[{type:"service",name:"LLMAdapter",reason:"recommended_next_steps only ($0.10)"},{type:"data",name:"GR-007 regex",reason:"Final no-conversion-predictions check"}],
+    internal_architecture:{
+      summary:"Deterministic where possible. LLM bounded to recommended_next_steps.",
+      components:[
+        {name:"OverallScore",role:"Deterministic formula"},
+        {name:"Grade",role:"A (90+), B (80+), C (70+), D (60+), F (<60)"},
+        {name:"Top5",role:"By priority score"},
+        {name:"Strengths",role:"Detected ≥80% passing pages"},
+        {name:"recommended_next_steps",role:"1 LLM call, temp=0, $0.10 cap, GR-007 final check"}
+      ],
+      internal_flow:["findings → counts → score → grade → top5 → strengths → 1 LLM call → ExecutiveSummary"]
+    },
+    why_matters:"CEO reads in 60 seconds.",
+    example:"3 critical + 6 high + 12 medium → score 100 − 45 − 48 − 36 = 0 → grade F.",
+    connected_to:["R1","P1"],
+    source_files:["docs/specs/final-architecture/14-delivery-layer.md","docs/specs/final-architecture/35-report-generation.md"]},
+
+  {id:"R1",label:"FindingStatus Pipeline (§12)",layer:12,x:3,y:1.9,
+    purpose:"13-state machine + Mode A/B routing + Tier 1/2/3 gating. Warm-up forces all → held.",
+    what_happens:["Mode A real-time: pass-through findings during conversation","Mode B async: route by tier","Tier 1 → auto-publish (after warm-up)","Tier 2 → 24h delayed","Tier 3 → held (consultant only)","publishDelayedFindings BullMQ job every 5 min","Warm-up active → all held"],
+    inputs:["GroundedFinding[]"],
+    outputs:["Findings in {generated, critiqued, grounded, published, delayed, held, edited, rejected}"],
+    dependencies:[{type:"service",name:"BullMQ",reason:"publishDelayedFindings job"},{type:"data",name:"§24 warm-up state machine",reason:"Pre-publish gate"}],
+    internal_architecture:{
+      summary:"13-state lifecycle. 4 dashboard sections. WarmupManager: 3 audits + <25% rejection = graduate.",
+      components:[
+        {name:"Mode A",role:"Real-time pass-through"},
+        {name:"Mode B",role:"Async gated"},
+        {name:"Tier 1 routing",role:"Auto-publish (post-warmup)"},
+        {name:"Tier 2 routing",role:"24h delayed (extendable)"},
+        {name:"Tier 3 routing",role:"Held (consultant only)"},
+        {name:"WarmupManager",role:"Default ON for new clients; graduate at 3 audits + <25% rejection"},
+        {name:"FindingEdit",role:"Version control (original preserved)"},
+        {name:"4 dashboard sections",role:"Needs Review | Publishing Soon | Published | Rejected"}
+      ],
+      internal_flow:["finding generated → critiqued → grounded","→ Mode B: tier routing","→ warmup_active? all held","→ delayed_publish (24h, BullMQ every 5m) → published"]
+    },
+    why_matters:"Brand-safe AI: every audit consultant-approved. Warm-up protects new clients from low-quality early findings.",
+    example:"New client first audit: 12 findings all held; consultant approves 9; warm-up records 25% rejection.",
+    connected_to:["R2","S1"],
+    source_files:["docs/specs/final-architecture/12-review-gate.md","docs/specs/final-architecture/24-two-store-pattern.md"]},
+
+  {id:"R2",label:"Consultant Review UI",layer:12,x:6.5,y:1.9,
+    purpose:"4-section dashboard for review. Approve/edit/reject preserves original.",
+    what_happens:["Render held findings","Consultant approves / edits / rejects","FindingEdit row preserves original","Approval triggers publish or delayed"],
+    inputs:["Held / delayed findings"],
+    outputs:["Approved findings","FindingEdit rows","Override deltas"],
+    dependencies:[{type:"service",name:"Clerk auth",reason:"Consultant identity"},{type:"data",name:"Internal store",reason:"Internal access mode"}],
+    internal_architecture:{
+      summary:"Next.js 15 + shadcn/ui + Tailwind + Clerk. R6 channel: heuristic body NEVER rendered.",
+      components:[
+        {name:"Needs Review",role:"Held + delayed for review"},
+        {name:"Publishing Soon",role:"Delayed countdown"},
+        {name:"Published",role:"Already public"},
+        {name:"Rejected",role:"Suppressed or consultant-rejected"},
+        {name:"FindingEdit",role:"Preserves original on edit"}
+      ],
+      internal_flow:["dashboard load → fetch by section → consultant action → FindingEdit + state transition"]
+    },
+    why_matters:"Human expertise stays central to the deliverable.",
+    example:"Consultant edits 'Severity: high → medium' on 1 finding; original kept; finding moves to published_findings.",
+    connected_to:["P1","P2","S1"],
+    source_files:["docs/specs/final-architecture/12-review-gate.md","docs/specs/final-architecture/14-delivery-layer.md"]},
+
+  {id:"P1",label:"PDF Report (§35)",layer:10,x:2,y:0.7,
+    purpose:"8-section branded PDF, only published findings, <5MB.",
+    what_happens:["Render Next.js HTML report","Playwright page.pdf() export","Store in R2","Update audit_runs.report_pdf_url"],
+    inputs:["ExecutiveSummary","ActionPlan","Published findings","Annotated screenshots"],
+    outputs:["PDF URL"],
+    dependencies:[{type:"service",name:"Playwright",reason:"page.pdf()"},{type:"service",name:"R2",reason:"PDF storage"}],
+    internal_architecture:{
+      summary:"Phase 9 (v2.2). 8 sections, deterministic where possible.",
+      components:[
+        {name:"Cover",role:"Client logo + audit metadata"},
+        {name:"Executive Summary",role:"From I4"},
+        {name:"Action Plan",role:"From I3 (4 quadrants)"},
+        {name:"Findings by Category",role:"Grouped + annotated"},
+        {name:"Cross-Page Patterns",role:"From X1"},
+        {name:"Funnel Analysis",role:"If workflows present"},
+        {name:"Methodology",role:"Heuristic categories used (not bodies)"},
+        {name:"Appendix",role:"Reproducibility note + version pins"}
+      ],
+      internal_flow:["fetch published findings → render HTML → page.pdf() → R2 → signed URL"]
+    },
+    why_matters:"Polished, share-ready, offline-readable.",
+    example:"Acme-CRO-Audit-2026-04.pdf · 18MB · 32 pages.",
+    connected_to:["S2"],
+    source_files:["docs/specs/final-architecture/35-report-generation.md"]},
+
+  {id:"P2",label:"Client Dashboard",layer:10,x:4.5,y:0.7,
+    purpose:"Web view for client. 7 pages. Sees only published findings + evidence + recommendation.",
+    what_happens:["Authenticate via Clerk","SET LOCAL app.access_mode='published_only'","Render audit list, finding detail, version diff, competitor comparison"],
+    inputs:["Audit data (published only)"],
+    outputs:["Dashboard render"],
+    dependencies:[{type:"service",name:"Clerk",reason:"Auth"},{type:"service",name:"AccessModeMiddleware",reason:"Fail-secure published_only"}],
+    internal_architecture:{
+      summary:"Next.js 15 + Tailwind. R6 channel: heuristic body NEVER in HTML.",
+      components:[
+        {name:"Overview",role:"Score, grade, trend"},
+        {name:"Findings list",role:"Filtered + sorted"},
+        {name:"Finding detail",role:"Annotated screenshot + recommendation"},
+        {name:"Compare versions",role:"Diff view"},
+        {name:"Competitors",role:"Pairwise comparison"},
+        {name:"Per-page",role:"Page-scoped findings"},
+        {name:"History",role:"Audit timeline"}
+      ],
+      internal_flow:["client request → Clerk auth → app.client_id + published_only → query → render"]
+    },
+    why_matters:"Clients self-serve. Heuristic IP stays private.",
+    example:"Client logs in, sees grade B, top 5 findings, clicks Finding #1 for annotated screenshot.",
+    connected_to:["S1"],
+    source_files:["docs/specs/final-architecture/14-delivery-layer.md"]},
+
+  {id:"P3",label:"MCP Server (8 tools)",layer:10,x:7,y:0.7,
+    purpose:"Programmatic delivery channel. Read-only in MVP. cro_trigger_audit deferred Phase 11.",
+    what_happens:["MCP API key validated, scoped to client_id","SET LOCAL app.client_id","Serve query"],
+    inputs:["MCP request"],
+    outputs:["JSON envelope (CROAuditResponse)"],
+    dependencies:[{type:"service",name:"§13 RLS",reason:"Per-client isolation"}],
+    internal_architecture:{
+      summary:"8 read tools (cro_trigger_audit deferred). Per-client API key scoping.",
+      components:[
+        {name:"cro_get_audit_summary",role:"Latest audit summary"},
+        {name:"cro_get_findings",role:"List with filters"},
+        {name:"cro_get_finding_detail",role:"Single finding + evidence"},
+        {name:"cro_get_screenshot",role:"Signed URL"},
+        {name:"cro_compare_versions",role:"Version diff"},
+        {name:"cro_get_competitor_comparison",role:"Competitor diff"},
+        {name:"cro_get_consistency_issues",role:"Cross-page consistency"},
+        {name:"cro_list_clients",role:"For consultant accounts"},
+        {name:"cro_trigger_audit",role:"Phase 11+ — write action"}
+      ],
+      internal_flow:["MCP call → API key validation → RLS context → query → JSON envelope"]
+    },
+    why_matters:"AI agents and tools query Neural like a database.",
+    example:"AI assistant calls cro_get_findings(audit_run_id=4321, severity='high') → JSON list.",
+    connected_to:["S1"],
+    source_files:["docs/specs/final-architecture/14-delivery-layer.md"]},
+
+  {id:"P4",label:"Hono REST API + SSE",layer:10,x:9.5,y:0.7,
+    purpose:"12 REST endpoints + SSE stream. Underlies dashboard and webhooks.",
+    what_happens:["AccessModeMiddleware","Clerk session","Serve REST endpoints","SSE stream for live progress"],
+    inputs:["HTTP request / SSE subscription"],
+    outputs:["JSON response / event stream"],
+    dependencies:[{type:"service",name:"Hono",reason:"4.x framework"}],
+    internal_architecture:{
+      summary:"12 endpoints + SSE at /api/audits/:id/stream.",
+      components:[
+        {name:"Audits CRUD",role:"List/create/get/delete"},
+        {name:"Findings approve/reject/edit",role:"Review actions"},
+        {name:"Patterns",role:"Pattern findings"},
+        {name:"Report",role:"PDF metadata + signed URL"},
+        {name:"Regenerate",role:"Re-render PDF"},
+        {name:"SSE stream",role:"22 audit_event types"}
+      ],
+      internal_flow:["HTTP → Clerk → AccessModeMiddleware → handler → response","SSE: subscribe → stream events from EventEmitter"]
+    },
+    why_matters:"Dashboard + integrations + webhooks all share one API.",
+    example:"GET /api/audits/4321 → JSON. SSE shows '4 of 6 pages complete'.",
+    connected_to:["S1","S5"],
+    source_files:["docs/specs/final-architecture/14-delivery-layer.md","docs/specs/final-architecture/34-observability.md"]},
+
+  {id:"P5",label:"Notification Adapter",layer:10,x:11.5,y:0.7,
+    purpose:"Email + webhook delivery on audit lifecycle events. DLQ for failures.",
+    what_happens:["Listen for audit_completed / audit_failed / findings_ready_for_review","Resend (Postmark fallback)","Webhook with HMAC signature","Exponential backoff x3","DLQ on final failure"],
+    inputs:["Audit event"],
+    outputs:["Email / webhook delivery"],
+    dependencies:[{type:"service",name:"Resend",reason:"Email primary"},{type:"data",name:"notification_dead_letter table",reason:"Failed delivery store"}],
+    internal_architecture:{
+      summary:"NotificationAdapter interface. EmailNotificationAdapter MVP. WebhookNotificationAdapter post-MVP.",
+      components:[
+        {name:"EmailNotificationAdapter",role:"Resend → Postmark fallback"},
+        {name:"WebhookNotificationAdapter",role:"HMAC + exponential backoff"},
+        {name:"DLQ",role:"3 attempts then notification_dead_letter table"},
+        {name:"notification_preferences",role:"Per-user opt-in/out"}
+      ],
+      internal_flow:["event → user pref check → send → success / retry / DLQ"]
+    },
+    why_matters:"Stakeholders notified without manual chase. Email failures don't sink the audit.",
+    example:"Audit complete → email to consultant + webhook to client's Slack.",
+    connected_to:["S4"],
+    source_files:["docs/specs/final-architecture/14-delivery-layer.md"]},
+
+  {id:"S1",label:"Internal Store + Published View",layer:11,x:13.5,y:10,
+    purpose:"§24 Two-Store Pattern. Internal findings table for consultants; published_findings VIEW for clients (access-mode gated).",
+    what_happens:["Findings written to internal table","Consultant queries with app.access_mode='internal'","Client queries with app.access_mode='published_only'","Published view filters WHERE publish_status='published' AND access_mode='published_only'"],
+    inputs:["Findings, edits, rollups"],
+    outputs:["Queryable rows (RLS + access-mode gated)"],
+    dependencies:[{type:"service",name:"Postgres + RLS",reason:"Per-client isolation"},{type:"data",name:"AccessModeMiddleware",reason:"Per-transaction SET LOCAL"}],
+    internal_architecture:{
+      summary:"40 tables total. View for client; materialized in Phase 10 if p95 latency >500ms.",
+      components:[
+        {name:"§13.1 base (12 tables)",role:"clients, audit_runs, findings, finding_edits, rejected_findings, comparison_findings, consistency_findings, screenshots, sessions, domain_patterns, workflow_recipes, audit_log"},
+        {name:"§13.6 extensions (15 tables)",role:"heuristic_catalog, templates, workflows, page_states, evidence, finding_rollups, heuristic_overlays, heuristic_calibration, reproducibility_snapshots, hypotheses, test_plans, variations, analytics_bindings, analytics_signals, audit_requests"},
+        {name:"§13.7 v2.2 (3 + 1 view)",role:"llm_call_log, audit_events, heuristic_health_metrics (mat view), published_findings (view)"},
+        {name:"AccessModeMiddleware",role:"SET LOCAL per transaction; published_only fail-secure"},
+        {name:"Heuristic content rule",role:"NEVER stored in findings — only heuristic_id"}
+      ],
+      internal_flow:["write: findings table → publish_status update → published view auto-filters","read: middleware sets access_mode → query","RLS: app.client_id session var → filter rows"]
+    },
+    why_matters:"Heuristic IP protected. Per-client isolation. No accidental client exposure.",
+    example:"Internal: 47 findings. Client view: 31 published findings (no heuristic_id, no full evidence).",
+    connected_to:["A5","R1","P2","P3","P4"],
+    source_files:["docs/specs/final-architecture/13-data-layer.md","docs/specs/final-architecture/24-two-store-pattern.md"]},
+
+  {id:"S2",label:"R2 Object Storage",layer:11,x:13.5,y:8.2,
+    purpose:"Stores screenshots, PDFs, raw artifacts.",
+    what_happens:["Save with audit-scoped key","Return signed URL"],
+    inputs:["Screenshots, PDFs"],
+    outputs:["File links"],
+    dependencies:[{type:"service",name:"Cloudflare R2",reason:"Blob storage; LocalDisk fallback dev"}],
+    internal_architecture:{
+      summary:"Adapter pattern (StorageAdapter interface).",
+      components:[
+        {name:"R2Adapter",role:"Production"},
+        {name:"LocalDiskStorage",role:"Dev fallback"},
+        {name:"Signed URL generator",role:"Time-limited access"}
+      ],
+      internal_flow:["upload → /audits/{audit_run_id}/{kind}/{key} → signed URL"]
+    },
+    why_matters:"Cheap scalable storage. PDFs and screenshots out of Postgres.",
+    example:"/audits/4321/state_0/desktop.png · 240KB.",
+    connected_to:[],
+    source_files:["docs/specs/final-architecture/13-data-layer.md"]},
+
+  {id:"S3",label:"LLM Call Log + Cost",layer:11,x:13.5,y:6.4,
+    purpose:"Append-only record of every LLM call. Per-client cost attribution.",
+    what_happens:["Atomic write per call","Track tokens, cost, model, latency, prompt hash"],
+    inputs:["Every LLM call"],
+    outputs:["llm_call_log rows"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"Append-only (Constitution R7.4). Trigger raises EXCEPTION on UPDATE/DELETE.",
+      components:[
+        {name:"call_id",role:"UUID per call"},
+        {name:"prompt_hash",role:"For reproducibility"},
+        {name:"tokens_in / tokens_out",role:"Cost computation"},
+        {name:"model",role:"e.g., claude-sonnet-4"},
+        {name:"latency_ms",role:"Performance"},
+        {name:"audit_run_id",role:"Per-audit roll-up"}
+      ],
+      internal_flow:["LLM call complete → INSERT llm_call_log → update running totals"]
+    },
+    why_matters:"Per-client billing transparency. Budget enforcement reads from here.",
+    example:"Audit #4321: 24 calls, $11.40 spent (76% of $15 budget).",
+    connected_to:["SC2"],
+    source_files:["docs/specs/final-architecture/26-cost-and-guardrails.md","docs/specs/final-architecture/13-data-layer.md"]},
+
+  {id:"S4",label:"Audit Events + Pino Logs",layer:11,x:13.5,y:4.6,
+    purpose:"3-layer observability. Layer 1 Pino logs, Layer 2 audit_events (22 types), Layer 3 metrics + alerts (Phase 9).",
+    what_happens:["Pino structured JSON logs (no console.log)","audit_events table append (22 named types)","metrics derived (Phase 9)","7 alerting rules (Phase 9)"],
+    inputs:["Log calls + state transitions"],
+    outputs:["Searchable logs + events + alerts"],
+    dependencies:[{type:"service",name:"LangSmith",reason:"trace_id correlation"}],
+    internal_architecture:{
+      summary:"22 AuditEventType. 7 alerts (audit stuck, grounding high, heuristic health low, cost overrun, llm errors, failure cluster). Operational dashboard built LAST.",
+      components:[
+        {name:"Pino logger",role:"JSON, audit_run_id + page_url + node_name + heuristic_id + trace_id"},
+        {name:"audit_events table",role:"Append-only, 90d retention"},
+        {name:"22 AuditEventTypes",role:"audit_started, page_browse_started, finding_produced, grounding_rejected, finding_published, budget_warning/exceeded, llm_call_completed/failed, llm_provider_fallback, perception_quality_low, hitl_requested, ..."},
+        {name:"HeuristicHealthMetrics",role:"Materialized view; flags health_score <0.3"},
+        {name:"7 alert rules",role:"Debounced per audit_run_id"},
+        {name:"Operations Dashboard",role:"Phase 9 last; admin-only /console/admin/operations"}
+      ],
+      internal_flow:["log/event → Pino + audit_events → metrics view → alerts (debounced) → ops dashboard"]
+    },
+    why_matters:"Bugs diagnosed in minutes. Heuristic health auto-flags rewrites.",
+    example:"audit_event 'grounding_rejected' for HEU-09 across 18 audits → health_score 0.22 → flagged.",
+    connected_to:["L2","L3"],
+    source_files:["docs/specs/final-architecture/34-observability.md"]},
+
+  {id:"S5",label:"SSE Progress Stream",layer:11,x:13.5,y:2.8,
+    purpose:"Live event stream from EventEmitter to dashboard.",
+    what_happens:["Node emits event","SSE subscribers receive","Dashboard updates progress"],
+    inputs:["Audit lifecycle events"],
+    outputs:["Live event stream"],
+    dependencies:[{type:"service",name:"Hono SSE",reason:"GET /api/audits/:id/stream"}],
+    internal_architecture:{
+      summary:"From the same 22 AuditEventType taxonomy. Phase 9.",
+      components:[
+        {name:"EventEmitter",role:"Per-graph-node emit"},
+        {name:"SSE handler",role:"Subscribe + stream"}
+      ],
+      internal_flow:["graph node → EventEmitter → audit_events DB + SSE → dashboard"]
+    },
+    why_matters:"Consultants see live progress, not a spinner.",
+    example:"Dashboard: 'page 4 of 6 complete · analyzing'.",
+    connected_to:["P4"],
+    source_files:["docs/specs/final-architecture/34-observability.md"]},
+
+  {id:"L1",label:"Outcomes Archive",layer:13,x:4,y:-0.7,
+    purpose:"Archives approved audits + flags novel findings (Phase 6 collect, Phase 12 compute).",
+    what_happens:["Tag approved audits","Link consultant edits","Flag heuristic-uncovered findings as 'novel'"],
+    inputs:["Approved audits","Consultant edits"],
+    outputs:["Outcome records"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"Phase 6 data collection. Phase 12 compute via Learning Service.",
+      components:[
+        {name:"Audit archive",role:"Approved + signed-off"},
+        {name:"Edit log",role:"Consultant edits per finding"},
+        {name:"Novel-flag tags",role:"Findings outside library"}
+      ],
+      internal_flow:["R2 approval → archive + edits → feed L3"]
+    },
+    why_matters:"Raw data for the learning service.",
+    example:"Audit 4321 archived; 4 edits; 1 novel finding flagged.",
+    connected_to:["L3"],
+    source_files:["docs/specs/final-architecture/28-learning-service.md"]},
+
+  {id:"L2",label:"Edit & Feedback Patterns",layer:13,x:6.5,y:-0.7,
+    purpose:"Tracks consultant edits across audits. HeuristicHealthMetrics auto signal.",
+    what_happens:["Capture every override","Aggregate patterns","Feed health metrics"],
+    inputs:["Consultant edits across all audits"],
+    outputs:["Edit-pattern signals"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"Phase 6 collect. Materialized view nightly.",
+      components:[
+        {name:"Per-heuristic edit rate",role:"Edits / total findings"},
+        {name:"Severity drift",role:"Up/down adjustments"},
+        {name:"Rejection rate",role:"For warm-up + calibration"}
+      ],
+      internal_flow:["edits → aggregator → mat view → L3"]
+    },
+    why_matters:"Tells us which heuristics need recalibration.",
+    example:"HEU-09 edited up 18% → suggest threshold tightening.",
+    connected_to:["L3"],
+    source_files:["docs/specs/final-architecture/28-learning-service.md","docs/specs/final-architecture/34-observability.md"]},
+
+  {id:"L3",label:"Heuristic Improvement",layer:13,x:9,y:-0.7,
+    purpose:"Phase 12 calibration job. Promotes novel findings to draft new rules.",
+    what_happens:["Read outcomes + edit patterns","Approval rate → reliability_delta (clamped [-0.3, +0.2])","Crystallisation candidates: same heuristic + edits on >5 + >70% consistency","Propose to team for review"],
+    inputs:["Outcomes","Edit patterns","Approved novel findings"],
+    outputs:["Heuristic change proposals (edits + new rules)"],
+    dependencies:[{type:"data",name:"Stale calibration rule",reason:">90 days ignored"}],
+    internal_architecture:{
+      summary:"Phase 12. Idempotent. Tier-specific approval thresholds.",
+      components:[
+        {name:"CalibrationJob",role:"Batch process"},
+        {name:"reliability_delta",role:"Clamped [-0.3, +0.2]"},
+        {name:"severity_override",role:"Per-client adjustment"},
+        {name:"suppress_below_confidence",role:"Per-client floor"},
+        {name:"Crystallisation pipeline",role:"Phase 16; consultant-driven, no NLP"}
+      ],
+      internal_flow:["outcomes + patterns → CalibrationJob → deltas → consultant review → heuristic_calibration table"]
+    },
+    why_matters:"Today's AI-discovered finding becomes tomorrow's rule.",
+    example:"After 50 audits: tighten 'mobile CTA visibility' threshold; promote 1 novel checkout-microcopy finding to new rule.",
+    connected_to:["H1"],
+    source_files:["docs/specs/final-architecture/28-learning-service.md","docs/specs/final-architecture/22-heuristic-retrieval-evolution.md"]},
+
+  {id:"F1",label:"Phased Roadmap (16 phases)",layer:14,x:3,y:-2,
+    purpose:"3 tracks × 16 phases × 38 weeks (per §16).",
+    what_happens:["Track A MVP weeks 1-19","Track B Product weeks 19-26","Track C Master weeks 26-38"],
+    inputs:["§16 plan"],
+    outputs:["Phase-by-phase task lists"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"~130 named artifacts. Phase 13 (state exploration) MUST precede Phase 14 (composition).",
+      components:[
+        {name:"Track A — MVP",role:"Phases 1, 1b, 1c, 2, 3, 4, 4b, 5, 5b, 6, 7, 8 — exit Phase 8 week 19"},
+        {name:"Track B — Product",role:"Phases 9, 10, 11, 12 — exit week 26"},
+        {name:"Track C — Master",role:"Phases 13, 13b, 14, 15, 16 — exit week 38"}
+      ],
+      internal_flow:["per-phase: spec → plan → tasks → impact → checklist → exit gate"]
+    },
+    why_matters:"Predictable, gated delivery.",
+    example:"Phase 7 Analysis Pipeline (week 16-18); Phase 14 Agent Composition (week 31-33).",
+    connected_to:[],
+    source_files:["docs/specs/final-architecture/16-implementation-phases.md"]},
+
+  {id:"F2",label:"Spec Kit Harness",layer:14,x:6,y:-2,
+    purpose:"Keeps specs and code in sync.",
+    what_happens:["/speckit.* commands regenerate spec/plan/tasks","Lifecycle-tagged artifacts"],
+    inputs:["PRD edits"],
+    outputs:["Regenerated spec files"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"Constitution R17 + R19 + R20 governance.",
+      components:[
+        {name:"R17",role:"Lifecycle states"},
+        {name:"R19",role:"Rollup-first reading"},
+        {name:"R20",role:"Impact before implementation"}
+      ],
+      internal_flow:["edit PRD → /speckit.specify → /speckit.plan → /speckit.tasks → status: draft → validated → approved → implemented"]
+    },
+    why_matters:"Specs never rot away from the codebase.",
+    example:"PRD change → /speckit.tasks regenerates task list.",
+    connected_to:[],
+    source_files:["docs/specs/final-architecture/16-implementation-phases.md","docs/specs/final-architecture/17-context-preservation.md"]},
+
+  {id:"F3",label:"Deferred Decisions (DD-01..DD-07)",layer:14,x:9,y:-2,
+    purpose:"6 explicitly deferred decisions per §02.",
+    what_happens:["Listed in §02 + PRD non-goals","Pulled into v1.1+ when ready"],
+    inputs:["Stakeholder requests"],
+    outputs:["Future roadmap items"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"Multi-agent coordination, vector search, fine-tuning, Firefox, K8s, weight calibration, multi-model.",
+      components:[
+        {name:"DD-01",role:"Multi-agent coordination"},
+        {name:"DD-02",role:"Vector search Phase 12"},
+        {name:"DD-03",role:"Fine-tuning"},
+        {name:"DD-04",role:"Firefox engine"},
+        {name:"DD-05",role:"Kubernetes"},
+        {name:"DD-06",role:"Weight calibration (after 6mo feedback)"},
+        {name:"DD-07",role:"Multi-model evaluation"}
+      ],
+      internal_flow:["pending → activated by team decision in later phase"]
+    },
+    why_matters:"Disciplined scope. Clear path forward.",
+    example:"DD-06 weight calibration activated in Phase 16 once enough consultant feedback collected.",
+    connected_to:[],
+    source_files:["docs/specs/final-architecture/02-architecture-decisions.md"]},
+
+  {id:"SC1",label:"Safety Controls (13)",layer:15,x:-2,y:7,
+    purpose:"§11 — 13 deterministic controls protecting browser actions and audit safety.",
+    what_happens:["ActionClassifier on every tool call","DomainPolicy + NavigationGuard cross-check","RobotsTxtValidator + FormSubmissionGuard","CircuitBreaker per domain","Rate limiters at 3 layers"],
+    inputs:["Every browser action"],
+    outputs:["Allow / log / block / terminate decision"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"13 controls — graph-level, NOT LLM-discretionary. Hard-block payment forms.",
+      components:[
+        {name:"ActionClassifier",role:"safe / caution / sensitive / blocked"},
+        {name:"DomainPolicy",role:"denylist / allowlist / default"},
+        {name:"NavigationGuard",role:"Pre-execution + post-recovery (go_back if JS-triggered)"},
+        {name:"RobotsTxtValidator",role:"robots.txt + ai-agent.txt"},
+        {name:"FormSubmissionGuard",role:"Hard-block payment/purchase, no override"},
+        {name:"CircuitBreaker",role:"3 fails / 1hr block per domain"},
+        {name:"BrowseRateLimiter",role:"30/min global, 10-30/min per-domain, 2s per-session"},
+        {name:"AnalysisRateLimiter",role:"15K tokens/page, 500K/audit, 3 LLM/page sequential"},
+        {name:"BudgetEnforcer",role:"$15/audit, $5/page caps"},
+        {name:"LLMCallLogger",role:"Atomic to llm_call_log"},
+        {name:"PreCallBudgetGate",role:"Estimate before call"},
+        {name:"LLMRateLimiter",role:"Redis sliding window"},
+        {name:"Failover",role:"Claude → GPT-4o per call; both down = pause 5m, retry, give up 15m"}
+      ],
+      internal_flow:["tool call → ActionClassifier → DomainPolicy → NavigationGuard → execute or block"]
+    },
+    why_matters:"Agent can never accidentally submit a payment form. Audit costs are bounded.",
+    example:"Click on 'Submit Payment' → FormSubmissionGuard hard-block → audit_event 'safety_blocked'.",
+    connected_to:["B1","O3","O4"],
+    source_files:["docs/specs/final-architecture/11-safety-cost.md"]},
+
+  {id:"SC2",label:"Cost Gates (18)",layer:15,x:-2,y:5,
+    purpose:"§26 — 18 distinct cost gates from pre-flight estimation through runtime gates to kill-switch.",
+    what_happens:["Pre-flight estimate per item","Runtime gates before each LLM call","Post-call tracker","Kill-switch via Temporal cancellation","Early-stop detector"],
+    inputs:["Cost estimates + LLM call records"],
+    outputs:["proceed / skip / abort decision"],
+    dependencies:[{type:"service",name:"Temporal",reason:"Kill-switch cancellation"}],
+    internal_architecture:{
+      summary:"5 budget gates + 9 runtime gates + post-call tracker + kill-switch + early-stop.",
+      components:[
+        {name:"Pre-flight Estimator",role:"Estimate browse + exploration + analysis"},
+        {name:"Audit Budget Gate",role:"$15 default, $100 max"},
+        {name:"Discovery Budget",role:"$0.05 fixed"},
+        {name:"Page Budget Gate",role:"$2 default, $10 max"},
+        {name:"Exploration Budget",role:"$0.50 default, $2 max"},
+        {name:"Workflow Budget",role:"$3 default, $15 max"},
+        {name:"Work Item Dequeue Gate",role:"Skip if estimate exceeds remaining"},
+        {name:"Before-Browse / Before-LLM / Before-Explore Gates",role:"6 runtime checks"},
+        {name:"Post-Call Cost Tracker",role:"Update running totals"},
+        {name:"Kill-Switch",role:"haltClient / haltGlobal / haltAudit"},
+        {name:"Early-Stop Detector",role:"Budget <10% + ≥70% templates done"}
+      ],
+      internal_flow:["estimate → 5 budget gates → 9 runtime gates → call → tracker → kill-switch / early-stop"]
+    },
+    why_matters:"Per-item budgets are CAPS not allocations. Predictable cost per audit.",
+    example:"Page #5 estimate $2.40 > remaining page budget $1.80 → skip page, mark 'budget_exceeded'.",
+    connected_to:["O4","S3"],
+    source_files:["docs/specs/final-architecture/26-cost-and-guardrails.md"]},
+
+  {id:"SC3",label:"Failure Modes (94)",layer:15,x:-2,y:3,
+    purpose:"§15 — 22 base + 72 master extensions with detection + response patterns.",
+    what_happens:["Detect failure type","Apply response pattern","Log + alert"],
+    inputs:["Errors + state transitions"],
+    outputs:["Recovery action"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"94 catalogued. 7 response patterns: transient→retry, structural→reflect, blocked→HITL, hallucination→reject, malformed→retry, budget→graceful stop, crash→checkpoint.",
+      components:[
+        {name:"Browse F-01..F-12",role:"Loop, hallucinated selectors, CAPTCHA, SPA, etc."},
+        {name:"Analysis AF-01..AF-10",role:"Hallucinated finding, malformed output, etc."},
+        {name:"Audit OA-01..OA-04",role:"All pages fail, budget, competitor, interrupted"},
+        {name:"Discovery DF-01..DF-07",role:"Root unreachable, all seeds excluded, etc."},
+        {name:"State Exploration SE-01..SE-10",role:"Crash, restore fail, etc."},
+        {name:"Workflow WF-01..WF-08",role:"Step page not analyzed, login mid-funnel"},
+        {name:"Heuristic Retrieval HR-01..HR-06",role:"Embedding model unavailable, etc."},
+        {name:"Trigger TF-01..TF-08",role:"Channel crash, auth down, etc."},
+        {name:"Reproducibility RF-01..RF-08",role:"Snapshot creation fails, etc."},
+        {name:"Cost CG-01..CG-08",role:"Mid-page exceeded, drift >50%"},
+        {name:"Durable DO-01..DO-08",role:"Temporal unavailable, history exceeds"},
+        {name:"Learning LS-01..LS-05",role:"Job fails, stale calibration"},
+        {name:"Analytics AB-01..AB-05",role:"Provider unavailable"},
+        {name:"Two-Store TS-01..TS-05",role:"access_mode not set"}
+      ],
+      internal_flow:["error → classify → response pattern → recovery"]
+    },
+    why_matters:"Resilience by design. Every failure has a response.",
+    example:"AF-01 hallucinated finding → grounding rejection (silent).",
+    connected_to:["S4"],
+    source_files:["docs/specs/final-architecture/15-failure-modes.md"]},
+
+  {id:"SC4",label:"Temporal Durable Layer (§27)",layer:15,x:-2,y:1,
+    purpose:"Durable outer orchestration. AuditWorkflow + 9 activities. LangGraph nested as inner subgraphs.",
+    what_happens:["Temporal owns audit lifecycle","9 activities wrap LangGraph + DB ops","Heartbeat 10s","continueAsNew at 40K events / 40MB"],
+    inputs:["AuditRequest"],
+    outputs:["AuditResult"],
+    dependencies:[{type:"service",name:"Temporal server",reason:"Phase 6 deployment"}],
+    internal_architecture:{
+      summary:"Two task queues: audit-orchestration + audit-execution. Activity retry = fresh session (NOT from LangGraph checkpoint).",
+      components:[
+        {name:"AuditWorkflow",role:"Temporal workflow class"},
+        {name:"resolveClient",role:"Activity"},
+        {name:"loadReproducibilitySnapshot",role:"Activity"},
+        {name:"runDiscovery",role:"Activity"},
+        {name:"runPageOrchestrator",role:"Wraps LangGraph BrowseGraph + AnalyzeGraph"},
+        {name:"runWorkflowOrchestrator",role:"Wraps LangGraph WorkflowOrchestrator"},
+        {name:"runRollupAndScoring",role:"Activity"},
+        {name:"runCrossPageConsistency",role:"Activity"},
+        {name:"applyReviewGate",role:"Activity"},
+        {name:"finalizeAudit",role:"Activity"}
+      ],
+      internal_flow:["AuditWorkflow.start() → 9 activities sequenced","each activity has timeout + heartbeat","retry → fresh session"]
+    },
+    why_matters:"Crash-resistant audits. No bespoke recovery code.",
+    example:"Worker dies mid-page → Temporal re-runs runPageOrchestrator from scratch on new worker.",
+    connected_to:["O1","O2","SC2"],
+    source_files:["docs/specs/final-architecture/27-durable-orchestration.md"]},
+
+  {id:"Q1",label:"Golden Test Suite (§36)",layer:16,x:-2,y:-1,
+    purpose:"Frozen perception + expected findings. Fast Mode + Nightly Mode regression detection.",
+    what_happens:["Fast Mode: MockLLM, 30s, runs in PR CI","Nightly Mode: real LLM, $1-2, regression alert","Pass criteria: ≥80% TP, ≤20% FP, no test <60%","Regression alert: nightly drop >10% blocks deploy"],
+    inputs:["GoldenTestCase JSON + Heuristic[]"],
+    outputs:["TP/FP/FN counts + pass/fail"],
+    dependencies:[{type:"service",name:"MockLLMAdapter",reason:"Cached responses"},{type:"service",name:"MockBrowserEngine",reason:"Saved perceptions"}],
+    internal_architecture:{
+      summary:"Phase 0 infrastructure, Phase 1 fixture capture, Phase 7+ runner.",
+      components:[
+        {name:"GoldenTestCase",role:"frozen perception + expected findings + expected_FPs"},
+        {name:"MockBrowserEngine",role:"Saved perceptions, no network"},
+        {name:"MockLLMAdapter",role:"Cached responses from last nightly"},
+        {name:"Fast Mode runner",role:"30s in PR"},
+        {name:"Nightly Mode runner",role:"Real LLM, $1-2"},
+        {name:"Regression detector",role:">10% drop = P1 alert"},
+        {name:"Offline mode",role:"NEURAL_MODE=offline, dev"}
+      ],
+      internal_flow:["fixtures → runner (Fast or Nightly) → compare → TP/FP counts → pass/fail/alert"]
+    },
+    why_matters:"Quality safety net. Catches prompt drift, heuristic changes, scoring bugs.",
+    example:"Heuristic edit → Fast Mode in PR (30s) → nightly real-LLM run → 12% drop → P1 alert.",
+    connected_to:[],
+    source_files:["docs/specs/final-architecture/36-golden-test-suite.md"]},
+
+  {id:"Q2",label:"Adapter Pattern (9 interfaces)",layer:16,x:-2,y:-3,
+    purpose:"§17 — 9 swappable adapter interfaces. All external SDK access isolated to adapter files.",
+    what_happens:["Concrete adapter implements interface","Core code only imports interface","Swap implementations without core changes"],
+    inputs:["Interface contract"],
+    outputs:["Adapter implementation"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"9 swappable adapters. Critical for Phase 6 LLM failover, Phase 12 multi-tenant, etc.",
+      components:[
+        {name:"LLMAdapter",role:"Anthropic primary, GPT-4o fallback"},
+        {name:"StorageAdapter",role:"R2 / LocalDisk"},
+        {name:"ScreenshotStorage",role:"R2 with signed URLs"},
+        {name:"BrowserEngine",role:"Playwright now; future Patchright (stealth)"},
+        {name:"NotificationAdapter",role:"Email (Resend/Postmark) / Webhook"},
+        {name:"HeuristicLoader",role:"FileSystem MVP / Postgres Phase 12"},
+        {name:"Auth Adapter",role:"Clerk"},
+        {name:"DiscoveryStrategy",role:"Sitemap / Manual / NavCrawl-deferred"},
+        {name:"DecryptionAdapter",role:"Plaintext MVP / AES-256-GCM v1.1"}
+      ],
+      internal_flow:["core → interface → adapter implementation → external SDK"]
+    },
+    why_matters:"Future flexibility. v1.1 adds stealth browser without core rewrite.",
+    example:"v1.2 swaps LLMAdapter to add GPT-4o fallback — zero core changes.",
+    connected_to:[],
+    source_files:["docs/specs/final-architecture/17-context-preservation.md"]}
+];
+const nodeById=Object.fromEntries(NODES.map(n=>[n.id,n]));
+
+const FLOW_TYPES={
+  control:{color:"#1F2937",dash:"solid",width:1.5},
+  data:{color:"#2563EB",dash:"solid",width:1.5},
+  evidence:{color:"#0D9488",dash:"solid",width:1.5},
+  analysis:{color:"#7C3AED",dash:"solid",width:2},
+  report:{color:"#16A34A",dash:"solid",width:2},
+  feedback:{color:"#F97316",dash:"dash",width:1.5},
+  infra:{color:"#9CA3AF",dash:"dot",width:1},
+  safety:{color:"#DC2626",dash:"solid",width:1.2}
+};
+
+const EDGES=[
+  ["T1","C1","control"],["T1","O1","control"],["T1","E4","data"],
+  ["T2","C1","data"],["T3","C1","data"],
+  ["C1","O1","data"],["C1","A1","data"],
+  ["O1","O2","control"],["O2","O3","control"],["O2","O4","control"],["O2","X1","control"],
+  ["O3","B1","control"],["O3","B2","control"],["O3","B3","control"],["O3","D1","control"],
+  ["B2","B3","control"],["B3","B4","data"],["B3","D1","data"],["B3","E1","evidence"],
+  ["B4","B3","data"],
+  ["B1","V1","control"],["V1","B1","feedback"],
+  ["D1","E1","evidence"],["D1","A1","data"],
+  ["E1","A1","evidence"],["E1","E2","evidence"],["E1","P1","evidence"],
+  ["E3","O4","control"],
+  ["O4","A1","control"],
+  ["H1","A2","data"],
+  ["A1","A2","analysis"],["A2","A3","analysis"],["A3","A4","analysis"],["A4","A5","analysis"],
+  ["A4","B1","feedback"],
+  ["A5","X1","analysis"],["X1","I1","analysis"],
+  ["I1","I2","analysis"],["I1","I3","analysis"],["I1","I4","analysis"],["I3","I4","data"],
+  ["I1","R1","data"],["I2","R1","data"],["I3","R1","data"],["I4","R1","data"],
+  ["R1","R2","data"],["R2","R1","feedback"],
+  ["R2","P1","report"],["R2","P2","report"],["R2","P3","report"],["R2","P4","report"],
+  ["P1","S2","infra"],["P2","S1","data"],["P3","S1","data"],["P4","S1","data"],["P4","S5","data"],
+  ["P5","S4","infra"],
+  ["A5","S1","infra"],["E4","S1","infra"],["B3","S2","infra"],
+  ["A1","S3","infra"],["A2","S3","infra"],["A3","S3","infra"],["I4","S3","infra"],
+  ["O2","S4","infra"],["O3","S4","infra"],["O4","S4","infra"],
+  ["O2","S5","infra"],["S5","P4","infra"],
+  ["P2","L1","feedback"],["R2","L2","feedback"],["L1","L3","feedback"],["L2","L3","feedback"],["L3","H1","feedback"],
+  ["S4","L2","feedback"],
+  ["SC1","B1","safety"],["SC1","O3","safety"],["SC1","O4","safety"],
+  ["SC2","O4","safety"],["SC2","S3","safety"],
+  ["SC3","S4","safety"],
+  ["SC4","O1","safety"],["SC4","O2","safety"]
+].map(([from,to,flow_type])=>({from,to,flow_type}));
+
+const VIEWS={
+  all:{layers:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]},
+  business:{layers:[1,2,7,8,9,12,10,13,14]},
+  cro:{layers:[4,5,6,7,8,9,12,10,13]}
+};
+
+const PLOT_DIV=document.getElementById('diagram');
+const PANEL=document.getElementById('panel');
+
+function hex2rgba(h,a){h=h.replace("#","");const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);return `rgba(${r},${g},${b},${a})`}
+
+function buildBands(lids){
+  const shapes=[],ann=[];
+  lids.forEach(lid=>{
+    const layer=layerById[lid];if(!layer)return;
+    const ns=NODES.filter(n=>n.layer===lid);if(!ns.length)return;
+    const xs=ns.map(n=>n.x),ys=ns.map(n=>n.y);
+    let xMin=Math.min(...xs)-0.7,xMax=Math.max(...xs)+0.7;
+    const yMin=Math.min(...ys)-0.45,yMax=Math.max(...ys)+0.45;
+    if(lid===11){xMin=12.7;xMax=14.3}
+    if(lid===15||lid===16){xMin=-2.7;xMax=-1.3}
+    if(lid===7){xMin=-1.3;xMax=1.3}
+    shapes.push({type:"rect",xref:"x",yref:"y",x0:xMin,x1:xMax,y0:yMin,y1:yMax,fillcolor:hex2rgba(layer.color,0.06),line:{color:hex2rgba(layer.color,0.20),width:1},layer:"below"});
+    ann.push({x:xMin+0.05,y:yMax-0.05,xref:"x",yref:"y",text:`<b>${layer.id}. ${layer.name}</b>`,showarrow:false,xanchor:"left",yanchor:"top",font:{size:10.5,color:layer.color}});
+  });
+  return {shapes,annotations:ann};
+}
+
+function buildArrows(visIds){
+  return EDGES.filter(e=>visIds.has(e.from)&&visIds.has(e.to)).map(e=>{
+    const s=nodeById[e.from],t=nodeById[e.to],ft=FLOW_TYPES[e.flow_type];
+    return {x:t.x,y:t.y,ax:s.x,ay:s.y,xref:"x",yref:"y",axref:"x",ayref:"y",showarrow:true,arrowhead:3,arrowsize:1,arrowwidth:ft.width,arrowcolor:ft.color,opacity:e.flow_type==='infra'?0.4:0.85,standoff:14,startstandoff:14};
+  });
+}
+
+function buildTrace(visNodes){
+  const keyIds=["O2","O3","O4","B1","V1","H1","A2","A4","R1","I3","P1","S1","SC1","SC4","Q1"];
+  return {type:"scatter",mode:"markers+text",x:visNodes.map(n=>n.x),y:visNodes.map(n=>n.y),text:visNodes.map(n=>n.label),customdata:visNodes.map(n=>n.id),textposition:"middle center",textfont:{size:10,color:"#0f172a"},marker:{size:visNodes.map(n=>keyIds.includes(n.id)?64:50),color:visNodes.map(n=>hex2rgba(layerById[n.layer].color,0.18)),line:{width:visNodes.map(n=>keyIds.includes(n.id)?2.5:1.5),color:visNodes.map(n=>layerById[n.layer].color)},symbol:"square"},hovertemplate:"<b>%{text}</b><br><i>click for full details</i><extra></extra>",hoverlabel:{bgcolor:"white",bordercolor:"#cbd5e1"}};
+}
+
+function render(viewKey){
+  const view=VIEWS[viewKey]||VIEWS.all;
+  const visLayers=new Set(view.layers);
+  const visNodes=NODES.filter(n=>visLayers.has(n.layer));
+  const visIds=new Set(visNodes.map(n=>n.id));
+  const bands=buildBands(view.layers);
+  const arrows=buildArrows(visIds);
+  const trace=buildTrace(visNodes);
+  const layout={margin:{t:20,l:20,r:20,b:20},showlegend:false,plot_bgcolor:"white",paper_bgcolor:"white",xaxis:{visible:false,range:[-3,15.5],fixedrange:false,showgrid:false,zeroline:false},yaxis:{visible:false,range:[-3.5,12.5],fixedrange:false,showgrid:false,zeroline:false,scaleanchor:"x",scaleratio:0.5},shapes:bands.shapes,annotations:[...bands.annotations,...arrows],dragmode:"pan",hovermode:"closest"};
+  Plotly.newPlot(PLOT_DIV,[trace],layout,{responsive:true,displaylogo:false,scrollZoom:true,modeBarButtonsToRemove:["lasso2d","select2d","autoScale2d"]});
+  PLOT_DIV.removeAllListeners?.("plotly_click");
+  PLOT_DIV.on("plotly_click",e=>{const id=e.points?.[0]?.customdata;if(id)showDetail(id)});
+}
+
+function showDetail(id){
+  const n=nodeById[id];if(!n)return;
+  const layer=layerById[n.layer];
+  const inbound=EDGES.filter(e=>e.to===id).map(e=>e.from);
+  const outbound=EDGES.filter(e=>e.from===id).map(e=>e.to);
+
+  const depsHTML = (n.dependencies||[]).map(d=>`
+    <div class="dep">
+      <div><span class="dep-type">${d.type}</span><span class="dep-name">${d.name}</span></div>
+      <div class="dep-reason">${d.reason}</div>
+    </div>`).join("");
+
+  const ia=n.internal_architecture||{};
+  const compsHTML=(ia.components||[]).map(c=>`
+    <div class="internal-component">
+      <div class="ic-name">${c.name}</div>
+      <div class="ic-role">${c.role}</div>
+    </div>`).join("");
+  const flowHTML=(ia.internal_flow||[]).map(f=>`<div class="if-step">${f}</div>`).join("");
+
+  PANEL.classList.remove("empty");
+  PANEL.innerHTML=`
+    <div class="panel-header">
+      <button class="close" onclick="closeDetail()">×</button>
+      <span class="layer-pill" style="background:${layer.color}">${layer.id}. ${layer.name}</span>
+      <h2>${n.label}</h2>
+      <p class="subtitle">${n.purpose}</p>
+      <div class="meta"><span>id: ${n.id}</span></div>
+    </div>
+    <div class="panel-body">
+      <section><h3>Why this matters</h3><div class="why">${n.why_matters}</div></section>
+      <section><h3>Internal architecture</h3>
+        <div class="internal">
+          <div class="internal-summary">${ia.summary||""}</div>
+          ${compsHTML?`<div class="internal-components">${compsHTML}</div>`:""}
+          ${flowHTML?`<div class="internal-flow">${flowHTML}</div>`:""}
+        </div>
+      </section>
+      <section><h3>What happens</h3><ul>${(n.what_happens||[]).map(s=>`<li>${s}</li>`).join("")}</ul></section>
+      <section><h3>Inputs</h3><ul>${(n.inputs||[]).map(s=>`<li>${s}</li>`).join("")}</ul></section>
+      <section><h3>Outputs</h3><ul>${(n.outputs||[]).map(s=>`<li>${s}</li>`).join("")}</ul></section>
+      <section><h3>Dependencies</h3>${depsHTML?`<div class="deps">${depsHTML}</div>`:"<p style='color:var(--muted);font-size:12.5px'>None.</p>"}</section>
+      <section><h3>Real example</h3><div class="example">${n.example}</div></section>
+      ${(inbound.length||outbound.length)?`<section><h3>Connected components</h3><div class="connected">
+        ${inbound.map(i=>`<button onclick="showDetail('${i}')" title="Upstream">← ${nodeById[i]?.label||i}</button>`).join("")}
+        ${outbound.map(o=>`<button onclick="showDetail('${o}')" title="Downstream">${nodeById[o]?.label||o} →</button>`).join("")}
+      </div></section>`:""}
+      <section><h3>Source specs</h3><div class="source-files">${(n.source_files||[]).map(f=>`<code>${f}</code>`).join("")}</div></section>
+    </div>`;
+  PANEL.scrollTop=0;
+}
+
+function closeDetail(){
+  PANEL.classList.add("empty");
+  PANEL.innerHTML=`<div class="placeholder">
+    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.4"><path d="M9 11l3 3 3-3M12 14V3M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+    <div><div style="font-size:14px;font-weight:500;color:#0f172a">Click any component</div><div style="font-size:12.5px;margin-top:4px;color:#64748b">Drawer shows purpose · inputs · outputs · dependencies · internal architecture.</div></div>
+  </div>`;
+}
+
+document.getElementById("view").addEventListener("change",e=>render(e.target.value));
+document.getElementById("search").addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase().trim();
+  if(!q){render(document.getElementById("view").value);return}
+  const hit=NODES.find(n=>n.label.toLowerCase().includes(q)||n.id.toLowerCase()===q);
+  if(hit)showDetail(hit.id);
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape")closeDetail();
+  if(e.key==="/"){const s=document.getElementById("search");if(document.activeElement!==s){e.preventDefault();s.focus()}}
+});
+
+render("all");
+</script>
+</body>
+</html>

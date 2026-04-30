@@ -1,0 +1,450 @@
+{
+  "part": "C",
+  "layers": {
+    "28": {
+      "name": "Agent Composition",
+      "nodes": [
+        {
+          "id": "CM1",
+          "label": "ToolRegistry",
+          "part": "C",
+          "partLabel": "Agent Composition",
+          "layer": 28,
+          "layerLabel": "Agent Composition",
+          "purpose": "Phase 2 dynamic tool registry exposing getToolsForContext(ToolContext) — replaces hardcoded tool list to make Phase 11 a feature flip, not a rewrite.",
+          "what_happens": [
+            "Registers named tool sets (e.g., 'browse', 'analyze', 'analyze_interactive') instead of a fixed array",
+            "Resolves tool set at runtime based on ToolContext { mode, compositionMode?, executionMode? }",
+            "In Phase 2 returns 23 browse tools or 5 analyze tools; Phase 11 adds a third 'analyze_interactive' set (9 browser + 6 analysis)",
+            "Defines schemas for 3 analysis output tools (produce_finding, mark_heuristic_pass, mark_heuristic_needs_review) at Phase 2 even though they only activate in Phase 11"
+          ],
+          "inputs": [
+            "ToolContext { mode: 'browse'|'analyze', compositionMode?: 'interactive'|'static', executionMode?: ExecutionMode }",
+            "MCPToolDefinition[] (registered per set)"
+          ],
+          "outputs": [
+            "MCPToolDefinition[] for the requested context"
+          ],
+          "dependencies": [
+            {"type": "interface", "name": "MCPToolDefinition", "reason": "Tool schema contract registered into the registry"},
+            {"type": "data", "name": "RawFindingSchema (§5.2)", "reason": "Input schema for the produce_finding output tool"}
+          ],
+          "internal_architecture": {
+            "summary": "A registry keyed by set name with a context-resolver that maps ToolContext to a set, decoupling tool exposure from caller mode. Phase 2 ships 'browse' and 'analyze' sets; Phase 11 adds 'analyze_interactive' without modifying callers.",
+            "components": [
+              {"name": "registerToolSet(setName, tools)", "role": "Registers a named tool collection"},
+              {"name": "getToolSet(setName)", "role": "Direct lookup of a registered set"},
+              {"name": "getToolsForContext(context)", "role": "Resolves the right set from caller context"},
+              {"name": "analyzeOutputTools schemas", "role": "produce_finding / mark_heuristic_pass / mark_heuristic_needs_review (defined Phase 2, activated Phase 11)"}
+            ],
+            "internal_flow": [
+              "Bootstrap: register 'browse' (23 tools) and 'analyze' (5 tools) sets at Phase 2",
+              "Caller passes ToolContext to getToolsForContext()",
+              "Registry resolves the requested set and returns the MCPToolDefinition array",
+              "Phase 11: 'analyze_interactive' set added (9 browser + 6 analysis); selection driven by compositionMode"
+            ]
+          },
+          "why_matters": "Eliminates Phase 11 rewrite of MCP server tool exposure. Without this registry, hardcoded tool lists would force ~weeks of refactoring once interactive composition activates.",
+          "example": "MCP server boots; ToolRegistry.getToolsForContext({ mode: 'analyze', compositionMode: 'static' }) returns 5 analysis tools. Later, the same call with compositionMode: 'interactive' returns 15 (9 browser + 6 analysis).",
+          "connected_to": ["CM4", "CM5", "CM6"],
+          "source_files": [
+            "docs/specs/final-architecture/33a-composition-integration.md",
+            "docs/specs/final-architecture/33-agent-composition-model.md"
+          ]
+        },
+        {
+          "id": "CM2",
+          "label": "SafetyContext",
+          "part": "C",
+          "partLabel": "Agent Composition",
+          "layer": 28,
+          "layerLabel": "Agent Composition",
+          "purpose": "Phase 4 analysis-aware ActionClassifier signature: classifies safety using calling node + browser session, not just tool name + URL.",
+          "what_happens": [
+            "Phase 4 builds ActionClassifier with the SafetyContext parameter shape (callingNode defaults to 'browse')",
+            "Phase 4 implements browse-mode rules only; Phase 11 adds analyze-mode rules without changing the interface",
+            "Detects whether the caller is browse / analyze / explore for context-specific gating",
+            "Passes browserSession through so Phase 11 can do focused-element checks (e.g., is activeElement inside a <form>?)",
+            "REQ-COMP-011a: classifyPressKey reclassifies Enter to 'sensitive' when document.activeElement.closest('form') is non-null — BLOCKED during analysis"
+          ],
+          "inputs": [
+            "SafetyContext { toolName, toolArgs, currentUrl, callingNode: 'browse'|'analyze'|'explore', domainPolicy, browserSession? }"
+          ],
+          "outputs": [
+            "ActionClass (safe | caution | sensitive | blocked) — sync or async (Promise) for focused-element checks"
+          ],
+          "dependencies": [
+            {"type": "service", "name": "BrowserSession", "reason": "Optional handle to evaluate activeElement.closest('form') for Enter-key reclassification"},
+            {"type": "data", "name": "DomainPolicy", "reason": "Per-domain allow/deny policy passed via context"}
+          ],
+          "internal_architecture": {
+            "summary": "Context-aware classification function that consumes a SafetyContext object instead of positional args. Phase 4 covers browse rules; Phase 11 layers analyze-mode rules (Enter-key reclassification, sensitive blocking, navigation detection) onto the same signature.",
+            "components": [
+              {"name": "SafetyContext type", "role": "Carries toolName, toolArgs, currentUrl, callingNode, domainPolicy, optional browserSession"},
+              {"name": "classifyAction(context)", "role": "Returns ActionClass — Phase 4 browse rules only"},
+              {"name": "classifyPressKey(key, browserSession)", "role": "Phase 11 — reclassifies Enter to 'sensitive' inside <form>"}
+            ],
+            "internal_flow": [
+              "Caller assembles SafetyContext including callingNode",
+              "Classifier checks deterministic rules (domainPolicy, sensitive tool list)",
+              "Phase 11: if callingNode === 'analyze', apply analyze-specific rules (Enter inside form → sensitive, navigation tools blocked)",
+              "Returns ActionClass; sensitive/blocked short-circuits the tool execution"
+            ]
+          },
+          "why_matters": "Allows the same classifier to enforce different rules for browse vs analyze without forking the codebase, and keeps the deterministic-code safety gate (not LLM judgment) per §11.",
+          "example": "During interactive analysis, LLM calls browser_press_key({key: 'Enter'}) on a focused checkout form input. classifyPressKey sees activeElement.closest('form') = true → returns 'sensitive' → tool execution blocked → LLM receives error message and continues evaluation from current evidence.",
+          "connected_to": ["CM3", "CM6"],
+          "source_files": [
+            "docs/specs/final-architecture/33a-composition-integration.md",
+            "docs/specs/final-architecture/33-agent-composition-model.md"
+          ]
+        },
+        {
+          "id": "CM3",
+          "label": "BrowserSessionManager",
+          "part": "C",
+          "partLabel": "Agent Composition",
+          "layer": 28,
+          "layerLabel": "Agent Composition",
+          "purpose": "Phase 4 external session injection — orchestrator owns session lifecycle; browse and analyze borrow the same handle, never own it.",
+          "what_happens": [
+            "Orchestrator calls BrowserSessionManager.createSession(config) BEFORE browse",
+            "Stores session.id in AuditState.browser_session_id (Phase 5 REQ-COMP-PHASE5-002)",
+            "Browse subgraph receives session via state — does NOT close it (REQ-COMP-PHASE5-001)",
+            "Analysis subgraph (Phase 11) receives the SAME session handle for interactive evaluate",
+            "Orchestrator decides when to closeSession (multi-page reuse vs workflow-funnel hold-open)",
+            "Workflow mode: session held OPEN across all funnel steps so cookies / cart / form data persist (REQ-COMP-022)"
+          ],
+          "inputs": [
+            "SessionConfig (browser engine, stealth options, viewport)",
+            "sessionId (for getSession / closeSession)"
+          ],
+          "outputs": [
+            "BrowserSession (Playwright context wrapper)",
+            "browser_session_id stored in AuditState"
+          ],
+          "dependencies": [
+            {"type": "service", "name": "Playwright BrowserContext", "reason": "Underlying browser engine wrapped by BrowserSession"},
+            {"type": "data", "name": "AuditState.browser_session_id", "reason": "State field that lets nodes resolve the shared session"}
+          ],
+          "internal_architecture": {
+            "summary": "Lifecycle manager that creates / hands out / closes browser sessions on the orchestrator's schedule. Inverts ownership: browse and analyze become consumers, not owners.",
+            "components": [
+              {"name": "createSession(config)", "role": "Spins up a new Playwright context with stealth + rate limiting"},
+              {"name": "getSession(sessionId)", "role": "Resolves a live session by ID for any subgraph that needs it"},
+              {"name": "closeSession(sessionId)", "role": "Tears down session at orchestrator's discretion (page boundary, audit end, or workflow end)"}
+            ],
+            "internal_flow": [
+              "audit_setup or page_router calls createSession → stores ID in state",
+              "browse subgraph: getSession(state.browser_session_id) → navigate / perceive / act / verify (does NOT close)",
+              "Phase 11: analyze subgraph: getSession(state.browser_session_id) → injected browser tools operate on SAME page",
+              "Orchestrator routes to next page or step → either reuses session or calls closeSession()",
+              "Workflow funnel: session NEVER closed mid-funnel (REQ-COMP-022)"
+            ]
+          },
+          "why_matters": "Without external ownership, sharing a session between browse and analyze in Phase 11 would require a full rewrite of session plumbing. This shape lets Phase 5 ship with the right contract for free.",
+          "example": "audit_setup: const session = await BrowserSessionManager.createSession(cfg); state.browser_session_id = session.id. Browse navigates and stabilises page. Phase 11 analyze receives the same session, calls browser_click on a tab, evaluates, returns. Orchestrator runs restore_state then page_router decides whether to closeSession or reuse for the next URL.",
+          "connected_to": ["CM2", "CM6", "CM8"],
+          "source_files": [
+            "docs/specs/final-architecture/33a-composition-integration.md",
+            "docs/specs/final-architecture/33-agent-composition-model.md"
+          ]
+        },
+        {
+          "id": "CM4",
+          "label": "EvaluateStrategy interface",
+          "part": "C",
+          "partLabel": "Agent Composition",
+          "layer": 28,
+          "layerLabel": "Agent Composition",
+          "purpose": "Phase 7 pluggable contract for evaluate node — strategy pattern that lets Phase 11 swap the evaluate implementation without touching graph topology.",
+          "what_happens": [
+            "Phase 7 introduces the EvaluateStrategy interface so the evaluate node is strategy-agnostic",
+            "Strategy.evaluate() takes (state, perception, heuristics, browserSession | null) and returns EvaluateResult",
+            "evaluateNode picks StaticEvaluateStrategy or InteractiveEvaluateStrategy based on state.composition_mode",
+            "Browser session is passed as null in static mode and as the live handle in interactive mode",
+            "Phase 7 ships StaticEvaluateStrategy (real); InteractiveEvaluateStrategy is a stub that throws 'enable in Phase 11'",
+            "Phase 7 also adds §33 state fields with defaults so static behavior is unchanged"
+          ],
+          "inputs": [
+            "AuditState",
+            "AnalyzePerception (from deep_perceive)",
+            "HeuristicExtended[] (filtered)",
+            "BrowserSession | null"
+          ],
+          "outputs": [
+            "EvaluateResult { raw_findings, interactions, open_observations, token_count, cost_usd }"
+          ],
+          "dependencies": [
+            {"type": "interface", "name": "AnalyzePerception", "reason": "Static perception input shared by both strategies"},
+            {"type": "data", "name": "HeuristicExtended[]", "reason": "Filtered heuristics from analyze pipeline"},
+            {"type": "service", "name": "BrowserSession", "reason": "Optional injected browser handle for interactive strategy"}
+          ],
+          "internal_architecture": {
+            "summary": "Single interface with two implementations — Static (Phase 7) and Interactive (Phase 11). evaluateNode is a thin dispatcher that resolves the strategy from composition_mode and adapts the result to AuditState fields.",
+            "components": [
+              {"name": "EvaluateStrategy.evaluate(...)", "role": "Pluggable evaluation contract"},
+              {"name": "EvaluateResult", "role": "Common result shape: raw_findings + interactions + open_observations + token_count + cost_usd"},
+              {"name": "evaluateNode (wrapper)", "role": "Selects strategy by composition_mode, resolves session via BrowserSessionManager.get, adapts result into Partial<AuditState>"}
+            ],
+            "internal_flow": [
+              "evaluateNode invoked by analysis graph",
+              "Resolves strategy: 'interactive' → InteractiveEvaluateStrategy, else → StaticEvaluateStrategy",
+              "Resolves browser session via BrowserSessionManager.get(state.browser_session_id) or null",
+              "Calls strategy.evaluate(state, perception, heuristics, session)",
+              "Maps EvaluateResult into AuditState fields (raw_findings, analysis_interactions, analysis_interaction_count, open_observations, evaluate_token_count, analysis_cost_usd)"
+            ]
+          },
+          "why_matters": "Decouples evaluate behavior from the analysis graph topology. Phase 11 adds a new class implementing the same interface — no callers, no graph wiring, no state shape changes required.",
+          "example": "Phase 7 prod: evaluateNode picks StaticEvaluateStrategy (composition_mode='static') → single-shot LLM call → returns 12 raw_findings, 0 interactions. Phase 11: flag flips to 'interactive' → evaluateNode picks InteractiveEvaluateStrategy → ReAct loop with tool injection → returns 14 raw_findings, 4 InteractionRecords, 3 OpenObservations.",
+          "connected_to": ["CM5", "CM6", "AN2"],
+          "source_files": [
+            "docs/specs/final-architecture/33a-composition-integration.md",
+            "docs/specs/final-architecture/33-agent-composition-model.md"
+          ]
+        },
+        {
+          "id": "CM5",
+          "label": "StaticEvaluateStrategy",
+          "part": "C",
+          "partLabel": "Agent Composition",
+          "layer": 28,
+          "layerLabel": "Agent Composition",
+          "purpose": "MVP evaluate strategy — pure single-shot LLM evaluation with no browser interaction. Identical behavior to pre-§33 §7.5 evaluate.",
+          "what_happens": [
+            "Single LLM call with the filtered heuristics + AnalyzePerception in the prompt",
+            "Browser session argument is ignored (always null in static mode)",
+            "Returns raw_findings parsed from LLM response",
+            "interactions = [], open_observations = [] (Pass 2 disabled in static mode)",
+            "Computes token_count and cost_usd from response.usage",
+            "Phase 7 acceptance: behavior identical to §7.5 with or without §33 interfaces in place"
+          ],
+          "inputs": [
+            "AuditState",
+            "AnalyzePerception",
+            "HeuristicExtended[]",
+            "BrowserSession (ignored — null)"
+          ],
+          "outputs": [
+            "EvaluateResult { raw_findings: RawFinding[], interactions: [], open_observations: [], token_count: number, cost_usd: number }"
+          ],
+          "dependencies": [
+            {"type": "service", "name": "LLM adapter", "reason": "Single-shot llm.invoke with evaluate prompt"},
+            {"type": "interface", "name": "EvaluateStrategy (CM4)", "reason": "Implements the pluggable contract"}
+          ],
+          "internal_architecture": {
+            "summary": "The simplest possible EvaluateStrategy implementation — assembles the evaluate prompt, fires a single LLM call at temperature 0, parses findings, returns. No tools, no loop.",
+            "components": [
+              {"name": "buildPrompt(perception, heuristics)", "role": "Constructs the static evaluate prompt"},
+              {"name": "llm.invoke(prompt)", "role": "Single call, no tool injection"},
+              {"name": "parseFindings(response)", "role": "Extracts RawFinding[] from response"}
+            ],
+            "internal_flow": [
+              "Build evaluate prompt from perception + heuristics",
+              "Call llm.invoke (single shot, temp 0)",
+              "Parse RawFinding[] from response",
+              "Compute cost from response.usage",
+              "Return EvaluateResult with empty interactions and open_observations"
+            ]
+          },
+          "why_matters": "Preserves MVP cost envelope (~$0.20-0.35/page) and gives static-mode audits identical behavior to pre-§33 baseline. Static mode is the budget-optimised default for re-audits and quick scans.",
+          "example": "Audit with composition_mode='static' on a homepage: StaticEvaluateStrategy.evaluate() → single LLM call → 12 raw_findings, 0 interactions, ~$0.15 evaluate cost. Total per-page analysis ~6-12s.",
+          "connected_to": ["CM4", "AN2"],
+          "source_files": [
+            "docs/specs/final-architecture/33a-composition-integration.md",
+            "docs/specs/final-architecture/33-agent-composition-model.md"
+          ]
+        },
+        {
+          "id": "CM6",
+          "label": "InteractiveEvaluateStrategy",
+          "part": "C",
+          "partLabel": "Agent Composition",
+          "layer": 28,
+          "layerLabel": "Agent Composition",
+          "purpose": "Phase 11+ ReAct loop with 9 browser + 6 analysis tools injected into evaluate. Implements the full §33 interactive composition contract.",
+          "what_happens": [
+            "Builds tool set: 9 injected browser tools (click, hover, select, type, press_key, scroll, get_state, screenshot, find_by_text) + 6 analysis tools (page_analyze, page_get_element_info, page_get_performance, produce_finding, mark_heuristic_pass, mark_heuristic_needs_review)",
+            "Excludes 14 browser tools (navigate, go_back, go_forward, tab_manage, download, upload, evaluate, extract, click_coords, reload, get_metadata, get_network, agent_complete, agent_request_human)",
+            "Initializes HeuristicInteractionTracker with per-heuristic cap (2 standard / 3 deep) and global page budget (5 standard / 15 deep)",
+            "Runs ReAct loop up to maxTurns (20 standard / 40 deep) at temperature 0",
+            "For each LLM tool call: classify safety (CM2), enforce per-heuristic + global budgets, navigation guard Layer 1 (pre-execution) + Layer 2 (post-execution recovery via goBack)",
+            "Workflow mode: blocks transition actions (Add to Cart, Proceed to Checkout) — only orchestrator advances funnel (REQ-COMP-023)",
+            "Captures InteractionRecord per executed tool with optional screenshot_ref",
+            "Token budget enforcement: at 80% of context limit, agent receives 'complete from available evidence' warning",
+            "Optional Pass 2 open observation runs after Pass 1 (no browser tools — static perception only)"
+          ],
+          "inputs": [
+            "AuditState (with composition_mode='interactive')",
+            "AnalyzePerception",
+            "HeuristicExtended[]",
+            "BrowserSession (live handle, NOT null)",
+            "StateGraph | null (read-only — frozen by explore_states)"
+          ],
+          "outputs": [
+            "EvaluateResult { raw_findings: RawFinding[], interactions: InteractionRecord[], open_observations: OpenObservation[], token_count, cost_usd }"
+          ],
+          "dependencies": [
+            {"type": "service", "name": "BrowserSession (CM3)", "reason": "Live page handle for tool execution"},
+            {"type": "service", "name": "HeuristicInteractionTracker (CM7)", "reason": "Enforces per-heuristic interaction caps"},
+            {"type": "service", "name": "ActionClassifier (CM2)", "reason": "Classifies each tool call with SafetyContext including Enter-key reclassification"},
+            {"type": "service", "name": "ToolRegistry (CM1)", "reason": "Resolves the analyze_interactive tool set"},
+            {"type": "data", "name": "StateGraph (frozen)", "reason": "Read-only — context to avoid redundant interactions"}
+          ],
+          "internal_architecture": {
+            "summary": "ReAct loop alternating LLM tool-call generation with deterministic gating (safety + budget + navigation guards) and tool execution. Maintains InteractionRecord log and HeuristicInteractionTracker state across turns.",
+            "components": [
+              {"name": "Tool set assembly", "role": "Concatenates 9 browser + 6 analysis tools"},
+              {"name": "HeuristicInteractionTracker (CM7)", "role": "current_heuristic_id pointer + per-heuristic counts + cap enforcement"},
+              {"name": "Safety gate", "role": "classifyAnalysisAction → blocks 'sensitive' / 'blocked' actions"},
+              {"name": "Navigation guard Layer 1", "role": "inspectClickTarget — pre-execution anchor href inspection"},
+              {"name": "Navigation guard Layer 2", "role": "verifyNoNavigation + goBack recovery for JS-triggered navigation"},
+              {"name": "Workflow transition guard", "role": "isTransitionAction — blocks funnel-advancing CTAs"},
+              {"name": "Token budget watchdog", "role": "80% context-limit threshold triggers warning system message"},
+              {"name": "Pass 2 open observation", "role": "Single LLM call after Pass 1 — static perception only, max 5 observations, always Tier 3"}
+            ],
+            "internal_flow": [
+              "Build allTools = browserTools (9) + analysisTools (6)",
+              "Initialize HeuristicInteractionTracker(heuristics, perHeuristicCap)",
+              "Build initial messages: interactive system prompt + evaluate user message + state_graph context",
+              "Loop turn 1..maxTurns: llmAdapter.invoke(messages, allTools, temp=0)",
+              "If no tool_calls → break (LLM done)",
+              "For each tool_call: route to output tool / analysis tool / browser tool branch",
+              "Browser tool branch: global budget check → per-heuristic check → safety classify → nav guard L1 → execute → nav guard L2 → record InteractionRecord",
+              "Output tool branch: append finding, advance HeuristicInteractionTracker pointer",
+              "Exit conditions: findings.length >= heuristics.length, or token budget warning, or maxTurns",
+              "After Pass 1: optional Pass 2 single LLM call (no tools) → up to 5 OpenObservations",
+              "Return EvaluateResult"
+            ]
+          },
+          "why_matters": "Unlocks state-aware evaluation: variant selection, form validation, hidden disclosures, modal/tab content. Lifts finding quality without compromising safety (deterministic gates around an LLM ReAct loop).",
+          "example": "Heuristic 'CTA visible above fold for selected variant'. LLM observes static data is insufficient. Calls browser_select(size='XL') → DOM updates → browser_get_state → notices CTA changed from 'Add to Cart' to 'Notify Me' → calls produce_finding with evidence.interaction_performed='select size XL'. HeuristicInteractionTracker records 1 interaction; pointer advances when produce_finding is called.",
+          "connected_to": ["CM4", "CM7", "CM2", "CM3", "CM1", "AN2", "BR9", "BR10", "BR11", "BR12", "BR13", "BR14"],
+          "source_files": [
+            "docs/specs/final-architecture/33-agent-composition-model.md",
+            "docs/specs/final-architecture/33a-composition-integration.md"
+          ]
+        },
+        {
+          "id": "CM7",
+          "label": "HeuristicInteractionTracker",
+          "part": "C",
+          "partLabel": "Agent Composition",
+          "layer": 28,
+          "layerLabel": "Agent Composition",
+          "purpose": "Phase 11 per-heuristic interaction budget enforcement — keeps the LLM from drifting into unbounded curiosity by capping interactions per heuristic.",
+          "what_happens": [
+            "Maintains current_heuristic_id pointer + per-heuristic interaction counts (Map)",
+            "Pointer advances when LLM calls produce_finding / mark_heuristic_pass / mark_heuristic_needs_review (signals heuristic complete)",
+            "All browser interactions between two finding/pass/review calls are attributed to current_heuristic_id",
+            "canInteract() checks if current heuristic has hit its cap (2 standard / 3 deep) — denies with reason if so",
+            "recordInteraction() increments count for current_heuristic_id",
+            "Fallback: if LLM skips signal, interactions attributed to first unresolved heuristic (REQ-COMP-062b)"
+          ],
+          "inputs": [
+            "Heuristic[] (initial list to seed pointer)",
+            "cap: number (2 for standard, 3 for deep)",
+            "heuristicId (from advanceHeuristic)",
+            "ToolCall events (from canInteract / recordInteraction)"
+          ],
+          "outputs": [
+            "{ allowed: boolean; reason?: string } (from canInteract)",
+            "Updated counts state",
+            "current_heuristic_id (read for InteractionRecord attribution)"
+          ],
+          "dependencies": [
+            {"type": "data", "name": "Heuristic list (filtered)", "reason": "Seeds initial pointer to first heuristic"},
+            {"type": "interface", "name": "InteractionRecord", "reason": "heuristic_id field stamped via currentHeuristicId()"}
+          ],
+          "internal_architecture": {
+            "summary": "Stateful tracker class instantiated per evaluate run. Internal Map<heuristic_id, count> + pointer to current heuristic. Exposes 4 methods: advanceHeuristic, canInteract, recordInteraction, currentHeuristicId.",
+            "components": [
+              {"name": "current_heuristic_id pointer", "role": "Tracks which heuristic the LLM is currently evaluating"},
+              {"name": "counts Map<string, number>", "role": "Per-heuristic interaction counts"},
+              {"name": "cap (2 or 3)", "role": "Per-heuristic interaction limit by mode"},
+              {"name": "advanceHeuristic(id)", "role": "Moves pointer when LLM signals heuristic complete"},
+              {"name": "canInteract()", "role": "Pre-execution gate — returns allowed + reason"},
+              {"name": "recordInteraction()", "role": "Post-execution increment"}
+            ],
+            "internal_flow": [
+              "Constructor seeds current_heuristic_id with heuristics[0].id",
+              "Before each browser tool: canInteract() → if count[current] >= cap, return { allowed: false, reason: 'budget reached for X' }",
+              "After successful tool execution: recordInteraction() → counts[current]++",
+              "When LLM emits produce_finding/mark_heuristic_pass/mark_heuristic_needs_review: advanceHeuristic(id) → pointer moves to next heuristic, count resets implicitly"
+            ]
+          },
+          "why_matters": "Enforces focus drift mitigation deterministically (REQ-COMP-062). Without this, the LLM could spend all 5 page interactions on heuristic 1 and starve the rest. Caps make the budget allocation predictable.",
+          "example": "Standard mode (cap=2). LLM evaluating heuristic CRO-CHK-014: calls browser_click (count=1), browser_get_state (count=2), tries browser_click again → canInteract returns { allowed: false, reason: 'Interaction budget for CRO-CHK-014 reached (2/2). Evaluate from available evidence.' } → LLM falls back to static evidence and calls produce_finding → tracker.advanceHeuristic('CRO-CHK-015') → next heuristic gets fresh budget.",
+          "connected_to": ["CM6"],
+          "source_files": [
+            "docs/specs/final-architecture/33-agent-composition-model.md"
+          ]
+        },
+        {
+          "id": "CM8",
+          "label": "restore_state + StateGraph plumbing",
+          "part": "C",
+          "partLabel": "Agent Composition",
+          "layer": 28,
+          "layerLabel": "Agent Composition",
+          "purpose": "Phase 7-10 state plumbing — restore_state node (Phase 8 no-op), §33 AuditState fields, InteractionRecord / OpenObservation types, frozen StateGraph contract.",
+          "what_happens": [
+            "Phase 7: AuditState extended with §33 fields, all defaulted so static mode behavior is unchanged: composition_mode (default 'static' per §33a; spec body sets default 'interactive' in §33.13 — see note), interaction_depth, dual_mode_evaluation, analysis_interactions, analysis_interaction_count, analysis_interaction_budget, open_observations, session_contamination_events",
+            "Phase 8: restore_state node added to orchestrator graph between analyze and page_router — no-op when composition_mode='static' or analysis_interaction_count=0",
+            "Phase 11: restore_state implements browser_reload + stability wait + verification (workflowStepRestore variant for funnel mode reloads + verifies cart/checkout state intact)",
+            "Phase 10: explore_states freezes StateGraph (Object.freeze) after exploration; interactive evaluate reads but cannot modify (REQ-COMP-033)",
+            "InteractionRecord type: tool, args, result, timestamp, phase, heuristic_id?, screenshot_ref? — stored transient per page in analysis_interactions, attached to findings via evidence.interaction_performed",
+            "OpenObservation type: synthetic OPEN-OBS-{NNN} id, evidence, category, recommendation, suggested_investigation, source='open_observation', confidence_tier='low' (always), needs_consultant_review=true (always)",
+            "GR-005 SKIPPED for open observations (synthetic ID is expected, not in KB); GR-001 / GR-007 / GR-008 still apply",
+            "Invariants: analysis_interaction_count ≤ analysis_interaction_budget; static mode → count=0 + interactions=[]; dual_mode=false → open_observations=[]; open_observations.length ≤ 5; every OpenObservation always Tier 3 + consultant review"
+          ],
+          "inputs": [
+            "AuditState (with composition fields)",
+            "BrowserSession (for Phase 11 reload + stability wait)",
+            "WorkflowContext (for workflow step restore variant)",
+            "StateGraph (read-only after freeze)"
+          ],
+          "outputs": [
+            "Partial<AuditState> ({} when no-op)",
+            "Restored page state (Phase 11)",
+            "session_contamination_events appended on funnel state loss",
+            "InteractionRecord[] / OpenObservation[] persisted via annotate_and_store"
+          ],
+          "dependencies": [
+            {"type": "service", "name": "BrowserSession (CM3)", "reason": "Phase 11 calls browser.reload + waitForStability"},
+            {"type": "data", "name": "WorkflowContext", "reason": "Workflow mode verifies funnel-state-intact post-reload"},
+            {"type": "data", "name": "StateGraph (frozen)", "reason": "Frozen after explore_states; restore_state may consult default state ID"},
+            {"type": "interface", "name": "AuditState §5.7.2", "reason": "Composition state extensions live here"}
+          ],
+          "internal_architecture": {
+            "summary": "Bundle of orchestration plumbing: a restore_state graph node (Phase 8 no-op, Phase 11 active), AuditState field additions (Phase 7), supporting type declarations (InteractionRecord, OpenObservation, SessionContaminationEvent), and the StateGraph immutability seal (Phase 10).",
+            "components": [
+              {"name": "restore_state node", "role": "Orchestrator graph node between analyze and page_router; no-op in static mode"},
+              {"name": "workflowStepRestore", "role": "Phase 11 funnel variant — reload + verify cart/checkout state, abandons workflow if state lost"},
+              {"name": "AuditState §33 fields", "role": "composition_mode, interaction_depth, dual_mode_evaluation, analysis_interactions, analysis_interaction_count, analysis_interaction_budget, open_observations, session_contamination_events"},
+              {"name": "InteractionRecord type", "role": "Transient per-page record of each tool call with optional screenshot_ref"},
+              {"name": "OpenObservation type", "role": "Pass 2 finding shape — always Tier 3, always needs review, synthetic OPEN-OBS-{NNN} id"},
+              {"name": "SessionContaminationEvent type", "role": "Workflow contamination audit trail entry"},
+              {"name": "StateGraph freeze (Phase 10)", "role": "Object.freeze after explore_states — interactive evaluate is read-only consumer"}
+            ],
+            "internal_flow": [
+              "Phase 7: AuditState declares §33 fields with defaults",
+              "Phase 8: orchestrator graph wires audit_setup → page_router → browse → analyze → restore_state → page_router/audit_complete",
+              "Phase 8 restore_state: if composition_mode='static' OR analysis_interaction_count=0 → return {} (no-op)",
+              "Phase 10: explore_states completes → state.state_graph = Object.freeze(builtStateGraph)",
+              "Phase 11 restore_state (page-level): browser.reload({ waitUntil: 'networkidle' }) → waitForStability",
+              "Phase 11 workflowStepRestore: reload → verify URL still matches step URL (re-navigate if redirected) → verifyFunnelState (cart not empty, checkout form present) → abandon workflow if state lost"
+            ]
+          },
+          "why_matters": "Adds the structural pieces needed to flip on interactive composition without rewriting the orchestration graph or AuditState. Phase 8 sets the topology; Phase 11 only fills in the bodies. The frozen StateGraph contract guarantees interactive evaluate cannot accidentally pollute §20's deterministic state map.",
+          "example": "Phase 8 audit on a PDP with composition_mode='static': restore_state runs, sees count=0, returns {} — page advances. Phase 11 audit on same PDP with composition_mode='interactive': analysis runs ReAct loop, makes 4 interactions (size XL, color blue, opens Reviews tab, scrolls to FAQ). restore_state runs, sees count=4 → calls browser.reload → waits for stability → returns. Orchestrator advances to next URL with a clean default-state page.",
+          "connected_to": ["CM3", "CM6", "SX1"],
+          "source_files": [
+            "docs/specs/final-architecture/33-agent-composition-model.md",
+            "docs/specs/final-architecture/33a-composition-integration.md"
+          ]
+        }
+      ]
+    }
+  }
+}

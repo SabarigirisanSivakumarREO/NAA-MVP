@@ -1,0 +1,1178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neural — Engineering Architecture (33 layers · ~152 nodes)</title>
+<style>
+:root{
+  --bg:#f7f8fa;--panel:#ffffff;--text:#0f172a;--muted:#64748b;
+  --border:#e2e8f0;--accent:#2563eb;
+  --c-control:#1F2937;--c-data:#2563EB;--c-evidence:#0D9488;
+  --c-analysis:#7C3AED;--c-report:#16A34A;--c-feedback:#F97316;
+  --c-infra:#9CA3AF;--c-safety:#DC2626;
+  --part-a:#2563EB;--part-b:#7C3AED;--part-c:#C026D3;--part-d:#16A34A;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.55}
+header{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--border);padding:12px 24px;z-index:50;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+header .brand h1{font-size:16px;margin:0;font-weight:600}
+header .brand p{margin:1px 0 0;color:var(--muted);font-size:12px}
+header .brand .progress{font-weight:600;color:var(--accent)}
+header nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+header nav input{padding:6px 11px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:white;width:200px;outline:none}
+header nav input:focus{border-color:var(--accent)}
+header nav a,header nav .jump{padding:6px 11px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);text-decoration:none;background:white;cursor:pointer}
+header nav a:hover,header nav .jump:hover{border-color:var(--accent);color:var(--accent)}
+header nav .jump-group{display:flex;gap:2px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:white}
+header nav .jump-group .jump{border:0;border-radius:0;padding:6px 10px}
+header nav .jump-group .jump:not(:last-child){border-right:1px solid var(--border)}
+
+main{padding:0;height:calc(100vh - 90px);overflow:hidden;display:grid;grid-template-columns:1fr 0;transition:grid-template-columns .25s}
+main.drawer-open{grid-template-columns:1fr 480px}
+#diagram-wrap{overflow:auto;background:white;position:relative}
+svg#diagram{display:block;background:white}
+
+/* SVG element styles */
+.part-band{fill:#fafbfd;stroke:#e2e8f0;stroke-width:1}
+.part-header-bar{cursor:pointer}
+.part-header-text{font-weight:700;font-size:14px;fill:#1e293b;dominant-baseline:middle}
+.part-scope-text{font-size:11px;fill:#64748b;dominant-baseline:middle}
+.part-stripe{rx:3;ry:3}
+
+.layer-row-bg{fill:transparent}
+.layer-label{font-size:11.5px;font-weight:600;fill:#334155;dominant-baseline:middle}
+.layer-sublabel{font-size:10px;fill:#94a3b8;dominant-baseline:middle}
+.layer-separator{stroke:#f1f5f9;stroke-width:1}
+.layer-empty-hint{font-size:11px;fill:#cbd5e1;font-style:italic;text-anchor:middle}
+
+/* Cross-cutting layer label - red tinted */
+.layer-label.cross-cutting{fill:#dc2626}
+.layer-sublabel.cross-cutting{fill:#fca5a5}
+.cross-cutting-badge{font-size:9px;fill:#dc2626;font-weight:600}
+
+/* Future-extending layer marker (Layers 25/26/27) */
+.future-extending-marker{font-size:9px;fill:#a16207;font-weight:600}
+
+/* Roadmap layer (Layer 33) styling */
+.roadmap-layer-bg{fill:#fef3c7;stroke:#fcd34d;stroke-width:1;stroke-dasharray:6 4;rx:6;ry:6}
+.roadmap-badge{font-size:11px;fill:#92400e;font-weight:600}
+
+/* Node */
+.node-rect{stroke-width:1.5;rx:6;ry:6;cursor:pointer;transition:.15s}
+.node-rect:hover{filter:drop-shadow(0 4px 8px rgba(15,23,42,.18))}
+.node-rect.roadmap{stroke-dasharray:5 3}
+.node-label{font-size:11.5px;font-weight:600;fill:#0f172a;text-anchor:middle;pointer-events:none}
+.node-id{font-size:9px;fill:#64748b;text-anchor:start;pointer-events:none;font-family:'SF Mono','Consolas',monospace}
+.node-roadmap-icon{font-size:10px;text-anchor:end;pointer-events:none}
+
+/* Edges */
+.edge-path{fill:none;stroke-width:1.5;pointer-events:none}
+.edge-path.flow-control{stroke:var(--c-control)}
+.edge-path.flow-data{stroke:var(--c-data)}
+.edge-path.flow-evidence{stroke:var(--c-evidence)}
+.edge-path.flow-analysis{stroke:var(--c-analysis);stroke-width:2}
+.edge-path.flow-report{stroke:var(--c-report);stroke-width:2}
+.edge-path.flow-feedback{stroke:var(--c-feedback);stroke-dasharray:5 4}
+.edge-path.flow-infra{stroke:var(--c-infra);stroke-dasharray:2 3;opacity:.6}
+.edge-path.flow-safety{stroke:var(--c-safety)}
+
+.legend-box{fill:white;stroke:var(--border);stroke-width:1;rx:6;ry:6}
+
+/* Drawer (identical to business view) */
+aside#drawer{background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;padding:0}
+aside#drawer.empty .placeholder{padding:80px 32px;text-align:center;color:var(--muted)}
+.panel-header{padding:18px 22px 12px;border-bottom:1px solid var(--border);position:relative}
+.panel-header .layer-pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:600;color:white;margin-bottom:6px}
+.panel-header h2{font-size:17px;margin:0;font-weight:600}
+.panel-header .subtitle{color:var(--muted);margin:5px 0 0;font-size:12.5px}
+.panel-header .meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.panel-header .meta span{font-size:10.5px;padding:2px 7px;border-radius:4px;background:#f1f5f9;color:#475569;border:1px solid var(--border);font-family:'SF Mono','Consolas',monospace}
+.panel-header .close{position:absolute;top:14px;right:16px;background:none;border:0;font-size:22px;color:var(--muted);cursor:pointer;line-height:1}
+.panel-body{padding:6px 22px 28px}
+.panel-body section{margin:16px 0}
+.panel-body section h3{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px;font-weight:600}
+.panel-body ul{margin:0;padding-left:16px}
+.panel-body li{margin:2px 0;font-size:13px}
+.panel-body .why{background:#fef9c3;border-left:3px solid #ca8a04;padding:9px 12px;border-radius:5px;font-size:12.5px;color:#713f12}
+.panel-body .example{background:#eff6ff;border-left:3px solid var(--accent);padding:9px 12px;border-radius:5px;font-size:12.5px;color:#1e3a8a}
+.panel-body .future-extending{background:#fff7ed;border-left:3px solid #f97316;padding:9px 12px;border-radius:5px;font-size:12.5px;color:#9a3412;margin-top:8px}
+.panel-body .future-extending b{color:#7c2d12}
+.panel-body .roadmap-warning{background:#fef3c7;border-left:3px solid #d97706;padding:9px 12px;border-radius:5px;font-size:12.5px;color:#78350f}
+.deps{display:flex;flex-direction:column;gap:5px}
+.dep{padding:7px 10px;background:#f8fafc;border:1px solid var(--border);border-radius:5px;font-size:12px}
+.dep .dep-name{font-weight:600}
+.dep .dep-type{display:inline-block;font-size:9.5px;padding:1px 5px;border-radius:3px;background:#e2e8f0;color:#475569;margin-right:5px;text-transform:uppercase;font-family:'SF Mono','Consolas',monospace}
+.dep .dep-reason{color:var(--muted);font-size:11.5px;margin-top:2px}
+.internal{padding:12px;background:#f8fafc;border-radius:6px;border:1px solid var(--border)}
+.internal-summary{font-size:12px;color:#334155;margin-bottom:8px}
+.internal-components{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.internal-component{display:flex;gap:10px;padding:5px 9px;background:white;border:1px solid var(--border);border-radius:4px}
+.internal-component .ic-name{font-weight:600;font-size:11.5px;flex-shrink:0;min-width:130px}
+.internal-component .ic-role{color:var(--muted);font-size:11.5px}
+.internal-flow{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:#475569;font-family:'SF Mono','Consolas',monospace}
+.internal-flow .if-step{padding:2px 7px;background:white;border-left:2px solid var(--accent);border-radius:2px}
+.connected{display:flex;flex-wrap:wrap;gap:5px}
+.connected button{padding:3px 9px;border-radius:5px;background:#f1f5f9;border:1px solid var(--border);font-size:11.5px;cursor:pointer;color:var(--text)}
+.connected button:hover{background:#e2e8f0}
+.source-files{display:flex;flex-direction:column;gap:3px}
+.source-files code{background:#f1f5f9;padding:3px 7px;border-radius:3px;font-size:11px;color:#334155;word-break:break-all}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>Neural — Engineering Architecture</h1>
+    <p>33 layers · <span class="progress" id="node-count">0 / ~152</span> nodes built · click any node for full drawer</p>
+  </div>
+  <nav>
+    <input id="search" type="text" placeholder="Search nodes…">
+    <div class="jump-group">
+      <a class="jump" href="#part-A">Part A</a>
+      <a class="jump" href="#part-B">Part B</a>
+      <a class="jump" href="#part-C">Part C</a>
+      <a class="jump" href="#part-D">Part D</a>
+    </div>
+    <a href="architecture-business.html">Business view</a>
+  </nav>
+</header>
+
+<main id="main">
+  <div id="diagram-wrap">
+    <svg id="diagram" width="1480" height="3600"></svg>
+  </div>
+  <aside id="drawer" class="empty">
+    <div class="placeholder">
+      <div style="font-weight:500;color:#0f172a">Click any node</div>
+      <div style="font-size:12.5px;margin-top:4px">Drawer schema is identical to the business view — purpose, internal architecture, dependencies, inputs/outputs, real example, source specs.</div>
+    </div>
+  </aside>
+</main>
+
+<script>
+/* =========================================================
+   LAYER INVENTORY (33 entries)
+========================================================= */
+const LAYERS = [
+  // Part A — Agent Internals (Layers 1–14)
+  {id:1,  name:"Vision & Decisions",          part:"A"},
+  {id:2,  name:"Constitution & Engineering",  part:"A"},
+  {id:3,  name:"Audit State Contract",        part:"A"},
+  {id:4,  name:"Audit Orchestrator",          part:"A"},
+  {id:5,  name:"Browser Mode",                part:"A"},
+  {id:6,  name:"Analyze Mode",                part:"A"},
+  {id:7,  name:"Heuristic KB",                part:"A"},
+  {id:8,  name:"Competitor & Versioning",     part:"A"},
+  {id:9,  name:"Safety & Cost (base)",        part:"A", cross_cutting:true},
+  {id:10, name:"Review Gate",                 part:"A"},
+  {id:11, name:"Data Layer",                  part:"A"},
+  {id:12, name:"Delivery Layer",              part:"A"},
+  {id:13, name:"Failure Modes",               part:"A", cross_cutting:true},
+  {id:14, name:"Implementation Phases",       part:"A"},
+  // Part B — Platform Extensions (Layers 15–27)
+  {id:15, name:"Trigger Gateway",             part:"B"},
+  {id:16, name:"Discovery Pipeline",          part:"B"},
+  {id:17, name:"State Exploration",           part:"B"},
+  {id:18, name:"Workflow Orchestration",      part:"B"},
+  {id:19, name:"Heuristic Evolution",         part:"B"},
+  {id:20, name:"Findings Engine",             part:"B"},
+  {id:21, name:"Two-Store Pattern",           part:"B"},
+  {id:22, name:"Reproducibility",             part:"B", cross_cutting:true},
+  {id:23, name:"Cost Architecture",           part:"B", cross_cutting:true},
+  {id:24, name:"Durable Orchestration",       part:"B", cross_cutting:true},
+  {id:25, name:"Learning Service",            part:"B", future_extending:true},
+  {id:26, name:"Hypothesis Pipeline",         part:"B", future_extending:true},
+  {id:27, name:"Analytics Bindings",          part:"B", future_extending:true},
+  // Part C — Agent Composition (Layer 28)
+  {id:28, name:"Agent Composition",           part:"C"},
+  // Part D — Cross-Cutting + Roadmap (Layers 29–33)
+  {id:29, name:"Observability",               part:"D", cross_cutting:true},
+  {id:30, name:"Report Generation",           part:"D"},
+  {id:31, name:"Golden Test Suite",           part:"D"},
+  {id:32, name:"Context Capture",             part:"D"},
+  {id:33, name:"Post-Master Roadmap",         part:"D", is_roadmap:true}
+];
+const layerById = Object.fromEntries(LAYERS.map(l=>[l.id, l]));
+
+/* =========================================================
+   PART METADATA
+========================================================= */
+const PART_META = {
+  A:{label:"Part A — Agent Internals",        scope:"§01–§17 · Phases 1–8 (MVP)",          color:"#2563EB"},
+  B:{label:"Part B — Platform Extensions",    scope:"§18–§30 · Phases 9–14",                color:"#7C3AED"},
+  C:{label:"Part C — Agent Composition",      scope:"§33, §33a · Phases 10–13",             color:"#C026D3"},
+  D:{label:"Part D — Cross-Cutting + Roadmap",scope:"§34–§37 + Roadmap · Phases 4b, 12–16+",color:"#16A34A"}
+};
+
+/* =========================================================
+   FLOW TYPES
+========================================================= */
+const FLOW_TYPES = {
+  control: {color:"#1F2937", width:1.5},
+  data:    {color:"#2563EB", width:1.5},
+  evidence:{color:"#0D9488", width:1.5},
+  analysis:{color:"#7C3AED", width:2},
+  report:  {color:"#16A34A", width:2},
+  feedback:{color:"#F97316", width:1.5, dash:"5 4"},
+  infra:   {color:"#9CA3AF", width:1, dash:"2 3"},
+  safety:  {color:"#DC2626", width:1.2}
+};
+
+/* =========================================================
+   DATA — populated layer-by-layer in subsequent steps
+========================================================= */
+const NODES = [
+  // ============================================
+  // LAYER 1 — Vision & Decisions  (§01, §02, §03)
+  // ============================================
+  {
+    id:"V1", label:"System Identity", layer:1, part:"A",
+    partLabel:"Agent Internals", layerLabel:"Vision & Decisions",
+    purpose:"Defines what Neural is — an AI CRO audit platform with 3 user roles, hypothesis-not-verdict findings, and a 3-layer hallucination filter.",
+    what_happens:[
+      "Crawls client + competitor sites with browser agent (human-like behavior)",
+      "Analyzes pages against curated heuristic KB (Baymard, Nielsen, Cialdini)",
+      "Validates each finding through 3-layer filter: CoT → self-critique → evidence grounding",
+      "Annotates screenshots with finding markers",
+      "Compares client vs competitor (pairwise)",
+      "Tracks changes across audit versions (resolved / persisted / new)",
+      "Exposes findings via MCP server + dashboards",
+      "Gates publishing (auto / 24h delay / consultant-held by tier)"
+    ],
+    inputs:["Client URLs","Business type","Audit configuration"],
+    outputs:["Grounded findings","Annotated screenshots","Cross-page patterns","Action plan"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"Three users, three future-but-deferred interfaces, and one core principle — findings are HYPOTHESES, not verdicts. Scale target: 20+ audits/week.",
+      components:[
+        {name:"CRO Consultant",role:"Runs audits, reviews/approves findings, manages clients (consultant dashboard)"},
+        {name:"Client",role:"Views published findings, tracks improvement (client dashboard)"},
+        {name:"LLM / AI Agent",role:"Queries findings programmatically (CRO Audit MCP Server)"},
+        {name:"FixGenerator interface",role:"Future — code patches for findings (post-MVP)"},
+        {name:"ABTestGenerator interface",role:"Future — variant generation for VWO/Optimizely (post-MVP)"},
+        {name:"DesignRecommender interface",role:"Future — mockup recommendations (post-MVP)"},
+        {name:"3-layer hallucination filter",role:"CoT generation → self-critique review → code-level evidence grounding"}
+      ],
+      internal_flow:[
+        "URLs → Browser Agent → Analysis Engine → Findings → Review Gate → Delivery",
+        "Every finding survives 3 filters before reaching a client",
+        "Conversion prediction explicitly BANNED (R-7, GR-007)"
+      ]
+    },
+    why_matters:"Establishes the platform's identity and its core constraint — Neural surfaces probable issues for human experts to validate, not replace human judgment.",
+    example:"A consultant runs an audit on a B2B SaaS site. Neural produces 47 internal hypotheses; after 3-layer filtering and tier-based review-gate, 31 publish to the client dashboard.",
+    connected_to:["V6","V5"],
+    source_files:["docs/specs/final-architecture/01-system-identity.md"]
+  },
+
+  {
+    id:"V2", label:"Locked Decisions", layer:1, part:"A",
+    partLabel:"Agent Internals", layerLabel:"Vision & Decisions",
+    purpose:"Architecturally-locked decisions (14 system-level SD-01..14 + 12 browser-agent BA-01..12) covering dual-mode design, heuristic strategy, anti-hallucination, and tech choices.",
+    what_happens:[
+      "SD-01 dual-mode architecture (browse + analyze)",
+      "SD-02 subgraph pattern (LangGraph.js native)",
+      "SD-03 heuristics as JSON data, not code",
+      "SD-04 heuristics in separate private repo (IP protection)",
+      "SD-05 3 reliability tiers on heuristics",
+      "SD-06 evidence grounding is deterministic code, NOT LLM",
+      "SD-07 self-critique as separate LLM call",
+      "SD-08 NEVER predict conversion impact",
+      "SD-09 pairwise comparison for competitors",
+      "SD-10 confidence-based review gate (chatbot + dashboard)",
+      "SD-11 adapter pattern for all external dependencies",
+      "SD-12 client isolation via PostgreSQL RLS",
+      "SD-13 max 50 pages per audit",
+      "SD-14 LLM-based competitor detection",
+      "BA-01..BA-12 — TypeScript / LangGraph.js / Playwright+stealth / Postgres+pgvector / LLM Adapter / AX-tree / 3 modes / hard safety gates / monorepo / multiplicative confidence / MCP-native / Docker isolation"
+    ],
+    inputs:["Architecture review process"],
+    outputs:["Frozen choices that other components inherit"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"Two decision groups — 14 system-level (SD-01..14) and 12 browser-agent (BA-01..12). All locked; re-litigation requires team review.",
+      components:[
+        {name:"SD-01..SD-14",role:"System-level: dual-mode, subgraph, heuristic strategy, evidence grounding, RLS, page cap"},
+        {name:"BA-01..BA-12",role:"Browser-agent: TS/LangGraph/Playwright/Postgres+pgvector/3 modes/hard safety/Docker"},
+        {name:"SD-08 conversion-prediction ban",role:"Reinforced in GR-007 regex grounding rule"},
+        {name:"SD-11 adapter pattern",role:"Enables LLM/Storage/Auth/Notification swaps without core changes"}
+      ],
+      internal_flow:[
+        "Decision proposed → debated → locked (SD-NN or BA-NN)",
+        "Code reviews enforce: no swap without team approval (Constitution R22)",
+        "Deferred items separated into DD-NN (see V3)"
+      ]
+    },
+    why_matters:"Anchors the architecture against re-litigation. Engineers who try to swap any of these without team approval are violating Constitution R22.",
+    example:"An engineer wants to switch the primary LLM to OpenAI. SD-11 (adapter pattern) means they swap the LLMAdapter implementation, not the architecture.",
+    connected_to:["V3","E1"],
+    source_files:["docs/specs/final-architecture/02-architecture-decisions.md"]
+  },
+
+  {
+    id:"V3", label:"Deferred Decisions", layer:1, part:"A",
+    partLabel:"Agent Internals", layerLabel:"Vision & Decisions",
+    purpose:"7 explicitly-deferred decisions (DD-01..DD-07): not now, not never — defer until a specific trigger condition is met.",
+    what_happens:[
+      "DD-01 Multi-agent coordination (parallel page analysis) — Phase 12+",
+      "DD-02 Vector search for heuristic retrieval — when count exceeds 500",
+      "DD-03 Custom fine-tuned model — after collecting 1,000+ grounded findings",
+      "DD-04 Multi-browser support (Firefox/WebKit) — after Chromium stable",
+      "DD-05 Kubernetes orchestration — if scale exceeds 100 audits/week",
+      "DD-06 Automated heuristic weight calibration — after 6mo consultant feedback",
+      "DD-07 Multi-model evaluation (different LLMs for evaluate vs critique) — after MVP validation (G5 coverage gap fix)"
+    ],
+    inputs:["Stakeholder requests","Scaling triggers","Coverage-gap reviews"],
+    outputs:["Activation timing per DD-NN","Capability already-existing-but-not-exercised flags (e.g., DD-07)"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"Each DD-NN has an explicit trigger condition. None are 'forgotten' — all tracked in §02.2.",
+      components:[
+        {name:"DD-01 Multi-agent",role:"Trigger: Phase 12+"},
+        {name:"DD-02 Vector retrieval",role:"Trigger: heuristic count > 500"},
+        {name:"DD-03 Fine-tuned model",role:"Trigger: 1,000+ grounded findings"},
+        {name:"DD-04 Multi-browser",role:"Trigger: Chromium-only stability proven"},
+        {name:"DD-05 Kubernetes",role:"Trigger: > 100 audits/week"},
+        {name:"DD-06 Auto-calibration",role:"Trigger: 6 months of feedback data"},
+        {name:"DD-07 Multi-model eval",role:"Trigger: MVP validated (LLMAdapter already supports per-call model)"}
+      ],
+      internal_flow:[
+        "Engineer hits a scaling/quality wall → check trigger condition for DD-NN",
+        "Trigger met → spec the deferred decision → proceed to implementation",
+        "Trigger not met → continue with current architecture"
+      ]
+    },
+    why_matters:"Disciplined scope. Future features clearly waiting in queue with activation conditions, not vague 'maybe later'.",
+    example:"DD-02 vector search activates when heuristic count exceeds 500. Today there are 100, so flat JSON filter is sufficient.",
+    connected_to:["V2","IP1"],
+    source_files:["docs/specs/final-architecture/02-architecture-decisions.md"]
+  },
+
+  {
+    id:"V4", label:"3 Browse Modes (A/B/C)", layer:1, part:"A",
+    partLabel:"Agent Internals", layerLabel:"Vision & Decisions",
+    purpose:"Three execution modes from BA-07 — Deterministic ($0/step), Guided (~$0.10/step, MVP default), Computer-Use (~$0.30/step) — for cost optimization without rewriting the browser graph.",
+    what_happens:[
+      "Mode A Deterministic: pre-defined action paths, no LLM per step ($0)",
+      "Mode B Guided: LLM picks next action from a limited tool set (~$0.10/step, MVP default)",
+      "Mode C Computer-Use: vision-based agent, full computer-use capability (~$0.30/step)"
+    ],
+    inputs:["Audit URL","Mode selection (defaults to B)"],
+    outputs:["Browse trace tagged with execution mode and per-step cost"],
+    dependencies:[
+      {type:"data",name:"BA-07 decision",reason:"Locks 3-mode design"},
+      {type:"interface",name:"LLMAdapter",reason:"Mode B/C invoke LLM via adapter"}
+    ],
+    internal_architecture:{
+      summary:"Cost-optimized execution per audit. MVP defaults to Mode B; A used for known-deterministic paths; C reserved for v1.1+ scenarios needing full vision.",
+      components:[
+        {name:"Mode A — Deterministic",role:"Pre-defined paths, $0/step, fastest"},
+        {name:"Mode B — Guided",role:"LLM-picked action, $0.10/step, MVP default"},
+        {name:"Mode C — Computer-Use",role:"Vision agent, $0.30/step, deferred to v1.1+"}
+      ],
+      internal_flow:[
+        "Audit start → pick mode based on page-type / config → run browser graph in chosen mode",
+        "Same graph runs in any mode without rewrite — cost differs, behavior consistent"
+      ]
+    },
+    why_matters:"Cost predictability per audit. Same graph runs in any mode without rewrite — choose cheaper modes when paths are known.",
+    example:"Audit /checkout in Mode B: LLM picks browser_click on the CTA → ~$0.10 for that step. The same graph re-run in Mode A would use a deterministic recipe → $0.",
+    connected_to:["BR8"],
+    source_files:["docs/specs/final-architecture/02-architecture-decisions.md"]
+  },
+
+  {
+    id:"V5", label:"5-Layer Architecture", layer:1, part:"A",
+    partLabel:"Agent Internals", layerLabel:"Vision & Decisions",
+    purpose:"5 architectural layers — Orchestration → Browser Agent → Analysis Engine → Data → Delivery — with strict typed-adapter contracts (REQ-LAYER-001..006).",
+    what_happens:[
+      "L1 Orchestration: audit lifecycle, mode switching, page queue, scheduling, client management, heuristic filtering",
+      "L2 Browser Agent: page navigation, interaction, perception (browse + analyze)",
+      "L3 Analysis Engine: heuristic evaluation, self-critique, evidence grounding, annotation, competitor comparison, version diff, review gate",
+      "L4 Data: PostgreSQL + pgvector + R2 + heuristic repo, RLS-isolated",
+      "L5 Delivery: MCP server + 2 dashboards + Hono REST API + auth",
+      "REQ-LAYER-005 v3 (revised by §33): Layer 3 receives AnalyzePerception data from Layer 2 and produces findings; with §33 tool-injection, Layer 3 MAY interact with browser during evaluation"
+    ],
+    inputs:["Architectural separation rules"],
+    outputs:["Layer boundaries enforced via TypeScript interfaces with Zod runtime validation"],
+    dependencies:[
+      {type:"interface",name:"REQ-LAYER-001",reason:"Layer N may only import from N-1, N, or N+1"},
+      {type:"interface",name:"REQ-LAYER-002",reason:"All inter-layer comms via Zod-validated TS interfaces"},
+      {type:"interface",name:"REQ-LAYER-006",reason:"Layer 4 enforces client isolation via PostgreSQL RLS"}
+    ],
+    internal_architecture:{
+      summary:"Strict 5-layer separation. L1 owns lifecycle, L2 owns browser, L3 owns analysis, L4 owns data, L5 owns delivery. Communication only between adjacent layers.",
+      components:[
+        {name:"L1 Orchestration",role:"Audit lifecycle, mode switching, scheduling, heuristic filter"},
+        {name:"L2 Browser Agent",role:"Page navigation, interaction, perception (8 layers, 10 nodes, 23 tools)"},
+        {name:"L3 Analysis Engine",role:"Heuristic eval, critique, grounding, annotation, review gate"},
+        {name:"L4 Data",role:"Postgres+pgvector + R2 + private heuristic repo (encrypted at rest)"},
+        {name:"L5 Delivery",role:"MCP server + Client/Consultant dashboards + Hono REST API"}
+      ],
+      internal_flow:[
+        "L1 builds page queue + filters heuristics",
+        "→ L2 produces AnalyzePerception + screenshots",
+        "→ L3 evaluates → critiques → grounds → annotates",
+        "→ L4 stores findings + screenshots",
+        "→ L5 serves via MCP + dashboards",
+        "→ L1 advances queue (or completes)"
+      ]
+    },
+    why_matters:"Predictable architecture. Engineers know where to add code; reviewers know what to challenge; future evolutions (e.g., §33 tool injection) preserve layer boundaries.",
+    example:"Adding a new heuristic doesn't touch L1, L2, L4, or L5 — it lives in heuristics-repo (L4) and HeuristicEvaluator (L3).",
+    connected_to:["AO1","BR1","AN1","DL1","DV1"],
+    source_files:[
+      "docs/specs/final-architecture/03-architecture-layers.md",
+      "docs/specs/final-architecture/33-agent-composition-model.md"
+    ]
+  },
+
+  {
+    id:"V6", label:"Reality Check", layer:1, part:"A",
+    partLabel:"Agent Internals", layerLabel:"Vision & Decisions",
+    purpose:"What LLM analysis CAN and CANNOT do, anchored in 8 research papers. 7 design principles (R-1..R-7) flow from this — and conversion prediction is BANNED.",
+    what_happens:[
+      "CAN reliably: missing elements (>80%), visual hierarchy (>75%), form field count (>90%), fold position (>90%), color contrast (>85%)",
+      "MIDDLE reliability: cross-page consistency (~65%), copy quality (~60%), persuasion technique (~55%)",
+      "CANNOT reliably: predict conversion impact (<30%), assign reliable severity (~56%), evaluate ease of use (~40%), match human expert findings (21.2% overlap)",
+      "Therefore: findings are HYPOTHESES, not VERDICTS",
+      "Conversion prediction is explicitly BANNED (R-7) — enforced by GR-007 regex grounding rule"
+    ],
+    inputs:["Research papers — GPT-4o vs Experts, MLLM UI Judge, WiserUI-Bench, UXAgent, AIHeurEval, LLM Feedback (Berkeley), WebUIBench, DesignBench"],
+    outputs:["Tier assignments on heuristics (Tier 1/2/3 by reliability)","Banned-output list enforced in prompts and grounding rules"],
+    dependencies:[
+      {type:"data",name:"GPT-4o vs Experts (2025)",reason:"21.2% overlap → finding-as-hypothesis design"},
+      {type:"data",name:"MLLM UI Judge (2025)",reason:">75% visual vs <40% emotional → 3-tier reliability"},
+      {type:"data",name:"WiserUI-Bench (2025)",reason:"LLMs can't predict UI conversion → ban + GR-007"}
+    ],
+    internal_architecture:{
+      summary:"Anchored in 8 research papers. Defines 7 design principles (R-1..R-7) that the rest of the architecture inherits — including the 3-tier heuristic system, the 3-layer hallucination filter, and the conversion-prediction ban.",
+      components:[
+        {name:"R-1 Findings are hypotheses",role:"Justifies 3-layer validation filter (CoT → critique → ground)"},
+        {name:"R-2 Severity must be evidence-grounded",role:"Severity from measurable data, not LLM opinion"},
+        {name:"R-3 Visual reliable, emotional not",role:"Justifies 3 reliability tiers (42% T1 / 42% T2 / 16% T3)"},
+        {name:"R-4 Multi-screen consistency matters",role:"Cross-page consistency analyzer"},
+        {name:"R-5 Browser interaction catches what screenshots miss",role:"Justifies dual-mode (browse + analyze)"},
+        {name:"R-6 Pairwise > absolute scoring",role:"Competitor comparison is pairwise, not scored"},
+        {name:"R-7 Never predict conversion",role:"Banned in prompts + enforced via GR-007 regex"}
+      ],
+      internal_flow:[
+        "Research finding → corresponding design principle (R-1..R-7)",
+        "Each principle anchors specific architectural choice (tiers / filter / pairwise / GR-007)",
+        "Junior engineer proposes a violating change → reviewer cites the principle → change rejected"
+      ]
+    },
+    why_matters:"Prevents over-promising. Every architectural choice traces back to what research shows actually works — and what doesn't.",
+    example:"A junior engineer suggests 'estimate +5% conversion lift' on a finding. Reality Check + R-7 + GR-007 reject it: prediction unreliable, output forbidden.",
+    connected_to:["V1","HK4"],
+    source_files:["docs/specs/final-architecture/01-system-identity.md"]
+  },
+
+  // ============================================
+  // LAYER 2 — Constitution & Engineering  (§17)
+  // ============================================
+  {
+    id:"E1", label:"Engineering Constitution", layer:2, part:"A",
+    partLabel:"Agent Internals", layerLabel:"Constitution & Engineering",
+    purpose:"10 non-negotiable engineering rules anchoring all architectural decisions — from 'findings are hypotheses' to 'heuristics are secret' to 'safety is structural'.",
+    what_happens:[
+      "1. Findings are hypotheses, not verdicts (3-filter validation)",
+      "2. Perception first, action second (no action without fresh snapshot)",
+      "3. Verify everything (no action 'done' until verification passes)",
+      "4. Evidence before assertion (no finding without specific page data)",
+      "5. Safety is structural (LLM cannot override safety gate)",
+      "6. Cheapest mode first (Mode A → B → C)",
+      "7. Never predict conversion (state violations, cite research, recommend fixes)",
+      "8. Tier determines trust (visual/structural reliable, emotional needs review)",
+      "9. Heuristics are SECRET (never exposed to clients/API/dashboard)",
+      "10. Self-critique is non-negotiable (even if it adds 2-3s/page)"
+    ],
+    inputs:["Architecture decisions","Code change proposals"],
+    outputs:["Code review checklist","Architectural discipline anchor"],
+    dependencies:[
+      {type:"data",name:"Constitution R22 (The Ratchet)",reason:"Prevents weakening of these rules over time"}
+    ],
+    internal_architecture:{
+      summary:"10 rules across 6 dimensions: validation discipline (1, 4, 10), action discipline (2, 3), safety (5), cost (6), capability boundaries (7, 8), IP protection (9).",
+      components:[
+        {name:"Rule 1 · Findings are hypotheses",role:"Justifies 3-layer filter (CoT → critique → ground)"},
+        {name:"Rule 2 · Perception before action",role:"No action without fresh page snapshot"},
+        {name:"Rule 3 · Verify everything",role:"No browse step 'done' until verify strategy passes"},
+        {name:"Rule 4 · Evidence before assertion",role:"Finding requires specific page-data backing"},
+        {name:"Rule 5 · Safety is structural",role:"Graph-level enforcement, not LLM-discretionary"},
+        {name:"Rule 6 · Cheapest mode first",role:"Route Mode A → B → C in cost order"},
+        {name:"Rule 7 · Never predict conversion",role:"Enforced by GR-007 regex grounding rule"},
+        {name:"Rule 8 · Tier determines trust",role:"Tier 1 auto, Tier 2 24h delay, Tier 3 held"},
+        {name:"Rule 9 · Heuristics are SECRET",role:"Never in API responses, logs, traces, dashboards"},
+        {name:"Rule 10 · Self-critique non-negotiable",role:"Even if +2-3s/page; ~30% FP reduction"}
+      ],
+      internal_flow:[
+        "Engineer proposes change → reviewer matches against rules 1-10",
+        "Violation found → reject PR; rationale cites the specific rule",
+        "Constitution R22 prevents loosening: rules can tighten, never weaken"
+      ]
+    },
+    why_matters:"Single source of architectural discipline. Every code review traces back to one of these 10 rules.",
+    example:"An engineer writes a finding without evidence in the JSONB. Rule 4 ('evidence before assertion') flags it; reviewer rejects PR.",
+    connected_to:["V2","AN3","HK7"],
+    source_files:["docs/specs/final-architecture/17-context-preservation.md"]
+  },
+
+  {
+    id:"E2", label:"9 Adapter Interfaces", layer:2, part:"A",
+    partLabel:"Agent Internals", layerLabel:"Constitution & Engineering",
+    purpose:"9 swappable adapter interfaces (per SD-11) — every external SDK access is isolated behind a typed interface, with 1 default + 3 documented alternatives each.",
+    what_happens:[
+      "BrowserEngine: Playwright (default) | Puppeteer | BrowserBase | CDP",
+      "LLMAdapter: Anthropic Claude Sonnet 4 (default) | OpenAI | Gemini | Local/Ollama",
+      "StorageAdapter: PostgreSQL+Drizzle (default) | Supabase | MongoDB | SQLite",
+      "ScreenshotStorage: Cloudflare R2 (default) | S3 | Local Disk | GCS",
+      "HeuristicLoader: JSON File encrypted (default) | Database | API | Vector DB",
+      "JobScheduler: BullMQ+Redis (default) | pg-boss | node-cron | Cloud",
+      "EventBus: SSE native (default) | WebSocket | Redis PubSub | Kafka",
+      "AuthProvider: Clerk (default) | Better Auth | Auth.js | Custom JWT",
+      "ImageProcessor: Sharp (default) | Canvas | Jimp | Puppeteer overlay"
+    ],
+    inputs:["External SDK integration needs","Provider swap requirements"],
+    outputs:["Concrete adapter implementations","Provider-independence at the call site"],
+    dependencies:[
+      {type:"data",name:"SD-11 (Locked Decision)",reason:"Adapter pattern for ALL external dependencies"}
+    ],
+    internal_architecture:{
+      summary:"Each adapter has 1 default + 3 documented alternatives. Core code imports interface only; concrete impl is swappable without core changes.",
+      components:[
+        {name:"BrowserEngine",role:"Headless browser control"},
+        {name:"LLMAdapter",role:"LLM provider abstraction (per-call model selection)"},
+        {name:"StorageAdapter",role:"Database / ORM abstraction"},
+        {name:"ScreenshotStorage",role:"Blob storage with signed URLs"},
+        {name:"HeuristicLoader",role:"Where heuristics come from (file / DB / API / vector)"},
+        {name:"JobScheduler",role:"Background-job orchestration"},
+        {name:"EventBus",role:"Real-time events to dashboard"},
+        {name:"AuthProvider",role:"Identity + session management"},
+        {name:"ImageProcessor",role:"Screenshot annotation + manipulation"}
+      ],
+      internal_flow:[
+        "Core code → typed interface → adapter implementation → external SDK",
+        "Swap implementation: change factory wiring + env var, no core changes",
+        "Adapters are unit-tested with mock implementations"
+      ]
+    },
+    why_matters:"Future-proofs the architecture. Adding a new LLM provider, swapping storage, or changing auth doesn't require core rewrites — only a new adapter implementation.",
+    example:"v1.1 wants stealth browser support: implement `BrowserEngine` for Patchright; flip a config flag; zero changes to perception/safety code.",
+    connected_to:["V2","HK1","DV6"],
+    source_files:["docs/specs/final-architecture/17-context-preservation.md"]
+  },
+
+  {
+    id:"E3", label:"3 Future Interfaces", layer:2, part:"A",
+    partLabel:"Agent Internals", layerLabel:"Constitution & Engineering",
+    purpose:"3 TypeScript interfaces declared but not implemented — FixGenerator, ABTestGenerator, DesignRecommender — anchoring the post-MVP arc and Layer 33 roadmap.",
+    what_happens:[
+      "FixGenerator: generateFix(finding, pageSource) → { html, css, diff, explanation }",
+      "ABTestGenerator: generateVariant(finding, pageSource, platform: 'vwo'|'optimizely') → { variantCode, hypothesis, metric }",
+      "DesignRecommender: generateMockup(finding, screenshot) → { mockupImage, changes, rationale }"
+    ],
+    inputs:["Future scope expansion approval"],
+    outputs:["Concrete implementations (post-MVP)","Anchor for Layer 33 roadmap items"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"TypeScript-typed interfaces. No backing implementation yet. Reserved namespace — when post-MVP work begins, implementations target THESE signatures, not new ones.",
+      components:[
+        {name:"FixGenerator",role:"Generates HTML/CSS patches for a finding"},
+        {name:"ABTestGenerator",role:"Generates A/B test variants for VWO/Optimizely"},
+        {name:"DesignRecommender",role:"Generates mockup images for a finding"}
+      ],
+      internal_flow:[
+        "Interface signature is locked → future implementations conform",
+        "Layer 33 roadmap items (RM1, RM2, RM3) trace back to these interfaces",
+        "Until implemented: `Function not yet implemented` with explicit error message"
+      ]
+    },
+    why_matters:"Anchors the post-Master roadmap. When the team builds variation code generation, A/B test creation, or design mockups, they implement THESE interfaces — not new ones.",
+    example:"Layer 33 RM1 (FixGenerator full implementation) targets this interface. v1.2 begins implementation; the rest of the system already knows how to consume `FixGenerator.generateFix()`.",
+    connected_to:["RM1","RM2","RM3"],
+    source_files:["docs/specs/final-architecture/17-context-preservation.md"]
+  },
+
+  {
+    id:"E4", label:"Monorepo Layout", layer:2, part:"A",
+    partLabel:"Agent Internals", layerLabel:"Constitution & Engineering",
+    purpose:"Monorepo structure (pnpm + Turborepo) with apps/{api, dashboard, workers} + packages/agent-core. Per BA-09.",
+    what_happens:[
+      "apps/api — Hono API server (Phase 4+)",
+      "apps/dashboard — Next.js Dashboard, App Router (Phase 6+)",
+      "apps/workers — BullMQ workers (AuditWorker, AuditScheduler, ReviewGateWorker)",
+      "packages/agent-core — Core agent logic (orchestration / perception / browser-runtime / mcp / human-behavior / verification / confidence / safety / adapters / streaming / rate-limit / db / analysis / storage)",
+      ".github/workflows — CI/CD (test, deploy-api, deploy-dashboard)",
+      "docker-compose.yml — Local dev: Postgres + Redis + API + Workers"
+    ],
+    inputs:["BA-09 monorepo decision"],
+    outputs:["Code organization","Build artifacts","Shared types across apps"],
+    dependencies:[
+      {type:"service",name:"pnpm + Turborepo",reason:"Monorepo tooling — workspace + build cache"}
+    ],
+    internal_architecture:{
+      summary:"Single repo, multiple workspaces. `packages/agent-core` is the dependency root; `apps/*` consume it. Turborepo enforces build order.",
+      components:[
+        {name:"apps/api",role:"Hono API server (Phase 4+)"},
+        {name:"apps/dashboard",role:"Next.js consultant + client dashboards (Phase 6+)"},
+        {name:"apps/workers",role:"AuditWorker / AuditScheduler / ReviewGateWorker"},
+        {name:"packages/agent-core",role:"Core agent logic library (~14 sub-modules)"},
+        {name:".spec/final-architecture",role:"Specifications (THIS folder, 38 files + diagrams)"},
+        {name:".github/workflows",role:"CI/CD (test.yml, deploy-api.yml, deploy-dashboard.yml)"},
+        {name:"docker-compose.yml",role:"Local dev orchestration"},
+        {name:".claude/HANDOVER.md",role:"Session handover for Claude Code"}
+      ],
+      internal_flow:[
+        "agent-core builds first → apps consume → tests across all workspaces",
+        "PR triggers CI → unit + integration tests → if green, deploys via deploy-* workflows",
+        "Local dev: docker-compose up → Postgres + Redis ready → pnpm dev across apps"
+      ]
+    },
+    why_matters:"One repo for the whole platform. Shared types ensure API/Dashboard/Workers can't drift. Build dependency graph enforced by Turborepo.",
+    example:"Engineer adds new orchestration node in `agent-core`. apps/api/dashboard auto-pick the new types. Single PR review covers everything; `pnpm test` runs across all workspaces.",
+    connected_to:["IP1"],
+    source_files:["docs/specs/final-architecture/17-context-preservation.md"]
+  },
+
+  {
+    id:"E5", label:"Handover & Workflow", layer:2, part:"A",
+    partLabel:"Agent Internals", layerLabel:"Constitution & Engineering",
+    purpose:"Session handover protocol for new Claude Code sessions + per-phase 12-step development workflow + 7-item Definition of Done checklist.",
+    what_happens:[
+      "Session Handover Prompt — fixed template (current phase, last completed, system summary, key invariants)",
+      "Per-Phase Process — 12 steps: read spec → branch → types → Zod → tests → impl → smoke → regression → PR → exit gate → merge",
+      "Definition of Done (per artifact) — 7 checks: TS types, Zod schemas, unit tests, smoke test, no regressions, LangSmith trace, REQ-ID traceability",
+      "Spec Kit Integration — `claude --context docs/specs/final-architecture/README.md`"
+    ],
+    inputs:["Phase boundary","New Claude Code session"],
+    outputs:["New-session bootstrap prompt","Phase-exit gate artifact"],
+    dependencies:[],
+    internal_architecture:{
+      summary:"Three sub-protocols: handover prompt template, per-phase 12-step process, 7-item Definition of Done checklist. Plus Spec Kit context-loading recipe.",
+      components:[
+        {name:"Handover Prompt",role:"Bootstrap context for new sessions (project, method, current phase, key invariants)"},
+        {name:"Per-Phase 12-Step Process",role:"Spec → branch → types → Zod → tests → impl → smoke → regression → PR → exit gate → merge"},
+        {name:"Definition of Done (7 items)",role:"TS types · Zod · unit tests · smoke · no regression · LangSmith trace · REQ-ID trace"},
+        {name:"Spec Kit Integration",role:"`claude --context docs/specs/final-architecture/README.md`"}
+      ],
+      internal_flow:[
+        "New session begins → load handover prompt → start at current phase",
+        "Per artifact: read spec → write types → Zod schemas → unit tests → implement → smoke test → PR with REQ-ID traceability",
+        "Phase exit gate: all artifacts pass DoD → merge to main → next phase"
+      ]
+    },
+    why_matters:"Continuity across Claude Code sessions. New session can resume in ~60 seconds with full context. Definition of Done prevents 'done but not done'.",
+    example:"Engineer starts Phase 7. Loads handover prompt. Reads §07 spec. Creates branch phase-7/heuristic-loader. Writes types → Zod → unit tests → impl → PR with REQ-ID traceability.",
+    connected_to:["IP1","E4"],
+    source_files:["docs/specs/final-architecture/17-context-preservation.md"]
+  }
+];
+const EDGES = [
+  // ============================================
+  // LAYER 1 internal edges (semantic — Vision items reference each other)
+  // ============================================
+  {from:"V1", to:"V6", flow:"data"},      // System Identity references Reality Check
+  {from:"V6", to:"V1", flow:"feedback"},  // Reality Check anchors System Identity (back-ref shown as feedback)
+  {from:"V2", to:"V3", flow:"data"},      // Locked → Deferred decisions
+  {from:"V5", to:"V1", flow:"data"},      // 5-Layer architecture supports System Identity
+
+  // ============================================
+  // LAYER 2 internal edges
+  // ============================================
+  {from:"E1", to:"E2", flow:"data"},      // Constitution → Adapters (e.g., Rule 9 → encrypted HeuristicLoader)
+  {from:"E2", to:"E3", flow:"data"},      // Adapter pattern extends to future interfaces
+  {from:"E4", to:"E5", flow:"data"},      // Repo layout feeds workflow
+
+  // ============================================
+  // LAYER 1 → LAYER 2 cross-layer edges
+  // ============================================
+  {from:"V2", to:"E1", flow:"data"},      // Locked Decisions ratify Constitution
+  {from:"V2", to:"E2", flow:"data"}       // SD-11 → 9 Adapter Interfaces
+];
+
+/* =========================================================
+   LAYOUT CONSTANTS
+========================================================= */
+const LAYOUT = {
+  canvasW:  1480,
+  // left margin: layer label column
+  layerLabelW: 170, layerLabelPad: 14,
+  // main area for nodes
+  mainStartX: 182, mainEndX: 1440,
+  // node sizing (compact for engineering view density)
+  nodeW: 158, nodeH: 50, nodeGapX: 22, nodeGapY: 8,
+  // layer band — minimum height; grows for layers with many nodes (multi-row)
+  layerHMin: 70,
+  // explicit gutter between layers (edge routing)
+  gutterH: 28,
+  // part band sizing
+  partHeaderH: 42, partHeaderGap: 8,
+  partGap: 22, // between Parts
+  // top/bottom padding
+  topPad: 14, bottomPad: 30,
+  // fan-out spacing on node edges (multi-edge sources/targets)
+  fanSpacing: 14
+};
+
+function nodesPerRow(){
+  return Math.floor((LAYOUT.mainEndX - LAYOUT.mainStartX + LAYOUT.nodeGapX) / (LAYOUT.nodeW + LAYOUT.nodeGapX));
+}
+function layerBandHeight(layerId){
+  const count = NODES.filter(n=>n.layer===layerId).length;
+  if (count === 0) return LAYOUT.layerHMin;
+  const perRow = nodesPerRow();
+  const rows = Math.ceil(count / perRow);
+  return Math.max(LAYOUT.layerHMin, rows * LAYOUT.nodeH + (rows-1) * LAYOUT.nodeGapY + 20);
+}
+
+/* =========================================================
+   LAYOUT COMPUTATION
+   Layout grammar:
+     topPad
+     for each Part:
+       partHeader
+       partHeaderGap
+       topGutter (above first layer in Part)
+       for each Layer in Part:
+         layerBand (variable height)
+         gutterBelowLayer
+       partGap
+     bottomPad
+========================================================= */
+function computePositions(){
+  const L = LAYOUT;
+  const positions = {};
+  const partOrder = ["A","B","C","D"];
+  let y = L.topPad;
+
+  partOrder.forEach((partKey, pIdx)=>{
+    const partLayers = LAYERS.filter(l=>l.part===partKey);
+    if (!partLayers.length) return;
+
+    // Part header
+    positions[`__partHeader_${partKey}`] = {x:8, y:y, w:L.canvasW-16, h:L.partHeaderH};
+    y += L.partHeaderH + L.partHeaderGap;
+
+    // Top gutter for this Part
+    positions[`__gutter_top_part${partKey}`] = {y:y, h:L.gutterH, mid:y + L.gutterH/2};
+    y += L.gutterH;
+
+    // Track Part band start for background drawing
+    const partBandStart = positions[`__partHeader_${partKey}`].y;
+
+    partLayers.forEach((layer, lIdx)=>{
+      const layerY = y;
+      const bandH = layerBandHeight(layer.id);
+
+      // Place nodes within this layer (multi-row if needed)
+      const nodesInLayer = NODES.filter(n=>n.layer===layer.id);
+      const perRow = nodesPerRow();
+      const rows = Math.max(1, Math.ceil(nodesInLayer.length / perRow));
+      const rowsActual = Math.min(rows, nodesInLayer.length); // for height
+      nodesInLayer.forEach((n, i)=>{
+        const row = Math.floor(i / perRow);
+        const col = i % perRow;
+        const colsThisRow = (row === rows-1) ? nodesInLayer.length - row*perRow : perRow;
+        const totalRowW = colsThisRow * L.nodeW + (colsThisRow-1) * L.nodeGapX;
+        const startX = L.mainStartX + ((L.mainEndX - L.mainStartX) - totalRowW) / 2;
+        const yWithin = layerY + 10 + row * (L.nodeH + L.nodeGapY);
+        positions[n.id] = {
+          x: startX + col*(L.nodeW + L.nodeGapX),
+          y: yWithin,
+          w: L.nodeW, h: L.nodeH,
+          layerY: layerY, layerH: bandH,
+          layerKey: `${partKey}_${layer.id}`,
+          layerColumn: col, layerRow: row,
+          part: partKey,
+          is_roadmap: !!n.is_roadmap
+        };
+      });
+
+      positions[`__layer_${partKey}_${layer.id}`] = {
+        y: layerY, h: bandH, layerNum: layer.id, layerName: layer.name,
+        cross_cutting: !!layer.cross_cutting,
+        future_extending: !!layer.future_extending,
+        is_roadmap: !!layer.is_roadmap,
+        part: partKey
+      };
+      y += bandH;
+
+      // Gutter below layer
+      positions[`__gutter_below_${partKey}_${layer.id}`] = {y:y, h:L.gutterH, mid:y + L.gutterH/2};
+      y += L.gutterH;
+    });
+
+    // Part band background extent
+    positions[`__partBand_${partKey}`] = {x:6, y:partBandStart, w:L.canvasW-12, h:y - partBandStart};
+
+    // Inter-Part gap (skip after last)
+    if (pIdx < partOrder.length-1) y += L.partGap;
+  });
+
+  positions.__totalH = y + L.bottomPad;
+
+  // ---- Edge metadata (fan-out + lane allocation) ----
+  const exits = {}, entries = {};
+  NODES.forEach(n=>{
+    exits[n.id]   = {right:[], bottom:[], left:[], top:[]};
+    entries[n.id] = {left:[], top:[], right:[], bottom:[]};
+  });
+  EDGES.forEach((e, idx)=>{
+    const s = positions[e.from], t = positions[e.to];
+    if(!s || !t) return;
+    exits[e.from][inferExitSide(s, t)].push(idx);
+    entries[e.to][inferEntrySide(s, t)].push(idx);
+  });
+  positions.__exits = exits;
+  positions.__entries = entries;
+
+  // Lane allocation per gutter
+  const traffic = {};
+  EDGES.forEach((e, idx)=>{
+    const s = positions[e.from], t = positions[e.to];
+    if(!s || !t) return;
+    horizontalUsage(e, s, t, positions).forEach(u=>{
+      if(!traffic[u.gutterKey]) traffic[u.gutterKey] = [];
+      traffic[u.gutterKey].push({edgeIdx:idx, dir:u.dir, sortKey:u.sortKey});
+    });
+  });
+  const lanes = {};
+  Object.keys(traffic).forEach(gKey=>{
+    const gutter = positions[gKey]; if(!gutter) return;
+    const list = traffic[gKey];
+    const rightward = list.filter(x=>x.dir==="right").sort((a,b)=>a.sortKey - b.sortKey);
+    const leftward  = list.filter(x=>x.dir==="left").sort((a,b)=>a.sortKey - b.sortKey);
+    rightward.forEach((x,i)=>{
+      const laneY = gutter.y + 6 + (i % 4) * 5;
+      if(!lanes[x.edgeIdx]) lanes[x.edgeIdx] = {};
+      lanes[x.edgeIdx][gKey] = laneY;
+    });
+    leftward.forEach((x,i)=>{
+      const laneY = gutter.y + gutter.h - 6 - (i % 4) * 5;
+      if(!lanes[x.edgeIdx]) lanes[x.edgeIdx] = {};
+      lanes[x.edgeIdx][gKey] = laneY;
+    });
+  });
+  positions.__lanes = lanes;
+
+  return positions;
+}
+
+/* =========================================================
+   EDGE ROUTING (no side rail — main canvas only)
+========================================================= */
+function inferExitSide(s, t){
+  if (s.layerKey === t.layerKey) return "right";
+  if (s.layerY < t.layerY) return "bottom";
+  return "top";
+}
+function inferEntrySide(s, t){
+  if (s.layerKey === t.layerKey) return "left";
+  if (s.layerY < t.layerY) return "top";
+  return "bottom";
+}
+function sideExitPoint(node, side, idx, total){
+  const L = LAYOUT;
+  const span = (total > 1) ? Math.min((total-1) * L.fanSpacing, node.w * 0.7) : 0;
+  const offset = (total > 1) ? -span/2 + idx * (span / (total-1)) : 0;
+  switch(side){
+    case "right":  return {x: node.x + node.w, y: node.y + node.h/2 + offset};
+    case "left":   return {x: node.x,           y: node.y + node.h/2 + offset};
+    case "top":    return {x: node.x + node.w/2 + offset, y: node.y};
+    case "bottom": return {x: node.x + node.w/2 + offset, y: node.y + node.h};
+  }
+}
+function gutterAboveKeyOf(t, positions){
+  // Returns the gutter key just ABOVE target's layer
+  // = "below_<prev_layer>" if prev exists in same Part, else "top_part<X>"
+  const layerKey = t.layerKey; // e.g. "A_3"
+  const [partKey, layerNumStr] = layerKey.split("_");
+  const layerNum = parseInt(layerNumStr,10);
+  const partLayers = LAYERS.filter(l=>l.part===partKey);
+  const idx = partLayers.findIndex(l=>l.id===layerNum);
+  if (idx <= 0) return `top_part${partKey}`;
+  const prev = partLayers[idx-1];
+  return `below_${partKey}_${prev.id}`;
+}
+function horizontalUsage(e, s, t, positions){
+  const out = [];
+  if (s.layerKey === t.layerKey){
+    const adjacent = Math.abs((s.x + s.w) - t.x) < (LAYOUT.nodeGapX + 8) && t.x > s.x;
+    if (adjacent) return [];
+    out.push({gutterKey:`__gutter_below_${s.layerKey}`, dir: t.x > s.x ? "right" : "left", sortKey: Math.min(s.x, t.x)});
+    return out;
+  }
+  if (s.layerY < t.layerY){
+    out.push({gutterKey:`__gutter_below_${s.layerKey}`, dir: t.x > s.x ? "right" : "left", sortKey: Math.min(s.x, t.x)});
+    return out;
+  }
+  out.push({gutterKey:`__gutter_below_${t.layerKey}`, dir: t.x > s.x ? "right" : "left", sortKey: Math.min(s.x, t.x)});
+  return out;
+}
+function edgePath(s, t, edgeIdx, positions, sId, tId){
+  const L = LAYOUT;
+  const exitSide  = inferExitSide(s, t);
+  const entrySide = inferEntrySide(s, t);
+  const exitArr  = positions.__exits[sId][exitSide];
+  const entryArr = positions.__entries[tId][entrySide];
+  const sExitPos  = sideExitPoint(s, exitSide,  exitArr.indexOf(edgeIdx),  exitArr.length);
+  const tEntryPos = sideExitPoint(t, entrySide, entryArr.indexOf(edgeIdx), entryArr.length);
+
+  const laneFor = (gutterKey)=>{
+    const lane = positions.__lanes?.[edgeIdx]?.[gutterKey];
+    if (lane !== undefined) return lane;
+    return positions[gutterKey]?.mid;
+  };
+
+  if (s.layerKey === t.layerKey){
+    const adjacent = Math.abs((s.x + s.w) - t.x) < (L.nodeGapX + 8) && t.x > s.x;
+    if (adjacent){
+      return `M ${s.x + s.w} ${s.y + s.h/2} H ${t.x}`;
+    }
+    const gutterKey = `__gutter_below_${s.layerKey}`;
+    const gy = laneFor(gutterKey);
+    const sCy = s.y + s.h/2, tCy = t.y + t.h/2;
+    const exitX = s.x + s.w + 6, entryX = t.x - 6;
+    return `M ${s.x + s.w} ${sCy} H ${exitX} V ${gy} H ${entryX} V ${tCy} H ${t.x}`;
+  }
+  if (s.layerY < t.layerY){
+    const gutterKey = `__gutter_below_${s.layerKey}`;
+    const gy = laneFor(gutterKey);
+    return `M ${sExitPos.x} ${sExitPos.y} V ${gy} H ${tEntryPos.x} V ${tEntryPos.y}`;
+  }
+  // Inter-layer bottom-up (rare)
+  const gutterKey = `__gutter_below_${t.layerKey}`;
+  const gy = laneFor(gutterKey);
+  return `M ${sExitPos.x} ${s.y} V ${gy} H ${tEntryPos.x} V ${t.y + t.h}`;
+}
+
+/* =========================================================
+   RENDER
+========================================================= */
+function render(){
+  const svg = document.getElementById("diagram");
+  svg.innerHTML = `
+    <defs>
+      ${["control","data","analysis","infra","safety","evidence","report","feedback"].map(ft=>`
+        <marker id="arrow-${ft}" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="${getCSS('--c-'+ft)}"/>
+        </marker>
+      `).join("")}
+    </defs>
+  `;
+
+  const pos = computePositions();
+
+  // --- Part bands + headers (with anchor for jump links) ---
+  ["A","B","C","D"].forEach(partKey=>{
+    const band = pos[`__partBand_${partKey}`];
+    const head = pos[`__partHeader_${partKey}`];
+    if (!band || !head) return;
+    const meta = PART_META[partKey];
+
+    // Anchor for jump-to-Part nav
+    appendSVG(svg, `<a href="#part-${partKey}"><rect id="part-${partKey}" x="${band.x}" y="${band.y}" width="${band.w}" height="${band.h}" fill="transparent" stroke="none"/></a>`);
+
+    // Band background
+    appendSVG(svg, `<rect class="part-band" x="${band.x}" y="${band.y}" width="${band.w}" height="${band.h}" rx="8" ry="8"/>`);
+
+    // Header bar
+    appendSVG(svg, `<rect class="part-header-bar" x="${head.x}" y="${head.y}" width="${head.w}" height="${head.h}" rx="8" ry="8" fill="${meta.color}" opacity="0.10"/>`);
+    appendSVG(svg, `<rect class="part-stripe" x="${head.x}" y="${head.y}" width="6" height="${head.h}" fill="${meta.color}"/>`);
+    appendSVG(svg, `<text class="part-header-text" x="${head.x+18}" y="${head.y+head.h/2}">${escapeXml(meta.label)}</text>`);
+    appendSVG(svg, `<text class="part-scope-text" x="${head.x+260}" y="${head.y+head.h/2}">${escapeXml(meta.scope)}</text>`);
+  });
+
+  // --- Layer rows ---
+  Object.keys(pos).filter(k=>k.startsWith("__layer_")).forEach(k=>{
+    const L = pos[k];
+    const layer = layerById[L.layerNum];
+    const isCrossCutting = L.cross_cutting;
+    const isFutureExtending = L.future_extending;
+    const isRoadmap = L.is_roadmap;
+
+    // Roadmap layer gets a special background
+    if (isRoadmap){
+      appendSVG(svg, `<rect class="roadmap-layer-bg" x="${LAYOUT.mainStartX-10}" y="${L.y+4}" width="${LAYOUT.mainEndX-LAYOUT.mainStartX+20}" height="${L.h-4}"/>`);
+    }
+
+    appendSVG(svg, `<line class="layer-separator" x1="${LAYOUT.mainStartX-2}" y1="${L.y+L.h}" x2="${LAYOUT.mainEndX}" y2="${L.y+L.h}"/>`);
+
+    const labelClass = `layer-label${isCrossCutting?' cross-cutting':''}`;
+    const subClass = `layer-sublabel${isCrossCutting?' cross-cutting':''}`;
+    appendSVG(svg, `<text class="${labelClass}" x="${LAYOUT.layerLabelPad}" y="${L.y + L.h/2 - 6}">${escapeXml(L.layerName)}</text>`);
+    appendSVG(svg, `<text class="${subClass}" x="${LAYOUT.layerLabelPad}" y="${L.y + L.h/2 + 8}">Layer ${L.layerNum}${isCrossCutting?' · cross-cutting':''}${isRoadmap?' · 🚧 roadmap':''}</text>`);
+
+    if (isFutureExtending){
+      appendSVG(svg, `<text class="future-extending-marker" x="${LAYOUT.layerLabelPad}" y="${L.y + L.h/2 + 22}">↳ post-Master extends</text>`);
+    }
+
+    // Empty hint when no nodes yet
+    const nodeCount = NODES.filter(n=>n.layer===L.layerNum).length;
+    if (nodeCount === 0){
+      const cx = (LAYOUT.mainStartX + LAYOUT.mainEndX) / 2;
+      appendSVG(svg, `<text class="layer-empty-hint" x="${cx}" y="${L.y + L.h/2 + 4}">— layer ${L.layerNum} pending — </text>`);
+    }
+  });
+
+  // --- Edges (before nodes) ---
+  EDGES.forEach((e, idx)=>{
+    const s = pos[e.from], t = pos[e.to];
+    if(!s || !t) return;
+    const path = edgePath(s, t, idx, pos, e.from, e.to);
+    appendSVG(svg, `<path class="edge-path flow-${e.flow}" d="${path}" marker-end="url(#arrow-${e.flow})"/>`);
+  });
+
+  // --- Nodes ---
+  NODES.forEach(n=>{
+    const p = pos[n.id]; if(!p) return;
+    const partColor = PART_META[n.part].color;
+    const fillBg = `rgba(${hexToRgb(partColor)},0.10)`;
+    const roadmapClass = n.is_roadmap ? ' roadmap' : '';
+    const roadmapIcon = n.is_roadmap ? `<text class="node-roadmap-icon" x="${p.x+p.w-8}" y="${p.y+12}">🚧</text>` : '';
+    appendSVG(svg, `
+      <g data-node-id="${n.id}" style="cursor:pointer">
+        <rect class="node-rect${roadmapClass}" x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" fill="${fillBg}" stroke="${partColor}"/>
+        <text class="node-id" x="${p.x+8}" y="${p.y+12}">${n.id}</text>
+        ${roadmapIcon}
+        <text class="node-label" x="${p.x+p.w/2}" y="${p.y+p.h/2 + 8}">${escapeXml(n.label)}</text>
+      </g>
+    `);
+  });
+
+  svg.querySelectorAll("g[data-node-id]").forEach(g=>{
+    g.addEventListener("click",()=>showDrawer(g.getAttribute("data-node-id")));
+  });
+
+  // --- Legend (sticky at bottom of canvas) ---
+  const lgY = pos.__totalH - 60;
+  appendSVG(svg, `<rect class="legend-box" x="14" y="${lgY}" width="900" height="40"/>`);
+  let lgX = 32;
+  const flows = [
+    {ft:"control",label:"control"},
+    {ft:"data",label:"data"},
+    {ft:"analysis",label:"analysis"},
+    {ft:"infra",label:"infra"},
+    {ft:"safety",label:"safety"},
+    {ft:"feedback",label:"feedback"},
+    {ft:"report",label:"report"}
+  ];
+  flows.forEach(f=>{
+    appendSVG(svg, `<line x1="${lgX}" y1="${lgY+20}" x2="${lgX+30}" y2="${lgY+20}" class="edge-path flow-${f.ft}" marker-end="url(#arrow-${f.ft})"/>`);
+    appendSVG(svg, `<text x="${lgX+38}" y="${lgY+24}" font-size="11" fill="#475569">${f.label}</text>`);
+    lgX += 100;
+  });
+
+  // Final canvas size
+  svg.setAttribute("height", pos.__totalH);
+  svg.setAttribute("width",  LAYOUT.canvasW);
+  svg.setAttribute("viewBox", `0 0 ${LAYOUT.canvasW} ${pos.__totalH}`);
+
+  // Update progress counter
+  const counter = document.getElementById("node-count");
+  if (counter) counter.textContent = `${NODES.length} / ~152`;
+}
+
+function appendSVG(parent, html){
+  const tmp = document.createElementNS("http://www.w3.org/2000/svg","g");
+  tmp.innerHTML = html;
+  while(tmp.firstChild) parent.appendChild(tmp.firstChild);
+}
+function getCSS(varName){
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+function hexToRgb(h){
+  h = h.replace("#","");
+  return `${parseInt(h.substr(0,2),16)},${parseInt(h.substr(2,2),16)},${parseInt(h.substr(4,2),16)}`;
+}
+function escapeXml(s){
+  return String(s).replace(/[<>&'"]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]));
+}
+
+/* =========================================================
+   DRAWER (identical to business view; supports future-extending + roadmap)
+========================================================= */
+function showDrawer(id){
+  const n = NODES.find(x=>x.id===id); if(!n) return;
+  const drawer = document.getElementById("drawer");
+  const main = document.getElementById("main");
+  const partColor = PART_META[n.part].color;
+  const inbound = EDGES.filter(e=>e.to===id).map(e=>e.from);
+  const outbound = EDGES.filter(e=>e.from===id).map(e=>e.to);
+
+  const depsHTML = (n.dependencies||[]).map(d=>`
+    <div class="dep">
+      <div><span class="dep-type">${escapeXml(d.type)}</span><span class="dep-name">${escapeXml(d.name)}</span></div>
+      <div class="dep-reason">${escapeXml(d.reason||"")}</div>
+    </div>`).join("");
+
+  const ia = n.internal_architecture||{};
+  const compsHTML = (ia.components||[]).map(c=>`
+    <div class="internal-component">
+      <div class="ic-name">${escapeXml(c.name)}</div>
+      <div class="ic-role">${escapeXml(c.role||"")}</div>
+    </div>`).join("");
+  const flowHTML = (ia.internal_flow||[]).map(f=>`<div class="if-step">${escapeXml(f)}</div>`).join("");
+
+  const futureExtendingHTML = n.future_extending_callout
+    ? `<div class="future-extending"><b>Future-extending:</b> ${escapeXml(n.future_extending_callout)}</div>`
+    : "";
+  const roadmapWarningHTML = n.is_roadmap
+    ? `<div class="roadmap-warning">🚧 <b>Post-Master roadmap.</b> No implementation spec yet — placeholder for the architectural arc beyond Master v1.0.</div>`
+    : "";
+
+  drawer.classList.remove("empty");
+  main.classList.add("drawer-open");
+  drawer.innerHTML = `
+    <div class="panel-header">
+      <button class="close" onclick="closeDrawer()">×</button>
+      <span class="layer-pill" style="background:${partColor}">${escapeXml(n.partLabel||PART_META[n.part].label)} · ${escapeXml(n.layerLabel||layerById[n.layer]?.name||'')}</span>
+      <h2>${escapeXml(n.label)}</h2>
+      <p class="subtitle">${escapeXml(n.purpose||"")}</p>
+      <div class="meta"><span>id: ${n.id}</span><span>layer: ${n.layer}</span></div>
+    </div>
+    <div class="panel-body">
+      ${roadmapWarningHTML}
+      <section><h3>Why this matters</h3><div class="why">${escapeXml(n.why_matters||"")}</div>${futureExtendingHTML}</section>
+      <section><h3>Internal architecture</h3>
+        <div class="internal">
+          <div class="internal-summary">${escapeXml(ia.summary||"")}</div>
+          ${compsHTML?`<div class="internal-components">${compsHTML}</div>`:""}
+          ${flowHTML?`<div class="internal-flow">${flowHTML}</div>`:""}
+        </div>
+      </section>
+      <section><h3>What happens</h3><ul>${(n.what_happens||[]).map(s=>`<li>${escapeXml(s)}</li>`).join("")}</ul></section>
+      <section><h3>Inputs</h3><ul>${(n.inputs||[]).map(s=>`<li>${escapeXml(s)}</li>`).join("")}</ul></section>
+      <section><h3>Outputs</h3><ul>${(n.outputs||[]).map(s=>`<li>${escapeXml(s)}</li>`).join("")}</ul></section>
+      <section><h3>Dependencies</h3>${depsHTML?`<div class="deps">${depsHTML}</div>`:"<p style='color:var(--muted);font-size:12px'>None.</p>"}</section>
+      <section><h3>Real example</h3><div class="example">${escapeXml(n.example||"")}</div></section>
+      ${(inbound.length||outbound.length)?`<section><h3>Connected components</h3><div class="connected">
+        ${inbound.map(i=>`<button onclick="showDrawer('${i}')">← ${escapeXml(NODES.find(x=>x.id===i)?.label||i)}</button>`).join("")}
+        ${outbound.map(o=>`<button onclick="showDrawer('${o}')">${escapeXml(NODES.find(x=>x.id===o)?.label||o)} →</button>`).join("")}
+      </div></section>`:""}
+      <section><h3>Source specs</h3><div class="source-files">${(n.source_files||[]).map(f=>`<code>${escapeXml(f)}</code>`).join("")||"<p style='color:var(--muted);font-size:12px'>(none)</p>"}</div></section>
+    </div>`;
+  drawer.scrollTop = 0;
+}
+function closeDrawer(){
+  document.getElementById("drawer").classList.add("empty");
+  document.getElementById("main").classList.remove("drawer-open");
+  document.getElementById("drawer").innerHTML = `<div class="placeholder"><div style="font-weight:500;color:#0f172a">Click any node</div><div style="font-size:12.5px;margin-top:4px">Drawer schema is identical to the business view.</div></div>`;
+}
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape") closeDrawer();
+  if(e.key==="/"){const s=document.getElementById("search");if(document.activeElement!==s){e.preventDefault();s.focus()}}
+});
+document.getElementById("search").addEventListener("input",e=>{
+  const q = e.target.value.toLowerCase().trim();
+  if(!q) return;
+  const hit = NODES.find(n=>n.label.toLowerCase().includes(q) || n.id.toLowerCase()===q);
+  if(hit) showDrawer(hit.id);
+});
+
+render();
+</script>
+</body>
+</html>

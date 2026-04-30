@@ -49,7 +49,8 @@
       "Bash(grep -B 5 -A 15 \"^### \\\\`MCPToolRegistry\\\\`\" C:/Sabari/Neural/NBA/docs/specs/mvp/phases/phase-2-tools/impact.md)",
       "Bash(awk -F'|' '{print $2, \"|\", $4}')",
       "Bash(cat)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "PowerShell(git commit -F .git/COMMIT_MSG_SESSION4.txt)"
     ]
   }
 }

@@ -1,0 +1,1404 @@
+{
+  "part": "D",
+  "layers": {
+    "29": {
+      "layerLabel": "Observability",
+      "nodes": [
+        {
+          "id": "OB1",
+          "label": "Pino Structured Logging",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 29,
+          "layerLabel": "Observability",
+          "purpose": "JSON-structured Pino logging with mandatory correlation fields; console.log forbidden in production code.",
+          "what_happens": [
+            "Every log line emitted as JSON via Pino (REQ-OBS-001)",
+            "Mandatory correlation fields attached: audit_run_id, client_id, page_url, node_name, heuristic_id, trace_id (REQ-OBS-002)",
+            "Log levels used consistently: debug (dev only), info (state transitions), warn (degraded), error (recovered failures), fatal (audit cannot continue) (REQ-OBS-003)",
+            "Sensitive data redaction enforced: no heuristic content, no credentials, no full HTML/DOM, no PII (REQ-OBS-004)",
+            "console.log/console.error forbidden in production code (REQ-OBS-005)"
+          ],
+          "inputs": [
+            "LogContext { audit_run_id?, client_id?, page_url?, node_name?, heuristic_id?, trace_id? }",
+            "log level (debug|info|warn|error|fatal)",
+            "message + structured fields"
+          ],
+          "outputs": [
+            "JSON log lines to stdout / log sink",
+            "LangSmith trace correlation via trace_id"
+          ],
+          "dependencies": [
+            {"type": "service", "name": "Pino logger", "reason": "JSON structured logging library"},
+            {"type": "service", "name": "LangSmith", "reason": "trace_id correlation across nodes"}
+          ],
+          "internal_architecture": {
+            "summary": "Pino logger configured with mandatory correlation context. All production code uses this logger; console.log is forbidden by lint rule.",
+            "components": [
+              {"name": "Pino logger instance", "role": "JSON log emission"},
+              {"name": "LogContext type", "role": "TypeScript interface enforcing correlation field shape"},
+              {"name": "Redaction config", "role": "Suppress sensitive fields per REQ-OBS-004"}
+            ],
+            "internal_flow": [
+              "Code calls logger.info(context, message)",
+              "Pino formats as JSON with timestamp, level, correlation fields",
+              "Output to stdout for log aggregator ingestion",
+              "trace_id ties multi-node operations together"
+            ]
+          },
+          "why_matters": "You cannot operate what you cannot observe. Structured logs with correlation fields make audit failures debuggable instead of mysterious.",
+          "example": "logger.info({ audit_run_id: 'a-123', page_url: 'https://shop.example.com/cart', node_name: 'evaluate', heuristic_id: 'H-cart-001' }, 'evaluation started')",
+          "connected_to": ["OB2", "OB3"],
+          "source_files": ["docs/specs/final-architecture/34-observability.md"]
+        },
+        {
+          "id": "OB2",
+          "label": "audit_events Table",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 29,
+          "layerLabel": "Observability",
+          "purpose": "Append-only event log with 22 canonical AuditEventTypes streamed via SSE and retained 90 days.",
+          "what_happens": [
+            "Every significant state transition emits an AuditEvent to audit_events table and via SSE stream (REQ-OBS-010)",
+            "AuditEvent schema: id, audit_run_id, client_id, event_type, page_url, metadata (event-specific), timestamp (REQ-OBS-011)",
+            "22 canonical event types: audit_started, audit_completed, audit_failed, page_browse_started/completed/failed, page_analyze_started/completed/skipped, finding_produced, finding_grounding_rejected, finding_critique_rejected, finding_published, budget_warning, budget_exceeded, llm_call_completed, llm_call_failed, llm_provider_fallback, perception_quality_low, hitl_requested, cross_page_analysis_completed, overlay_dismissed (REQ-OBS-012)",
+            "Append-only: no UPDATE, no DELETE; 90 days active retention then archived to cold storage (REQ-OBS-013)",
+            "All events emitted within a single graph node share the same trace_id for LangSmith correlation (REQ-OBS-014)"
+          ],
+          "inputs": [
+            "Event emissions from any graph node",
+            "metadata payload per event_type"
+          ],
+          "outputs": [
+            "AuditEvent rows persisted in audit_events table",
+            "SSE stream events for dashboard consumers",
+            "Input feed for Layer 3 derived metrics"
+          ],
+          "dependencies": [
+            {"type": "data", "name": "audit_events table (§13)", "reason": "Append-only event persistence"},
+            {"type": "service", "name": "SSE streaming", "reason": "Real-time event delivery to dashboards"}
+          ],
+          "internal_architecture": {
+            "summary": "Append-only event ledger with 22 typed events and structured metadata, feeding both real-time SSE and batch metrics computation.",
+            "components": [
+              {"name": "AuditEvent type", "role": "Canonical event schema"},
+              {"name": "AuditEventType enum", "role": "22 fixed event types"},
+              {"name": "Event emitter", "role": "Writes to DB + SSE stream atomically"}
+            ],
+            "internal_flow": [
+              "Graph node emits an event with type + metadata",
+              "Emitter writes append-only row to audit_events",
+              "Same event broadcast on SSE for live consumers",
+              "Aged events (>90d) moved to cold storage"
+            ]
+          },
+          "why_matters": "Events are the substrate for dashboard rendering, post-hoc analysis, and metrics. Append-only guarantees auditability.",
+          "example": "page_analyze_completed event: { page_url: '/checkout', findings_count: 7, duration_ms: 18450, cost_usd: 0.42 }",
+          "connected_to": ["OB1", "OB3", "OB5"],
+          "source_files": ["docs/specs/final-architecture/34-observability.md"]
+        },
+        {
+          "id": "OB3",
+          "label": "Layer 3 Derived Metrics",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 29,
+          "layerLabel": "Observability",
+          "purpose": "8 audit-level + 8 heuristic-level metrics computed from events and llm_call_log for trending and quality monitoring.",
+          "what_happens": [
+            "Audit-level metrics computed from audit_events + llm_call_log + findings (REQ-OBS-020)",
+            "8 audit-level metrics: duration_seconds, actual_cost_usd, cost_vs_estimate_ratio, pages_complete_rate, pages_skipped_count, findings_per_page_avg, grounding_rejection_rate, cache_hit_rate",
+            "Heuristic-level HeuristicHealthMetrics per heuristic_id: total_evaluations, findings_produced, passes, grounding_rejections, critique_rejections, consultant_approvals, consultant_rejections, health_score, last_updated (REQ-OBS-021)",
+            "health_score formula: (produced - grounding_rej - consultant_rej) / total",
+            "Phase 9 implementation"
+          ],
+          "inputs": [
+            "audit_events rows",
+            "llm_call_log rows",
+            "findings table rows",
+            "consultant approval/rejection signals"
+          ],
+          "outputs": [
+            "Audit-level metric values (8)",
+            "HeuristicHealthMetrics rows (8 fields each)",
+            "health_score per heuristic"
+          ],
+          "dependencies": [
+            {"type": "data", "name": "audit_events", "reason": "Source events for audit metrics"},
+            {"type": "data", "name": "llm_call_log", "reason": "Cost + cache hit metrics"},
+            {"type": "data", "name": "findings", "reason": "Findings count + grounding rejection metrics"}
+          ],
+          "internal_architecture": {
+            "summary": "SQL/materialized-view computations producing audit-scope and heuristic-scope metrics on top of append-only event and call-log tables.",
+            "components": [
+              {"name": "Audit metrics queries", "role": "8 formulas computed per audit_run_id"},
+              {"name": "HeuristicHealthMetrics interface", "role": "Per-heuristic counters + health_score"}
+            ],
+            "internal_flow": [
+              "Pull events + llm_call_log + findings rows for the audit",
+              "Apply 8 deterministic formulas (e.g., SUM cost_usd, COUNT skipped pages)",
+              "Per heuristic, aggregate counters and compute health_score"
+            ]
+          },
+          "why_matters": "Metrics turn raw events into operational insight: cost accuracy, reliability, finding quality, and per-heuristic health for IP curation.",
+          "example": "Heuristic H-trust-007: total_evaluations=120, findings_produced=82, grounding_rejections=18, consultant_rejections=21, health_score=0.36",
+          "connected_to": ["OB2", "OB4", "OB6"],
+          "source_files": ["docs/specs/final-architecture/34-observability.md"]
+        },
+        {
+          "id": "OB4",
+          "label": "7 Alert Rules",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 29,
+          "layerLabel": "Observability",
+          "purpose": "BullMQ scheduled job runs every 5 min checking 7 rules with debounced notifications via NotificationAdapter.",
+          "what_happens": [
+            "BullMQ scheduled job runs every 5 minutes checking alert rules (REQ-OBS-030)",
+            "7 rules: audit_stuck_warning (>45min, warning), audit_stuck_critical (>90min, critical), grounding_rejection_high (>80% page rejected, warning), heuristic_health_low (health_score<0.3, warning), cost_overrun (actual>2x estimated, warning), llm_provider_errors (5+ errors/10min, critical), audit_failure_cluster (3+ failed/hour, critical)",
+            "Notifications delivered via NotificationAdapter (§14 v2.2a). Email for MVP. Webhook post-MVP (REQ-OBS-031)",
+            "Debounced: same alert type for the same audit_run_id fires at most once per hour (REQ-OBS-032)"
+          ],
+          "inputs": [
+            "Derived metrics from OB3",
+            "audit_events table",
+            "llm_call_log error counts"
+          ],
+          "outputs": [
+            "Email/webhook notifications via NotificationAdapter",
+            "Log entries for each fired rule",
+            "Optional pause prompt for critical audits"
+          ],
+          "dependencies": [
+            {"type": "service", "name": "BullMQ scheduler", "reason": "5-minute cron job"},
+            {"type": "interface", "name": "NotificationAdapter (§14)", "reason": "Email/webhook delivery"},
+            {"type": "data", "name": "audit_events + llm_call_log", "reason": "Rule evaluation inputs"}
+          ],
+          "internal_architecture": {
+            "summary": "Scheduled rule evaluator that reads metrics + events, classifies severity, applies per-audit/per-type debouncing, and routes to notification channels.",
+            "components": [
+              {"name": "Alert rule definitions", "role": "7 typed conditions + severities"},
+              {"name": "Debouncer", "role": "1-hour throttle per (alert_type, audit_run_id)"},
+              {"name": "BullMQ job", "role": "5-minute cron evaluator"}
+            ],
+            "internal_flow": [
+              "Cron tick every 5 minutes",
+              "Each rule queries metrics/events for its condition",
+              "If condition met and not debounced, emit notification via NotificationAdapter",
+              "Record fire time for debouncing window"
+            ]
+          },
+          "why_matters": "Alerts surface degraded behavior before customers notice; debouncing prevents alert storms from a single failing audit.",
+          "example": "audit_stuck_critical fires once after 90 min on audit a-456, sending email to admin with pause option; second event in same hour suppressed.",
+          "connected_to": ["OB3", "OB5"],
+          "source_files": ["docs/specs/final-architecture/34-observability.md"]
+        },
+        {
+          "id": "OB5",
+          "label": "Operations Dashboard",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 29,
+          "layerLabel": "Observability",
+          "purpose": "Admin-only /console/admin/operations route showing active audits, summary, heuristic health, alerts, cost trend, failure breakdown.",
+          "what_happens": [
+            "Admin route /console/admin/operations provides real-time operational visibility; access restricted to consultant role with admin flag (REQ-OBS-040)",
+            "6 dashboard sections: Active Audits (progress, ETA, cost burn), 24h Summary, Heuristic Health Table (sortable by health_score), Alert Feed (last 24h), Cost Trend (30-day chart), Failure Breakdown (pie chart) (REQ-OBS-041)",
+            "Read-only: queries audit_events, llm_call_log, materialized heuristic_health_metrics view; no live writes from dashboard (REQ-OBS-042)",
+            "Phase 9 last — built after consultant dashboard, client dashboard, PDF reports (§34.8)"
+          ],
+          "inputs": [
+            "audit_events queries",
+            "llm_call_log queries",
+            "heuristic_health_metrics materialized view"
+          ],
+          "outputs": [
+            "Rendered admin dashboard UI",
+            "6 sections with charts and sortable tables"
+          ],
+          "dependencies": [
+            {"type": "data", "name": "audit_events", "reason": "Active audits + alert feed source"},
+            {"type": "data", "name": "llm_call_log", "reason": "Cost trend chart source"},
+            {"type": "data", "name": "heuristic_health_metrics view", "reason": "Heuristic table source"},
+            {"type": "service", "name": "Clerk admin role", "reason": "Access gating"}
+          ],
+          "internal_architecture": {
+            "summary": "Read-only admin UI surfacing 6 operational sections backed by materialized views and event queries.",
+            "components": [
+              {"name": "Active Audits panel", "role": "Live progress with ETA + cost burn"},
+              {"name": "24h Summary panel", "role": "Aggregate audit stats"},
+              {"name": "Heuristic Health Table", "role": "Sortable by health_score"},
+              {"name": "Alert Feed panel", "role": "Recent warnings + criticals"},
+              {"name": "Cost Trend chart", "role": "30-day daily LLM spend"},
+              {"name": "Failure Breakdown chart", "role": "Pie chart of failure types"}
+            ],
+            "internal_flow": [
+              "Admin authenticates via Clerk (admin flag required)",
+              "Dashboard SSR/CSR renders 6 panels",
+              "Each panel queries its data source (events / llm_call_log / view)",
+              "User sorts/filters; no writes performed"
+            ]
+          },
+          "why_matters": "Single pane of glass for ops staff to spot stuck audits, cost overruns, or systemic regressions before they cascade.",
+          "example": "Admin opens /console/admin/operations and sees audit a-789 stuck for 60 min with $14 cost burn (warning state) and heuristic H-cta-014 trending health_score=0.28.",
+          "connected_to": ["OB2", "OB4", "OB6"],
+          "source_files": ["docs/specs/final-architecture/34-observability.md"]
+        },
+        {
+          "id": "OB6",
+          "label": "HeuristicHealthMetrics View",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 29,
+          "layerLabel": "Observability",
+          "purpose": "Materialized view of per-heuristic health; health_score < 0.3 flags rewrite candidate, feeding §28 Learning Service.",
+          "what_happens": [
+            "Per-heuristic counters maintained: total_evaluations, findings_produced, passes, grounding_rejections, critique_rejections, consultant_approvals, consultant_rejections (REQ-OBS-021)",
+            "health_score = (produced - grounding_rej - consultant_rej) / total",
+            "health_score < 0.3 → heuristic flagged for rewrite (REQ-OBS-022)",
+            "Feeds §28 Learning Service for IP curation"
+          ],
+          "inputs": [
+            "Evaluations from §07 analyze pipeline",
+            "Grounding rejection signals (§07 Ground node)",
+            "Critique rejection signals (§07 SelfCritique node)",
+            "Consultant approval/rejection signals from review workflow"
+          ],
+          "outputs": [
+            "HeuristicHealthMetrics row per heuristic_id",
+            "health_score (numeric)",
+            "Flag for rewrite when score < 0.3"
+          ],
+          "dependencies": [
+            {"type": "data", "name": "audit_events (finding_*) ", "reason": "Counter source"},
+            {"type": "data", "name": "consultant review signals", "reason": "Approval/rejection inputs"},
+            {"type": "service", "name": "§28 Learning Service", "reason": "Consumes flagged heuristics for rewrite"}
+          ],
+          "internal_architecture": {
+            "summary": "Materialized view aggregating evaluation + rejection + approval counters per heuristic_id, deriving a single health_score with a 0.3 rewrite threshold.",
+            "components": [
+              {"name": "HeuristicHealthMetrics interface", "role": "9-field per-heuristic record"},
+              {"name": "health_score formula", "role": "(produced - grounding_rej - consultant_rej) / total"},
+              {"name": "Rewrite flag emitter", "role": "Triggers when score < 0.3"}
+            ],
+            "internal_flow": [
+              "Aggregate counters per heuristic_id over evaluation events",
+              "Compute health_score on view refresh",
+              "If score < 0.3, mark for rewrite",
+              "Feed §28 Learning Service queue"
+            ]
+          },
+          "why_matters": "Closes the loop: heuristics that consistently produce rejected findings are surfaced for human-led rewrite, protecting deliverable quality.",
+          "example": "Heuristic H-trust-007 with health_score=0.28 (below 0.3 threshold) is flagged for rewrite and queued for §28 Learning Service.",
+          "connected_to": ["OB3", "OB5"],
+          "source_files": ["docs/specs/final-architecture/34-observability.md"]
+        }
+      ]
+    },
+    "30": {
+      "layerLabel": "Report Generation",
+      "nodes": [
+        {
+          "id": "REP1",
+          "label": "ExecutiveSummary",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 30,
+          "layerLabel": "Report Generation",
+          "purpose": "Deterministic 0-100 score + grade A-F, top 5 findings, strengths, plus 1 LLM call for recommended_next_steps.",
+          "what_happens": [
+            "audit_complete node produces ExecutiveSummary as typed output (REQ-REPORT-001)",
+            "Deterministic overall_score = 100 - (critical*15 + high*8 + medium*3 + low*1), clamped 0-100 (REQ-REPORT-002)",
+            "Grade thresholds: A>=85, B>=70, C>=55, D>=40, F<40",
+            "Strengths detection deterministic: heuristic passing on >=80% of applicable pages added to strengths; no LLM (REQ-REPORT-003)",
+            "recommended_next_steps: 1 LLM call, temperature=0, $0.10 budget cap, GR-007 grounding applied (no conversion predictions); input is top 5 + pattern findings (REQ-REPORT-004)",
+            "top_findings sort by priority score (§23.4), ties broken by severity then confidence_tier (REQ-REPORT-005)"
+          ],
+          "inputs": [
+            "Grounded findings (§07)",
+            "Pattern findings (§cross-page analysis)",
+            "audit metadata (pages_analyzed, pages_skipped, total_cost_usd, duration_seconds, heuristic_sources)"
+          ],
+          "outputs": [
+            "ExecutiveSummary { overall_score, overall_grade, severity counts, top_findings[5], category_breakdown, strengths[], patterns[], recommended_next_steps, audit_metadata }"
+          ],
+          "dependencies": [
+            {"type": "interface", "name": "LLMAdapter", "reason": "Single temp=0 call for recommended_next_steps"},
+            {"type": "service", "name": "GR-007 grounding", "reason": "Reject conversion-prediction language in next_steps"},
+            {"type": "data", "name": "Grounded findings + 4D scoring (§23.4)", "reason": "Top 5 sort key"}
+          ],
+          "internal_architecture": {
+            "summary": "Deterministic score + bucketing + strengths in pure code; one tightly-budgeted LLM call to draft 3-5 next-step sentences.",
+            "components": [
+              {"name": "ExecutiveSummary interface", "role": "Typed output shape"},
+              {"name": "Score formula", "role": "Deterministic 0-100 + grade"},
+              {"name": "Strengths detector", "role": "Heuristics passing on >=80% of applicable pages"},
+              {"name": "Next-steps LLM caller", "role": "temp=0, $0.10 cap, GR-007 grounded"}
+            ],
+            "internal_flow": [
+              "Count findings by severity, compute score + grade",
+              "Detect strengths from pass-rate per heuristic",
+              "Sort findings by priority for top_findings",
+              "Single LLM call producing recommended_next_steps under budget",
+              "Apply GR-007 final regex check on returned text"
+            ]
+          },
+          "why_matters": "The ExecSummary is what decision-makers actually read; deterministic scoring keeps it reproducible while one bounded LLM call adds narrative.",
+          "example": "Audit with 2 critical, 5 high, 8 medium → score = 100 - (30 + 40 + 24) = 6 → grade F; top 5 sorted by priority; next_steps describes the dominant theme.",
+          "connected_to": ["REP2", "REP3", "REP5"],
+          "source_files": ["docs/specs/final-architecture/35-report-generation.md"]
+        },
+        {
+          "id": "REP2",
+          "label": "ActionPlan (4 quadrants)",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 30,
+          "layerLabel": "Report Generation",
+          "purpose": "Quick wins / strategic / incremental / deprioritized bucketing by impact x effort; deterministic, no LLM.",
+          "what_happens": [
+            "audit_complete produces ActionPlan grouping findings into 4 quadrants: quick_wins, strategic, incremental, deprioritized (REQ-REPORT-010)",
+            "Each quadrant carries label, description, findings[], estimated_total_effort_hours, page_count",
+            "Bucketing logic deterministic, no LLM (REQ-REPORT-011): high_impact = business_impact >= 6, low_effort = effort_hours <= 8",
+            "Quadrant matrix: high_impact + low_effort = Quick Wins; high_impact + high_effort = Strategic; low_impact + low_effort = Incremental; low_impact + high_effort = Deprioritized",
+            "estimated_total_effort_hours sourced from heuristic effort_category through EFFORT_MAP (§23.4); pattern findings aggregate effort across affected pages",
+            "Within each quadrant, findings sort by priority descending (REQ-REPORT-012)"
+          ],
+          "inputs": [
+            "Grounded findings with business_impact + effort_category",
+            "Pattern findings with affected page sets",
+            "EFFORT_MAP (§23.4)"
+          ],
+          "outputs": [
+            "ActionPlan { quick_wins, strategic, incremental, deprioritized } each as ActionPlanPhase"
+          ],
+          "dependencies": [
+            {"type": "data", "name": "4D scoring + EFFORT_MAP (§23.4)", "reason": "Bucket thresholds"},
+            {"type": "data", "name": "Grounded findings", "reason": "Inputs for bucketing"}
+          ],
+          "internal_architecture": {
+            "summary": "Pure-function bucketing on (business_impact, effort_hours) with priority-descending sort within each quadrant.",
+            "components": [
+              {"name": "ActionPlanPhase type", "role": "Per-quadrant container"},
+              {"name": "Bucketing matrix", "role": "2x2 impact x effort"},
+              {"name": "Effort aggregator", "role": "Sums effort across pages for patterns"}
+            ],
+            "internal_flow": [
+              "For each grounded finding, compute (business_impact, effort_hours)",
+              "Map to quadrant via 2x2 matrix",
+              "Aggregate effort + page_count per quadrant",
+              "Sort findings within quadrant by priority desc"
+            ]
+          },
+          "why_matters": "Decision-makers and dev teams need a sequencing map, not a flat list; quadrants make 'what to fix first' explicit.",
+          "example": "Finding 'missing trust badge on PDP' with business_impact=7, effort_hours=4 → Quick Wins; 'redesign checkout flow' impact=8, effort_hours=80 → Strategic.",
+          "connected_to": ["REP1", "REP3", "REP5"],
+          "source_files": ["docs/specs/final-architecture/35-report-generation.md"]
+        },
+        {
+          "id": "REP3",
+          "label": "ReportGenerator",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 30,
+          "layerLabel": "Report Generation",
+          "purpose": "Service in packages/agent-core/src/delivery/ReportGenerator.ts; renders Next.js HTML then Playwright page.pdf().",
+          "what_happens": [
+            "ReportGenerator service in packages/agent-core/src/delivery/ReportGenerator.ts produces a branded PDF from ExecSummary + ActionPlan + grounded findings (REQ-REPORT-020)",
+            "Approach (REQ-REPORT-021): Next.js route /api/report/[audit_run_id]/render renders report-ready HTML; headless Playwright navigates with auth; page.pdf({ format: 'A4', printBackground: true }) converts to PDF; PDF uploaded to Cloudflare R2 at /{client_id}/reports/{audit_run_id}/report.pdf",
+            "No new dependencies — reuses Playwright + Next.js already in stack",
+            "Delivery (REQ-REPORT-025): downloadable from consultant + client dashboards; link stored in audit_runs.report_pdf_url; optionally emailed via NotificationAdapter on audit_completed event",
+            "Partial reports (REQ-REPORT-030): if any page has analysis_status != complete, append 'Pages Not Fully Analyzed' section with URL, status, reason, recommended manual action"
+          ],
+          "inputs": [
+            "ExecutiveSummary",
+            "ActionPlan",
+            "Grounded findings (published only)",
+            "ReportTemplate (client branding)"
+          ],
+          "outputs": [
+            "PDF file uploaded to R2",
+            "audit_runs.report_pdf_url updated",
+            "Optional notification email"
+          ],
+          "dependencies": [
+            {"type": "service", "name": "Next.js renderer", "reason": "HTML template route"},
+            {"type": "service", "name": "Playwright headless browser", "reason": "page.pdf() generation"},
+            {"type": "service", "name": "Cloudflare R2", "reason": "PDF storage"},
+            {"type": "interface", "name": "NotificationAdapter", "reason": "Optional email delivery"}
+          ],
+          "internal_architecture": {
+            "summary": "HTML template route + Playwright PDF capture pipeline with R2 upload and DB pointer update.",
+            "components": [
+              {"name": "/api/report/[audit_run_id]/render route", "role": "Renders report HTML"},
+              {"name": "Playwright PDF runner", "role": "Headless capture as A4"},
+              {"name": "R2 uploader", "role": "Persists PDF to {client_id}/reports/{audit_run_id}/report.pdf"},
+              {"name": "DB writer", "role": "Sets audit_runs.report_pdf_url"}
+            ],
+            "internal_flow": [
+              "Build HTML template populated with ExecSummary + ActionPlan + findings",
+              "Headless Playwright authenticates and navigates to route",
+              "page.pdf({ format: 'A4', printBackground: true }) captures PDF",
+              "Upload PDF to R2 path; update DB; optionally email"
+            ]
+          },
+          "why_matters": "PDF is the artifact that gets forwarded in email — it is the deliverable that justifies the engagement.",
+          "example": "Audit a-123 finishes; ReportGenerator renders /api/report/a-123/render, captures PDF, uploads to R2 at /clientX/reports/a-123/report.pdf, sets audit_runs.report_pdf_url.",
+          "connected_to": ["REP1", "REP2", "REP4", "REP5"],
+          "source_files": ["docs/specs/final-architecture/35-report-generation.md"]
+        },
+        {
+          "id": "REP4",
+          "label": "ReportTemplate",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 30,
+          "layerLabel": "Report Generation",
+          "purpose": "Per-client branding config: logo, colors, company_name, footer; falls back to REO Digital / Neural branding.",
+          "what_happens": [
+            "Per-client ReportTemplate config: client_id, logo_url (R2 URL or data URI), primary_color (hex), secondary_color, company_name, footer_text (REQ-REPORT-023)",
+            "Fallback to REO Digital / Neural branding when client template is missing"
+          ],
+          "inputs": [
+            "client_id",
+            "Persisted ReportTemplate row"
+          ],
+          "outputs": [
+            "Branding config consumed by ReportGenerator HTML template"
+          ],
+          "dependencies": [
+            {"type": "data", "name": "report_templates table (or equivalent storage)", "reason": "Per-client persistence"}
+          ],
+          "internal_architecture": {
+            "summary": "Static per-client branding record loaded at report render time, with fallback to default Neural branding.",
+            "components": [
+              {"name": "ReportTemplate interface", "role": "Branding fields"},
+              {"name": "Loader with fallback", "role": "Returns default if client row missing"}
+            ],
+            "internal_flow": [
+              "ReportGenerator looks up template by client_id",
+              "If missing, returns default Neural / REO Digital branding",
+              "Template values injected into HTML template (logo, colors, footer)"
+            ]
+          },
+          "why_matters": "Branded deliverables look like agency work product, not generic SaaS output; one config swap repaints the whole report.",
+          "example": "Client 'Acme' has logo_url + primary_color #FF6600 + footer 'Confidential — Acme Inc.'; PDF renders with these instead of Neural defaults.",
+          "connected_to": ["REP3"],
+          "source_files": ["docs/specs/final-architecture/35-report-generation.md"]
+        },
+        {
+          "id": "REP5",
+          "label": "8 PDF Sections + <5MB Rule",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 30,
+          "layerLabel": "Report Generation",
+          "purpose": "Cover, ExecSummary, ActionPlan, Findings by Category, Cross-Page Patterns, Funnel, Methodology, Appendix; <5MB target with JPEG70%, 50 crops max, font subsetting.",
+          "what_happens": [
+            "8 sections in order (REQ-REPORT-022): Cover Page (logo, audit date, site URL, grade badge, branding); Executive Summary (score, top 5, strengths, category chart, next steps); Action Plan (4 quadrants); Findings by Category (observation, assessment, severity badge, benchmark, annotated screenshot, recommendation); Cross-Page Patterns; Funnel Analysis (if funnel findings exist); Methodology Note; Appendix (full finding table, perception quality summary, pages skipped)",
+            "Size + quality budgets (REQ-REPORT-024): target < 5MB per PDF; screenshots compressed to JPEG 70%; max 50 annotated screenshot crops per report (one per finding, prioritized by severity); font embedding subsets Inter (primary) + JetBrains Mono (code/data)",
+            "Only published findings included (cross-ref §24 Two-Store Pattern)"
+          ],
+          "inputs": [
+            "ExecutiveSummary",
+            "ActionPlan",
+            "Published grounded findings",
+            "Cross-page patterns + funnel findings",
+            "Annotated screenshot crops",
+            "Branding from REP4"
+          ],
+          "outputs": [
+            "Rendered 8-section HTML feeding REP3 PDF capture",
+            "Asset budget enforcement (max 50 crops, JPEG70%, font subset)"
+          ],
+          "dependencies": [
+            {"type": "data", "name": "Published findings store (§24)", "reason": "Only published findings appear"},
+            {"type": "service", "name": "Sharp / image compression", "reason": "JPEG 70% conversion"},
+            {"type": "service", "name": "Font subsetter", "reason": "Inter + JetBrains Mono subsetting"}
+          ],
+          "internal_architecture": {
+            "summary": "Section-by-section HTML composer with strict asset budgets to keep PDF under 5MB and load quickly in email clients.",
+            "components": [
+              {"name": "Section composers (x8)", "role": "Render each section HTML"},
+              {"name": "Asset budgeter", "role": "Caps crops at 50, compresses to JPEG70%"},
+              {"name": "Font subsetter", "role": "Embeds Inter + JetBrains Mono subsets"}
+            ],
+            "internal_flow": [
+              "Compose Cover with branding + grade",
+              "Compose ExecSummary, ActionPlan, Findings by Category",
+              "Compose Cross-Page Patterns + Funnel (conditional)",
+              "Compose Methodology + Appendix",
+              "Apply asset budgets (50 crops max, JPEG70%, subset fonts)",
+              "Hand HTML to REP3 for PDF capture"
+            ]
+          },
+          "why_matters": "Email-friendly size + consistent structure means the PDF actually gets opened and read, not bounced or stalled.",
+          "example": "Audit produces 73 findings — top 50 by severity get annotated crops; remaining 23 listed in appendix table only; final PDF lands at 4.2MB.",
+          "connected_to": ["REP1", "REP2", "REP3", "REP4"],
+          "source_files": ["docs/specs/final-architecture/35-report-generation.md"]
+        }
+      ]
+    },
+    "31": {
+      "layerLabel": "Golden Test Suite",
+      "nodes": [
+        {
+          "id": "GT1",
+          "label": "GoldenTestCase",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 31,
+          "layerLabel": "Golden Test Suite",
+          "purpose": "Frozen perception + page_type + heuristics + expected_findings + expected_false_positives; JSON in test/golden/, treated as production artifact.",
+          "what_happens": [
+            "Golden test case is a frozen input + expected output pair (REQ-GOLDEN-001)",
+            "Frozen inputs (never change): perception (full saved AnalyzePerception), page_type, business_type, filtered_heuristics (exact heuristics used at validation time)",
+            "Expected outputs: expected_findings[] with heuristic_id, status (violation|pass), severity, must_contain[] key phrases; expected_false_positives[] with heuristic_id + reason",
+            "Stored as individual JSON files in test/golden/GT-XXX.json, committed to git, treated as production artifacts (REQ-GOLDEN-002)",
+            "Bootstrapping: first 5 hand-crafted during Phase 1-5; engineer runs pipeline, consultant validates, exported via pnpm golden:capture (REQ-GOLDEN-010)",
+            "Targets: Week 4 → 5 tests; Phase 7 end → 10; Phase 8 end → 15; Phase 9 end → 20 baseline coverage (REQ-GOLDEN-011)"
+          ],
+          "inputs": [
+            "Saved AnalyzePerception",
+            "page_type + business_type",
+            "Heuristics list at validation time",
+            "Consultant validation notes + expected_false_positives"
+          ],
+          "outputs": [
+            "test/golden/GT-XXX.json file",
+            "Reusable regression input"
+          ],
+          "dependencies": [
+            {"type": "data", "name": "AnalyzePerception schema", "reason": "Frozen perception input shape"},
+            {"type": "data", "name": "Heuristic schema (§09)", "reason": "Frozen heuristics list"}
+          ],
+          "internal_architecture": {
+            "summary": "JSON artifact pinning a perception + heuristic set + consultant-validated expected/false-positive findings; immutable and git-tracked.",
+            "components": [
+              {"name": "GoldenTestCase interface", "role": "Frozen schema with id, source_url, captured_at, validated_by, perception, expected_findings, expected_false_positives"},
+              {"name": "test/golden/GT-XXX.json files", "role": "Per-case persistence"}
+            ],
+            "internal_flow": [
+              "Engineer runs pipeline against real site",
+              "Consultant marks findings valid / invalid / missed",
+              "pnpm golden:capture exports as JSON",
+              "Consultant adds expected_false_positives",
+              "JSON committed to repo"
+            ]
+          },
+          "why_matters": "Quality regression net for heuristic + prompt changes; without it, quality degradation is silent and cumulative.",
+          "example": "GT-001 'Amazon PDP — missing size guide': frozen perception, expected_findings includes H-pdp-size-guide violation with must_contain=['size chart','fit guide'], expected_false_positives excludes H-pdp-shipping.",
+          "connected_to": ["GT2", "GT3", "GT4", "GT5"],
+          "source_files": ["docs/specs/final-architecture/36-golden-test-suite.md"]
+        },
+        {
+          "id": "GT2",
+          "label": "MockBrowserEngine",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 31,
+          "layerLabel": "Golden Test Suite",
+          "purpose": "Implements BrowserEngine returning saved perceptions + screenshots from test/fixtures/sites/; no Playwright, no network.",
+          "what_happens": [
+            "MockBrowserEngine implements BrowserEngine interface (REQ-GOLDEN-041)",
+            "Returns saved HTML snapshots from test/fixtures/sites/",
+            "page_analyze() returns saved AnalyzePerception JSON",
+            "Screenshots return saved JPEG files",
+            "No Playwright, no network",
+            "Activated when NEURAL_MODE=offline (REQ-GOLDEN-040)",
+            "Fixture directory structure: test/fixtures/sites/{site}/ with perception.json, page-state.json, viewport.jpg, fullpage.jpg (REQ-GOLDEN-042)",
+            "CLI: pnpm fixture:capture --url <url> navigates real URL once and saves perception + screenshots reusable forever offline (REQ-GOLDEN-043)"
+          ],
+          "inputs": [
+            "Page URL (matched against fixture site key)",
+            "test/fixtures/sites/{site}/ JSON + JPEG files"
+          ],
+          "outputs": [
+            "Saved AnalyzePerception",
+            "Saved viewport + fullpage screenshots"
+          ],
+          "dependencies": [
+            {"type": "interface", "name": "BrowserEngine adapter", "reason": "Drop-in replacement"},
+            {"type": "data", "name": "test/fixtures/sites/", "reason": "Snapshot store"}
+          ],
+          "internal_architecture": {
+            "summary": "Drop-in BrowserEngine that reads pre-captured fixtures from disk instead of driving Playwright, enabling network-free testing.",
+            "components": [
+              {"name": "Fixture loader", "role": "Reads perception.json + screenshot JPEGs"},
+              {"name": "BrowserEngine surface", "role": "Mirrors real engine's methods"}
+            ],
+            "internal_flow": [
+              "Test invokes pipeline with NEURAL_MODE=offline",
+              "MockBrowserEngine looks up fixture by URL/site key",
+              "Returns saved AnalyzePerception + screenshots",
+              "Pipeline runs as if browser had executed"
+            ]
+          },
+          "why_matters": "Eliminates network flakiness and cost from CI; pipeline tests become deterministic at zero API spend.",
+          "example": "Test runs pipeline against 'amazon-pdp' fixture; MockBrowserEngine returns perception.json + viewport.jpg from disk in milliseconds.",
+          "connected_to": ["GT1", "GT4"],
+          "source_files": ["docs/specs/final-architecture/36-golden-test-suite.md"]
+        },
+        {
+          "id": "GT3",
+          "label": "MockLLMAdapter",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 31,
+          "layerLabel": "Golden Test Suite",
+          "purpose": "Implements LLMAdapter returning cached responses keyed by golden-test perceptions; updated nightly; no API calls.",
+          "what_happens": [
+            "MockLLMAdapter implements LLMAdapter interface (REQ-GOLDEN-041)",
+            "For known inputs (matching golden test perceptions): returns cached responses",
+            "For unknown inputs: returns structured 'mock finding' with placeholder data",
+            "Tracks call count, simulated tokens, simulated cost",
+            "No Anthropic / OpenAI API calls",
+            "Cache directory: test/fixtures/llm-responses/ (e.g. evaluate-amazon-pdp.json, critique-amazon-pdp.json) (REQ-GOLDEN-042)",
+            "Cached responses are pre-captured per golden test from last nightly run (REQ-GOLDEN-030)"
+          ],
+          "inputs": [
+            "Prompt + perception payload",
+            "test/fixtures/llm-responses/ cache directory"
+          ],
+          "outputs": [
+            "Cached LLM response (evaluate / critique)",
+            "Mock structured response for unknown inputs",
+            "Tracked call count + simulated cost"
+          ],
+          "dependencies": [
+            {"type": "interface", "name": "LLMAdapter", "reason": "Drop-in replacement"},
+            {"type": "data", "name": "test/fixtures/llm-responses/", "reason": "Cached response store"}
+          ],
+          "internal_architecture": {
+            "summary": "LLMAdapter surface backed by a hash-keyed cache of nightly-captured responses, falling back to mock data for unseen inputs.",
+            "components": [
+              {"name": "Response cache loader", "role": "Reads JSON files for known perceptions"},
+              {"name": "Mock generator", "role": "Returns placeholder finding for unknown inputs"},
+              {"name": "Cost simulator", "role": "Tracks call count + simulated tokens/cost"}
+            ],
+            "internal_flow": [
+              "Pipeline calls LLM with perception + prompt",
+              "MockLLMAdapter computes cache key from perception/prompt",
+              "If cache hit, return saved response",
+              "If miss, return structured mock finding",
+              "Increment simulated call count + cost"
+            ]
+          },
+          "why_matters": "Lets every PR run the full pipeline in <30s with zero API spend, while nightly real-LLM runs refresh the cache.",
+          "example": "Fast-mode CI runs GT-001 → MockLLMAdapter loads test/fixtures/llm-responses/evaluate-amazon-pdp.json and returns cached evaluate output instantly.",
+          "connected_to": ["GT1", "GT4", "GT5"],
+          "source_files": ["docs/specs/final-architecture/36-golden-test-suite.md"]
+        },
+        {
+          "id": "GT4",
+          "label": "Fast Mode (every PR)",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 31,
+          "layerLabel": "Golden Test Suite",
+          "purpose": "MockLLM-backed run in PR CI: tests grounding/filtering/scoring/integration; ~30s; $0; catches deterministic bugs.",
+          "what_happens": [
+            "Fast mode (every PR) uses MockLLMAdapter with cached responses (REQ-GOLDEN-030)",
+            "Tests grounding, heuristic filtering, scoring, deterministic pipeline logic",
+            "LLM responses pre-captured per golden test from last nightly run",
+            "Zero API cost",
+            "Runs in ~30 seconds",
+            "Catches: grounding rule bugs, filtering bugs, scoring bugs, integration bugs",
+            "CI triggers on PRs touching analysis/, heuristics/, heuristics-repo/, prompt templates (REQ-GOLDEN-020)",
+            "Pass criteria (REQ-GOLDEN-022): aggregate TP rate >=80%, FP rate <=20%, no individual test below 60% TP; unexpected findings logged but do not fail CI",
+            "CLI: pnpm test:golden runs fast mode (REQ-GOLDEN-043)"
+          ],
+          "inputs": [
+            "GoldenTestCase JSONs",
+            "MockLLMAdapter cached responses",
+            "MockBrowserEngine fixtures"
+          ],
+          "outputs": [
+            "Per-test TP/FN/FP/unexpected counts",
+            "CI pass/fail signal"
+          ],
+          "dependencies": [
+            {"type": "service", "name": "GT1 GoldenTestCase", "reason": "Frozen test inputs"},
+            {"type": "service", "name": "GT3 MockLLMAdapter", "reason": "Cached responses"},
+            {"type": "service", "name": "GT2 MockBrowserEngine", "reason": "Fixture-based perception (when full pipeline runs)"}
+          ],
+          "internal_architecture": {
+            "summary": "PR-time CI runner that executes the analyze pipeline against golden inputs with mocked LLM, computing TP/FP rates against pass criteria.",
+            "components": [
+              {"name": "Golden runner", "role": "Iterates golden tests"},
+              {"name": "Comparator", "role": "Computes TP/FN/FP/unexpected per case"},
+              {"name": "Aggregator", "role": "Applies REQ-GOLDEN-022 thresholds"}
+            ],
+            "internal_flow": [
+              "For each GoldenTestCase: load frozen inputs",
+              "Run evaluate (mocked LLM) → self_critique → grounding (deterministic 12 rules)",
+              "Compare outputs against expected_findings + expected_false_positives",
+              "Aggregate TP/FP rates; check pass criteria",
+              "Emit CI result"
+            ]
+          },
+          "why_matters": "Catches deterministic regressions (grounding/filtering/scoring) on every PR without burning API budget.",
+          "example": "PR modifies GR-007 logic; fast mode runs 20 golden tests in 30s using cached LLM responses, finds 1 regression where GT-005 TP rate drops below 60%, blocks merge.",
+          "connected_to": ["GT1", "GT2", "GT3", "GT5"],
+          "source_files": ["docs/specs/final-architecture/36-golden-test-suite.md"]
+        },
+        {
+          "id": "GT5",
+          "label": "Nightly Mode (real LLM)",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 31,
+          "layerLabel": "Golden Test Suite",
+          "purpose": "Scheduled 2am UTC real-LLM run; $1-2/run; >10% drop vs 7-day rolling average fires P1, blocks deployment.",
+          "what_happens": [
+            "Nightly mode (scheduled 2am UTC) uses real LLM calls (REQ-GOLDEN-031)",
+            "Tests actual evaluate + critique prompt quality",
+            "Updates cached responses for fast mode",
+            "Costs ~$1-2 per run (20 tests × ~$0.10 each)",
+            "Catches: prompt quality regressions, model behavior drift, heuristic-prompt alignment issues",
+            "Regression alerting (REQ-GOLDEN-032): nightly scores drop > 10% vs 7-day rolling average → P1 alert via §34 observability; blocks next deployment until investigated",
+            "CLI: pnpm test:golden:nightly (manual trigger) or scheduled job (REQ-GOLDEN-043)",
+            "Quality gate philosophy (REQ-GOLDEN-051): regression safety net, NOT a substitute for unit/integration/type tests, NOT a development blocker"
+          ],
+          "inputs": [
+            "GoldenTestCase JSONs",
+            "Real LLMAdapter (Anthropic/OpenAI)",
+            "7-day rolling score history"
+          ],
+          "outputs": [
+            "Refreshed test/fixtures/llm-responses/ cache for fast mode",
+            "Aggregate TP/FP scores",
+            "P1 alert via §34 observability on >10% drop",
+            "Deployment block until investigated"
+          ],
+          "dependencies": [
+            {"type": "interface", "name": "Real LLMAdapter", "reason": "Anthropic/OpenAI calls"},
+            {"type": "service", "name": "Scheduler (BullMQ/cron)", "reason": "2am UTC trigger"},
+            {"type": "service", "name": "§34 observability alerting", "reason": "P1 alert channel"}
+          ],
+          "internal_architecture": {
+            "summary": "Scheduled real-LLM run of all golden tests that refreshes the fast-mode cache and watches for prompt/model drift via 7-day rolling baseline.",
+            "components": [
+              {"name": "Nightly scheduler", "role": "2am UTC cron"},
+              {"name": "Real-LLM runner", "role": "Executes pipeline against real Anthropic/OpenAI"},
+              {"name": "Cache refresher", "role": "Saves responses to test/fixtures/llm-responses/"},
+              {"name": "Drift detector", "role": "Compares aggregate score to 7-day rolling avg"}
+            ],
+            "internal_flow": [
+              "2am UTC: run all golden tests with real LLM",
+              "Compute aggregate TP/FP",
+              "Save responses to fast-mode cache",
+              "Compare to 7-day rolling baseline",
+              "If drop > 10%, fire P1 alert and block next deployment"
+            ]
+          },
+          "why_matters": "Catches prompt-quality regressions and model drift that fast mode cannot see, while keeping fast-mode cache fresh.",
+          "example": "Sonnet model update silently changes critique behavior; nightly TP rate drops from 84% to 71% (>10% drop), P1 alert fires, deployment blocked until prompt or fixtures investigated.",
+          "connected_to": ["GT1", "GT3", "GT4", "OB4"],
+          "source_files": ["docs/specs/final-architecture/36-golden-test-suite.md"]
+        }
+      ]
+    },
+    "32": {
+      "layerLabel": "Context Capture",
+      "nodes": [
+        {
+          "id": "CC1",
+          "label": "ContextProfile",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 32,
+          "layerLabel": "Context Capture",
+          "purpose": "Immutable 5-dimension profile with per-field {value, source, confidence}, hash for §25 reproducibility.",
+          "what_happens": [
+            "ContextProfile is the typed output: meta (captured_at, capture_method, user_provided_fields[], inferred_fields[], overall_confidence, perception_layer_version), 5 dimensions, open_questions[], hash (REQ-CONTEXT-OUT-* shape)",
+            "Each dimension field carries { value, source: ContextSource, confidence: number }",
+            "Immutable after capture (Object.freeze); consumers needing derived views produce a new artifact (REQ-CONTEXT-OUT-003)",
+            "hash = SHA-256 of profile content for §25 reproducibility integration (REQ-CONTEXT-REPRO-001)",
+            "Pinned into ReproducibilitySnapshot via context_profile_id, context_profile_hash, context_capture_layer_version"
+          ],
+          "inputs": [
+            "AuditRequest with optional intake fields",
+            "URL + optional HTML fetch outputs",
+            "Inference signal extractions"
+          ],
+          "outputs": [
+            "Immutable ContextProfile object",
+            "context_profile_hash for §25"
+          ],
+          "dependencies": [
+            {"type": "interface", "name": "Zod schema for ContextProfile", "reason": "Validation at boundary"},
+            {"type": "data", "name": "context_profiles table (§13)", "reason": "Inline storage (~5KB)"},
+            {"type": "service", "name": "§25 ReproducibilitySnapshot", "reason": "Hash pinning"}
+          ],
+          "internal_architecture": {
+            "summary": "Frozen typed object with 5 dimensions, per-field provenance, open questions, and a content hash for reproducibility.",
+            "components": [
+              {"name": "ContextProfile interface", "role": "Top-level typed shape"},
+              {"name": "BusinessDimension / PageDimension / AudienceDimension / TrafficDimension / GoalDimension", "role": "5 dimension subtrees"},
+              {"name": "open_questions[]", "role": "Low-confidence prompts (blocking flag)"},
+              {"name": "hash", "role": "SHA-256 over normalized content"}
+            ],
+            "internal_flow": [
+              "Pipeline assembles dimension values + provenance",
+              "Open questions emitted for low-confidence fields",
+              "Profile hashed and Object.frozen",
+              "Persisted in context_profiles table; pinned in ReproducibilitySnapshot"
+            ]
+          },
+          "why_matters": "Every audit decision now traces back to context with explicit provenance — no silent assumptions, fully reproducible.",
+          "example": "ContextProfile for /pricing page: business.archetype = { value: 'SaaS', source: 'schema_org', confidence: 0.92 }; goal.primary_kpi = { value: 'trial_start', source: 'user', confidence: 1 }; hash = sha256:abc123...",
+          "connected_to": ["CC2", "CC3", "CC4", "CC5", "CC6"],
+          "source_files": ["docs/specs/final-architecture/37-context-capture-layer.md"]
+        },
+        {
+          "id": "CC2",
+          "label": "6 ContextSources",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 32,
+          "layerLabel": "Context Capture",
+          "purpose": "Per-field provenance enum: user, url_pattern, schema_org, copy_inference, layout_inference, default.",
+          "what_happens": [
+            "ContextSource enum identifies origin of every field value (REQ-CONTEXT-OUT-001 implicit shape)",
+            "Six values: user (explicit intake), url_pattern (URL parsing), schema_org (JSON-LD/Schema.org parsing), copy_inference (CTA/copy patterns), layout_inference (HTML structure heuristics), default (enum default with confidence 0)",
+            "Recorded per field in dimension subtrees alongside value + confidence",
+            "MUST NOT silently guess (Constitution R25 / REQ-CONTEXT-BOUND-001 §3): every inference records source + confidence"
+          ],
+          "inputs": [
+            "Field-level inference outcomes",
+            "User intake answers"
+          ],
+          "outputs": [
+            "ContextSource value attached to each ContextProfile field",
+            "meta.user_provided_fields[] + meta.inferred_fields[] dot-paths"
+          ],
+          "dependencies": [
+            {"type": "data", "name": "ContextProfile field shape", "reason": "Source attached per field"},
+            {"type": "interface", "name": "Constitution R25", "reason": "MUST NOT silently guess"}
+          ],
+          "internal_architecture": {
+            "summary": "Type-level enum embedded in every dimension field record, enabling auditing of how each context value was determined.",
+            "components": [
+              {"name": "ContextSource type", "role": "6-value enum"},
+              {"name": "Field provenance writer", "role": "Stamps source on each value"}
+            ],
+            "internal_flow": [
+              "Each inference rule emits (value, source, confidence)",
+              "Writer attaches all three to dimension field",
+              "meta dot-paths track which fields came from user vs inference"
+            ]
+          },
+          "why_matters": "Provenance lets consultants instantly tell which context values were entered vs inferred, controlling trust appropriately.",
+          "example": "page.type = { value: 'PDP', source: 'url_pattern', confidence: 0.95 } vs goal.primary_kpi = { value: 'purchase', source: 'user', confidence: 1 }.",
+          "connected_to": ["CC1", "CC4"],
+          "source_files": ["docs/specs/final-architecture/37-context-capture-layer.md"]
+        },
+        {
+          "id": "CC3",
+          "label": "5 Dimensions Detail",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 32,
+          "layerLabel": "Context Capture",
+          "purpose": "Business / Page / Audience / Traffic / Goal — fields, enum domains, regulated-vertical constraint requirement, per-phase scope.",
+          "what_happens": [
+            "Business dimension: archetype (D2C|marketplace|SaaS|subscription|B2B|enterprise|lead_gen|service), aov_tier (low|mid|high|enterprise), cadence (one_time|repeat|subscription|considered|contract), vertical (REQ-CONTEXT-DIM-BUSINESS-001)",
+            "Page dimension: type (home|PLP|PDP|cart|checkout|post_purchase|category|landing|blog|about|pricing|comparison), funnel_stage (awareness|consideration|decision|retention), job (educate|convert|reassure|upsell|recover|retain|qualify|route), is_indexed (REQ-CONTEXT-DIM-PAGE-001)",
+            "Audience dimension: buyer (consumer|prosumer|SMB|mid_market|enterprise|technical|non_technical), awareness_level (Schwartz unaware→most_aware) (Phase 13b), decision_style (impulse|researched|committee|habitual) (Phase 13b), sophistication (REQ-CONTEXT-DIM-AUDIENCE-001)",
+            "Traffic dimension: primary_sources[] {channel, share?, creative_or_message?}, device_priority (mobile|desktop|balanced), mobile_share, geo_primary (Phase 13b), locale_primary (Phase 13b) (REQ-CONTEXT-DIM-TRAFFIC-001)",
+            "Goal dimension: primary_kpi (REQUIRED; REQ-CONTEXT-DIM-GOAL-002), secondary_kpis, current_baseline, target_lift, constraints { regulatory, accessibility (WCAG_AA|WCAG_AAA|none), brand, technical }",
+            "Constraints REQUIRED for regulated verticals (pharma, fintech, gambling, healthcare, legal); validator rejects missing regulatory list (REQ-CONTEXT-DIM-GOAL-003)"
+          ],
+          "inputs": [
+            "AuditRequest intake fields",
+            "URL + HTML signals",
+            "Inference rules"
+          ],
+          "outputs": [
+            "5 typed dimension subtrees on ContextProfile",
+            "Validation rejections for missing required fields"
+          ],
+          "dependencies": [
+            {"type": "data", "name": "ContextProfile schema", "reason": "Container for dimensions"},
+            {"type": "service", "name": "AuditRequest validator", "reason": "Enforces primary_kpi + regulated-vertical constraints"}
+          ],
+          "internal_architecture": {
+            "summary": "Five dimension subtrees with strict enum domains, per-field provenance, and Phase 4b vs Phase 13b scoping.",
+            "components": [
+              {"name": "BusinessDimension", "role": "archetype/aov_tier/cadence/vertical"},
+              {"name": "PageDimension", "role": "type/funnel_stage/job/is_indexed"},
+              {"name": "AudienceDimension", "role": "buyer/awareness_level/decision_style/sophistication"},
+              {"name": "TrafficDimension", "role": "primary_sources/device_priority/mobile_share/geo/locale"},
+              {"name": "GoalDimension", "role": "primary_kpi/secondary_kpis/baseline/target_lift/constraints"}
+            ],
+            "internal_flow": [
+              "Each dimension assembled from intake + inference",
+              "Required fields validated (primary_kpi, regulatory constraints when vertical regulated)",
+              "Dimension subtrees attached to ContextProfile"
+            ]
+          },
+          "why_matters": "Dimensions are the substrate for heuristic selection (and Phase 13b weight modifiers) — context-aware analysis vs generic checklist.",
+          "example": "B2B + checkout + high AOV → trust-badge heuristic weight modifier 1.8; D2C + PDP + low AOV → 0.6 (Phase 13b illustration).",
+          "connected_to": ["CC1", "CC2", "CC6", "CC7"],
+          "source_files": ["docs/specs/final-architecture/37-context-capture-layer.md"]
+        },
+        {
+          "id": "CC4",
+          "label": "Inference Pipeline Order",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 32,
+          "layerLabel": "Context Capture",
+          "purpose": "JSON-LD @type > pricing patterns > CTA copy > domain TLD > price magnitude. Single GET via undici, cheerio parse, robots.txt + 5s timeout.",
+          "what_happens": [
+            "Inference signal ordering for business archetype (REQ-CONTEXT-DIM-BUSINESS-001 ordered list): 1) JSON-LD @type, 2) pricing patterns (/mo, per user, free shipping, book a demo), 3) CTA copy (Add to cart, Request demo, Start free trial, Get a quote), 4) Domain TLD + naming, 5) Price points (≥$1K without ATC → considered or B2B)",
+            "Capture flow (§37.3): receive AuditRequest → parse URL (cheap, high confidence) → optional HTML fetch (cheerio, no JS) → run inference per dimension → identify low-confidence fields → build open_questions → halt if blocking → merge user answers → finalize",
+            "Fetch policy (REQ-CONTEXT-FLOW-001): single GET via undici/node-fetch (no Playwright); realistic User-Agent (per §11.1.1); respect robots.txt (REQ-SAFETY-005); 5s timeout; degrade to URL-only on failure; cache by URL+ETag for re-runs; emit CONTEXT_FETCH_FAILED warning on failure",
+            "HTML parse via cheerio or linkedom; no JSDOM, no JS execution (REQ-CONTEXT-FLOW-002)",
+            "JSON-LD parse via jsonld package extracting @type, name, offers, description"
+          ],
+          "inputs": [
+            "AuditRequest.url",
+            "Optional HTML body (5s timeout fetch)",
+            "JSON-LD blocks",
+            "robots.txt + ETag cache"
+          ],
+          "outputs": [
+            "Per-dimension inferred values with source + confidence",
+            "CONTEXT_FETCH_FAILED warning when HTML fetch fails"
+          ],
+          "dependencies": [
+            {"type": "service", "name": "undici / node-fetch", "reason": "Single GET request"},
+            {"type": "service", "name": "cheerio / linkedom", "reason": "HTML parse without JS"},
+            {"type": "service", "name": "jsonld package", "reason": "JSON-LD extraction"},
+            {"type": "interface", "name": "REQ-SAFETY-005 robots.txt", "reason": "Safe fetch"}
+          ],
+          "internal_architecture": {
+            "summary": "Lightweight pre-perception extractor: URL parse, optional one-shot HTML fetch, cheerio + JSON-LD parse, then ordered inference rules per dimension.",
+            "components": [
+              {"name": "URL parser", "role": "Page-type candidate from path segments"},
+              {"name": "HTML fetcher (undici)", "role": "Single GET, 5s timeout, robots-respecting"},
+              {"name": "Cheerio/linkedom parser", "role": "Static HTML parse, no JS"},
+              {"name": "JSON-LD extractor", "role": "Highest-confidence signals"},
+              {"name": "Ordered inference rules", "role": "Schema > pricing > CTA > TLD > price magnitude"}
+            ],
+            "internal_flow": [
+              "Parse URL for page-type candidate",
+              "Fetch HTML once (cache by URL+ETag)",
+              "Extract JSON-LD @type → highest-priority signal",
+              "Apply pricing-pattern, CTA-copy, TLD, and price-magnitude inferences in order",
+              "Emit (value, source, confidence) per dimension field",
+              "Degrade gracefully on fetch failure"
+            ]
+          },
+          "why_matters": "Strong signals (Schema.org) trump weak ones (TLD), and the layer never executes JS, keeping it cheap, safe, and reproducible.",
+          "example": "Site with JSON-LD @type=SoftwareApplication beats a /shop subdomain hint; archetype resolved to SaaS with confidence 0.92 from schema_org.",
+          "connected_to": ["CC1", "CC2", "CC3", "CC5"],
+          "source_files": ["docs/specs/final-architecture/37-context-capture-layer.md"]
+        },
+        {
+          "id": "CC5",
+          "label": "Confidence Thresholds",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 32,
+          "layerLabel": "Context Capture",
+          "purpose": "≥0.9 act; 0.6–0.9 use + flag in report; <0.6 emit as open_question (blocking when field is required).",
+          "what_happens": [
+            "Confidence thresholds (REQ-CONTEXT-OUT-001): >=0.9 act on the value, no clarification needed; 0.6-0.9 use the value but flag in final report; <0.6 emit as open_question (becomes blocking if field is required)",
+            "blocking: true on an open_question means analysis CANNOT proceed without an answer (REQ-CONTEXT-OUT-002)",
+            "Audit halts at audit_setup and surfaces the question via CLI prompt (Phase 4b) or dashboard form (Phase 13b)",
+            "Tie-in with CC6 blocking gate"
+          ],
+          "inputs": [
+            "Per-field confidence value from inference",
+            "Required-field flag (e.g., goal.primary_kpi)"
+          ],
+          "outputs": [
+            "Action decision: act / use+flag / open_question",
+            "open_questions[] entries with blocking flag"
+          ],
+          "dependencies": [
+            {"type": "data", "name": "ContextProfile field { confidence }", "reason": "Threshold input"},
+            {"type": "service", "name": "CLI prompt (Phase 4b) / dashboard form (Phase 13b)", "reason": "Question surfacing"}
+          ],
+          "internal_architecture": {
+            "summary": "Three-band threshold classifier converting confidence numbers into action / flag / question outcomes.",
+            "components": [
+              {"name": "Threshold classifier", "role": "Three bands: >=0.9, 0.6-0.9, <0.6"},
+              {"name": "open_question emitter", "role": "Adds entry to ContextProfile.open_questions"},
+              {"name": "Required-field map", "role": "Determines blocking flag"}
+            ],
+            "internal_flow": [
+              "Compute confidence per field",
+              "Classify into one of three bands",
+              "If <0.6, emit open_question; set blocking when required",
+              "If 0.6-0.9, mark for final-report flag",
+              "If >=0.9, proceed silently"
+            ]
+          },
+          "why_matters": "Confidence-driven gating turns 'silent guesses' into either acceptable defaults or explicit clarifications — no quietly wrong audits.",
+          "example": "Inferred page.type=PDP confidence 0.55 → open_question 'Is this a product detail page?'; if blocking, audit halts at setup until answered.",
+          "connected_to": ["CC1", "CC4", "CC6"],
+          "source_files": ["docs/specs/final-architecture/37-context-capture-layer.md"]
+        },
+        {
+          "id": "CC6",
+          "label": "Blocking Gate",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 32,
+          "layerLabel": "Context Capture",
+          "purpose": "Halts audit_setup on missing primary_kpi or required regulatory constraints; runs BEFORE perception per Constitution R25.",
+          "what_happens": [
+            "primary_kpi REQUIRED (REQ-CONTEXT-DIM-GOAL-002) — AuditRequest validation rejects audits without it",
+            "Constraints REQUIRED for regulated verticals (REQ-CONTEXT-DIM-GOAL-003): validator checks business.vertical against regulated list (pharma, fintech, gambling, healthcare, legal); if matched, constraints.regulatory MUST be non-empty",
+            "blocking: true on any open_question halts analysis at audit_setup until answered (REQ-CONTEXT-OUT-002)",
+            "This layer runs BEFORE perception (no headless browser, no state graph) — gates the audit on context certainty (§37.0)",
+            "Architectural boundaries (REQ-CONTEXT-BOUND-001 / Constitution R25): MUST NOT run perception, MUST NOT make heuristic judgments, MUST NOT silently guess, MUST NOT skip clarification, MUST NOT mutate page state, MUST NOT assume traffic without user input"
+          ],
+          "inputs": [
+            "ContextProfile draft with open_questions[]",
+            "AuditRequest intake fields",
+            "Regulated-vertical list"
+          ],
+          "outputs": [
+            "Halt signal at audit_setup (CLI prompt or dashboard form)",
+            "Validation rejection with reason",
+            "Permission to proceed once answered"
+          ],
+          "dependencies": [
+            {"type": "service", "name": "AuditRequest validator", "reason": "Required-field rejection"},
+            {"type": "service", "name": "Audit setup orchestration", "reason": "Halt + resume flow"},
+            {"type": "interface", "name": "Constitution R25", "reason": "MUST NOT discipline"}
+          ],
+          "internal_architecture": {
+            "summary": "Pre-perception gate that rejects audits without primary_kpi or required regulatory constraints, and surfaces blocking open_questions before any analysis runs.",
+            "components": [
+              {"name": "Required-field validator", "role": "primary_kpi must be present"},
+              {"name": "Regulated-vertical checker", "role": "Forces non-empty regulatory[]"},
+              {"name": "Blocking-question surfacer", "role": "CLI prompt or dashboard form"}
+            ],
+            "internal_flow": [
+              "Run validator on AuditRequest + draft ContextProfile",
+              "If missing primary_kpi → reject",
+              "If regulated vertical and empty regulatory → reject",
+              "If any blocking open_question → halt, surface to user",
+              "On answer, merge into ContextProfile and proceed"
+            ]
+          },
+          "why_matters": "Forces context certainty up front so downstream perception/heuristic work isn't built on silent assumptions or compliance violations.",
+          "example": "User triggers audit on /checkout but omits primary_kpi → audit_setup rejects; user adds primary_kpi='purchase', audit proceeds.",
+          "connected_to": ["CC1", "CC3", "CC5"],
+          "source_files": ["docs/specs/final-architecture/37-context-capture-layer.md"]
+        },
+        {
+          "id": "CC7",
+          "label": "Phase 13b Additions",
+          "part": "D",
+          "partLabel": "Cross-Cutting",
+          "layer": 32,
+          "layerLabel": "Context Capture",
+          "purpose": "Schwartz awareness levels, message-match per traffic source, decision_style, geo+locale, weight modifiers; Constitution R25 MUST NOT list.",
+          "what_happens": [
+            "Phase 13b additions to context capture (§37.8 phase mapping)",
+            "Schwartz awareness levels: unaware → problem_aware → solution_aware → product_aware → most_aware (REQ-CONTEXT-DIM-AUDIENCE-001 Phase 13b)",
+            "Message-match field per traffic source: creative_or_message captures ad copy, email subject, referrer expectation (REQ-CONTEXT-DIM-TRAFFIC-001 Phase 13b) — highest-impact CRO context most audits miss",
+            "decision_style inference: impulse | researched | committee | habitual (Phase 13b)",
+            "is_indexed (SEO vs paid landing) — distinct heuristic sets",
+            "Geo + locale formal capture (geo_primary ISO country, locale_primary BCP-47) — EU GDPR / CA CCPA / BR LGPD binding",
+            "Heuristic weight modifiers (REQ-CONTEXT-DOWNSTREAM-002): heuristic.weight_for(ctx) = base_weight * business_modifier * page_modifier * goal_modifier — context-aware analysis vs generic checklist",
+            "Constitution R25 MUST NOT list (REQ-CONTEXT-BOUND-001): MUST NOT run perception, make heuristic judgments, silently guess, skip clarification, mutate page state, assume traffic without user input",
+            "Dashboard intake form (Phase 13b) replaces CLI prompt for non-CLI audits",
+            "Weight modifiers explicitly deferred from Phase 4b — calibration data needed first"
+          ],
+          "inputs": [
+            "Phase 4b ContextProfile baseline",
+            "Calibration data from Phases 4-12",
+            "Dashboard intake responses"
+          ],
+          "outputs": [
+            "Extended audience + traffic + page dimensions",
+            "Heuristic weight modifiers",
+            "Dashboard-driven ContextProfile capture",
+            "ReproducibilitySnapshot context_profile_hash pinning"
+          ],
+          "dependencies": [
+            {"type": "service", "name": "Phase 4b ContextProfile baseline", "reason": "Foundation to extend"},
+            {"type": "data", "name": "Calibration data", "reason": "Required before weight modifiers"},
+            {"type": "interface", "name": "Constitution R25", "reason": "MUST NOT discipline preserved"},
+            {"type": "service", "name": "§25 ReproducibilitySnapshot", "reason": "Hash pinning Phase 13b"}
+          ],
+          "internal_architecture": {
+            "summary": "Phase 13b extension layer that adds Schwartz awareness, message-match, decision style, geo/locale, and heuristic weight modifiers atop the Phase 4b baseline.",
+            "components": [
+              {"name": "Awareness level inferer (Schwartz)", "role": "5-stage classifier"},
+              {"name": "Message-match capturer", "role": "Per-traffic-source creative/copy"},
+              {"name": "Decision style classifier", "role": "impulse/researched/committee/habitual"},
+              {"name": "Geo + locale extractor", "role": "ISO country + BCP-47"},
+              {"name": "Weight modifier engine", "role": "business * page * goal multipliers"},
+              {"name": "Dashboard intake form", "role": "Replaces CLI prompt"}
+            ],
+            "internal_flow": [
+              "Awaits Phase 4b baseline + calibration data",
+              "Adds Phase 13b dimensions to ContextProfile",
+              "Computes heuristic weight modifiers from context",
+              "Surfaces dashboard intake form for non-CLI audits"
+            ]
+          },
+          "why_matters": "Turns generic findings into context-aware priorities — the same heuristic earns 1.8x weight on a B2B high-AOV checkout vs 0.6x on a D2C low-AOV PDP.",
+          "example": "Trust-badge heuristic base_weight=0.5 → B2B + checkout + high AOV → modifier 1.8 → final 0.9; D2C + PDP + low AOV → modifier 0.6 → final 0.3.",
+          "connected_to": ["CC1", "CC3"],
+          "source_files": ["docs/specs/final-architecture/37-context-capture-layer.md"]
+        }
+      ]
+    },
+    "33": {
+      "layerLabel": "Post-Master Roadmap",
+      "nodes": [
+        {
+          "id": "RM1",
+          "label": "FixGenerator",
+          "part": "D",
+          "partLabel": "Post-Master Roadmap",
+          "layer": 33,
+          "layerLabel": "Post-Master Roadmap",
+          "purpose": "Future system that generates full HTML/CSS/JS variations across frameworks — extends VariationIdeaGenerator from DRAFT snippets to runnable code.",
+          "what_happens": [
+            "Roadmap concept — no implementation spec yet",
+            "Would extend VariationIdeaGenerator's DRAFT snippets into complete HTML/CSS/JS variations runnable in production",
+            "Named as a future interface in §01 system identity and §17 context preservation"
+          ],
+          "inputs": [
+            "Grounded finding + variation idea (DRAFT snippet) from §07/§17"
+          ],
+          "outputs": [
+            "Production-quality HTML/CSS/JS variation code"
+          ],
+          "dependencies": [],
+          "internal_architecture": {
+            "summary": "Post-Master roadmap. No spec yet.",
+            "components": [],
+            "internal_flow": ["Awaits spec authoring"]
+          },
+          "why_matters": "Closes the loop from finding to deployable code, dramatically reducing the engineering distance between recommendation and experiment.",
+          "example": "Future: a finding 'CTA contrast too low' yields a complete CSS patch + JS hook ready to drop into the client's site without consultant rewriting.",
+          "connected_to": ["HP3"],
+          "source_files": [
+            "docs/specs/final-architecture/01-system-identity.md",
+            "docs/specs/final-architecture/17-context-preservation.md"
+          ],
+          "is_roadmap": true
+        },
+        {
+          "id": "RM2",
+          "label": "ABTestGenerator",
+          "part": "D",
+          "partLabel": "Post-Master Roadmap",
+          "layer": 33,
+          "layerLabel": "Post-Master Roadmap",
+          "purpose": "Future system that writes test definitions to Optimizely / VWO / Convert / Adobe Target — extends AnalyticsProviderAdapter from read to write.",
+          "what_happens": [
+            "Roadmap concept — no implementation spec yet",
+            "Would extend AnalyticsProviderAdapter from read-only ingestion to write-direction test creation",
+            "Targets Optimizely, VWO, Convert, Adobe Target",
+            "Named as a future interface in §01 system identity and §17 context preservation"
+          ],
+          "inputs": [
+            "Grounded finding + variation hypothesis",
+            "Target test platform credentials (Optimizely/VWO/Convert/Adobe Target)"
+          ],
+          "outputs": [
+            "Provider-native test definition created via API write call",
+            "Test ID + URL for tracking"
+          ],
+          "dependencies": [],
+          "internal_architecture": {
+            "summary": "Post-Master roadmap. No spec yet.",
+            "components": [],
+            "internal_flow": ["Awaits spec authoring"]
+          },
+          "why_matters": "Removes a major manual step in the audit-to-experiment pipeline, turning Neural deliverables directly into running tests.",
+          "example": "Future: a finding's variation hypothesis is published as an Optimizely Web experiment with traffic allocation, audiences, and goal events pre-configured.",
+          "connected_to": ["AB3"],
+          "source_files": [
+            "docs/specs/final-architecture/01-system-identity.md",
+            "docs/specs/final-architecture/17-context-preservation.md"
+          ],
+          "is_roadmap": true
+        },
+        {
+          "id": "RM3",
+          "label": "DesignRecommender",
+          "part": "D",
+          "partLabel": "Post-Master Roadmap",
+          "layer": 33,
+          "layerLabel": "Post-Master Roadmap",
+          "purpose": "Future system producing Figma plugin output + design mockup generation — visual variations to complement code variations.",
+          "what_happens": [
+            "Roadmap concept — no implementation spec yet",
+            "Would emit Figma plugin payloads + generated design mockups for findings",
+            "Pairs with FixGenerator (RM1) so designers and engineers receive parallel artifacts",
+            "Named as a future interface in §01 system identity and §17 context preservation"
+          ],
+          "inputs": [
+            "Grounded finding + variation idea",
+            "Design tokens from RM4 (typography/color/spacing)"
+          ],
+          "outputs": [
+            "Figma plugin payload (frames, components)",
+            "Rendered design mockup image"
+          ],
+          "dependencies": [],
+          "internal_architecture": {
+            "summary": "Post-Master roadmap. No spec yet.",
+            "components": [],
+            "internal_flow": ["Awaits spec authoring"]
+          },
+          "why_matters": "Gives design teams a starting artifact aligned with the same finding the engineers receive, accelerating cross-team adoption.",
+          "example": "Future: a finding about hero-section hierarchy yields a Figma frame proposing a redesigned headline + image stack ready for design review.",
+          "connected_to": ["HP3", "RM1"],
+          "source_files": [
+            "docs/specs/final-architecture/01-system-identity.md",
+            "docs/specs/final-architecture/17-context-preservation.md"
+          ],
+          "is_roadmap": true
+        },
+        {
+          "id": "RM4",
+          "label": "Design Token Extractor",
+          "part": "D",
+          "partLabel": "Post-Master Roadmap",
+          "layer": 33,
+          "layerLabel": "Post-Master Roadmap",
+          "purpose": "Future system that crawls a site to extract typography / color / spacing tokens, feeding DesignRecommender for on-brand mockups.",
+          "what_happens": [
+            "Roadmap concept — no implementation spec yet",
+            "Would crawl pages to detect font families/sizes, color palettes, spacing scales, and component primitives",
+            "Outputs structured design tokens consumed by DesignRecommender (RM3)"
+          ],
+          "inputs": [
+            "Site root URL + crawl scope"
+          ],
+          "outputs": [
+            "Typography tokens (families, sizes, weights)",
+            "Color tokens (primary, secondary, neutral palette)",
+            "Spacing tokens (scale)"
+          ],
+          "dependencies": [],
+          "internal_architecture": {
+            "summary": "Post-Master roadmap. No spec yet.",
+            "components": [],
+            "internal_flow": ["Awaits spec authoring"]
+          },
+          "why_matters": "Without tokens, design recommendations look generic; with them, mockups feel native to the client's existing brand system.",
+          "example": "Future: extractor crawls client.com and emits { font.heading: 'Inter 600', color.primary: '#FF6600', space.unit: 8 } feeding RM3.",
+          "connected_to": ["RM3"],
+          "source_files": [],
+          "is_roadmap": true
+        },
+        {
+          "id": "RM5",
+          "label": "Heatmap Quantitative Layer",
+          "part": "D",
+          "partLabel": "Post-Master Roadmap",
+          "layer": 33,
+          "layerLabel": "Post-Master Roadmap",
+          "purpose": "Future extension of analytics ingestion — native heatmap visualization + finding correlation, beyond raw ingestion in §30.",
+          "what_happens": [
+            "Roadmap concept — no implementation spec yet",
+            "Would add native heatmap visualizations and overlay them against findings to corroborate UX hypotheses with quantitative behavior",
+            "Extends §30 analytics ingestion conceptually from data pull to data interpretation"
+          ],
+          "inputs": [
+            "Heatmap data from analytics providers (Hotjar/Microsoft Clarity/etc.)",
+            "Grounded findings with on-page coordinates / selectors"
+          ],
+          "outputs": [
+            "Heatmap visualization linked to specific findings",
+            "Quantitative corroboration signal per finding"
+          ],
+          "dependencies": [],
+          "internal_architecture": {
+            "summary": "Post-Master roadmap. No spec yet.",
+            "components": [],
+            "internal_flow": ["Awaits spec authoring"]
+          },
+          "why_matters": "Pairs qualitative heuristic findings with quantitative attention/click data, strengthening the consultant's case to clients.",
+          "example": "Future: a finding 'CTA invisible below fold' is overlaid on a Hotjar scroll-depth heatmap showing 35% bounce above the CTA, making the case data-backed.",
+          "connected_to": ["AB3"],
+          "source_files": [],
+          "is_roadmap": true
+        },
+        {
+          "id": "RM6",
+          "label": "External Heuristic Scraper",
+          "part": "D",
+          "partLabel": "Post-Master Roadmap",
+          "layer": 33,
+          "layerLabel": "Post-Master Roadmap",
+          "purpose": "Future legal scraper of public CRO research, feeding §22 Heuristic Evolution Phase 4 calibration + Learning Service.",
+          "what_happens": [
+            "Roadmap concept — no implementation spec yet",
+            "Would legally scrape public CRO research (Baymard public reports, Nielsen Norman articles, academic papers) for new heuristic candidates",
+            "Feeds §22 Heuristic Evolution Phase 4 calibration pipeline + §28 Learning Service"
+          ],
+          "inputs": [
+            "Curated list of public CRO research sources",
+            "Robots.txt + ToS compliance gate"
+          ],
+          "outputs": [
+            "Candidate heuristic snippets",
+            "Source attribution + confidence",
+            "Queue for human curation in §22"
+          ],
+          "dependencies": [],
+          "internal_architecture": {
+            "summary": "Post-Master roadmap. No spec yet.",
+            "components": [],
+            "internal_flow": ["Awaits spec authoring"]
+          },
+          "why_matters": "Keeps the heuristic library current with the broader CRO research ecosystem instead of relying solely on internal authoring.",
+          "example": "Future: a Baymard public-report excerpt about checkout friction is auto-imported as a draft heuristic candidate, queued for §22 calibration.",
+          "connected_to": ["HE4", "LS1"],
+          "source_files": [],
+          "is_roadmap": true
+        },
+        {
+          "id": "RM7",
+          "label": "JS Framework Variation Adapters",
+          "part": "D",
+          "partLabel": "Post-Master Roadmap",
+          "layer": 33,
+          "layerLabel": "Post-Master Roadmap",
+          "purpose": "Future per-framework code-gen subset of FixGenerator — React, Vue, Svelte, Angular variants of a single variation.",
+          "what_happens": [
+            "Roadmap concept — no implementation spec yet",
+            "Would emit framework-native variation code (React JSX, Vue SFC, Svelte component, Angular component) from a single FixGenerator output",
+            "Subset of FixGenerator (RM1) focused on framework-specific code generation"
+          ],
+          "inputs": [
+            "FixGenerator output (RM1)",
+            "Target framework selector"
+          ],
+          "outputs": [
+            "Framework-native variation code in selected framework"
+          ],
+          "dependencies": [],
+          "internal_architecture": {
+            "summary": "Post-Master roadmap. No spec yet.",
+            "components": [],
+            "internal_flow": ["Awaits spec authoring"]
+          },
+          "why_matters": "Most clients live in one framework — handing them React/Vue/Svelte/Angular code instead of generic HTML cuts integration time.",
+          "example": "Future: a finding's FixGenerator output is rendered as a React component for a client on Next.js, ready to drop into their codebase.",
+          "connected_to": ["RM1"],
+          "source_files": [],
+          "is_roadmap": true
+        }
+      ]
+    }
+  }
+}

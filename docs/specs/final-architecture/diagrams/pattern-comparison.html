@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Engineering Diagram — Pattern Comparison</title>
+
+<!-- Plotly for the baseline -->
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<!-- Mermaid for swimlanes -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+<!-- Cytoscape for force-directed -->
+<script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+
+<style>
+:root{
+  --bg:#f7f8fa;--panel:#ffffff;--text:#0f172a;--muted:#64748b;
+  --border:#e2e8f0;--accent:#2563eb;
+  --c-control:#1F2937;--c-data:#2563EB;--c-evidence:#0D9488;
+  --c-analysis:#7C3AED;--c-report:#16A34A;--c-feedback:#F97316;
+  --c-infra:#9CA3AF;--c-safety:#DC2626;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.55}
+header{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--border);padding:14px 24px;z-index:100;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+header h1{font-size:17px;margin:0;font-weight:600}
+header p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+header nav{display:flex;gap:6px;flex-wrap:wrap}
+header nav a{padding:6px 11px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);text-decoration:none;background:white}
+header nav a:hover{border-color:var(--accent);color:var(--accent)}
+
+.section{max-width:1280px;margin:32px auto;padding:0 24px}
+.section h2{font-size:20px;margin:0 0 4px;font-weight:600}
+.section .lead{color:var(--muted);margin:0 0 18px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:20px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.verdict{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px}
+.verdict>div{flex:1 1 300px;padding:10px 14px;border-radius:8px;font-size:13px}
+.verdict .pro{background:#dcfce7;color:#166534;border-left:3px solid #16a34a}
+.verdict .con{background:#fee2e2;color:#991b1b;border-left:3px solid #dc2626}
+.verdict .at-scale{background:#fef9c3;color:#713f12;border-left:3px solid #ca8a04}
+
+.dataset-card{background:#eff6ff;border-left:3px solid var(--accent);padding:14px 18px;border-radius:6px;font-size:13px;color:#1e3a8a;margin-bottom:24px}
+.dataset-card code{background:rgba(37,99,235,.1);padding:1px 6px;border-radius:3px;font-size:12px}
+
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:8px 0 14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:18px;height:2px}
+
+/* baseline */
+#plot-baseline{height:520px;width:100%;background:white;border:1px solid var(--border);border-radius:8px}
+
+/* C4 overview */
+.c4-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:8px}
+.c4-card{background:white;border:1.5px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:.15s}
+.c4-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,23,42,.08)}
+.c4-card .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;color:white;margin-bottom:8px}
+.c4-card h4{font-size:14px;margin:0 0 6px;font-weight:600}
+.c4-card .scope{color:var(--muted);font-size:12px;margin-bottom:10px}
+.c4-card ul{margin:0;padding-left:16px;font-size:12px;color:#334155}
+.c4-card li{margin:2px 0}
+
+.c4-pipe{margin-top:18px;padding:14px;background:white;border:1px dashed var(--border);border-radius:8px}
+.c4-pipe h4{margin:0 0 8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.c4-pipe-flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;font-size:12px}
+.c4-pipe-flow .stage{padding:6px 11px;background:#f1f5f9;border-radius:6px;font-weight:500}
+.c4-pipe-flow .arrow{color:var(--muted);padding:0 6px;font-size:14px}
+.c4-pipe-flow .stage.active{background:#2563eb;color:white}
+
+.c4-detail-preview{margin-top:18px}
+.c4-detail-preview h4{margin:0 0 6px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.c4-breadcrumb{font-size:12px;color:var(--muted);margin-bottom:8px}
+.c4-breadcrumb b{color:var(--text)}
+#plot-c4-detail{height:340px;width:100%;background:white;border:1px solid var(--border);border-radius:8px}
+
+/* mermaid */
+.mermaid-wrap{background:white;border:1px solid var(--border);border-radius:8px;padding:18px;overflow:auto}
+.mermaid{font-size:13px}
+
+/* cytoscape */
+.cy-controls{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.cy-controls button{padding:6px 12px;border:1px solid var(--border);background:white;border-radius:6px;font-size:12px;cursor:pointer}
+.cy-controls button:hover{border-color:var(--accent);color:var(--accent)}
+#cy{height:520px;width:100%;background:white;border:1px solid var(--border);border-radius:8px}
+
+/* DSM */
+.dsm-wrap{background:white;border:1px solid var(--border);border-radius:8px;padding:14px;overflow:auto}
+.dsm{border-collapse:collapse;font-size:11px}
+.dsm th,.dsm td{border:1px solid #f1f5f9;padding:0;text-align:center;width:30px;height:30px}
+.dsm th{background:#f8fafc;font-weight:500;color:#334155;writing-mode:vertical-rl;transform:rotate(180deg);height:90px;font-size:10px;padding:4px 0;vertical-align:bottom;line-height:1.1;border:1px solid var(--border)}
+.dsm tr th:first-child{writing-mode:horizontal-tb;transform:none;width:auto;text-align:right;padding-right:8px;height:30px;font-size:11px}
+.dsm td.diag{background:#1f2937}
+.dsm td.cell{cursor:default}
+.dsm-legend{margin-top:12px;font-size:12px}
+
+/* subway sketch */
+.subway-svg{display:block;width:100%;max-width:1100px;margin:0 auto;background:white;border:1px solid var(--border);border-radius:8px}
+
+/* compare summary */
+.compare-table{width:100%;border-collapse:collapse;background:white;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:13px}
+.compare-table th,.compare-table td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.compare-table th{background:#f8fafc;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#475569}
+.compare-table tr:last-child td{border-bottom:none}
+.compare-table .pick{background:#dcfce7}
+
+.recommend{background:#dcfce7;border-left:3px solid #16a34a;padding:14px 18px;border-radius:6px;margin-top:18px;font-size:13.5px}
+.recommend b{color:#166534}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Engineering diagram — pattern comparison</h1>
+    <p>5 candidate patterns rendered with the same 16-node subset · scroll to compare · pick one to proceed</p>
+  </div>
+  <nav>
+    <a href="#baseline">1. Baseline</a>
+    <a href="#c4">2. C4 drill-down</a>
+    <a href="#subway">3. Subway map</a>
+    <a href="#mermaid">4. Mermaid swimlanes</a>
+    <a href="#cyto">5. Force-directed (collapsible)</a>
+    <a href="#dsm">6. DSM matrix</a>
+    <a href="#summary">→ Summary</a>
+  </nav>
+</header>
+
+<div class="section">
+  <div class="dataset-card">
+    <b>Common dataset shown across all patterns:</b>
+    16 representative nodes drawn from across Parts A &amp; D of the real architecture
+    (<code>T1</code> Trigger Gateway, <code>T2</code> Discovery, <code>O2</code> AuditGraph, <code>O3</code> BrowseGraph,
+    <code>O4</code> AnalyzeGraph, <code>B1</code> MCP Tools, <code>H1</code> Heuristic KB, <code>A5</code> Annotate+Store,
+    <code>I1</code> Findings, <code>I3</code> ActionPlan, <code>SC1</code> Safety, <code>SC2</code> Cost,
+    <code>SC4</code> Temporal, <code>S1</code> Stores, <code>S2</code> R2, <code>S4</code> Events).
+    15 edges span 5 flow types (control, data, analysis, infra, safety).
+    <br><br>
+    <b>The full diagram will have ~145 nodes and ~250+ edges.</b> Each pattern below is judged on how it'd hold up at that scale.
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--c-control)"></i>control</span>
+    <span><i style="background:var(--c-data)"></i>data</span>
+    <span><i style="background:var(--c-analysis)"></i>analysis</span>
+    <span><i style="background:var(--c-infra);border-top:1px dotted #6b7280"></i>infra</span>
+    <span><i style="background:var(--c-safety)"></i>safety</span>
+  </div>
+</div>
+
+<!-- =========================================================
+     1. BASELINE — current Plotly scatter (THE PROBLEM)
+========================================================= -->
+<div class="section" id="baseline">
+  <div class="card">
+    <h2>1. Baseline — the current Plotly scatter pattern</h2>
+    <p class="lead">This is what's used in <code>architecture-business.html</code>. Rendered here with only 16 nodes — already busy.</p>
+    <div id="plot-baseline"></div>
+    <div class="verdict">
+      <div class="pro"><b>Strength:</b> Same code as business view. All info visible. Click → drawer works as expected.</div>
+      <div class="con"><b>Weakness:</b> Edges cross in shared 2D plane. No visual hierarchy beyond layer color tint.</div>
+      <div class="at-scale"><b>At 145 nodes &amp; 250 edges:</b> Becomes a hairball. Engineers can't follow a single flow without aggressive filtering. <b>This is the "neural network" feel you flagged.</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     2. C4 DRILL-DOWN
+========================================================= -->
+<div class="section" id="c4">
+  <div class="card">
+    <h2>2. Pattern A — C4-style drill-down</h2>
+    <p class="lead">3 levels of zoom: 4-Part overview → one Part detail → component drawer. Engineer never sees 145 nodes at once.</p>
+
+    <div class="c4-pipe">
+      <h4>Audit lifecycle (always visible at top)</h4>
+      <div class="c4-pipe-flow">
+        <span class="stage active">Trigger</span>
+        <span class="arrow">→</span>
+        <span class="stage">Discovery</span>
+        <span class="arrow">→</span>
+        <span class="stage">Browse</span>
+        <span class="arrow">→</span>
+        <span class="stage">Analyze</span>
+        <span class="arrow">→</span>
+        <span class="stage">Cross-Page</span>
+        <span class="arrow">→</span>
+        <span class="stage">Review Gate</span>
+        <span class="arrow">→</span>
+        <span class="stage">Deliver</span>
+      </div>
+    </div>
+
+    <div class="c4-grid" style="margin-top:14px">
+      <div class="c4-card" onclick="alert('In production this would load the Part A detail view (~85 nodes, isolated).')" style="border-left:3px solid #2563EB">
+        <div class="badge" style="background:#2563EB">Part A</div>
+        <h4>Agent Internals</h4>
+        <div class="scope">§01–§17 · Phases 1–8 (MVP)</div>
+        <ul>
+          <li>Browser agent (10 nodes, 28 tools)</li>
+          <li>Analysis pipeline (5 nodes, 12 GR rules)</li>
+          <li>Heuristic KB (100, tier-filtered)</li>
+          <li>Audit Orchestrator + State + Data</li>
+        </ul>
+      </div>
+      <div class="c4-card" onclick="alert('Part B detail view (~70 nodes).')" style="border-left:3px solid #7C3AED">
+        <div class="badge" style="background:#7C3AED">Part B</div>
+        <h4>Platform Extensions</h4>
+        <div class="scope">§18–§30 · Phases 9–14</div>
+        <ul>
+          <li>Trigger Gateway · Discovery · State Exploration</li>
+          <li>Workflow · Reproducibility · Cost</li>
+          <li>Two-Store · Durable · Learning</li>
+          <li>Hypothesis · Analytics</li>
+        </ul>
+      </div>
+      <div class="c4-card" onclick="alert('Part C detail view (~8 nodes).')" style="border-left:3px solid #C026D3">
+        <div class="badge" style="background:#C026D3">Part C</div>
+        <h4>Agent Composition</h4>
+        <div class="scope">§33, §33a · Phases 10–13</div>
+        <ul>
+          <li>ToolRegistry · SafetyContext</li>
+          <li>EvaluateStrategy (Static + Interactive)</li>
+          <li>BrowserSessionManager</li>
+          <li>HeuristicInteractionTracker</li>
+        </ul>
+      </div>
+      <div class="c4-card" onclick="alert('Part D detail view (~25 nodes).')" style="border-left:3px solid #16A34A">
+        <div class="badge" style="background:#16A34A">Part D</div>
+        <h4>Cross-Cutting</h4>
+        <div class="scope">§34–§37 · Phases 4b, 12–16</div>
+        <ul>
+          <li>Observability (Pino, 22 events, alerts)</li>
+          <li>Report Generation (PDF, ExecSummary)</li>
+          <li>Golden Test Suite</li>
+          <li>Context Capture Layer</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="c4-detail-preview">
+      <h4>↓ Detail view preview (clicking a Part card opens this)</h4>
+      <div class="c4-breadcrumb">Engineering › <b>Part A — Agent Internals</b> › Layers 1–14 (subset shown)</div>
+      <div id="plot-c4-detail"></div>
+    </div>
+
+    <div class="verdict">
+      <div class="pro"><b>Strength:</b> Engineers never see 145 nodes at once. Each view is readable. Standard pattern (C4 model). Drawer schema unchanged.</div>
+      <div class="con"><b>Weakness:</b> Either 5 separate HTML files OR one SPA shell that swaps views via JS. Slightly more navigation friction.</div>
+      <div class="at-scale"><b>At 145 nodes:</b> Each detail view holds 25–85 nodes — Plotly's comfort zone. Cross-Part flow shown only on overview.</div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     3. SUBWAY MAP
+========================================================= -->
+<div class="section" id="subway">
+  <div class="card">
+    <h2>3. Pattern B — Subway / metro map</h2>
+    <p class="lead">Each flow type is a colored "line" routed through stations (components). Trace one line at a time. Mock at 16 nodes:</p>
+
+    <svg class="subway-svg" viewBox="0 0 1100 360" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background -->
+      <rect width="1100" height="360" fill="white"/>
+
+      <!-- Lines (flow types) - drawn first so stations sit on top -->
+      <!-- Control line (gray): T1 → O2 → O3, O2 → O4 -->
+      <path d="M 80 180 Q 180 180 260 180 T 440 180 T 620 130" stroke="#1F2937" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M 440 180 Q 530 180 620 230" stroke="#1F2937" stroke-width="6" fill="none" stroke-linecap="round"/>
+
+      <!-- Data line (blue): T2 → O2, O4 → H1 -->
+      <path d="M 80 100 Q 220 100 440 180" stroke="#2563EB" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="0"/>
+      <path d="M 620 230 Q 720 230 800 130" stroke="#2563EB" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+      <!-- Analysis line (purple): O4 → A5 → I1 → I3 -->
+      <path d="M 620 230 L 800 230 L 920 230 L 1020 230" stroke="#7C3AED" stroke-width="6" fill="none" stroke-linecap="round"/>
+
+      <!-- Infra line (gray dotted): A5 → S1, A5 → S2, O2 → S4 -->
+      <path d="M 800 230 Q 800 290 700 320" stroke="#9CA3AF" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="6 6"/>
+      <path d="M 800 230 Q 800 290 880 320" stroke="#9CA3AF" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="6 6"/>
+      <path d="M 440 180 Q 440 280 540 320" stroke="#9CA3AF" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="6 6"/>
+
+      <!-- Safety line (red): SC1 ← B1, SC2 → O4, SC4 → O2 -->
+      <path d="M 620 130 Q 580 90 530 60" stroke="#DC2626" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M 700 60 Q 660 130 620 230" stroke="#DC2626" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M 320 60 Q 380 110 440 180" stroke="#DC2626" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+      <!-- Stations (circles + labels) -->
+      <g font-family="-apple-system,Segoe UI,Roboto" font-size="11" fill="#0f172a">
+        <!-- Top row -->
+        <circle cx="320" cy="60" r="14" fill="white" stroke="#DC2626" stroke-width="3"/>
+        <text x="320" y="40" text-anchor="middle" font-weight="600">SC4</text>
+        <text x="320" y="90" text-anchor="middle" font-size="10" fill="#64748b">Temporal</text>
+
+        <circle cx="530" cy="60" r="14" fill="white" stroke="#DC2626" stroke-width="3"/>
+        <text x="530" y="40" text-anchor="middle" font-weight="600">SC1</text>
+        <text x="530" y="90" text-anchor="middle" font-size="10" fill="#64748b">Safety</text>
+
+        <circle cx="700" cy="60" r="14" fill="white" stroke="#DC2626" stroke-width="3"/>
+        <text x="700" y="40" text-anchor="middle" font-weight="600">SC2</text>
+        <text x="700" y="90" text-anchor="middle" font-size="10" fill="#64748b">Cost</text>
+
+        <!-- Middle row (the lifecycle) -->
+        <circle cx="80" cy="100" r="14" fill="white" stroke="#2563EB" stroke-width="3"/>
+        <text x="80" y="80" text-anchor="middle" font-weight="600">T2</text>
+        <text x="80" y="125" text-anchor="middle" font-size="10" fill="#64748b">Discovery</text>
+
+        <circle cx="80" cy="180" r="14" fill="white" stroke="#1F2937" stroke-width="3"/>
+        <text x="80" y="160" text-anchor="middle" font-weight="600">T1</text>
+        <text x="80" y="205" text-anchor="middle" font-size="10" fill="#64748b">Trigger</text>
+
+        <circle cx="260" cy="180" r="14" fill="white" stroke="#1F2937" stroke-width="3"/>
+        <text x="260" y="160" text-anchor="middle" font-weight="600">O2</text>
+        <text x="260" y="205" text-anchor="middle" font-size="10" fill="#64748b">AuditGraph</text>
+
+        <circle cx="440" cy="180" r="16" fill="white" stroke="#1F2937" stroke-width="4"/>
+        <text x="440" y="158" text-anchor="middle" font-weight="700">O2</text>
+        <text x="440" y="207" text-anchor="middle" font-size="10" fill="#64748b">router</text>
+
+        <circle cx="620" cy="130" r="14" fill="white" stroke="#1F2937" stroke-width="3"/>
+        <text x="620" y="110" text-anchor="middle" font-weight="600">O3</text>
+        <text x="620" y="155" text-anchor="middle" font-size="10" fill="#64748b">Browse</text>
+
+        <circle cx="620" cy="230" r="14" fill="white" stroke="#7C3AED" stroke-width="3"/>
+        <text x="620" y="210" text-anchor="middle" font-weight="600">O4</text>
+        <text x="620" y="255" text-anchor="middle" font-size="10" fill="#64748b">Analyze</text>
+
+        <circle cx="800" cy="130" r="14" fill="white" stroke="#2563EB" stroke-width="3"/>
+        <text x="800" y="110" text-anchor="middle" font-weight="600">H1</text>
+        <text x="800" y="155" text-anchor="middle" font-size="10" fill="#64748b">Heuristics</text>
+
+        <circle cx="800" cy="230" r="14" fill="white" stroke="#7C3AED" stroke-width="3"/>
+        <text x="800" y="210" text-anchor="middle" font-weight="600">A5</text>
+        <text x="800" y="255" text-anchor="middle" font-size="10" fill="#64748b">Annotate</text>
+
+        <circle cx="920" cy="230" r="14" fill="white" stroke="#7C3AED" stroke-width="3"/>
+        <text x="920" y="210" text-anchor="middle" font-weight="600">I1</text>
+        <text x="920" y="255" text-anchor="middle" font-size="10" fill="#64748b">Findings</text>
+
+        <circle cx="1020" cy="230" r="14" fill="white" stroke="#7C3AED" stroke-width="3"/>
+        <text x="1020" y="210" text-anchor="middle" font-weight="600">I3</text>
+        <text x="1020" y="255" text-anchor="middle" font-size="10" fill="#64748b">ActionPlan</text>
+
+        <!-- Bottom row (storage/observability) -->
+        <circle cx="540" cy="320" r="13" fill="white" stroke="#9CA3AF" stroke-width="3"/>
+        <text x="540" y="345" text-anchor="middle" font-size="10" fill="#64748b">S4 · Events</text>
+
+        <circle cx="700" cy="320" r="13" fill="white" stroke="#9CA3AF" stroke-width="3"/>
+        <text x="700" y="345" text-anchor="middle" font-size="10" fill="#64748b">S1 · Stores</text>
+
+        <circle cx="880" cy="320" r="13" fill="white" stroke="#9CA3AF" stroke-width="3"/>
+        <text x="880" y="345" text-anchor="middle" font-size="10" fill="#64748b">S2 · R2</text>
+
+        <!-- Hidden B1 station bridging tools -->
+        <circle cx="620" cy="60" r="12" fill="white" stroke="#1F2937" stroke-width="2.5"/>
+        <text x="620" y="40" text-anchor="middle" font-weight="600" font-size="10">B1</text>
+        <text x="620" y="85" text-anchor="middle" font-size="9" fill="#64748b">MCP tools</text>
+      </g>
+
+      <!-- Line legend bottom-left -->
+      <g transform="translate(20,20)" font-family="-apple-system,Segoe UI,Roboto" font-size="10" fill="#0f172a">
+        <line x1="0" y1="0" x2="22" y2="0" stroke="#1F2937" stroke-width="4"/>
+        <text x="28" y="3">Control line</text>
+        <line x1="0" y1="14" x2="22" y2="14" stroke="#2563EB" stroke-width="4"/>
+        <text x="28" y="17">Data line</text>
+        <line x1="0" y1="28" x2="22" y2="28" stroke="#7C3AED" stroke-width="4"/>
+        <text x="28" y="31">Analysis line</text>
+        <line x1="0" y1="42" x2="22" y2="42" stroke="#9CA3AF" stroke-width="4" stroke-dasharray="4 3"/>
+        <text x="28" y="45">Infra line</text>
+        <line x1="0" y1="56" x2="22" y2="56" stroke="#DC2626" stroke-width="4"/>
+        <text x="28" y="59">Safety line</text>
+      </g>
+    </svg>
+
+    <div class="verdict">
+      <div class="pro"><b>Strength:</b> The eye traces one colored line at a time. Most beautiful single-image option. Familiar mental model. Wall-poster shareable.</div>
+      <div class="con"><b>Weakness:</b> Hand-laid-out — auto-layout doesn't produce subway-map quality. Each new node = manual SVG editing. High maintenance cost.</div>
+      <div class="at-scale"><b>At 145 nodes:</b> Doable but ~2 weeks of layout tuning. The eye still works because lines stay isolated by color. Best with 5–6 lines max — would need to consolidate flow types.</div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     4. MERMAID SWIMLANES
+========================================================= -->
+<div class="section" id="mermaid">
+  <div class="card">
+    <h2>4. Pattern C/G — Mermaid graph with subgraph clusters</h2>
+    <p class="lead">Text-driven layout. Each layer is a Mermaid <code>subgraph</code>. Auto-routed arrows.</p>
+    <div class="mermaid-wrap">
+      <pre class="mermaid">
+graph TB
+  subgraph TRIGGER["Trigger &amp; Discovery"]
+    T1[T1 · Trigger Gateway]
+    T2[T2 · Discovery Pipeline]
+  end
+  subgraph ORCH["Orchestration"]
+    O2[O2 · AuditGraph Outer]
+    O3[O3 · BrowseGraph]
+    O4[O4 · AnalyzeGraph]
+  end
+  subgraph BROWSE["Browser Agent"]
+    B1[B1 · MCP Tools 28]
+  end
+  subgraph KB["Knowledge"]
+    H1[H1 · Heuristic KB]
+  end
+  subgraph ANALYSIS["Analysis &amp; Findings"]
+    A5[A5 · Annotate + Store]
+    I1[I1 · Findings Engine]
+    I3[I3 · Action Plan]
+  end
+  subgraph SAFETY["Safety / Cost / Durable"]
+    SC1[SC1 · Safety Controls 13]
+    SC2[SC2 · Cost Gates 18]
+    SC4[SC4 · Temporal Durable]
+  end
+  subgraph STORAGE["Storage &amp; Observability"]
+    S1[S1 · Internal/Published]
+    S2[S2 · R2 Storage]
+    S4[S4 · Audit Events]
+  end
+
+  T1 -->|control| O2
+  T2 -->|data| O2
+  O2 -->|control| O3
+  O2 -->|control| O4
+  O3 -->|control| B1
+  O4 -->|data| H1
+  O4 -->|analysis| A5
+  A5 -->|analysis| I1
+  I1 -->|analysis| I3
+  A5 -.infra.-> S1
+  A5 -.infra.-> S2
+  O2 -.infra.-> S4
+  B1 -.safety.-> SC1
+  SC2 -.safety.-> O4
+  SC4 -.safety.-> O2
+
+  classDef trigger fill:#dbeafe,stroke:#2563eb;
+  classDef orch fill:#e0e7ff,stroke:#4f46e5;
+  classDef browse fill:#cffafe,stroke:#0891b2;
+  classDef kb fill:#fef3c7,stroke:#d97706;
+  classDef analysis fill:#f3e8ff,stroke:#9333ea;
+  classDef safety fill:#fee2e2,stroke:#dc2626;
+  classDef storage fill:#f5f5f4,stroke:#78716c;
+
+  class T1,T2 trigger;
+  class O2,O3,O4 orch;
+  class B1 browse;
+  class H1 kb;
+  class A5,I1,I3 analysis;
+  class SC1,SC2,SC4 safety;
+  class S1,S2,S4 storage;
+      </pre>
+    </div>
+    <div class="verdict">
+      <div class="pro"><b>Strength:</b> Text-driven (easy to maintain in git). Auto-layout. Subgraphs visually group concerns. Engineers love Mermaid.</div>
+      <div class="con"><b>Weakness:</b> Auto-layout struggles past ~80 nodes — Mermaid starts overlapping. Click-to-drawer needs custom JS overlay on the SVG. Limited control over node coordinates.</div>
+      <div class="at-scale"><b>At 145 nodes:</b> Will produce a long-but-readable diagram if split into 4 Mermaid blocks (one per Part). Combined with the C4 overview pattern, this is a strong contender.</div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     5. CYTOSCAPE FORCE-DIRECTED + COLLAPSIBLE
+========================================================= -->
+<div class="section" id="cyto">
+  <div class="card">
+    <h2>5. Pattern D — Force-directed graph with collapsible Part groups (Cytoscape.js)</h2>
+    <p class="lead">Each Part is a parent node. Use the buttons to expand / collapse Parts. Drag nodes around. Click any node to log details.</p>
+    <div class="cy-controls">
+      <button onclick="cyExpandAll()">Expand all Parts</button>
+      <button onclick="cyCollapseAll()">Collapse all Parts</button>
+      <button onclick="cyFit()">Fit view</button>
+      <button onclick="cyLayout()">Re-run layout</button>
+    </div>
+    <div id="cy"></div>
+    <div class="verdict">
+      <div class="pro"><b>Strength:</b> User controls density via expand/collapse. Scales to 145+ without showing all at once. Drag-to-rearrange. Strong drill-down feel.</div>
+      <div class="con"><b>Weakness:</b> Force-directed layout can be ugly on first render (jiggly). New library dep. Coordinates aren't deterministic — diagrams differ between sessions.</div>
+      <div class="at-scale"><b>At 145 nodes:</b> Works well IF Parts stay collapsed by default. Expanding all 4 = mild hairball but recoverable via re-layout. Better than baseline.</div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     6. DSM
+========================================================= -->
+<div class="section" id="dsm">
+  <div class="card">
+    <h2>6. Pattern E — Dependency Structure Matrix (DSM)</h2>
+    <p class="lead">Rows = source, columns = target. Cell color = flow type. Zero edge crossings — every relationship is a single cell.</p>
+    <div class="dsm-wrap">
+      <table class="dsm" id="dsm"></table>
+      <div class="dsm-legend legend">
+        <span><i style="background:var(--c-control)"></i>control</span>
+        <span><i style="background:var(--c-data)"></i>data</span>
+        <span><i style="background:var(--c-analysis)"></i>analysis</span>
+        <span><i style="background:var(--c-infra)"></i>infra</span>
+        <span><i style="background:var(--c-safety)"></i>safety</span>
+      </div>
+    </div>
+    <div class="verdict">
+      <div class="pro"><b>Strength:</b> Shows ALL relationships at once with zero edge crossings. Industry-standard for large-scale dependency analysis. Clean at any scale.</div>
+      <div class="con"><b>Weakness:</b> Alien at first glance. Doesn't tell a flow narrative — you can't "read" a story from it. Each cell needs a tooltip for context.</div>
+      <div class="at-scale"><b>At 145 nodes:</b> Becomes a 145×145 grid. Still readable IF Parts/layers are clustered into block-diagonal groups (you'd see "this Part has dense internal coupling, sparse external"). Useful for architects, less so for narrative.</div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     SUMMARY
+========================================================= -->
+<div class="section" id="summary">
+  <div class="card">
+    <h2>Side-by-side summary</h2>
+    <table class="compare-table">
+      <thead><tr>
+        <th>Pattern</th><th>Build cost</th><th>Readability @ 145</th><th>Drill-down</th><th>Maintenance</th><th>Best for</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><b>1. Plotly baseline</b></td>
+          <td>Done</td>
+          <td>❌ Hairball</td>
+          <td>Drawer only</td>
+          <td>Easy</td>
+          <td>≤50 nodes</td>
+        </tr>
+        <tr class="pick">
+          <td><b>2. C4 drill-down</b> (overview + 4 detail views)</td>
+          <td>Medium (5 files OR 1 SPA)</td>
+          <td>✅ Each view ≤85 nodes</td>
+          <td>3 levels</td>
+          <td>Easy (per-view edits)</td>
+          <td><b>Engineers needing reference + AI agents</b></td>
+        </tr>
+        <tr>
+          <td><b>3. Subway map</b></td>
+          <td>High (manual SVG)</td>
+          <td>✅ Beautiful single image</td>
+          <td>Drawer only</td>
+          <td>Hard (manual layout per add)</td>
+          <td>Sales / wall poster / one-shot</td>
+        </tr>
+        <tr>
+          <td><b>4. Mermaid swimlanes</b></td>
+          <td>Low</td>
+          <td>🟡 OK if split per-Part</td>
+          <td>Drawer needs custom JS</td>
+          <td>Easy (text-driven)</td>
+          <td>Devs comfortable with Mermaid</td>
+        </tr>
+        <tr>
+          <td><b>5. Cytoscape collapsible</b></td>
+          <td>Medium</td>
+          <td>🟡 Good when collapsed</td>
+          <td>Built-in</td>
+          <td>Medium (JS config)</td>
+          <td>Interactive exploration</td>
+        </tr>
+        <tr>
+          <td><b>6. DSM matrix</b></td>
+          <td>Low</td>
+          <td>✅ Always readable</td>
+          <td>Cell tooltip</td>
+          <td>Easy</td>
+          <td>Architects only</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="recommend">
+      <b>My pick: Pattern 2 (C4 drill-down) as the primary engineering view, with Pattern 4 (Mermaid) embedded inside each Part-detail view for the flow diagrams.</b>
+      Engineers and AI agents get a 4-Part overview that fits on one screen, drill into the Part they care about, and see a clean Mermaid graph for that Part's components — clicking any component opens the existing drawer. Maintains everything you've already built (drawer schema, dependencies, internal_architecture) and avoids the hairball entirely.
+      <br><br>
+      <b>Alternative if you want one beautiful artifact:</b> Pattern 3 (subway map) — but I'd budget a full session for layout tuning.
+    </div>
+
+    <p style="margin-top:18px;color:var(--muted);font-size:13px">
+      Tell me which pattern (or combination) to proceed with. I'll then start the chosen pattern's implementation as Step 0.
+    </p>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   Shared dataset
+========================================================= */
+const NODES = [
+  {id:"T1",  label:"Trigger Gateway",       part:"A", layer:1, x:1,  y:7},
+  {id:"T2",  label:"Discovery",             part:"A", layer:1, x:3,  y:7},
+  {id:"O2",  label:"AuditGraph Outer",      part:"A", layer:3, x:5,  y:6},
+  {id:"O3",  label:"BrowseGraph",           part:"A", layer:3, x:7,  y:6},
+  {id:"O4",  label:"AnalyzeGraph",          part:"A", layer:3, x:9,  y:6},
+  {id:"B1",  label:"MCP Tools (28)",        part:"A", layer:5, x:7,  y:4.5},
+  {id:"H1",  label:"Heuristic KB",          part:"A", layer:7, x:11, y:4.5},
+  {id:"A5",  label:"Annotate + Store",      part:"A", layer:8, x:9,  y:3},
+  {id:"I1",  label:"Findings Engine",       part:"A", layer:9, x:11, y:3},
+  {id:"I3",  label:"Action Plan",           part:"A", layer:9, x:13, y:3},
+  {id:"SC1", label:"Safety Controls (13)",  part:"D", layer:15, x:5, y:2},
+  {id:"SC2", label:"Cost Gates (18)",       part:"D", layer:15, x:7, y:2},
+  {id:"SC4", label:"Temporal Durable",      part:"D", layer:15, x:3, y:2},
+  {id:"S1",  label:"Internal / Published",  part:"D", layer:11, x:9, y:1},
+  {id:"S2",  label:"R2 Storage",            part:"D", layer:11, x:11, y:1},
+  {id:"S4",  label:"Audit Events",          part:"D", layer:11, x:13, y:1}
+];
+const EDGES = [
+  ["T1","O2","control"], ["T2","O2","data"],
+  ["O2","O3","control"], ["O2","O4","control"],
+  ["O3","B1","control"], ["B1","SC1","safety"],
+  ["O4","H1","data"],    ["O4","A5","analysis"],
+  ["A5","I1","analysis"],["I1","I3","analysis"],
+  ["A5","S1","infra"],   ["A5","S2","infra"],
+  ["O2","S4","infra"],
+  ["SC2","O4","safety"], ["SC4","O2","safety"]
+];
+const FLOW = {
+  control:{color:"#1F2937",dash:"solid",width:1.5},
+  data:{color:"#2563EB",dash:"solid",width:1.5},
+  analysis:{color:"#7C3AED",dash:"solid",width:2},
+  infra:{color:"#9CA3AF",dash:"dot",width:1},
+  safety:{color:"#DC2626",dash:"solid",width:1.2}
+};
+const PART_COLOR = {A:"#2563EB", B:"#7C3AED", C:"#C026D3", D:"#16A34A"};
+
+/* =========================================================
+   1. Baseline Plotly
+========================================================= */
+function renderBaseline(divId, nodes, height){
+  const trace = {
+    type:"scatter", mode:"markers+text",
+    x: nodes.map(n=>n.x), y: nodes.map(n=>n.y),
+    text: nodes.map(n=>n.label),
+    textposition:"middle center",
+    textfont:{size:10, color:"#0f172a"},
+    marker:{
+      size:55,
+      color: nodes.map(n=>hex2rgba(PART_COLOR[n.part], 0.18)),
+      line:{width:1.5, color: nodes.map(n=>PART_COLOR[n.part])},
+      symbol:"square"
+    },
+    hovertemplate:"<b>%{text}</b><extra></extra>"
+  };
+  const ann = EDGES.filter(([f,t])=>nodes.find(n=>n.id===f)&&nodes.find(n=>n.id===t))
+    .map(([f,t,ft])=>{
+      const s=nodes.find(n=>n.id===f), tg=nodes.find(n=>n.id===t), c=FLOW[ft];
+      return {
+        x:tg.x, y:tg.y, ax:s.x, ay:s.y,
+        xref:"x", yref:"y", axref:"x", ayref:"y",
+        showarrow:true, arrowhead:3, arrowsize:1,
+        arrowwidth:c.width, arrowcolor:c.color,
+        opacity: ft==="infra"?0.45:0.85,
+        standoff:14, startstandoff:14
+      };
+    });
+  Plotly.newPlot(divId,[trace],{
+    margin:{t:10,l:10,r:10,b:10},
+    showlegend:false,
+    plot_bgcolor:"white", paper_bgcolor:"white",
+    xaxis:{visible:false,range:[0,14],fixedrange:true},
+    yaxis:{visible:false,range:[0,8],fixedrange:true,scaleanchor:"x",scaleratio:0.9},
+    annotations:ann,
+    height:height
+  },{responsive:true,displaylogo:false,displayModeBar:false});
+}
+function hex2rgba(h,a){h=h.replace("#","");const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);return `rgba(${r},${g},${b},${a})`}
+
+renderBaseline("plot-baseline", NODES, 520);
+
+/* =========================================================
+   2. C4 detail-view preview (Plotly with Part A subset)
+========================================================= */
+const partANodes = NODES.filter(n=>n.part==="A");
+renderBaseline("plot-c4-detail", partANodes, 340);
+
+/* =========================================================
+   3. Mermaid init
+========================================================= */
+mermaid.initialize({startOnLoad:true, theme:"default", themeVariables:{fontSize:"13px"}});
+
+/* =========================================================
+   4. Cytoscape with collapsible Parts
+========================================================= */
+const cyElements = [
+  // Parent (Part) nodes
+  {data:{id:"PA", label:"Part A — Agent Internals", isParent:true}, classes:"part part-a"},
+  {data:{id:"PD", label:"Part D — Cross-Cutting", isParent:true}, classes:"part part-d"},
+  // Child nodes
+  ...NODES.map(n=>({
+    data:{id:n.id, label:n.label, parent:n.part==="A"?"PA":"PD"},
+    classes:`node part-${n.part.toLowerCase()}`
+  })),
+  // Edges
+  ...EDGES.map(([f,t,ft])=>({
+    data:{id:`${f}_${t}`, source:f, target:t, flow:ft},
+    classes:`edge flow-${ft}`
+  }))
+];
+const cy = cytoscape({
+  container: document.getElementById("cy"),
+  elements: cyElements,
+  style: [
+    {selector:"node.part-a", style:{
+      "background-color":"#dbeafe","border-color":"#2563EB","border-width":2,
+      "label":"data(label)","color":"#0f172a","font-size":11,
+      "text-valign":"center","text-halign":"center",
+      "shape":"round-rectangle","width":110,"height":50,
+      "text-wrap":"wrap","text-max-width":100
+    }},
+    {selector:"node.part-d", style:{
+      "background-color":"#dcfce7","border-color":"#16A34A","border-width":2,
+      "label":"data(label)","color":"#0f172a","font-size":11,
+      "text-valign":"center","text-halign":"center",
+      "shape":"round-rectangle","width":110,"height":50,
+      "text-wrap":"wrap","text-max-width":100
+    }},
+    {selector:"node.part", style:{
+      "background-opacity":0.08,"border-color":"#64748b","border-width":2,
+      "border-style":"dashed","label":"data(label)","color":"#475569",
+      "font-size":13,"font-weight":"bold","text-valign":"top","text-halign":"center",
+      "padding":"24px","shape":"round-rectangle"
+    }},
+    {selector:"node.part.part-a", style:{"background-color":"#dbeafe","border-color":"#2563EB"}},
+    {selector:"node.part.part-d", style:{"background-color":"#dcfce7","border-color":"#16A34A"}},
+    {selector:"edge", style:{
+      "curve-style":"bezier","target-arrow-shape":"triangle",
+      "width":2,"line-color":"#64748b","target-arrow-color":"#64748b",
+      "opacity":0.7
+    }},
+    {selector:"edge.flow-control", style:{"line-color":"#1F2937","target-arrow-color":"#1F2937"}},
+    {selector:"edge.flow-data", style:{"line-color":"#2563EB","target-arrow-color":"#2563EB"}},
+    {selector:"edge.flow-analysis", style:{"line-color":"#7C3AED","target-arrow-color":"#7C3AED","width":2.5}},
+    {selector:"edge.flow-infra", style:{"line-color":"#9CA3AF","target-arrow-color":"#9CA3AF","line-style":"dotted","opacity":0.5}},
+    {selector:"edge.flow-safety", style:{"line-color":"#DC2626","target-arrow-color":"#DC2626"}}
+  ],
+  layout:{name:"cose", animate:false, padding:30, idealEdgeLength:120, nodeRepulsion:8000}
+});
+cy.on("tap","node",e=>{
+  const d=e.target.data();
+  if(d.isParent) return;
+  console.log("Node clicked:", d.label, "(in production: opens drawer)");
+});
+function cyCollapseAll(){
+  cy.nodes(".part").forEach(p=>{
+    const children=p.children();
+    children.style("display","none");
+    p.style({"width":160,"height":80,"padding":"8px"});
+  });
+  cy.layout({name:"cose",animate:true,padding:30,idealEdgeLength:200,nodeRepulsion:8000}).run();
+}
+function cyExpandAll(){
+  cy.nodes().forEach(n=>n.style("display","element"));
+  cy.nodes(".part").forEach(p=>p.removeStyle("width height padding"));
+  cy.layout({name:"cose",animate:true,padding:30,idealEdgeLength:120,nodeRepulsion:8000}).run();
+}
+function cyFit(){cy.fit(undefined,30)}
+function cyLayout(){cy.layout({name:"cose",animate:true,padding:30,idealEdgeLength:120,nodeRepulsion:8000}).run()}
+
+/* =========================================================
+   5. DSM matrix
+========================================================= */
+function renderDSM(){
+  const tbl = document.getElementById("dsm");
+  const ids = NODES.map(n=>n.id);
+  // Header row
+  let head = "<tr><th></th>" + ids.map(id=>`<th title="${NODES.find(n=>n.id===id).label}">${id}</th>`).join("") + "</tr>";
+  // Body rows
+  const edgeMap = {};
+  EDGES.forEach(([f,t,ft])=>{ edgeMap[`${f}|${t}`]=ft; });
+  let body = "";
+  ids.forEach(rid=>{
+    const rowNode = NODES.find(n=>n.id===rid);
+    let row = `<tr><th title="${rowNode.label}">${rid} · ${rowNode.label}</th>`;
+    ids.forEach(cid=>{
+      if(rid===cid){ row += `<td class="diag" title="self"></td>`; return; }
+      const ft = edgeMap[`${rid}|${cid}`];
+      if(ft){
+        row += `<td class="cell" style="background:${FLOW[ft].color};opacity:${ft==='infra'?0.55:0.85}" title="${rid} → ${cid} · ${ft}"></td>`;
+      } else {
+        row += `<td class="cell"></td>`;
+      }
+    });
+    row += `</tr>`;
+    body += row;
+  });
+  tbl.innerHTML = head + body;
+}
+renderDSM();
+</script>
+</body>
+</html>

@@ -284,7 +284,7 @@ If PRD §10 is not already in your task context, load that section before procee
 6. `pnpm test:conformance -- <component>` for every component the task touched (PRD §9.6) — green.
 7. `pnpm lint` — clean.
 8. Verify files touched match task scope (no drive-by edits).
-9. Commit: `<type>(<scope>): <TaskID> <description> (<REQ-ID>)`.
+9. Mark `- [ ]` → `- [x]` in the phase's `tasks.md` next to the completed task ID. Commit (same commit as the impl): `<type>(<scope>): <TaskID> <description> (<REQ-ID>)`.
 10. PR body MUST include Spec Coverage section per PRD §10.6.
 11. Any failure → STOP. Use `superpowers:systematic-debugging` skill.
 
@@ -312,6 +312,29 @@ Log your reasoning in commit messages / PR descriptions / inline comments at key
 6. **Deviations from spec** (must ASK FIRST; if proceeding after approval, log why)
 
 Do NOT log: full chain-of-thought narrations, heuristic content (IP — R6), secrets, or PII.
+
+## 8c. Phase artifact maintenance (per task + per phase)
+
+The phase folders in `docs/specs/mvp/phases/` are the canonical source of truth in git. As work progresses, keep them in sync — not just the personal HTML tracker (`implementation-roadmap.html` localStorage is browser-local and not authoritative).
+
+**Before phase implementation begins** (the `draft → approved` transition per R17):
+- Run `/speckit.analyze` on THIS phase only — do NOT bulk-analyze across phases
+- Triage findings; fix spec defects first per R11.4 (fix spec before implementing)
+- Bump frontmatter `status:` from `draft` to `approved` only after analyze is clean
+- Repeat this gate per phase as you progress through the implementation order; never analyze phases you're not about to implement
+- Rationale: earlier phases may force spec changes that ripple to later phases (R20 cross-cutting impact); bulk-analyzing 15 phases produces findings against artifacts that will change
+
+**Per task** (alongside §8 self-check, step 9):
+- Mark `- [ ]` → `- [x]` in the phase's `tasks.md` next to the completed task ID
+- Stage the change in the same commit as the implementation
+
+**Per phase** (when the last task in a phase lands):
+- Bump frontmatter `status:` per R17 lifecycle: `approved` → `implemented` (all tasks done; tests green) → `verified` (conformance + acceptance tests green)
+- Bump `status:` on companion artifacts in the same folder (`spec.md`, `plan.md`, `impact.md`, `checklists/requirements.md`)
+- Author `phase-N-current.md` rollup per R19 (active modules, contracts now in effect, system flows operational, known limitations, open risks for next phase) — template at `docs/specs/mvp/templates/phase-rollup.template.md`
+- Update `docs/specs/mvp/phases/INDEX.md` — flip the phase row's status column (⚪ not started → 🟡 in progress → 🟢 complete)
+
+**Why this matters:** if you only update the personal HTML tracker, the canonical corpus drifts; `/speckit.analyze` will flag phantom incomplete tasks; R17 lifecycle stays stuck on `draft`; phase rollups (R19) never land, so each subsequent phase loses the compressed predecessor state it's supposed to read first per CLAUDE.md §1b.
 
 ---
 
