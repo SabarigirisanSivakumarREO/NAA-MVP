@@ -336,6 +336,40 @@ The phase folders in `docs/specs/mvp/phases/` are the canonical source of truth 
 
 **Why this matters:** if you only update the personal HTML tracker, the canonical corpus drifts; `/speckit.analyze` will flag phantom incomplete tasks; R17 lifecycle stays stuck on `draft`; phase rollups (R19) never land, so each subsequent phase loses the compressed predecessor state it's supposed to read first per CLAUDE.md §1b.
 
+## 8d. Phase review (R17.4 lifecycle gate — `validated → approved`)
+
+Engineering lead review is the gate before bumping `status: draft → approved` on a phase's artifacts (spec/plan/tasks/impact). It's distinct from `/speckit.analyze`:
+
+- **`/speckit.analyze`** — mechanical cross-artifact consistency (REQ-ID coverage, dependency conflicts, terminology drift)
+- **Phase review** — JUDGMENT (doom check, design soundness, kill-criteria realism)
+
+Both are required before phase implementation begins. Run analyze FIRST; resolve CRITICAL/HIGH findings; THEN run phase review.
+
+**Centralized templates** (DO NOT duplicate per-phase):
+- [`docs/specs/mvp/templates/phase-review-prompt.md`](docs/specs/mvp/templates/phase-review-prompt.md) v1.0 — review instructions
+- [`docs/specs/mvp/templates/phase-review-report.template.md`](docs/specs/mvp/templates/phase-review-report.template.md) v1.0 — output schema
+
+**Invocation pattern:**
+
+```
+"Review phase-N-name using the phase-review template."
+```
+
+Claude reads the template + phase folder artifacts + constitution, executes the 5-step review pass (read in order → per-artifact judgment → doom check → kill criteria validation → recommendation), and emits `docs/specs/mvp/phases/phase-N-name/review-notes.md` per the report schema. Recommendation is one of: **APPROVE** / **REVISE** / **RE-SPEC**.
+
+**Order of gates before implementation:**
+
+1. Run `/speckit.analyze` on the target phase (mechanical consistency)
+2. Resolve any CRITICAL/HIGH analyze findings
+3. Run phase review using the centralized template (judgment)
+4. If review recommends **APPROVE** → bump `status: draft → approved` on spec.md/plan.md/tasks.md/impact.md (per §8c "Before phase implementation begins")
+5. If review recommends **REVISE** → address findings, re-run review (status stays `draft`)
+6. If review recommends **RE-SPEC** → pause phase; re-open design discussion; may require `/speckit.specify` re-run
+
+**Single-team adaptation:** When the user is their own reviewer (solo or small MVP team), the review still works — follow the calibration notes in the prompt template: time-box per phase risk (LOW ~30min, MEDIUM ~45min, HIGH ~60min), take a 2-4 hour break between authoring and review, use the doom check ruthlessly, record the review in writing.
+
+**Recordkeeping:** every approved phase's `review-notes.md` is the audit trail justifying the R17.4 transition. Future Claude sessions reading the phase folder see why it was approved and by whom. Commit message on the status-bump commit cites: `(R17.4 review approved per phase-N/review-notes.md)`.
+
 ---
 
 ## 9. Sub-agent dispatch policy

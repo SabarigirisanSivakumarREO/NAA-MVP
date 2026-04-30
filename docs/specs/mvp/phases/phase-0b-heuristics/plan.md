@@ -1,10 +1,10 @@
 ---
 title: Phase 0b — Heuristic Authoring — Implementation Plan
 artifact_type: plan
-status: draft
-version: 0.1
+status: approved
+version: 0.3
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-04-30
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -35,7 +35,9 @@ affected_contracts:
 delta:
   new:
     - Phase 0b plan — drafting prompt structure, verification protocol, kill criteria
-  changed: []
+  changed:
+    - v0.1 → v0.2 applied 1 analyze-driven fix (L3: §10 risk register cross-reference note added explaining overlap with impact.md §9)
+    - v0.2 → v0.3 — status bumped draft → approved (R17.4 review approved per phase-0b-heuristics/review-notes.md)
   impacted: []
   unchanged: []
 
@@ -333,6 +335,8 @@ Calendar duration: ~4 weeks alongside Phase 1-3 implementation (NOT critical-pat
 ---
 
 ## 10. Risks (specific to Phase 0b execution; broader risks in spec.md SC + impact.md §9)
+
+> **Note on overlap with [impact.md §9](impact.md):** ~9 of these entries also appear in impact.md §9 risk register. The split is intentional but soft — plan.md §10 captures EXECUTION-time risks (engineer-facing during authoring sessions; mitigations are workflow-level), while impact.md §9 captures cross-cutting / contract-shape risks (reviewer-facing during R20 sign-off; mitigations are architectural). Many risks have both an execution response AND a cross-cutting impact, so they appear in both. When updating either, propagate to the other if applicable.
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|

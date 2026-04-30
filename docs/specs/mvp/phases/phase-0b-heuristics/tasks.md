@@ -1,10 +1,10 @@
 ---
 title: Phase 0b — Heuristic Authoring — Tasks
 artifact_type: tasks
-status: draft
-version: 0.1
+status: approved
+version: 0.3
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-04-30
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -35,7 +35,9 @@ delta:
     - Phase 0b tasks — 5 infrastructure tasks (T0B-001..T0B-005) + 3 content tasks (T103/T104/T105)
     - T103-T105 ownership shifts from Phase 6 to Phase 0b workstream per F-012 v1.2 amendment 2026-04-26
     - T103-T105 counts reduced from 50/35/15 to 15/10/5 per F-012 v1.2 amendment (tasks-v2.md v2.3.3 patch)
-  changed: []
+  changed:
+    - v0.1 → v0.2 applied 1 analyze-driven fix (M2 cascade: T0B-004 acceptance updated to reference expanded AC-13 R6 conformance test scope per spec.md v0.2 — 5-channel coverage)
+    - v0.2 → v0.3 — status bumped draft → approved (R17.4 review approved per phase-0b-heuristics/review-notes.md; D1 condition binding for T0B-004 implementer: lint CLI must redact Zod-error `received: <value>` content from stdout/stderr; conformance test must assert with `NEURAL_TEST_FIXTURE_BODY` sentinel string)
   impacted:
     - tasks-v2.md v2.3.2 → v2.3.3 (Phase 0b section + reduced counts)
     - phase-6-heuristics/tasks.md already references T103-T105 as Phase 0b workstream (no change)
@@ -99,7 +101,7 @@ Per [plan.md](plan.md) §1: Week 1 = T0B-001..T0B-005 (infrastructure) → Week 
   - `apps/cli/src/commands/heuristic-lint.ts` (NEW)
   - `apps/cli/package.json` (add `heuristic:lint` script)
   - `apps/cli/tests/conformance/heuristic-lint.test.ts` (NEW)
-- **acceptance:** CLI per [plan.md §5](plan.md). Five checks: (1) Zod parse against HeuristicSchemaExtended; (2) all 5 `provenance` fields non-empty; (3) `benchmark` discriminated union present + well-formed; (4) manifest selectors `archetype` + `page_type` + `device` present; (5) banned-phrase regex on `recommendation.summary` + `recommendation.details`. Exit non-zero on any failure. Conformance test covers all 5 fail cases + 1 pass case + AC-13 isolation assertions.
+- **acceptance:** CLI per [plan.md §5](plan.md). Five checks: (1) Zod parse against HeuristicSchemaExtended; (2) all 5 `provenance` fields non-empty; (3) `benchmark` discriminated union present + well-formed; (4) manifest selectors `archetype` + `page_type` + `device` present; (5) banned-phrase regex on `recommendation.summary` + `recommendation.details`. Exit non-zero on any failure. Conformance test covers all 5 fail cases + 1 pass case + AC-13 isolation assertions per spec.md v0.2 (5-channel coverage: gitignore contains `.heuristic-drafts/`; drafting subprocess does NOT import `langsmith` / `@langsmith/*`; drafting subprocess does NOT import `packages/agent-core/src/observability/*` Pino module; drafting subprocess script is NOT imported by any `apps/` or `packages/` runtime module; `apps/dashboard/**/*` source does NOT reference drafting subprocess paths).
 - **conformance:** `apps/cli/tests/conformance/heuristic-lint.test.ts` (AC-04, AC-13)
 
 ## T0B-005 — `heuristics-repo/README.md` + `.gitignore` for `.heuristic-drafts/`

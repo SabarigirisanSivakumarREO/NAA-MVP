@@ -2,10 +2,18 @@
 title: Phase 0b — Heuristic Authoring (LLM-Assisted, Engineering-Owned) — README
 artifact_type: readme
 status: draft
-version: 0.1
+version: 0.2
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-04-30
 owner: engineering lead
+
+delta:
+  v0_2:
+    changed:
+      - Effort estimate synced with plan.md §9 ("~24h" → "~26h engineering + ~7h verifier"; analyze L1 finding from Phase 0b /speckit.analyze pass)
+  v0_1:
+    new:
+      - Phase 0b README initial draft
 ---
 
 # Phase 0b — Heuristic Authoring (LLM-Assisted, Engineering-Owned)
@@ -46,7 +54,7 @@ owner: engineering lead
 | Status | ⚪ Not started |
 | Depends on | Phase 0 (T001-T005 setup) + T101 HeuristicSchemaExtended (Phase 6) + T4B-013 manifest selectors contract (Phase 4b refresh) |
 | Blocks | Phase 6 implementation (engine needs content to load + integration test against), Phase 7 EvaluateNode (consumes filtered heuristic packs) |
-| Estimated effort | ~24h ±6 (single engineer over 4 weeks; ~30-45 min per heuristic × 30 + infra setup + verification spot-checks) |
+| Estimated effort | ~26h engineering + ~7h verifier (single engineer over 4 weeks; see [plan.md §9](plan.md) for itemized breakdown) |
 | Heuristic count | 30 (≈15 Baymard + ≈10 Nielsen + ≈5 Cialdini) per F-012 v1.2 amendment |
 | LLM cost | ~$5-10 total drafting cost (Claude Sonnet 4 × 30 heuristics × ~3K tokens/draft) |
 | Affected contracts | None new — consumes Phase 6's HeuristicSchemaExtended; produces JSON files for `heuristics-repo/` |

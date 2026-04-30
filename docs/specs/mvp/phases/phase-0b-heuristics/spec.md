@@ -1,10 +1,10 @@
 ---
 title: Phase 0b — Heuristic Authoring (LLM-Assisted, Engineering-Owned)
 artifact_type: spec
-status: draft
-version: 0.1
+status: approved
+version: 0.3
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-04-30
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -42,7 +42,9 @@ delta:
     - Phase 0b spec — engineering-owned LLM-assisted authoring workflow + 30-heuristic MVP pack
     - AC-01..AC-15 stable IDs for T0B-001..T0B-005 + T103/T104/T105 acceptance
     - R-01..R-12 functional requirements
-  changed: []
+  changed:
+    - v0.1 → v0.2 applied 6 analyze-driven fixes (M1: R-01 business_types→archetype terminology drift; M2: AC-13 R6 conformance test scope expanded to 5 channels; M3: drafting-subprocess R9 exemption formally documented in Assumptions per R22.2 pattern; M4: NF-01/NF-02 marked observation-only; L2: Pino-vs-CLI wording clarified in Constraints Inherited; L4: AC-01 fixture path pointed at examples.md §10)
+    - v0.2 → v0.3 — status bumped draft → approved (R17.4 review approved per phase-0b-heuristics/review-notes.md; 3 polish conditions captured — D1 binding for T0B-004 lint CLI Zod-error redaction; D2 binding for T0B-005 README human-protocol R6 boundary doc; D3 optional pre-commit hook for `.heuristic-drafts/`)
   impacted:
     - Phase 6 implementation unblocked (engine has content to validate + load in T112 integration test)
     - Phase 7 EvaluateNode consumes the 30-heuristic pack via `HeuristicLoader.loadForContext()` filter
@@ -98,7 +100,7 @@ When reading this spec, agents must already have loaded:
 - **F-012 v1.2 amendment scope:** 30 heuristics total (≈15 Baymard + ≈10 Nielsen + ≈5 Cialdini). NOT 100 (which is §09.3 master target — defer to v1.1+). MVP authors the 30 most-leveraged.
 - **No conversion predictions (R5.3 + GR-007).** Heuristic recommendation text MUST NOT predict "X% conversion lift" — even hypothetical. GR-007 deterministic regex check rejects findings that quote heuristics with banned phrasing; safer to ban it at authoring time.
 - **No new external deps.** Drafting CLI is TypeScript + Zod + Anthropic SDK (already required for Phase 7); reuses Phase 6 HeuristicSchemaExtended for validation.
-- **No `console.log`** in CLI helper (R10.6) — Pino logger with `heuristic_id` correlation; drafting LLM responses redacted per R15.3.3.
+- **No server-side `console.log`** in production runtime code (R10.6). Lint CLI (T0B-004) uses `process.stdout.write` for user-facing output (R10.6 CLI exception, same as Phase 0 T003); Pino is NOT required since lint is a developer-time tool, not a server runtime path. Drafting subprocess (META tooling) writes transcripts to `.heuristic-drafts/` files; no Pino logger instantiation in drafting subprocess (R15.3.3 isolation; AC-13 enforces).
 
 ---
 
@@ -168,7 +170,7 @@ When Phase 6 implementation begins, the integration test (T112) loads the entire
 
 | ID | Criterion | Conformance test path | Linked REQ-ID(s) |
 |----|-----------|----------------------|------------------|
-| AC-01 | Drafting prompt template exists at `docs/specs/mvp/templates/heuristic-drafting-prompt.md` and produces a draft conforming to `HeuristicSchemaExtended` on a known Baymard / Nielsen / Cialdini excerpt. | manual review (no runtime test); template validated by T0B-005 onboarding doc | R15.3.1, R15.3.3 |
+| AC-01 | Drafting prompt template exists at `docs/specs/mvp/templates/heuristic-drafting-prompt.md` and produces a draft conforming to `HeuristicSchemaExtended` on the canonical fixture excerpts in `docs/specs/mvp/examples.md` §10 (✅ GOOD heuristic — Baymard checkout-form-fields excerpt as the smoke fixture). | manual review (no runtime test); T0B-001 owner runs the prompt on the §10 excerpt, confirms output passes `pnpm heuristic:lint`; template validated by T0B-005 onboarding doc | R15.3.1, R15.3.3 |
 | AC-02 | Verification protocol document exists at `docs/specs/mvp/templates/heuristic-verification-protocol.md` covering ±20% quantitative match, text-reference qualitative match, source-URL liveness check, and reject-and-redraft workflow on divergence. | manual review | R15.3.2 |
 | AC-03 | PR Contract Proof block extension (`docs/specs/mvp/templates/heuristic-pr-proof.md`) covers per-heuristic verification evidence: `verified_by` + `verified_date` + link to source URL + brief re-derivation note. Referenced from PRD §10.9 PR Contract template. | manual review; new heuristic PRs cited in Proof block | R15.3.2 |
 | AC-04 | `pnpm heuristic:lint <file-or-glob>` CLI helper passes Zod parse against `HeuristicSchemaExtended`, validates all 5 `provenance` fields present + non-empty, validates `benchmark` discriminated union, validates `archetype`/`page_type`/`device` selectors present, runs deterministic R5.3/GR-007 banned-phrase regex check on `recommendation.summary` + `recommendation.details`. Exit code non-zero on any failure. | `apps/cli/tests/conformance/heuristic-lint.test.ts` | R15.3, R15.3.1, R5.3, GR-007 |
@@ -180,7 +182,7 @@ When Phase 6 implementation begins, the integration test (T112) loads the entire
 | AC-10 | All 30 heuristics carry a `benchmark` block (quantitative or qualitative discriminated union); 0 missing benchmarks. | `pnpm heuristic:lint heuristics-repo/**/*.json` | R15.3, REQ-HK-BENCHMARK-001 |
 | AC-11 | All 30 heuristics carry manifest selectors (`archetype`, `page_type`, `device`) consumable by Phase 4b T4B-013 `loadForContext(profile)`; on a representative `{ecommerce, checkout, mobile}` ContextProfile the filter returns 12-25 heuristics. | `packages/agent-core/tests/integration/load-for-context-against-mvp-pack.test.ts` (Phase 4b) | REQ-CONTEXT-DOWNSTREAM-001 |
 | AC-12 | F-012 spot-check passes: a *different* human re-verifies 5 random heuristics; ≤1 of 5 diverges. Spot-check log committed under `heuristics-repo/_spot-checks.md`. | manual review + signed log | F-012 |
-| AC-13 | R6 IP boundary: drafting LLM responses are NOT logged to LangSmith / Pino / dashboard. Drafting subprocess uses isolated SDK call with no LangSmith key; drafting logs go to `.heuristic-drafts/` (gitignored). | `tests/conformance/r6-drafting-isolation.test.ts` (asserts `.gitignore` contains `.heuristic-drafts/`; asserts no LangSmith call from drafting subprocess) | R6.1, R15.3.3 |
+| AC-13 | R6 IP boundary: drafting LLM responses are NOT logged to LangSmith / Pino / dashboard. Drafting subprocess uses isolated SDK call with no LangSmith key; drafting logs go to `.heuristic-drafts/` (gitignored). | `tests/conformance/r6-drafting-isolation.test.ts` asserts: (a) `.gitignore` contains `.heuristic-drafts/`; (b) drafting subprocess source files do NOT import `langsmith` / `@langsmith/*`; (c) drafting subprocess source files do NOT import `packages/agent-core/src/observability/*` (Pino logger module — grep on import graph); (d) drafting subprocess script is NOT imported by any `apps/` or `packages/` runtime module — grep on import graph; (e) `apps/dashboard/**/*` source does NOT reference drafting subprocess paths (R6 dashboard channel preserved) | R6.1, R15.3.3 |
 | AC-14 | All 30 heuristics pass `HeuristicSchemaExtended.parse()` when Phase 6's `HeuristicLoader.loadAll()` runs in T112 integration test. (Cross-phase acceptance — Phase 6 owns the test; Phase 0b is the producer.) | `packages/agent-core/tests/integration/phase6.test.ts` (Phase 6 T112) | REQ-HK-001, REQ-HK-EXT-001 |
 | AC-15 | No heuristic `recommendation.summary` or `recommendation.details` matches the GR-007 banned-phrase regex (e.g., `/(increase|lift|boost|raise|grow|improve)\s+(conversion|conversions|CR|cr)\s+by\s+\d+%/i`); linter rejects on match. | included in T0B-004 linter; AC-04 covers test path | R5.3, GR-007 |
 
@@ -190,7 +192,7 @@ When Phase 6 implementation begins, the integration test (T112) loads the entire
 
 | ID | Requirement | Cites PRD F-NNN | Linked architecture spec |
 |----|-------------|-----------------|--------------------------|
-| R-01 | System SHALL provide a drafting prompt template (T0B-001) at `docs/specs/mvp/templates/heuristic-drafting-prompt.md` accepting `{source, source_url, citation_text, page_types, business_types, device}` inputs and instructing the LLM to produce a JSON object conforming to `HeuristicSchemaExtended` with all required fields populated and a placeholder `verified_by: ""` + `verified_date: ""` awaiting human input. | F-012 | §09.1, §09.10 |
+| R-01 | System SHALL provide a drafting prompt template (T0B-001) at `docs/specs/mvp/templates/heuristic-drafting-prompt.md` accepting `{source, source_url, citation_text, page_types, archetype, device}` inputs and instructing the LLM to produce a JSON object conforming to `HeuristicSchemaExtended` with all required fields populated and a placeholder `verified_by: ""` + `verified_date: ""` awaiting human input. | F-012 | §09.1, §09.10 |
 | R-02 | System SHALL provide a verification protocol document (T0B-002) at `docs/specs/mvp/templates/heuristic-verification-protocol.md` codifying R15.3.2: human verifier opens `source_url`, finds the cited passage, re-derives the benchmark, confirms ±20% match (quantitative) or text-reference (qualitative), fills `verified_by` + `verified_date`. Includes reject-and-redraft workflow on divergence. | F-012 | — (constitution R15.3.2) |
 | R-03 | System SHALL extend the PR Contract Proof block template (T0B-003) per PRD §10.9 to require per-heuristic verification evidence: `verified_by` name, `verified_date`, link to `source_url`, and a brief (1-2 sentence) re-derivation note. | F-012 | PRD §10.9 |
 | R-04 | System SHALL provide a `pnpm heuristic:lint <file-or-glob>` CLI helper (T0B-004) that: (a) parses files against `HeuristicSchemaExtended`; (b) verifies all 5 `provenance` fields non-empty; (c) verifies `benchmark` discriminated union present and well-formed; (d) verifies manifest selectors `archetype` + `page_type` + `device` present; (e) runs deterministic R5.3/GR-007 banned-phrase regex check on `recommendation.summary` + `recommendation.details`. Exit non-zero on any failure. | F-012 | §09.1, §09.10 |
@@ -209,8 +211,8 @@ When Phase 6 implementation begins, the integration test (T112) loads the entire
 
 | ID | Metric | Target | Cites PRD NF-NNN | Measurement method |
 |----|--------|--------|------------------|--------------------|
-| NF-01 | Total drafting cost across 30 heuristics | ≤$15 | NF-002 (cost) | sum of Anthropic SDK call costs in `.heuristic-drafts/_cost-log.json` (local; not LangSmith) |
-| NF-02 | Per-heuristic drafting + verification time | ≤45 minutes p50 | — | engineer log under `heuristics-repo/_authoring-time-log.md` (sampled, not exhaustive) |
+| NF-01 | Total drafting cost across 30 heuristics | ≤$15 (observation-only target — no automated gate; kill criterion fires at >$25 per plan.md §7) | NF-002 (cost) | sum of Anthropic SDK call costs in `.heuristic-drafts/_cost-log.json` (local; not LangSmith); manual review against target |
+| NF-02 | Per-heuristic drafting + verification time | ≤45 minutes p50 (observation-only target — no automated gate; kill criterion fires at >90 min p50 per plan.md §7) | — | engineer log under `heuristics-repo/_authoring-time-log.md` (sampled, not exhaustive); manual observation against target |
 | NF-03 | F-012 spot-check divergence rate | ≤1 of 5 (≤20%) | — | spot-check log `heuristics-repo/_spot-checks.md` |
 | NF-04 | `pnpm heuristic:lint` runtime against full 30-heuristic pack | ≤2 seconds | — | CLI integration test timer |
 | NF-05 | Heuristic content leakage to observability | 0 occurrences (LangSmith / Pino / dashboard) | — | T0B-004 conformance test + Phase 6 Pino transport spy + grep test on logs |
@@ -278,6 +280,7 @@ When Phase 6 implementation begins, the integration test (T112) loads the entire
 - Source URLs (Baymard articles, Nielsen Norman pages, Cialdini chapter references) remain stable for the spot-check window. Verifier MUST snapshot to Wayback Machine if a Baymard URL is paywalled or unstable.
 - F-012 v1.2 amendment counts (15 + 10 + 5 = 30) are CANONICAL; the v2.0 tasks-v2.md counts (50 + 35 + 15 = 100) are reduced to MVP scope via tasks-v2.md v2.3.3 patch (this session).
 - No new vendor dependencies — drafting uses existing Anthropic SDK; linter uses existing Zod; logging uses existing Pino.
+- **Drafting subprocess (e.g., `scripts/draft-heuristic.ts`) is EXEMPT from R9 adapter boundary.** *Why:* R9 governs production runtime code that touches external services on behalf of clients (LLM, browser, DB, storage). The drafting subprocess is META authoring tooling — it produces heuristic JSON files at design-time, not customer-facing runtime. *Why not via agent-core's LLMAdapter:* agent-core's LLMAdapter wires LangSmith for trace observability, which would violate R15.3.3 (drafting LLM responses MUST NOT touch LangSmith). The drafting subprocess deliberately uses `@anthropic-ai/sdk` directly to bypass the LangSmith trace path. *Criteria for exemption:* (a) only invoked manually via a developer script (e.g., `pnpm draft:heuristic`) during heuristic authoring sessions; (b) does NOT run in production audit pipeline (no scheduled jobs, no API trigger, no on-demand client request); (c) NOT imported as a module by any `packages/` or `apps/` runtime code; (d) writes only to `.heuristic-drafts/` (gitignored) and produces JSON files for human review. *Codification:* same pattern as Phase 0's `scripts/db-migrate-stub.mjs` exemption (per Constitution R22.2 Ratchet — every rule traces to a decision); reviewed quarterly per R22.3.
 
 ---
 

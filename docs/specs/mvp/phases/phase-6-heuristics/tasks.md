@@ -2,9 +2,9 @@
 title: Tasks — Phase 6 Heuristic KB Engine
 artifact_type: tasks
 status: draft
-version: 0.2
+version: 0.3
 created: 2026-04-27
-updated: 2026-04-28
+updated: 2026-04-30
 owner: engineering lead
 authors: [Claude (drafter)]
 
@@ -38,6 +38,7 @@ delta:
     - v0.2 — T106 acceptance extended to surface T4B-013 dependency (Phase 4b owns the `loadForContext()` impl deliverable). HeuristicSchemaExtended (T101) gains `archetype` / `page_type` / `device` selector fields per AC-11.
   changed:
     - v0.1 → v0.2 — adds T4B-013 dependency notes; HeuristicSchemaExtended manifest selectors
+    - v0.2 → v0.3 — added Cross-phase note at top pointing readers to phase-0b-heuristics/tasks.md for T103/T104/T105 (engine vs content split made explicit; analyze L5 finding from Phase 0b /speckit.analyze pass — spans phases since T103-T105 are owned by Phase 0b but referenced in Phase 6)
   impacted:
     - Phase 4b T4B-013 — drives the loadForContext() implementation; lands AFTER Phase 6 baseline ships
     - Phase 0b heuristic authoring — heuristic manifests now MUST include archetype/page_type/device selectors
@@ -56,6 +57,8 @@ description: "Phase 6 task list — 9 engine tasks; T103-T105 Phase 0b deferred;
 **Prerequisites:** spec + impact `approved` (MEDIUM risk)
 **Test policy:** TDD per R3.1.
 **Organization:** Single user story; 9 MVP engine tasks.
+
+> **Cross-phase note:** T103/T104/T105 (heuristic CONTENT authoring — Baymard / Nielsen / Cialdini packs) are the **Phase 0b workstream** per F-012 v1.2 amendment, NOT scheduled here. See [phase-0b-heuristics/tasks.md](../phase-0b-heuristics/tasks.md). Phase 6 owns the **engine** (T101, T102, T106-T112); Phase 0b owns the **content**.
 
 ---
 
