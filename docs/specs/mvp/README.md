@@ -2,19 +2,19 @@
 title: Neural MVP — Index + Reading Order
 artifact_type: index
 status: approved
-version: 2.0
+version: 2.1
 created: 2026-04-07
 updated: 2026-05-01
 owner: engineering lead
 authors: [REO Digital team, Claude]
 
-supersedes: v1.0 (2026-04-07; pre-Session 3 — referenced root-level spec.md/plan.md/tasks.md that no longer match corpus structure; 8-phase scope; 100-heuristic target; single-URL DoD command)
+supersedes: v2.0 (2026-05-01 Round 1 full rewrite); v1.0 (2026-04-07 pre-Session 3)
 supersededBy: null
 
 derived_from:
-  - docs/specs/mvp/PRD.md v1.2
-  - docs/specs/mvp/constitution.md v1.2 (R1-R26)
-  - docs/specs/mvp/phases/INDEX.md v1.4
+  - docs/specs/mvp/PRD.md v1.2.1
+  - docs/specs/mvp/constitution.md v1.3 (R1-R26)
+  - docs/specs/mvp/phases/INDEX.md v1.5
   - docs/specs/mvp/implementation-roadmap.md v0.3
   - docs/specs/mvp/sessions/session-2026-04-30-handover.md (Session 6 closeout)
 
@@ -25,20 +25,30 @@ breaking: false
 affected_contracts: []
 
 delta:
-  new:
-    - Full rewrite (v1.0 → v2.0); document map updated to current corpus structure
-    - Per-phase folder pattern documented as the canonical spec/plan/tasks location (replaces stale root-level Spec Kit artifact model)
-    - 15-phase scope (was 8); MVP heuristic target 30 (was 100; F-012 v1.2 amendment 2026-04-26)
-    - Walking-skeleton 12-week timeline + Wednesday demo cadence (was 8-11 weeks linear)
-    - Sibling docs extracted from PRD listed (architecture / testing-strategy / risks / spec-driven-workflow)
-    - DoD command corrected to `--urls ./urls.txt --business-type ecommerce`
-    - Reading order matched to CLAUDE.md §1 (auto-loaded each session)
-    - Constitution rule range R1-R26 (was R1-R16 implicit)
-    - Status reflects 2026-05-01 — Phase 0 + 0b + 1 approved per R17.4
-  changed: []
-  impacted:
-    - CLAUDE.md §1 reading order (Round 1 sync companion edit)
-  unchanged: []
+  v2_1:
+    new:
+      - "## Session bootstrap (kickoff prompt)" section added — copy-paste-ready prompt for new Claude sessions starting Phase N implementation work; consolidates Tier 2-5 reading guidance + standing directives into one discoverable block
+    changed:
+      - Frontmatter `derived_from` versions bumped to reflect Round 4 sync (PRD v1.2.1, constitution v1.3, INDEX v1.5)
+    impacted:
+      - phases/INDEX.md v1.5 changelog (Round 5 entry added)
+    unchanged:
+      - All other sections (Reading order, Document map, MVP scope, DoD, How to use, File structure, Timeline, Source of truth, Maintenance)
+  v2_0:
+    new:
+      - Full rewrite (v1.0 → v2.0); document map updated to current corpus structure
+      - Per-phase folder pattern documented as the canonical spec/plan/tasks location (replaces stale root-level Spec Kit artifact model)
+      - 15-phase scope (was 8); MVP heuristic target 30 (was 100; F-012 v1.2 amendment 2026-04-26)
+      - Walking-skeleton 12-week timeline + Wednesday demo cadence (was 8-11 weeks linear)
+      - Sibling docs extracted from PRD listed (architecture / testing-strategy / risks / spec-driven-workflow)
+      - DoD command corrected to `--urls ./urls.txt --business-type ecommerce`
+      - Reading order matched to CLAUDE.md §1 (auto-loaded each session)
+      - Constitution rule range R1-R26 (was R1-R16 implicit)
+      - Status reflects 2026-05-01 — Phase 0 + 0b + 1 approved per R17.4
+    changed: []
+    impacted:
+      - CLAUDE.md §1 reading order (Round 1 sync companion edit)
+    unchanged: []
 
 governing_rules:
   - Constitution R17 (Lifecycle States)
@@ -176,6 +186,73 @@ The MVP is complete when:
 8. **Phase 9 acceptance gates:** AC-21 (T175) + AC-26 (PDF) + AC-30 (email) + AC-36 (R6 channels 3+4 redaction) all green
 
 After Phase 9 ships → MVP is shippable for **first external pilot** (with v1.1 R6.2 AES-256-GCM at-rest hardening added BEFORE the pilot per PRD §3.2).
+
+---
+
+## Session bootstrap (kickoff prompt)
+
+When opening a new Claude Code session for implementation work, paste this prompt verbatim. It consolidates Tier 2-5 reading guidance + every standing directive — copy-paste-ready, no editing required (just substitute the active phase if not Phase 0).
+
+````
+Start Neural MVP implementation. Begin at Phase 0 (Setup) per phases/INDEX.md v1.5.
+
+PROJECT ORIENTATION (read first):
+- docs/specs/mvp/README.md v2.1 (entry point + document map; this prompt lives here)
+- docs/specs/mvp/constitution.md v1.3 (R1-R26 — non-negotiable)
+- docs/specs/mvp/phases/INDEX.md v1.5 (phase decision table; current status)
+- docs/specs/mvp/PRD.md v1.2.1 §1, §2.4, §10, §11 (vision, success criteria, ALWAYS/ASK FIRST/NEVER boundaries + PR Contract + Spec Coverage, domain) — NOT full PRD
+- docs/specs/mvp/implementation-roadmap.md v0.3 (walking-skeleton 12-week plan; Wednesday demo cadence)
+- Latest docs/specs/mvp/sessions/ handover (last session state + binding conditions)
+
+ACTIVE PHASE (load when starting):
+- docs/specs/mvp/phases/phase-0-setup/{README,spec,plan,tasks}.md
+- For Phase N+1 later: read phases/phase-<N>-current.md rollup INSTEAD of predecessor's full artifacts (R19)
+
+PER TASK (PRD §10.7 — one task per prompt, <20K tokens):
+- Single task definition from active phase tasks.md
+- Cited architecture spec section from docs/specs/final-architecture/ — only the cited section
+- Relevant examples.md section if a pattern exists
+
+ON-DEMAND (load when triggered):
+- architecture.md — implementing across layers
+- testing-strategy.md — writing tests / conformance gate
+- risks.md — incident triage
+- spec-driven-workflow.md v1.1 — updating specs / R17.4 review / generating rollup
+- engineering-practices/code-style.md or git-workflow.md — TS pattern / commit format
+- AI_Browser_Agent_Architecture_v3.1.md — Browse mode work
+- AI_Analysis_Agent_Architecture_v1.0.md — Analyze mode work
+- templates/<template>.md — authoring impact / rollup / review-notes
+- tasks-v2.md v2.3.3 — REQ-ID spot-lookup (NOT full read)
+
+STANDING DIRECTIVES:
+- neural-dev-workflow skill for implementation (NOT /speckit.implement) — operationalizes R22-R23 + PRD §10.9 PR Contract
+- speckit-* skills for spec authoring only (per-phase folders under phases/, not root)
+- TodoWrite for multi-step task tracking
+- §8 self-check before commit (CLAUDE.md): re-read AC → 11-step verification → mark - [ ] → - [x] in phase tasks.md → commit format `<type>(<scope>): <TaskID> <desc> (<REQ-ID>)`
+- pnpm lint && pnpm typecheck && pnpm test before every commit
+- PR body MUST include Spec Coverage section per PRD §10.6
+- R20 impact.md REQUIRED for any task touching shared contracts (AnalyzePerception, PageStateModel, AuditState, Finding, adapter interfaces, DB schema, MCP tool interfaces, grounding rule interfaces)
+- R23 kill criteria REQUIRED for tasks > 2 hr OR shared-contract changes OR subagent dispatch OR LLM budget > $0.50
+- Walking-skeleton: stubs in real file paths from week 1; de-stub in place per implementation-roadmap.md v0.3
+- Wednesday demo cadence (Mon: pin URLs + author script; Tue: dry-run; Wed: 30-min demo + feedback log)
+- R17.4 review gate before phase impl: /speckit.analyze → resolve CRITICAL/HIGH → phase review (templates/phase-review-prompt.md) → APPROVE → bump status: draft → approved
+- Per-phase JIT analyze: NEVER bulk-analyze across phases (CLAUDE.md §8c)
+- Heuristic IP boundary (R6): heuristic content NEVER in API responses, dashboards, logs, LangSmith traces, git-committed test fixtures
+- temperature=0 on evaluate / self_critique / evaluate_interactive (R10/R13 + TemperatureGuard adapter; R22.6 codification deferred to constitution v1.4)
+- Phase 0b binding conditions D1 + D2 (T0B-004 + T0B-005 implementers; D3 optional) — see latest session handover
+
+IMPLEMENTATION ORDER (canonical):
+0 → 0b → 1 → 1b → 1c → 2 → 3 → 4 → 4b → 5 → 5b → 6 → 7 → 8 → 9
+
+LIFECYCLE STATUS (2026-05-01):
+- Phase 0 + 0b + 1: status: approved (R17.4 reviewed; Phase 6 R17.4 pending)
+- Phases 1b through 9 (excl 0b/1): status: draft — must run /speckit.analyze + phase review before bumping to approved
+- Implementation: 0% — no code yet
+
+★ MVP COMPLETE ★ when Phase 9 ships (T175 + AC-21 + AC-26 + AC-30 + AC-36 green) → MVP shippable for first external pilot, with v1.1 R6.2 AES-256-GCM at-rest heuristic hardening landing BEFORE pilot per PRD §3.2.
+````
+
+**Constitution-load note:** `constitution.md` v1.3 is ~16K tokens loaded in full. It's "always-load" per CLAUDE.md but in narrow per-task prompts (where it competes with cited specs against the <20K budget), JIT discipline says load only the rules you'll cite. Keep the full load for session orientation; per-task it's a reference.
 
 ---
 
