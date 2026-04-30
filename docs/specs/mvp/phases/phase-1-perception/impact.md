@@ -2,9 +2,9 @@
 title: Impact Analysis — Phase 1 Browser Perception (BrowserEngine adapter + PageStateModel)
 artifact_type: impact
 status: draft
-version: 0.2
+version: 0.3
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-30
 owner: engineering lead
 
 supersedes: null
@@ -31,9 +31,11 @@ delta:
     - v0.2 — explicit "Forward Contract" section now defines what Phase 2 + Phase 7 will import from Phase 1 (analyze finding X2)
   changed:
     - v0.1 → v0.2 frontmatter affected_contracts standardized to short form (was prose); descriptive prose retained in body (analyze finding C3)
-  impacted: []
+    - v0.2 → v0.3 — frontmatter version sync with parallel spec.md/plan.md/tasks.md polish (analyze findings M1-M4 + L1-L2 + L5-L6); impact.md body unchanged
+  impacted:
+    - spec.md + plan.md + tasks.md (v0.2 → v0.3) — frontmatter sync
   unchanged:
-    - All prior content (v0.1 sections preserved)
+    - All prior content (v0.1 + v0.2 sections preserved verbatim — BrowserEngine + PageStateModel before/after, Forward Contract, risk level MEDIUM)
 
 governing_rules:
   - Constitution R9 (Loose Coupling / Adapter Pattern)

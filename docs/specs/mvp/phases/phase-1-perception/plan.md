@@ -2,9 +2,9 @@
 title: Implementation Plan — Phase 1 Browser Perception
 artifact_type: plan
 status: draft
-version: 0.2
+version: 0.3
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-30
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -15,9 +15,8 @@ supersededBy: null
 derived_from:
   - docs/specs/mvp/phases/phase-1-perception/spec.md
   - docs/specs/mvp/phases/phase-1-perception/impact.md
-  - docs/specs/mvp/architecture.md (§6.4 tech stack — no overrides)
-  - docs/specs/mvp/architecture.md (§6.5 project structure)
-  - docs/specs/mvp/constitution.md (R1-R23)
+  - docs/specs/mvp/architecture.md (§6.4 tech stack — no overrides; §6.5 project structure)
+  - docs/specs/mvp/constitution.md (R1-R26)
   - docs/specs/mvp/testing-strategy.md (§9.6 conformance pattern)
   - docs/specs/mvp/risks.md (§15 risk register)
 
@@ -43,9 +42,12 @@ delta:
     - Tech stack subset declared: Playwright + Sharp + tiktoken active in Phase 1 (rest deferred)
     - v0.2 — Phase 1 Design item 6 now documents the deterministic shrink ladder for ContextAssembler oversize handling (analyze finding A4)
     - v0.2 — Phase 1 Design item 7 (NEW) documents PageStateModel `_extensions` reservation for Phase 7+ (analyze finding X2)
+    - v0.3 — Phase 1 Design item 2 now includes `reductionFloorWaived: boolean` in HardFilter return shape so plan aligns with spec.md AC-04 v0.2 + tasks.md T009 v0.2 (analyze finding L5)
   changed:
     - v0.1 → v0.2 — analyze-driven fixes (A1, A4, X2); design content sharpened, no scope changes
-  impacted: []
+    - v0.2 → v0.3 — analyze-driven polish — M1 (R10→R13 stale xref for temperature=0 in Constitution Check); M2 (constitution citation R1-R23 → R1-R26 in derived_from); L5 (HardFilter return shape includes `reductionFloorWaived`); L6 (architecture.md derived_from collapsed from 2 lines to 1); no scope changes
+  impacted:
+    - spec.md + impact.md + tasks.md (v0.2 → v0.3) for parallel polish sync
   unchanged:
     - Tech stack table, Project Structure narrative, Approval Gates
 
@@ -123,7 +125,7 @@ Phase 1 establishes the browser perception layer. The R9 adapter pattern lands f
 - [x] R7.2: RLS on client-scoped tables — no tables yet
 - [x] R7.4: No UPDATE/DELETE on append-only tables — no tables yet
 - [x] R9 (FIRST CONCRETE ADAPTER): All Playwright access through `BrowserEngine` adapter; `BrowserManager` is the sole implementer; no `import ... from 'playwright'` outside `BrowserManager.ts` + `adapters/BrowserEngine.ts`. ESLint rule lands in Phase 4; for Phase 1, code review enforces.
-- [x] R10: TemperatureGuard enforces temperature=0 — no LLM calls in Phase 1
+- [x] R13 Forbidden Patterns: TemperatureGuard enforces temperature=0 on evaluate/self_critique/evaluate_interactive (constitution.md §13 line 411; `(R10)` was a stale xref per note_on_stale_xref) — no LLM calls in Phase 1
 - [x] R10.1-R10.6: Files < 300 lines, functions < 50 lines, named exports, no commented-out code, no `console.log` — every file in plan stays within these limits; Pino used for browser events
 - [x] R10.6 (CLI exception irrelevant in Phase 1): no CLI work in Phase 1; all logging is server-side via Pino with new correlation fields (session_id, page_url, extractor)
 - [x] R11.2: Every implementation decision traces to a REQ-ID — REQ-BROWSE-NODE-003, REQ-BROWSE-HUMAN-005/006 (reduced), REQ-BROWSE-PERCEPT-001/002/003/005/006
@@ -258,7 +260,7 @@ All schemas `.strict()` (no extra props).
 ### Per-extractor design
 
 1. **AccessibilityExtractor** (T008): calls `page.accessibility.snapshot({ interestingOnly: false })`; recursively counts nodes; warns at < 50 nodes; returns root + count.
-2. **HardFilter** (T009): pure function on AccessibilityTree; drops nodes by hidden/disabled/aria-hidden/zero-dim; recursive; returns filtered tree + reduction percent.
+2. **HardFilter** (T009): pure function on AccessibilityTree; drops nodes by hidden/disabled/aria-hidden/zero-dim; recursive; returns `{ tree: AccessibilityTree; reductionPct: number; reductionFloorWaived: boolean }` — per spec v0.2 AC-04, when input has < 20 pre-filter nodes the > 50% reduction floor is waived and `reductionFloorWaived: true` so downstream diagnostics can distinguish degenerate-page filtering from typical-page filtering.
 3. **SoftFilter** (T010): pure function on filtered tree; scoring formula `score = baseRoleWeight × textWeight × positionWeight × visibilityWeight` (multiplicative per R4.4); top 30 by descending score; returns FilteredDOM.
 4. **MutationMonitor** (T011): `addInitScript` injects MutationObserver harness into page; polls window.__neuralMutationLog; computes settle; returns Diagnostics fragment.
 5. **ScreenshotExtractor** (T012): `page.screenshot({ type: 'jpeg', quality: 80, fullPage: false })`; if > 150 KB, Sharp re-encodes; one retry max with reduced dimensions; returns Visual.

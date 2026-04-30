@@ -2,9 +2,9 @@
 title: Phase 1 — Browser Perception Foundation
 artifact_type: spec
 status: draft
-version: 0.2
+version: 0.3
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-30
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -14,7 +14,7 @@ supersededBy: null
 
 derived_from:
   - docs/specs/mvp/PRD.md (F-003 Browser Agent, F-004 Browser Perception)
-  - docs/specs/mvp/constitution.md (R1-R23; especially R4 browser rules + R9 adapter pattern)
+  - docs/specs/mvp/constitution.md (R1-R26; especially R4 browser rules + R9 adapter pattern)
   - docs/specs/mvp/architecture.md (§6.4 tech stack, §6.5 file locations)
   - docs/specs/mvp/tasks-v2.md (T006-T015 — T007 SCOPE REDUCED v2.3.1)
   - docs/specs/AI_Browser_Agent_Architecture_v3.1.md (canonical browser agent spec; v1.1 stealth deferred)
@@ -46,13 +46,16 @@ delta:
     - v0.2 — AC-04 now defines a node-count floor for degenerate pages (analyze finding A1)
     - v0.2 — Key Entities + R-10 now document the ContextAssembler oversize-handling shrink algorithm (analyze finding A4)
     - v0.2 — Key Entities now documents PageStateModel `_extensions` reservation for Phase 7+ deep_perceive composition (analyze finding X2)
+    - v0.3 — R-09 now cites REQ-BROWSE-PERCEPT-004 for screenshot fallback (analyze finding M4)
   changed:
     - v0.1 → v0.2 frontmatter affected_contracts standardized to short form (was prose); descriptive prose retained in body (analyze finding C3)
     - v0.1 → v0.2 4 polish fixes from /speckit.analyze report (A1, A4, C3, X2) without changing AC-NN IDs (R18 append-only preserved)
+    - v0.2 → v0.3 6 polish fixes from /speckit.analyze report — M1 (R10→R13 stale xref for temperature=0); M2 (constitution citation R1-R23 → R1-R26); M3 (R-05 drops misattributed REQ-BROWSE-PERCEPT-002 since AccessibilityExtractor does no filtering); M4 (R-09 cites REQ-BROWSE-PERCEPT-004 for screenshot fallback); L1 (dedupe BrowserEngine heading); L2 (token-budget operator standardized to `<` not `≤`); no AC-NN/R-NN/SC-NNN IDs changed (R18 append-only preserved)
   impacted:
     - Constitution R9 — first concrete adapter implementation lands here (BrowserEngine)
     - tasks-v2.md v2.3.1 — T007 scope reduction reflected in this spec
     - plan.md + impact.md + tasks.md (v0.1 → v0.2) for parallel fixes
+    - plan.md + impact.md + tasks.md (v0.2 → v0.3) for parallel polish sync (plan absorbs M1+M2+L5+L6; impact + tasks frontmatter sync only)
   unchanged:
     - AC-01..AC-10 stable IDs and acceptance scenarios (R18 append-only)
     - R-01..R-11 functional requirement IDs and statements
@@ -170,11 +173,11 @@ AC-NN IDs are append-only on subsequent edits per Constitution R18.
 | R-02 | System MUST implement `BrowserManager` in `packages/agent-core/src/browser-runtime/BrowserManager.ts` that wraps Playwright Chromium and returns `BrowserSession` (Zod-validated) implementing `BrowserEngine` | F-003 | REQ-BROWSE-NODE-003 |
 | R-03 | System MUST provide `StealthConfig` in `browser-runtime/StealthConfig.ts` with reduced scope: per-session UA + viewport + WebGL fingerprint rotation via Playwright native API; NO `playwright-extra` dependency in MVP | F-003 (reduced) | REQ-BROWSE-HUMAN-005, REQ-BROWSE-HUMAN-006 (MVP-reduced); tasks-v2 v2.3.1 |
 | R-04 | System MUST define `PageStateModel` Zod schema (with sub-schemas: `Metadata`, `AccessibilityTree`, `FilteredDOM`, `InteractiveGraph`, `Visual`, `Diagnostics`) in `packages/agent-core/src/perception/types.ts` | F-004 | REQ-BROWSE-PERCEPT-001 |
-| R-05 | System MUST implement `AccessibilityExtractor` in `perception/AccessibilityExtractor.ts` that fetches Playwright AX-tree (via `page.accessibility.snapshot`) returning > 50 nodes for typical e-commerce pages | F-004 | REQ-BROWSE-PERCEPT-001, REQ-BROWSE-PERCEPT-002 |
+| R-05 | System MUST implement `AccessibilityExtractor` in `perception/AccessibilityExtractor.ts` that fetches Playwright AX-tree (via `page.accessibility.snapshot`) returning > 50 nodes for typical e-commerce pages | F-004 | REQ-BROWSE-PERCEPT-001 |
 | R-06 | System MUST implement `HardFilter` in `perception/HardFilter.ts` removing invisible / disabled / aria-hidden / zero-dim nodes; > 50% reduction on typical pages | F-004 | REQ-BROWSE-PERCEPT-002 |
 | R-07 | System MUST implement `SoftFilter` in `perception/SoftFilter.ts` scoring elements by relevance with multiplicative decay (R4.4); returns top 30 | F-004 | REQ-BROWSE-PERCEPT-003 |
 | R-08 | System MUST implement `MutationMonitor` in `perception/MutationMonitor.ts` injecting `MutationObserver`, settling within 2 s on static, 10 s timeout on dynamic pages | F-003 | REQ-BROWSE-PERCEPT-005, REQ-BROWSE-PERCEPT-006 |
-| R-09 | System MUST implement `ScreenshotExtractor` in `perception/ScreenshotExtractor.ts` producing JPEG ≤ 150 KB ≤ 1280 px wide (Sharp for compression) | F-004 | (no specific REQ-ID; falls under F-004 visual fallback) |
+| R-09 | System MUST implement `ScreenshotExtractor` in `perception/ScreenshotExtractor.ts` producing JPEG ≤ 150 KB ≤ 1280 px wide (Sharp for compression) | F-004 | REQ-BROWSE-PERCEPT-004 (screenshot fallback when filtered node count < 10) |
 | R-10 | System MUST implement `ContextAssembler` in `perception/ContextAssembler.ts` orchestrating extractors → `PageStateModel`. If candidate model > 1500 tokens, MUST apply the deterministic shrink ladder (Key Entities §Oversize-handling) before accepting with `diagnostics.errors: ['oversized-after-shrink']`. MUST close session in `finally` to prevent zombie processes (NF-Phase1-05). | F-004 | REQ-BROWSE-PERCEPT-001 |
 | R-11 | System MUST provide `tests/integration/phase1.test.ts` validating end-to-end pipeline on 3 sites | F-003 + F-004 acceptance | (integration test, no REQ-ID) |
 
@@ -197,7 +200,7 @@ AC-NN IDs are append-only on subsequent edits per Constitution R18.
 **`PageStateModel`** (NEW shared contract — see `impact.md`)
 - Lives in `packages/agent-core/src/perception/types.ts`
 - Composed of: `Metadata` (url, title, statusCode, navigationStartedAt, navigationEndedAt), `AccessibilityTree` (root + filtered nodes), `FilteredDOM` (top-30 elements with bounding boxes), `InteractiveGraph` (clickable / typeable / submittable structure), `Visual` (optional screenshot reference), `Diagnostics` (axNodeCount, mutationsObserved, stable, lowAxNodeCount, unstable, errors, warnings)
-- Total tokenized JSON ≤ 1500 tokens (cl100k_base) — see oversize-handling below
+- Total tokenized JSON < 1500 tokens (cl100k_base) — see oversize-handling below
 - Includes `_extensions?: z.record(z.string(), z.unknown())` field — RESERVED for Phase 7+ deep_perceive enrichment without forcing a schema migration. Phase 1 itself MUST NOT populate `_extensions`; Phase 7 will namespace its enrichments under `_extensions.deepPerceive` per R20 forward-compatibility hygiene.
 
 **Oversize-handling algorithm (R-10 / T013)**
@@ -210,8 +213,6 @@ When `ContextAssembler` produces a candidate `PageStateModel` exceeding the 1500
 4. **Stage 4 — Accept oversized:** if all 3 shrink stages applied and still > 1500, return the model with `diagnostics.errors: ['oversized-after-shrink']`. Do NOT throw.
 
 If any stage brings the model back under 1500 tokens, accept with `diagnostics.warnings: ['shrunk-from-N-tokens']` recording the original size. The shrink ladder is deterministic — same input always produces same output.
-
-**`BrowserEngine`** (NEW adapter interface — see `impact.md`)
 
 **`BrowserEngine`** (NEW adapter interface — see `impact.md`)
 - Lives in `packages/agent-core/src/adapters/BrowserEngine.ts`
@@ -240,7 +241,7 @@ If any stage brings the model back under 1500 tokens, accept with `diagnostics.w
 - [x] Does NOT auto-publish findings without consultant review (warm-up rule, F-016) — N/A in Phase 1
 - [x] Does NOT UPDATE or DELETE rows from append-only tables (R7.4) — no DB writes in Phase 1
 - [x] Does NOT import vendor SDKs outside adapters (R9) — `BrowserEngine` adapter introduced; `BrowserManager` is the only Playwright importer
-- [x] Does NOT set temperature > 0 on `evaluate` / `self_critique` / `evaluate_interactive` (R10) — no LLM calls in Phase 1
+- [x] Does NOT set temperature > 0 on `evaluate` / `self_critique` / `evaluate_interactive` (R13 Forbidden Patterns; constitution.md §13 line 411 codifies temperature=0 invariant — `(R10)` was a stale xref per constitution.md note_on_stale_xref) — no LLM calls in Phase 1
 - [x] Does NOT expose heuristic content outside the LLM evaluate prompt (R6) — no heuristics in Phase 1
 - [x] DOES include conformance test stubs for every AC-NN — see `packages/agent-core/tests/conformance/*.test.ts` paths in AC table
 - [x] DOES carry frontmatter delta block — see frontmatter

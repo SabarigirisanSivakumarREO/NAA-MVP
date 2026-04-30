@@ -2,9 +2,9 @@
 title: Tasks — Phase 1 Browser Perception
 artifact_type: tasks
 status: draft
-version: 0.2
+version: 0.3
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-30
 owner: engineering lead
 authors: [Claude (drafter)]
 
@@ -42,9 +42,11 @@ delta:
     - v0.2 — T014 brief now documents `_extensions` reservation for Phase 7+ (analyze finding X2)
   changed:
     - v0.1 → v0.2 — analyze-driven polish (A1, A4, X2 + C5); no task scope changes
-  impacted: []
+    - v0.2 → v0.3 — frontmatter version sync with parallel spec.md/plan.md/impact.md polish (analyze findings M1-M4 + L1-L2 + L5-L6); ONE body edit on line 183 (T008 header) to propagate M3 — drops misattributed `REQ-BROWSE-PERCEPT-002` from T008, leaving only `REQ-BROWSE-PERCEPT-001`. PERCEPT-002 is HardFilter (T009 / R-06) per `docs/specs/final-architecture/06-browse-mode.md:370`; AccessibilityExtractor does no filtering. L3 (T-PHASE1-* tasks not in tasks-v2.md) and L4 (tasks-v2 v2.3.1 → v2.3.3 citation) deferred to v2.3.4 punch-list per INDEX.md v1.4.
+  impacted:
+    - spec.md + plan.md + impact.md (v0.2 → v0.3) — frontmatter sync
   unchanged:
-    - T006-T012, T015 task bodies; default kill criteria block; dependency graph
+    - T006, T007, T009-T015 + T-PHASE1-* polish tasks (TESTS, DOC, LOGGER, ADAPTERS-README, ROLLUP) — bodies, dependency graph, default + per-task kill criteria all preserved verbatim from v0.2 (only T008 header REQ-ID list trimmed for M3)
 
 governing_rules:
   - Constitution R3 (TDD)
@@ -178,7 +180,7 @@ Two foundations must precede the rest:
   - **Smoke test:** Two sequential `applyStealthConfig` calls yield different fingerprint tuples; bot.sannysoft.com NOT a test target in MVP
   - **Kill criteria:** default block + extra: any attempt to add `playwright-extra` dep → STOP, that's v1.1 scope
 
-- [ ] **T008 [P] [US-1] AccessibilityExtractor** (AC-03, REQ-BROWSE-PERCEPT-001, REQ-BROWSE-PERCEPT-002)
+- [ ] **T008 [P] [US-1] AccessibilityExtractor** (AC-03, REQ-BROWSE-PERCEPT-001)
   - **Brief:**
     - **Outcome:** `perception/AccessibilityExtractor.ts` exports `accessibilityExtractor.extract(page: BrowserPage): Promise<AccessibilityTree>`. Uses `page.accessibility.snapshot({ interestingOnly: false })` to capture full tree; recursively walks to count nodes; logs warning at < 50 nodes. Returns `AccessibilityTreeSchema`-validated object.
     - **Context:** plan.md "Phase 0 Research" item 1 — AX-tree fetch decision. T014 PageStateModel sub-schemas already in place (T014 prereq).

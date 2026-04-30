@@ -2,9 +2,9 @@
 title: Neural MVP — Phases Index
 artifact_type: index
 status: approved
-version: 1.3
+version: 1.4
 created: 2026-04-22
-updated: 2026-04-29
+updated: 2026-04-30
 owner: engineering lead
 governing_rules:
   - Constitution R17-R21
@@ -69,6 +69,14 @@ No drift found in Phase 9 sections — task IDs T156-T175 + T239-T244 + T245-T24
 - Add discrete T-ID for cross-page PatternDetector (carry-over from v1.2 — currently folded into Phase 8 T139 acceptance)
 - Constitution R22.6 stale xref: PRD §10.1 + R13 cite "(R10)" for temperature=0; should cite R13 directly (carry-over from Session 3)
 - Phase 2 "28 vs 29 MCP tools" mismatch in impact.md + plan.md (carry-over from Session 2)
+- **(NEW Session 7 / Phase 1 analyze L3)** Phase 1 polish task IDs (`T-PHASE1-TESTS`, `T-PHASE1-DOC`, `T-PHASE1-LOGGER`, `T-PHASE1-ADAPTERS-README`, `T-PHASE1-ROLLUP`) defined in `phase-1-perception/tasks.md` but absent from canonical `tasks-v2.md` Phase 1 section. Add to v2.3.4 alongside T006-T015 (and apply same retroactive treatment to Phase 0's `T-PHASE0-TEST` + Phase 0b's `T-SKELETON-001..010` if not already in v2.3.4 scope).
+- **(NEW Session 7 / Phase 1 analyze L4)** `phase-1-perception/{spec,plan,tasks}.md` cite `tasks-v2 v2.3.1` (the version when T007 reduction landed) but canonical version is now v2.3.3 per Session 4 patch. Bump citation to `v2.3.3` (or `v2.3.1 — T007 reduction; current corpus v2.3.3`) when v2.3.4 lands.
+
+---
+
+## v1.4 changes (2026-04-30 Session 7)
+
+Phase 1 v0.3 polish landed: 8 analyze findings (M1-M4 + L1-L2 + L5-L6) applied across `phase-1-perception/{spec,plan,tasks,impact}.md`. Mechanical fixes only — no AC-NN / R-NN / SC-NNN ID changes (R18 append-only preserved). 2 carry-over items (L3, L4) added to v2.3.4 punch-list above. Phase 1 now ready for R17.4 phase review per CLAUDE.md §8d.
 
 ---
 
