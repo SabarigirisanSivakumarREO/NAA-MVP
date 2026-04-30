@@ -2,19 +2,19 @@
 title: Neural MVP — Product Requirements Document
 artifact_type: prd
 status: approved
-version: 1.2
+version: 1.2.1
 created: 2026-04-22
-updated: 2026-04-24
+updated: 2026-05-01
 owner: product + engineering lead
 authors: [REO Digital team, Claude]
 reviewers: [REO Digital team]
 
-supersedes: v1.1
+supersedes: v1.2
 supersededBy: null
 
 derived_from:
   - docs/specs/final-architecture/ (§01-§36 + §33a)
-  - docs/specs/mvp/tasks-v2.md
+  - docs/specs/mvp/tasks-v2.md (v2.3.3)
   - docs/engineering-practices/ai-orchestration-research-2026-04-24.md
 
 req_ids: []  # PRD introduces F-001..F-021 + NF-001..NF-010, tracked inline
@@ -24,28 +24,41 @@ breaking: false
 affected_contracts: []
 
 delta:
-  new:
-    - §10.9 PR Contract (per code-review-ai research)
-    - §10.10 Comprehension-debt pacing (per cognitive-parallel-agents research)
-    - R17 lifecycle frontmatter on PRD.md itself (was missing; self-compliance fix)
-    - F-012 amendment 2026-04-26 — heuristic authoring switched from CRO-parallel to LLM-assisted with human verification (engineering-owned in Phase 0b)
-    - §3.1 item 6 amendment 2026-04-26 — clarified LLM-assisted authoring + provenance requirement
-  changed:
-    - References throughout aligned to master plan v2.3
-    - References throughout cite docs/engineering-practices/ai-orchestration-research-2026-04-24.md
-    - F-012 acceptance criteria expanded to require provenance + verification evidence in PR Contract
-  impacted:
-    - docs/specs/mvp/constitution.md (R22-R23 added; R15.3 expanded with provenance + verification rules on 2026-04-26)
-    - docs/specs/mvp/phases/INDEX.md (Phase 0b row updated 2026-04-26 to engineering-owned)
-    - .claude/skills/neural-dev-workflow/ (new runtime playbook operationalizing §10.9-10.10)
-    - CLAUDE.md (§7 reference drift fix done)
-    - HeuristicSchema (Phase 6 implementation must add provenance fields per Constitution R15.3)
-  unchanged:
-    - F-001..F-011, F-013..F-021 functional requirements (only F-012 amended)
-    - NF-001..NF-010 non-functional requirements
-    - §6 architecture (5-layer stack)
-    - §6.4 tech stack
-    - R6 IP protection (still applies regardless of author — restated in R15.3.3 for clarity)
+  v1_2_1:
+    new:
+      - Frontmatter version 1.2 → 1.2.1; updated 2026-05-01 (minor clarification per spec-driven-workflow.md §12.2; not a scope change — no product-owner re-approval needed)
+    changed:
+      - §1 Status line — "ready for Spec Kit CLI → /speckit.specify → /speckit.plan → /speckit.tasks" reframed to per-phase invocation pattern (matches Round 1+2 README + spec-driven-workflow updates)
+      - §1 "This document's role" line — "Spec Kit consumes this to regenerate spec.md, plan.md, tasks.md" reframed to per-phase artifact authoring (matches the realized corpus structure under phases/phase-<N>-<name>/)
+    impacted:
+      - Round 4 (2026-05-01) closes the last MVP-root file describing the old root-level Spec Kit model; PRD now consistent with README v2.0 + CLAUDE.md §1 + spec-driven-workflow.md v1.1 + architecture.md tree
+    unchanged:
+      - All §2-§17 product content (vision, scope, F-001..F-021, NF-001..NF-010, architecture pointers, components, commands, testing, boundaries, domain, success metrics, timeline, risks, appendices)
+      - §12 already a pointer to spec-driven-workflow.md (no edit needed)
+      - All version-bump rules + cross-doc sync table in spec-driven-workflow.md §12.2-§12.3
+  v1_2:
+    new:
+      - §10.9 PR Contract (per code-review-ai research)
+      - §10.10 Comprehension-debt pacing (per cognitive-parallel-agents research)
+      - R17 lifecycle frontmatter on PRD.md itself (was missing; self-compliance fix)
+      - F-012 amendment 2026-04-26 — heuristic authoring switched from CRO-parallel to LLM-assisted with human verification (engineering-owned in Phase 0b)
+      - §3.1 item 6 amendment 2026-04-26 — clarified LLM-assisted authoring + provenance requirement
+    changed:
+      - References throughout aligned to master plan v2.3
+      - References throughout cite docs/engineering-practices/ai-orchestration-research-2026-04-24.md
+      - F-012 acceptance criteria expanded to require provenance + verification evidence in PR Contract
+    impacted:
+      - docs/specs/mvp/constitution.md (R22-R23 added; R15.3 expanded with provenance + verification rules on 2026-04-26)
+      - docs/specs/mvp/phases/INDEX.md (Phase 0b row updated 2026-04-26 to engineering-owned)
+      - .claude/skills/neural-dev-workflow/ (new runtime playbook operationalizing §10.9-10.10)
+      - CLAUDE.md (§7 reference drift fix done)
+      - HeuristicSchema (Phase 6 implementation must add provenance fields per Constitution R15.3)
+    unchanged:
+      - F-001..F-011, F-013..F-021 functional requirements (only F-012 amended)
+      - NF-001..NF-010 non-functional requirements
+      - §6 architecture (5-layer stack)
+      - §6.4 tech stack
+      - R6 IP protection (still applies regardless of author — restated in R15.3.3 for clarity)
 
 governing_rules:
   - Constitution R17 (Lifecycle)
@@ -61,9 +74,9 @@ governing_rules:
 > **Product:** Neural — AI CRO Audit Platform
 > **Company:** REO Digital (Indian digital agency)
 > **Version:** 1.2 (2026-04-22, updated 2026-04-24) — adds Constitution R17-R21 (lifecycle, delta, rollup, impact, traceability) + R22-R23 (Ratchet, Kill criteria) + §10.9-10.10 (PR Contract, Comprehension-debt pacing) + phases/ folder structure + templates/ + scripts/ per scalable SDD framework (see §16)
-> **Status:** Approved; ready for Spec Kit CLI → `/speckit.specify` → `/speckit.plan` → `/speckit.tasks`
+> **Status:** Approved; per-phase Spec Kit invocations (`/speckit.specify` → `/speckit.plan` → `/speckit.tasks` → `/speckit.analyze`) run **one phase at a time** per `docs/specs/mvp/phases/INDEX.md` order (0 → 0b → 1 → 1b → 1c → 2 → 3 → 4 → 4b → 5 → 5b → 6 → 7 → 8 → 9). R17.4 phase review gate before `status: draft → approved` per CLAUDE.md §8d.
 > **Source of truth (architecture):** `docs/specs/final-architecture/§01-§36 + §33a` (master plan v2.3)
-> **This document's role:** Canonical PRD. Spec Kit consumes this to regenerate `spec.md`, `plan.md`, `tasks.md`. All other session-specific docs archived or deleted.
+> **This document's role:** Canonical PRD. Spec Kit per-phase commands consume this PRD + `tasks-v2.md` + architecture / testing-strategy / risks / spec-driven-workflow siblings to author per-phase artifacts under `docs/specs/mvp/phases/phase-<N>-<name>/{spec,plan,tasks,impact}.md`. **There are NO root-level `spec.md` / `plan.md` / `tasks.md` in this corpus** — see [`spec-driven-workflow.md`](spec-driven-workflow.md) §12.1 for the full per-phase flow. Old ad-hoc session-specific docs were archived or deleted in v1.0.
 
 ---
 
