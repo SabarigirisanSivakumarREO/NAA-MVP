@@ -1,7 +1,7 @@
 ---
 title: Impact Analysis — Phase 6 Heuristic KB Engine (7 contracts; first R6 runtime enforcement)
 artifact_type: impact
-status: draft
+status: approved
 version: 0.4
 created: 2026-04-27
 updated: 2026-04-30

@@ -1,7 +1,7 @@
 ---
 title: Phase 6 — Heuristic KB Engine
 artifact_type: spec
-status: draft
+status: approved
 version: 0.4
 created: 2026-04-27
 updated: 2026-04-30
