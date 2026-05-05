@@ -17,6 +17,11 @@
       "types": "./dist/observability/index.d.ts",
       "import": "./dist/observability/index.js",
       "default": "./dist/observability/index.js"
+    },
+    "./perception/types": {
+      "types": "./dist/perception/types.d.ts",
+      "import": "./dist/perception/types.js",
+      "default": "./dist/perception/types.js"
     }
   },
   "scripts": {
@@ -26,7 +31,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "pino": "^9.5.0"
+    "pino": "^9.5.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

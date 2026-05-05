@@ -2,9 +2,9 @@
 title: Tasks — Phase 1 Browser Perception
 artifact_type: tasks
 status: approved
-version: 0.3
+version: 0.4
 created: 2026-04-27
-updated: 2026-04-30
+updated: 2026-05-05
 owner: engineering lead
 authors: [Claude (drafter)]
 
@@ -43,6 +43,7 @@ delta:
   changed:
     - v0.1 → v0.2 — analyze-driven polish (A1, A4, X2 + C5); no task scope changes
     - v0.2 → v0.3 — frontmatter version sync with parallel spec.md/plan.md/impact.md polish (analyze findings M1-M4 + L1-L2 + L5-L6); ONE body edit on line 183 (T008 header) to propagate M3 — drops misattributed `REQ-BROWSE-PERCEPT-002` from T008, leaving only `REQ-BROWSE-PERCEPT-001`. PERCEPT-002 is HardFilter (T009 / R-06) per `docs/specs/final-architecture/06-browse-mode.md:370`; AccessibilityExtractor does no filtering. L3 (T-PHASE1-* tasks not in tasks-v2.md) and L4 (tasks-v2 v2.3.1 → v2.3.3 citation) deferred to v2.3.4 punch-list per INDEX.md v1.4.
+    - v0.3 → v0.4 (2026-05-05 Session 8) — T014 marked `[x]` standalone (forward-pulled to week 1 per `implementation-roadmap.md` §6 cross-week ordering note: "T014 MUST land in week 1 alongside T-SKELETON-002 for contract test feasibility"). T014 implementation files: `packages/agent-core/src/perception/types.ts` (PageStateModel + sub-schemas, MAX_AX_TREE_DEPTH constant, checkAxTreeDepth helper) + `packages/agent-core/tests/unit/perception/types.test.ts` (15 tests covering AC-09). Phase 1 overall status remains `approved` — only T014 is forward-pulled; T006-T013 + T015 + T-PHASE1-{TESTS,DOC,LOGGER,ADAPTERS-README,ROLLUP} still `[ ]` and execute in week 2 per the roadmap.
   impacted:
     - spec.md + plan.md + impact.md (v0.2 → v0.3) — frontmatter sync
   unchanged:
@@ -268,7 +269,7 @@ Two foundations must precede the rest:
     - "Session leaks (zombie Chromium process after capture())" → R23 trigger; missing `finally { await session.close() }`.
     - "Wall-clock for single capture() > 30 s on example.com" → R23 trigger; perception extractor inefficiency.
 
-- [ ] **T014 [P] [SETUP] PageStateModel types + Zod schemas** (AC-09, REQ-BROWSE-PERCEPT-001)
+- [x] **T014 [P] [SETUP] PageStateModel types + Zod schemas** (AC-09, REQ-BROWSE-PERCEPT-001) — **forward-pulled to week 1 (2026-05-05) per implementation-roadmap.md §6 Cross-week ordering note; landed standalone with 15 vitest unit tests covering AC-09**
   - **Brief:**
     - **Outcome:** `perception/types.ts` exports `PageStateModelSchema` + sub-schemas (Metadata, AccessibilityNode/AccessibilityTree, FilteredDOM, InteractiveGraph, Visual, Diagnostics) + inferred TS types via `z.infer`. All schemas `.strict()` EXCEPT the top-level `PageStateModelSchema` which includes the explicit `_extensions: z.record(z.string(), z.unknown()).optional()` field. **Diagnostics schema MUST include `warnings: z.array(z.string()).default([])`** (used by T013 shrink ladder) in addition to existing `errors` array.
     - **Forward-compatibility seam (per spec v0.2 + impact v0.2 + analyze finding X2):** `_extensions` is RESERVED for Phase 7+ deep_perceive composition. Phase 1 MUST NOT populate `_extensions` (write a unit test asserting `model._extensions === undefined` after Phase 1 capture). Phase 7 will namespace under `_extensions.deepPerceive`. This avoids forcing Phase 1 schema migration when later phases attach data.
