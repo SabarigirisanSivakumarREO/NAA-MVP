@@ -80,12 +80,12 @@ Per [plan.md](plan.md) §1: Week 1 = T0B-001..T0B-005 (infrastructure) → Week 
 - **conformance:** manual review (template); validated indirectly via T103-T105 outputs (week 4) + machine-validated via T0B-004 lint CLI on first heuristic JSON (Day 2+).
 - **delta from v0.3:** T0B-001 task acceptance line was originally written against §9.1's rich structured shape (~25 fields); v0.4 reorients to T101's 11-field body-string design per the R11.4 patch documented in spec.md/plan.md/tasks.md v0.4 delta blocks.
 
-## T0B-002 — Verification protocol document ⚪ pending
+## T0B-002 — Verification protocol document ✅ **DONE 2026-05-06**
 
-- **dep:** none
+- **dep:** none ✅
 - **spec:** R15.3.2
-- **files:** `docs/specs/mvp/templates/heuristic-verification-protocol.md`
-- **acceptance:** 8-step protocol per [plan.md §3](plan.md): URL liveness, citation locate, ±20% benchmark re-derivation (quantitative) or text-reference (qualitative), banned-phrase check, manifest-selector check, fill `verified_by`/`verified_date`, run `pnpm heuristic:lint`, commit with PR Contract Proof block. Includes 3-strike re-draft rule + escalation criteria.
+- **files:** `docs/specs/mvp/templates/heuristic-verification-protocol.md` ✅ (v1.0.0 landed)
+- **acceptance:** 8-step protocol per [plan.md §3](plan.md): URL liveness, citation locate, ±20% benchmark re-derivation (quantitative) or text-reference (qualitative), banned-phrase check, manifest-selector check, fill `verified_by`/`verified_date`, run `pnpm heuristic:lint`, commit with PR Contract Proof block. Includes 3-strike re-draft rule + escalation criteria. Adds: R6/R15.3.3 discipline section enumerating forbidden sharing channels (Slack/email/screenshot/support-ticket — sets precedent for T0B-005 D2 BINDING); pre-flight checklist; "what this protocol does NOT cover" disambiguation block (defers to T0B-001/004/005 + spot-check protocol); cross-references to all sibling Phase 0b templates.
 - **conformance:** manual review.
 
 ## T0B-003 — PR Contract Proof block extension
