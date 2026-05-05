@@ -1,10 +1,10 @@
 ---
 title: Implementation Plan — Phase 0 Setup
 artifact_type: plan
-status: approved
-version: 0.3
+status: implemented
+version: 0.4
 created: 2026-04-26
-updated: 2026-04-30
+updated: 2026-05-05
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -35,6 +35,7 @@ delta:
   changed:
     - v0.1 → v0.2 applied analyze-driven fixes (F1, F12); no design changes
     - v0.2 → v0.3 applied 1 analyze-driven fix (L2 — derived_from R1-R23 → R1-R26 + Complexity Tracking "23 rules" → "26 rules" with R24-R26 layer-MUST-NOT N/A note); status bumped draft → approved (R17.4 engineering lead sign-off via 2026-04-30 session)
+    - v0.3 → v0.4 (2026-05-05 T-PHASE0-ROLLUP at phase exit) — status bumped `approved` → `implemented` per CLAUDE.md §8c (R17 lifecycle: all tasks done, acceptance tests 5/5 green). No design changes vs v0.3 — implementation followed the plan as authored. Status will bump to `verified` when Phase 1 begins.
   impacted: []
   unchanged:
     - Tech stack table, Project Structure narrative, Approval Gates

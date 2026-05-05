@@ -1,8 +1,8 @@
 ---
 title: Phase 0 — Setup
 artifact_type: spec
-status: approved
-version: 0.5
+status: implemented
+version: 0.6
 created: 2026-04-26
 updated: 2026-05-05
 owner: engineering lead
@@ -32,6 +32,7 @@ delta:
     - v0.2 → v0.3 applied 3 analyze-driven fixes (M1 SC-003 lint clause deferred to Phase 4 ESLint scope; M2 NF-Phase0-02 marked observation-only; L2 R1-R23 → R1-R26 in Mandatory References + derived_from + R24-R26 layer-MUST-NOT N/A note); status bumped draft → approved (R17.4 engineering lead sign-off via 2026-04-30 session)
     - v0.3 → v0.4 (2026-05-05 T004 implementation surfaced spec defect per R11.4) — AC-04 wording corrected; original conflated "binaries preinstalled" with "extension CREATEd in DB". Reality: `pgvector/pgvector:pg16` image preinstalls binaries (queryable via `pg_available_extensions`) but does NOT auto-CREATE the extension; the `/docker-entrypoint-initdb.d/` directory ships empty. CREATE EXTENSION is delegated to T005's `pnpm db:migrate` stub per §Assumptions (already documented). Patch: AC-04 now uses `pg_available_extensions` (binaries) instead of `pg_extension` (CREATEd); CREATE EXTENSION verification stays in AC-05's T005 scope. AC-NN ID preserved (R18 append-only); only the criterion text under AC-04 changed. No code/behavior change beyond aligning spec text with documented design.
     - v0.4 → v0.5 (2026-05-05 T005 implementation) — AC-05 wording corrected: env var name `DATABASE_URL` → `POSTGRES_URL`. Original cited DATABASE_URL but the .env.example authored 2026-04-24 (alongside docker-compose.yml) uses POSTGRES_URL — consistent with the docker-compose POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB convention. Patch aligns spec text with the canonical scaffolding env-var name. AC-NN ID preserved. CLAUDE_MODEL also dropped from the AC-05 example list (model name `claude-sonnet-4-*` is hardcoded per CLAUDE.md §2 + architecture.md §6.4; no env var needed).
+    - v0.5 → v0.6 (2026-05-05 T-PHASE0-ROLLUP at phase exit) — status bumped `approved` → `implemented` per CLAUDE.md §8c (R17 lifecycle: all tasks done, acceptance tests 5/5 green). No content changes vs v0.5. Status will bump to `verified` when Phase 1 begins per INDEX.md "Rollup locations" convention.
   impacted:
     - tests/acceptance/phase-0-setup.spec.ts AC-04 block — query updated (T004 v0.4 commit)
     - docs/specs/mvp/phases/phase-0-setup/tasks.md T004 + T005 — wording updated in respective commits

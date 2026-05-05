@@ -1,15 +1,24 @@
 ---
 title: Phase 0 — Setup
 artifact_type: phase-readme
-status: approved
-version: 1.1
+status: implemented
+version: 1.2
 phase_number: 0
 phase_name: Setup
 created: 2026-04-22
-updated: 2026-05-01
+updated: 2026-05-05
 owner: engineering lead
 req_ids: []
 delta:
+  v1_2:
+    new:
+      - phase-0-current.md rollup landed (this commit; R19)
+    changed:
+      - status: approved → implemented (R17 lifecycle bump per CLAUDE.md §8c; all 8 task lines [x]; acceptance 5/5 green)
+    impacted:
+      - docs/specs/mvp/phases/INDEX.md row 0 status flip (⚪ → 🟢) — Phase 1 can now begin; this README's status will bump to `verified` when Phase 1 begins
+    unchanged:
+      - All Phase 0 task descriptions, exit criteria, depends-on/blocks, rollup section, do-not-load list (R18 append-only)
   v1_1:
     new: []
     changed:

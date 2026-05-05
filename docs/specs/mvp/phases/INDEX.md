@@ -2,9 +2,9 @@
 title: Neural MVP — Phases Index
 artifact_type: index
 status: approved
-version: 1.6
+version: 1.7
 created: 2026-04-22
-updated: 2026-05-01
+updated: 2026-05-05
 owner: engineering lead
 governing_rules:
   - Constitution R17-R21
@@ -24,7 +24,7 @@ generated_by: pnpm spec:index    # Auto-regenerated when phase folders or sub-ph
 
 | Phase | Name | Status | Tasks | Folder | Depends on | Blocks |
 |---|---|---|---|---|---|---|
-| 0 | Setup | ⚪ not started | M0.1-M0.5 | `phase-0-setup/` | — | 1 |
+| 0 | Setup | 🟢 **implemented** (5/5 ACs green; rollup landed 2026-05-05) | M0.1-M0.5 + T-PHASE0-{TEST,DOC,ROLLUP} | `phase-0-setup/` | — | 1 |
 | **0b** | **Heuristic Authoring (LLM-assisted, engineering-owned)** | ⚪ not started — spec shipped v0.1 | T0B-001..T0B-005 + T103/T104/T105 | `phase-0b-heuristics/` | 0 | 6 |
 | 1 | Browser Perception Foundation | ⚪ not started | M1.1-M1.10 (T006-T015) | `phase-1-perception/` | 0 | 1b, 2, 5 |
 | **1b** | **Perception Extensions v2.4** | ⚪ not started | T1B-001..T1B-012 | `phase-1b-perception-extensions/` | 1 | 1c, 6, 7 |
@@ -81,6 +81,79 @@ No drift found in Phase 9 sections — task IDs T156-T175 + T239-T244 + T245-T24
 **Phase 1 v0.3 polish:** 8 analyze findings (M1-M4 + L1-L2 + L5-L6) applied across `phase-1-perception/{spec,plan,tasks,impact}.md`. Mechanical fixes only — no AC-NN / R-NN / SC-NNN ID changes (R18 append-only preserved). 2 carry-over items (L3, L4) added to v2.3.4 punch-list above. R17.4 review APPROVED with conditions C1 BINDING + C2/C3 OPTIONAL per [`phase-1-perception/review-notes.md`](phase-1-perception/review-notes.md) v1.0; status bumped to `approved`.
 
 **Phase 6 v0.4 catch-up polish:** 4 analyze findings (H1 + H2 + H3 + M1) applied as a single v0.4 sync across `phase-6-heuristics/{spec,plan,tasks,impact}.md`. Catch-up consolidates two pending updates that never reached plan/impact: (a) v0.2 Pino redaction-pattern → BenchmarkSchema mapping; (b) v0.3 contract surface for T4B-013 + AC-11 + R-09 + REQ-CONTEXT-DOWNSTREAM-001 + manifest selectors (`archetype` / `page_type` / `device`). H1 closes the R6 enforcement gap in T-PHASE6-LOGGER (3 wrong-syntax paths → 6 correct paths matching spec.md:101 authoritative list). Versions: spec.md v0.3→v0.4; plan.md v0.2→v0.4 (skip v0.3 for catch-up); tasks.md v0.3→v0.4; impact.md v0.1→v0.4 (skip v0.2/v0.3 for catch-up). 2 carry-over items (L1, L3) added to v2.3.4 punch-list above. R17.4 review pending.
+
+---
+
+## v1.7 changes (2026-05-05 — Phase 0 implementation complete)
+
+First phase to ship under the per-phase corpus + walking-skeleton model. **Phase 0 implementation landed in a single 1-day session (Session 8, 2026-05-05) on `feat/week-1-walking-skeleton` branch.**
+
+### Phase 0 row flipped: ⚪ not started → 🟢 implemented
+
+All 8 task lines (T-PHASE0-TEST + T001-T005 + T-PHASE0-DOC + T-PHASE0-ROLLUP) marked `[x]` in `phase-0-setup/tasks.md` v0.6. Acceptance suite `tests/acceptance/phase-0-setup.spec.ts` runs 5/5 green via `pnpm test:integration`.
+
+### R17 status bumps (CLAUDE.md §8c)
+
+| Artifact | Before | After |
+|---|---|---|
+| `phase-0-setup/spec.md` | v0.5 `approved` | **v0.6 `implemented`** (will → `verified` when Phase 1 begins) |
+| `phase-0-setup/plan.md` | v0.3 `approved` | **v0.4 `implemented`** |
+| `phase-0-setup/tasks.md` | v0.5 `approved` | **v0.6 `implemented`** |
+| `phase-0-setup/README.md` | v1.1 `approved` | **v1.2 `implemented`** |
+| `phase-0-setup/phase-0-current.md` | did not exist | **NEW v1.0 `implemented`** (R19 rollup) |
+
+### R19 rollup landed
+
+`phase-0-setup/phase-0-current.md` v1.0 — 8 sections per `templates/phase-rollup.template.md`. Compressed Phase 0 system state for Phase 1 to read first (active modules, data contracts in effect [none], system flows, known limitations carried forward, open risks for Phase 1, conformance gate status, what Phase 1 should read, cost+time summary).
+
+### R11.4 spec defects surfaced + patched during Phase 0 implementation
+
+| # | Defect | Patch |
+|---|---|---|
+| 1 | spec.md AC-04 conflated "binaries preinstalled" with "extension CREATEd in DB" (`pgvector/pgvector:pg16` ships binaries but `/docker-entrypoint-initdb.d/` empty) | spec.md v0.3 → v0.4: AC-04 query switched from `pg_extension` (CREATEd) to `pg_available_extensions` (binaries-only). CREATE EXTENSION belongs to T005's `pnpm db:migrate` per existing §Assumptions design. AC-NN ID preserved (R18 append-only). |
+| 2 | spec.md AC-05 cited `DATABASE_URL` but pre-existing `.env.example` (authored 2026-04-24, before the spec) uses `POSTGRES_URL` consistent with docker-compose POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB convention | spec.md v0.4 → v0.5: AC-05 env var name corrected to `POSTGRES_URL`. CLAUDE_MODEL also dropped (model name `claude-sonnet-4-*` is hardcoded per CLAUDE.md §2; no env var). AC-NN ID preserved. |
+
+### Pre-authorized deviations from spec (CLAUDE.md §8b agent reasoning log)
+
+- **pnpm 9 → pnpm 10.33.3** (matches local + back-compat with pnpm 9 workspaces). Pinned via `packageManager` field in root package.json.
+- **engines.node: "22"** (CI-pinned even though local is Node v24). Matches `.nvmrc`.
+- **T004 + T005 reframed from "author" → "VERIFY"**: `docker-compose.yml` + `.env.example` were pre-existing (authored 2026-04-24 alongside Phase 0 setup planning). User kickoff explicitly authorized verification-only treatment.
+
+### Env install side-effect
+
+Microsoft Visual C++ Redistributable installed via `winget install Microsoft.VCRedist.2015+.x64` to supply UCRT API set forwarders required by `turbo.exe` (and future Playwright Chromium binaries). One-time host fix; documented in root README troubleshooting + `phase-0-current.md` §4 known limitations.
+
+### Commit chain (`feat/week-1-walking-skeleton`)
+
+| SHA | Task | Files | AC |
+|---|---|---|---|
+| `9919449` | T-PHASE0-TEST + T001 (bundled) | 10 files / +395 LOC | AC-01 |
+| `bb63cd0` | T002 — agent-core skeleton + Pino | 10 files / +1316 LOC | AC-02 |
+| `90ab537` | T003 — apps/cli + cro:audit | 9 files / +372 LOC | AC-03 |
+| `1e9ff98` | T004 — verify docker + spec v0.4 | 3 files / +33 LOC | AC-04 |
+| `bd09040` | T005 — db:migrate stub + spec v0.5 | 5 files / +186 LOC | AC-05 |
+| `42a21fb` | T-PHASE0-DOC — root README quickstart | 2 files / +138 LOC | (polish) |
+| (this) | T-PHASE0-ROLLUP — phase-0-current.md + R17 status bumps | (multi) | (phase exit) |
+
+### What Phase 1 should do next
+
+Per `phase-0-current.md` §7 + `phase-1-perception/README.md` reading order:
+
+1. Read `phase-0-current.md` (compressed Phase 0 state) — this rollup
+2. Open `phase-1-perception/{README,spec,tasks}.md`
+3. Apply BINDING condition C1 from Session 7 R17.4 review (T015 Playwright timeout budgets ≤20s/site; ≤60s for 3 sites; `waitUntil: 'domcontentloaded'`)
+4. T014 (PageStateModel Zod schema) is forward-pulled to week 1 per `implementation-roadmap.md` §6 — needed by walking-skeleton T-SKELETON-002 contract test
+
+### Implementation-roadmap.md week 1 progress
+
+Per [implementation-roadmap.md](../implementation-roadmap.md) §7 Week 1:
+
+- [x] T-PHASE0-TEST + T001-T005 (Phase 0 setup) — done
+- [ ] T014 forward-pulled from Phase 1 (PageStateModel schema)
+- [ ] T101 forward-pulled from Phase 6 (HeuristicSchemaExtended)
+- [ ] T0B-001..T0B-005 (Phase 0b infra)
+- [ ] T-SKELETON-001..010 (walking skeleton stubs)
+- [ ] Wednesday demo (2026-05-06) — run `pnpm cro:audit --url=<peregrine PDP>` end-to-end through stubbed pipeline
 
 ---
 

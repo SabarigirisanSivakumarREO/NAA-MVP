@@ -1,8 +1,8 @@
 ---
 title: Tasks — Phase 0 Setup
 artifact_type: tasks
-status: approved
-version: 0.5
+status: implemented
+version: 0.6
 created: 2026-04-26
 updated: 2026-05-05
 owner: engineering lead
@@ -28,12 +28,17 @@ delta:
     - v0.2 → v0.3 — status bumped draft → approved (R17.4 engineering lead sign-off via 2026-04-30 session); no task body changes
     - v0.3 → v0.4 (2026-05-05 T004 implementation) — T004 Brief reframed from "author docker-compose.yml" to "VERIFY pre-existing docker-compose.yml" per user kickoff directive (compose file authored 2026-04-24 ships 3 services anticipating Phase 4/9 scope; AC-04 query updated to use `pg_available_extensions` per spec.md v0.3 → v0.4 R11.4 patch). T-PHASE0-TEST + T001 + T002 + T003 + T004 marked [x]. AC-NN IDs preserved (R18 append-only). Task body of T005 unchanged (spec drift POSTGRES_URL vs DATABASE_URL still pending T005).
     - v0.4 → v0.5 (2026-05-05 T005 implementation) — T005 Brief reframed: (a) env var DATABASE_URL → POSTGRES_URL throughout (matches pre-existing .env.example authored 2026-04-24 + docker-compose POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB convention; spec.md v0.4 → v0.5 R11.4 patch); (b) CLAUDE_MODEL example dropped from key list (model name hardcoded per CLAUDE.md §2 + architecture.md §6.4); (c) implementation note added that .env.example is pre-existing (verification only); (d) constraints simplified — `pg` import in scripts/ is canonical R9 carve-out per spec.md §Assumptions, no inline rationale needed in task body. T005 marked [x]. T-PHASE0-DOC + T-PHASE0-ROLLUP still pending (Day 1 polish + Day 2 phase-exit).
+    - v0.5 → v0.6 (2026-05-05 T-PHASE0-ROLLUP at phase exit) — status bumped `approved` → `implemented` per CLAUDE.md §8c (R17 lifecycle). T-PHASE0-DOC + T-PHASE0-ROLLUP marked [x]. All 8 task lines now [x]. No task body changes vs v0.5. Status will bump to `verified` when Phase 1 begins.
   impacted:
-    - docs/specs/mvp/phases/phase-0-setup/spec.md AC-04 wording (v0.3 → v0.4 delta) + AC-05 wording (v0.4 → v0.5 delta)
-    - tests/acceptance/phase-0-setup.spec.ts AC-04 + AC-05 (already POSTGRES_URL-tolerant from initial T-PHASE0-TEST authoring; no test-file change required for v0.5)
+    - docs/specs/mvp/phases/phase-0-setup/spec.md AC-04 wording (v0.3 → v0.4 delta) + AC-05 wording (v0.4 → v0.5 delta) + status bump (v0.5 → v0.6 delta)
+    - docs/specs/mvp/phases/phase-0-setup/plan.md status bump (v0.3 → v0.4 delta)
+    - docs/specs/mvp/phases/phase-0-setup/README.md status bump (v1.1 → v1.2 delta)
+    - docs/specs/mvp/phases/phase-0-setup/phase-0-current.md (NEW — R19 rollup; this commit)
+    - docs/specs/mvp/phases/INDEX.md row 0 status flip (⚪ → 🟢) + v1.6 → v1.7 changelog
+    - docs/specs/mvp/sessions/session-handover.md block 1 Phase 0 row + block 5 Session 8 entry
+    - tests/acceptance/phase-0-setup.spec.ts AC-04 + AC-05 (already POSTGRES_URL-tolerant from initial T-PHASE0-TEST authoring; no test-file change required for v0.5/v0.6)
   unchanged:
     - T001..T003 acceptance criteria, file lists, kill criteria block
-    - T-PHASE0-DOC + T-PHASE0-ROLLUP polish task definitions
 
 governing_rules:
   - Constitution R3 (TDD)
@@ -207,7 +212,7 @@ pnpm install && pnpm build && pnpm cro:audit --version && docker-compose up -d &
 For Phase 0, polish is minimal:
 
 - [x] **T-PHASE0-DOC [P]** Update root `README.md` with developer quickstart: prerequisites (Node 22, pnpm 10.33.3, Docker 24.x+, Git, **Windows: VCRedist for UCRT**), `pnpm install`, `docker compose up -d --wait`, `cp .env.example .env`, `pnpm db:migrate`, `pnpm cro:audit --version`. References `docs/specs/mvp/phases/phase-0-setup/spec.md` exit criteria + the rest of the corpus (PRD, constitution, INDEX, roadmap).
-- [ ] **T-PHASE0-ROLLUP** Author `docs/specs/mvp/phases/phase-0-setup/phase-0-current.md` per R19 + `docs/specs/mvp/templates/phase-rollup.template.md`. Include: active modules introduced, data contracts in effect (none — Phase 0 has no schemas), system flows operational (`pnpm cro:audit --version`, Postgres+pgvector container), known limitations (no Drizzle, no LLM, no browser), open risks for Phase 1 (Pino logger correlation fields untested until first node uses them).
+- [x] **T-PHASE0-ROLLUP** Author `docs/specs/mvp/phases/phase-0-setup/phase-0-current.md` per R19 + `docs/specs/mvp/templates/phase-rollup.template.md`. Include: active modules introduced, data contracts in effect (none — Phase 0 has no schemas), system flows operational (`pnpm cro:audit --version`, Postgres+pgvector container), known limitations (no Drizzle, no LLM, no browser), open risks for Phase 1 (Pino logger correlation fields untested until first node uses them).
 
 ---
 

@@ -2,10 +2,10 @@
 title: Neural MVP — Rolling Session Handover
 artifact_type: session-handover
 status: complete
-version: 1.0
-last_updated: 2026-05-01
-last_session_number: 7
-last_session_outcome: Phase 1 + Phase 6 R17.4 approved; spec-prep arc complete for week-1 + week-2 forward-pulled deps; Peregrine T-shirt PDP locked as week-1 demo target
+version: 1.1
+last_updated: 2026-05-05
+last_session_number: 8
+last_session_outcome: Phase 0 implementation complete (5/5 ACs green); R17 status bumps approved → implemented across spec/plan/tasks/README; phase-0-current.md rollup landed; INDEX.md row 0 flipped ⚪ → 🟢; 2 R11.4 spec defects patched during impl (AC-04 binaries-vs-CREATEd; AC-05 POSTGRES_URL); Microsoft VCRedist installed on host for UCRT API sets
 
 description: "Single rolling handover doc. Replaces per-session handover files from Session 8 onwards. Each session-end Claude updates blocks 1+2+3+5 in place; block 4 is static; block 6 updates when demo target changes. Never create per-session files. Old session detail lives in git history (git log -p docs/specs/mvp/sessions/session-handover.md). Predecessor per-session handovers at session-2026-04-30-handover.md (Session 6) + session-2026-05-01-handover.md (Session 7) preserved for archival reference."
 
@@ -25,13 +25,13 @@ cross_references:
 
 ## 1. Current state ledger
 
-**As of 2026-05-01 (post-Session 7):**
+**As of 2026-05-05 (post-Session 8):**
 
 ### Phase status
 
 | Phase | Status | Approved in | Implementation timing |
 |---|---|---|---|
-| Phase 0 (Setup) | ✅ approved | Session 6 | Week 1 |
+| Phase 0 (Setup) | 🟢 **implemented** (5/5 ACs green; Session 8) | Session 6 | Week 1 — **DONE 2026-05-05** |
 | Phase 0b (Heuristics infra) | ✅ approved | Session 6 | Week 1 |
 | **Phase 1 (Browser Perception)** | ✅ **approved** | **Session 7** | Week 1 (T014) + Week 2 (full) |
 | Phase 1b (Perception Ext v2.4) | ⚪ draft | future JIT | Week 3 (ride-along TBD) |
@@ -62,6 +62,10 @@ cross_references:
 ## 2. Standing conditions (BINDING obligations from past R17.4 reviews — delete when consumed)
 
 These conditions ride along with the implementing task. Delete each row when the implementing task lands and the condition is satisfied.
+
+### Phase 0 — Session 8 implementation (closed)
+
+Phase 0 had no R17.4 BINDING conditions from Session 6 review. During implementation (Session 8), 2 R11.4 spec defects surfaced + were patched in same commits as the implementing tasks. No standing conditions remain for Phase 0.
 
 ### Phase 0b — Session 6 review
 
@@ -98,7 +102,8 @@ These conditions ride along with the implementing task. Delete each row when the
 | **PD-01** | Phase 1b + 1c folding — week 2 ride-along vs slip to weeks 3-4. | engineering lead | After Phase 1 ships in week 2 |
 | **PD-02** | Phase 2 forward-pull — bring T-PHASE2-TYPES + T019 + T024 + T048 into week 4 to ease week-5 load? | engineering lead | After Phase 6 ships in week 4 |
 | **PD-03** | Next JIT analyze target = Phase 4 (week-3 dependency: T070 RLS first runtime + T073 LLM cornerstone temperature=0 first runtime + R6 LangSmith trace channel). NOT urgent during week-1 implementation. | engineering lead | Just-before week 3 begins |
-| **PD-04** | Phase 1 T015 integration-test fixture set — current spec is `example.com` (simple) + `amazon.in` (complex/bot) + Shopify demo (TBD). Replace Shopify demo with `peregrineclothing.co.uk` T-shirt PDP (Shopify-powered real D2C — better real-world coverage than `example.com` too)? | T015 implementer (week 2) | When T015 lands |
+| **PD-04** | Phase 1 T015 integration-test fixture set — current spec is `example.com` (simple) + `amazon.in` (complex/bot) + Shopify demo (TBD). Replace Shopify demo with `peregrineclothing.co.uk` T-shirt PDP (Shopify-powered real D2C — better real-world coverage than `example.com` too)? **Effectively resolved** by Session 8 demo-target lock at the Peregrine PDP — close when T015 lands in week 2 by referencing this PD. | T015 implementer (week 2) | When T015 lands |
+| **PD-05 (NEW Session 8)** | Should `.claude/settings.local.json` be untracked from git (it was committed before .gitignore excluded it; now shows as "modified" forever)? `git rm --cached .claude/settings.local.json` would silently fix; per-user file by design. Cosmetic only — fix when convenient or defer. | engineering lead | next session that touches git hygiene |
 
 ---
 
@@ -126,6 +131,8 @@ When a new Claude session starts:
 - **Session 6 (2026-04-30)** — Phase 0 + Phase 0b R17.4 approved; centralized phase-review templates shipped; walking-skeleton roadmap v0.3 + visual.md + .html; constitution.md sync fix to .specify/memory/. Commits: `b8994a1`, `bbca2a9`, `2ba6b6e`. Per-session archive: [session-2026-04-30-handover.md](session-2026-04-30-handover.md).
 
 - **Session 7 (2026-05-01)** — Phase 1 v0.3 polish (8 analyze findings) + R17.4 review APPROVE with C1 BINDING (T015 timeout budgets); Phase 6 v0.4 catch-up polish (3 HIGH + 1 MEDIUM analyze findings; closed multi-artifact version drift v0.1/v0.2/v0.3 → v0.4) + R17.4 review APPROVE with C1+C2 BINDING (T106 Zod-error sanitization mirroring Phase 0b D1 + r6-ip-boundary.test.ts string-interpolation coverage); INDEX.md v1.4 → v1.6; /speckit.implement ↔ neural-dev-workflow integration via extension hooks; rolling session-handover.md established (this file). Commits: `4bd1f5c`, `e0ed5a0`, `26b7a72`, `2ee7914`, `cc657da`. Per-session archive: [session-2026-05-01-handover.md](session-2026-05-01-handover.md).
+
+- **Session 8 (2026-05-05)** — **Phase 0 implementation complete in single 1-day session.** All 8 tasks (T-PHASE0-TEST + T001-T005 + T-PHASE0-DOC + T-PHASE0-ROLLUP) shipped on `feat/week-1-walking-skeleton` branch. Acceptance suite `tests/acceptance/phase-0-setup.spec.ts` 5/5 green. Two R11.4 spec defects patched during impl (spec.md v0.3 → v0.4 → v0.5: AC-04 `pg_extension` → `pg_available_extensions`; AC-05 `DATABASE_URL` → `POSTGRES_URL` + `CLAUDE_MODEL` dropped). R17 status bumps `approved` → `implemented` on 4 artifacts (spec/plan/tasks/README). R19 rollup `phase-0-current.md` v1.0 landed. INDEX.md v1.6 → v1.7 with row 0 flip ⚪ → 🟢. Pre-authorized deviations: pnpm 9 → 10.33.3; engines.node:"22"; T004/T005 author → verify reframe. Env side-effect: Microsoft VCRedist installed via winget for UCRT API sets (one-time host fix; documented in root README troubleshooting). Commits: `9919449` (T-PHASE0-TEST+T001), `bb63cd0` (T002), `90ab537` (T003), `1e9ff98` (T004 + spec v0.4), `bd09040` (T005 + spec v0.5), `42a21fb` (T-PHASE0-DOC), + this rollup commit. Next: Phase 1 implementation (T014 forward-pulled to week 1) + Phase 0b infra + walking-skeleton T-SKELETON-001..010 by Wednesday demo (2026-05-06).
 
 ---
 
