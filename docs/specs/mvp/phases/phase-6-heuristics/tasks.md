@@ -2,9 +2,9 @@
 title: Tasks — Phase 6 Heuristic KB Engine
 artifact_type: tasks
 status: approved
-version: 0.4
+version: 0.5
 created: 2026-04-27
-updated: 2026-04-30
+updated: 2026-05-05
 owner: engineering lead
 authors: [Claude (drafter)]
 
@@ -40,11 +40,13 @@ delta:
     - v0.1 → v0.2 — adds T4B-013 dependency notes; HeuristicSchemaExtended manifest selectors
     - v0.2 → v0.3 — added Cross-phase note at top pointing readers to phase-0b-heuristics/tasks.md for T103/T104/T105 (engine vs content split made explicit; analyze L5 finding from Phase 0b /speckit.analyze pass — spans phases since T103-T105 are owned by Phase 0b but referenced in Phase 6)
     - v0.3 → v0.4 — Session 7 /speckit.analyze polish — H1 fix: T-PHASE6-LOGGER (Phase 2 Foundational, line 115) now registers the full 6-path Pino redaction config matching spec.md:101 authoritative list — `['*.body', '*.benchmark.value', '*.benchmark.standard_text', '*.benchmark.unit', '*.benchmark.metric', '*.provenance.citation_text']` — closing the R6 enforcement gap that the prior 3-path with wrong wildcard syntax (`*.benchmark.*.value` etc) would have left open. Frontmatter sync with parallel spec.md v0.3→v0.4 (M1) + plan.md v0.2→v0.4 catch-up (M1 + v0.3 sync + H3) + impact.md v0.1→v0.4 catch-up (v0.2 + v0.3 + H2). No AC-NN/R-NN/SC-NNN ID changes; T101-T112 + T-PHASE6-* task bodies preserved verbatim except T-PHASE6-LOGGER redaction-path list.
+    - v0.4 → v0.5 (2026-05-05 Session 8) — T101 marked `[x]` standalone (forward-pulled to week 1 per `implementation-roadmap.md` §6 cross-week ordering note: "T101 MUST land in week 1 alongside T-SKELETON-003 for contract test feasibility"). T101 implementation files: `packages/agent-core/src/analysis/heuristics/types.ts` (HeuristicSchemaBase + HeuristicSchemaExtended + ProvenanceSchema + BenchmarkSchema discriminatedUnion + 6 enum constants + matchesSelector helper) + `packages/agent-core/tests/unit/analysis/heuristics/types.test.ts` (40 tests covering AC-01 + AC-02 + AC-11 partial). Phase 6 overall status remains `approved` — only T101 is forward-pulled; T102 + T106-T112 + T-PHASE6-{TESTS,LOGGER,FIXTURES,DOC,ROLLUP} still `[ ]` and execute in week 4 per the roadmap. Commit `3d2119c`.
   impacted:
     - Phase 4b T4B-013 — drives the loadForContext() implementation; lands AFTER Phase 6 baseline ships
     - Phase 0b heuristic authoring — heuristic manifests now MUST include archetype/page_type/device selectors
   unchanged:
     - All 9 baseline task IDs and acceptance criteria (T4B-013 owns implementation; Phase 6 owns schema field reservation)
+    - T102 + T106-T112 + T-PHASE6-* task bodies (only T101 mark-done changed in v0.5)
 
 governing_rules:
   - Constitution R3, R5.4/R5.5, R6, R9, R15.3, R23
@@ -128,7 +130,7 @@ T106 + T107 carry extended kill criteria.
 
 ### Implementation tasks
 
-- [ ] **T101 [SETUP] [US-1] HeuristicSchema (base + Extended)** (AC-01, AC-02, AC-11 partial, REQ-HK-001 + REQ-HK-EXT-001..019 + REQ-CONTEXT-DOWNSTREAM-001)
+- [x] **T101 [SETUP] [US-1] HeuristicSchema (base + Extended)** (AC-01, AC-02, AC-11 partial, REQ-HK-001 + REQ-HK-EXT-001..019 + REQ-CONTEXT-DOWNSTREAM-001) — **forward-pulled to week 1 (2026-05-05) per implementation-roadmap.md §6 Cross-week ordering note; landed in commit `3d2119c` with 40 vitest unit tests covering AC-01 + AC-02 + AC-11 partial**
   - **Brief:**
     - **Outcome:** `analysis/heuristics/types.ts` exports `HeuristicSchemaBase` + `HeuristicSchemaExtended` + `ProvenanceSchema` + `BenchmarkSchema` (discriminated union: quantitative / qualitative). Extended `.extend()`s base with §9.10 fields. **Both `benchmark` and `provenance` REQUIRED** (R15.3). **v0.2 — `HeuristicSchemaExtended` adds optional manifest selectors `archetype`, `page_type`, `device` (each accepting an array of enum values matching ContextProfile dimensions)** for AC-11 / T4B-013 filtering.
     - **Constraints:** File < 300 lines. Zero `z.any()`. `provenance.draft_model` accepts `'human'` literal OR LLM-model-id pattern. `provenance.verified_date` ISO-8601 regex.
