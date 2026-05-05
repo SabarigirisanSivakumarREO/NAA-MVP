@@ -2,7 +2,7 @@
 title: Tasks — Phase 0 Setup
 artifact_type: tasks
 status: approved
-version: 0.4
+version: 0.5
 created: 2026-04-26
 updated: 2026-05-05
 owner: engineering lead
@@ -27,11 +27,13 @@ delta:
     - v0.1 → v0.2 dependency graph reordered to make TDD ordering visible (no task body changes)
     - v0.2 → v0.3 — status bumped draft → approved (R17.4 engineering lead sign-off via 2026-04-30 session); no task body changes
     - v0.3 → v0.4 (2026-05-05 T004 implementation) — T004 Brief reframed from "author docker-compose.yml" to "VERIFY pre-existing docker-compose.yml" per user kickoff directive (compose file authored 2026-04-24 ships 3 services anticipating Phase 4/9 scope; AC-04 query updated to use `pg_available_extensions` per spec.md v0.3 → v0.4 R11.4 patch). T-PHASE0-TEST + T001 + T002 + T003 + T004 marked [x]. AC-NN IDs preserved (R18 append-only). Task body of T005 unchanged (spec drift POSTGRES_URL vs DATABASE_URL still pending T005).
+    - v0.4 → v0.5 (2026-05-05 T005 implementation) — T005 Brief reframed: (a) env var DATABASE_URL → POSTGRES_URL throughout (matches pre-existing .env.example authored 2026-04-24 + docker-compose POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB convention; spec.md v0.4 → v0.5 R11.4 patch); (b) CLAUDE_MODEL example dropped from key list (model name hardcoded per CLAUDE.md §2 + architecture.md §6.4); (c) implementation note added that .env.example is pre-existing (verification only); (d) constraints simplified — `pg` import in scripts/ is canonical R9 carve-out per spec.md §Assumptions, no inline rationale needed in task body. T005 marked [x]. T-PHASE0-DOC + T-PHASE0-ROLLUP still pending (Day 1 polish + Day 2 phase-exit).
   impacted:
-    - docs/specs/mvp/phases/phase-0-setup/spec.md AC-04 wording (same v0.3 → v0.4 delta)
-    - tests/acceptance/phase-0-setup.spec.ts AC-04 query (same commit as T004)
+    - docs/specs/mvp/phases/phase-0-setup/spec.md AC-04 wording (v0.3 → v0.4 delta) + AC-05 wording (v0.4 → v0.5 delta)
+    - tests/acceptance/phase-0-setup.spec.ts AC-04 + AC-05 (already POSTGRES_URL-tolerant from initial T-PHASE0-TEST authoring; no test-file change required for v0.5)
   unchanged:
-    - T001..T003, T005 acceptance criteria, file lists, kill criteria block
+    - T001..T003 acceptance criteria, file lists, kill criteria block
+    - T-PHASE0-DOC + T-PHASE0-ROLLUP polish task definitions
 
 governing_rules:
   - Constitution R3 (TDD)
@@ -182,16 +184,16 @@ pnpm install && pnpm build && pnpm cro:audit --version && docker-compose up -d &
   - **Smoke test:** `docker compose up -d --wait` brings all 3 services healthy
   - **Kill criteria:** default block
 
-- [ ] **T005 [US-1] Setup environment variables** (AC-05)
+- [x] **T005 [US-1] Setup environment variables** (AC-05)
   - **Brief:**
-    - **Outcome:** `.env.example` at repo root documents every key needed across Phase 0-9 with one-line comments: DATABASE_URL (Phase 0), ANTHROPIC_API_KEY (Phase 4), CLAUDE_MODEL (Phase 4), R2_ACCOUNT_ID/R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY/R2_BUCKET (Phase 4), CLERK_SECRET_KEY/CLERK_PUBLISHABLE_KEY (Phase 9), RESEND_API_KEY (Phase 9), REDIS_URL (Phase 4), LANGSMITH_API_KEY (Phase 4 — optional). `.env` listed in `.gitignore` (already added in T001). Root `package.json` script `db:migrate` runs a tiny Node script that connects to Postgres via DATABASE_URL and `CREATE EXTENSION IF NOT EXISTS vector`; prints "OK pgvector vN.N.N".
+    - **Outcome:** `.env.example` at repo root documents every key needed across Phase 0-9 with one-line comments: POSTGRES_URL (Phase 0), ANTHROPIC_API_KEY (Phase 4), R2_ACCOUNT_ID/R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY/R2_BUCKET (Phase 4), CLERK_SECRET_KEY/CLERK_PUBLISHABLE_KEY (Phase 9), RESEND_API_KEY (Phase 9), REDIS_URL (Phase 4), LANGSMITH_API_KEY (Phase 4 — optional). `.env` listed in `.gitignore` (already added in T001). Root `package.json` script `db:migrate` runs a tiny Node script that connects to Postgres via POSTGRES_URL and `CREATE EXTENSION IF NOT EXISTS vector`; prints "OK pgvector vN.N.N". Implementation reframed (2026-05-05) from "author .env.example + script" to "**verify pre-existing .env.example** (authored 2026-04-24; satisfies AC-05 key list per .env.example v1.0) + author scripts/db-migrate-stub.mjs + add db:migrate script". Pre-existing .env.example uses POSTGRES_URL convention (not DATABASE_URL as the spec originally cited — see spec.md v0.4 → v0.5 R11.4 patch).
     - **Context:** spec.md AC-05 + plan.md "Phase 1 Design" item 5. Stub script lives at `scripts/db-migrate-stub.mjs` (project-root-level utility, not under packages/ since no Drizzle yet); plan.md does NOT list this file — adding it now as a Phase 0 utility is acceptable per architecture.md §6.5 (utility scripts at root are permitted).
-    - **Constraints:** No real secrets committed. `.env.example` MUST NOT include any plausible-looking key values (use `<your-key-here>` placeholders). Stub script uses Node 22 native `node-postgres` (`pg`) — wait, R9 says no direct `pg` imports outside adapters. Decision: stub script is *infrastructure tooling*, not production code, so it lives at `scripts/db-migrate-stub.mjs` and is exempt — this is the pattern for build/dev scripts. Document this exemption in the script's header comment with a `why:` note.
+    - **Constraints:** No real secrets committed. `.env.example` MUST NOT include any plausible-looking key values (use empty placeholders). Stub script uses `pg` (node-postgres) directly — R9 carve-out for infrastructure tooling per spec.md §Assumptions; documented in the script header comment with `why:` note (R22.2 Ratchet).
     - **Non-goals:** No Drizzle config; no actual migrations.
     - **Acceptance:** `cp .env.example .env` succeeds; running `pnpm db:migrate` against the docker-compose Postgres prints "OK pgvector vN.N.N"; CLI `--version` works without `.env` present.
     - **Integration:** Closes the Phase 0 acceptance loop. AC-05 unblocks Phase 1+ work.
     - **Verify:** AC-05 block FAIL → PASS.
-  - **Files:** `.env.example`, `scripts/db-migrate-stub.mjs`; modify root `package.json` to add `db:migrate` script
+  - **Files:** `.env.example` (pre-existing — verification only); `scripts/db-migrate-stub.mjs` (NEW); modify root `package.json` to add `db:migrate` script + `pg` devDep; spec.md v0.4 → v0.5 + tasks.md v0.4 → v0.5 deltas (R11.4 POSTGRES_URL patch)
   - **dep:** T004
   - **Smoke test:** `pnpm db:migrate` connects to Postgres and verifies pgvector
   - **Kill criteria:** default block + extra: any attempt to pull a Drizzle dependency in Phase 0 → STOP, that's Phase 4 scope

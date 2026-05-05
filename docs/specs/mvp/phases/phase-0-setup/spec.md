@@ -2,7 +2,7 @@
 title: Phase 0 — Setup
 artifact_type: spec
 status: approved
-version: 0.4
+version: 0.5
 created: 2026-04-26
 updated: 2026-05-05
 owner: engineering lead
@@ -31,13 +31,13 @@ delta:
     - v0.1 → v0.2 applied 5 polish fixes from /speckit.analyze report (F1, F3, F11, F12, F18) without changing AC-NN IDs (R18 append-only preserved)
     - v0.2 → v0.3 applied 3 analyze-driven fixes (M1 SC-003 lint clause deferred to Phase 4 ESLint scope; M2 NF-Phase0-02 marked observation-only; L2 R1-R23 → R1-R26 in Mandatory References + derived_from + R24-R26 layer-MUST-NOT N/A note); status bumped draft → approved (R17.4 engineering lead sign-off via 2026-04-30 session)
     - v0.3 → v0.4 (2026-05-05 T004 implementation surfaced spec defect per R11.4) — AC-04 wording corrected; original conflated "binaries preinstalled" with "extension CREATEd in DB". Reality: `pgvector/pgvector:pg16` image preinstalls binaries (queryable via `pg_available_extensions`) but does NOT auto-CREATE the extension; the `/docker-entrypoint-initdb.d/` directory ships empty. CREATE EXTENSION is delegated to T005's `pnpm db:migrate` stub per §Assumptions (already documented). Patch: AC-04 now uses `pg_available_extensions` (binaries) instead of `pg_extension` (CREATEd); CREATE EXTENSION verification stays in AC-05's T005 scope. AC-NN ID preserved (R18 append-only); only the criterion text under AC-04 changed. No code/behavior change beyond aligning spec text with documented design.
+    - v0.4 → v0.5 (2026-05-05 T005 implementation) — AC-05 wording corrected: env var name `DATABASE_URL` → `POSTGRES_URL`. Original cited DATABASE_URL but the .env.example authored 2026-04-24 (alongside docker-compose.yml) uses POSTGRES_URL — consistent with the docker-compose POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB convention. Patch aligns spec text with the canonical scaffolding env-var name. AC-NN ID preserved. CLAUDE_MODEL also dropped from the AC-05 example list (model name `claude-sonnet-4-*` is hardcoded per CLAUDE.md §2 + architecture.md §6.4; no env var needed).
   impacted:
-    - tests/acceptance/phase-0-setup.spec.ts AC-04 block — query updated in same commit (T004)
-    - docs/specs/mvp/phases/phase-0-setup/tasks.md T004 acceptance line — wording updated in same commit
+    - tests/acceptance/phase-0-setup.spec.ts AC-04 block — query updated (T004 v0.4 commit)
+    - docs/specs/mvp/phases/phase-0-setup/tasks.md T004 + T005 — wording updated in respective commits
   unchanged:
     - AC-01..AC-05 IDs (R18 append-only)
     - R-01..R-06 functional requirement IDs and statements
-    - AC-05 (CREATE EXTENSION verification stays here per existing design)
     - Out of Scope, Success Criteria, Constitution Alignment Check (all preserved)
 
 governing_rules:
@@ -118,7 +118,7 @@ A new engineer clones the Neural repository, follows the README, and reaches a s
 | AC-02 | `pnpm build` compiles `packages/agent-core` (TypeScript 5 strict, Vitest configured); `pnpm test` in agent-core runs zero tests successfully (placeholder for TDD-first phases) | `tests/acceptance/phase-0-setup.spec.ts` | T002 |
 | AC-03 | `pnpm cro:audit --version` prints semver-compatible string from `apps/cli/package.json#version`; exit code 0 | `tests/acceptance/phase-0-setup.spec.ts` | T003 |
 | AC-04 | `docker compose up -d` starts a Postgres 16 container with `pgvector` **binaries preinstalled** (CREATE EXTENSION delegated to T005's `pnpm db:migrate` per §Assumptions); `docker compose exec postgres psql -tAc 'SELECT default_version FROM pg_available_extensions WHERE name=''vector''';` returns a non-null row | `tests/acceptance/phase-0-setup.spec.ts` | T004 |
-| AC-05 | `.env.example` exists at repo root; documents every key required by `tasks-v2.md` Phase 0-9 (DATABASE_URL, ANTHROPIC_API_KEY, R2 keys, CLERK keys, RESEND key, REDIS_URL); `.env` is in `.gitignore`; CLI `--version` works without `.env` present | `tests/acceptance/phase-0-setup.spec.ts` | T005 |
+| AC-05 | `.env.example` exists at repo root; documents every key required by `tasks-v2.md` Phase 0-9 (POSTGRES_URL, ANTHROPIC_API_KEY, R2 keys, CLERK keys, RESEND key, REDIS_URL); `.env` is in `.gitignore`; CLI `--version` works without `.env` present | `tests/acceptance/phase-0-setup.spec.ts` | T005 |
 
 **Note:** AC-NN IDs are append-only on subsequent edits per Constitution R18. Never renumber.
 
