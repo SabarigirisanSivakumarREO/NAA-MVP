@@ -206,7 +206,7 @@ pnpm install && pnpm build && pnpm cro:audit --version && docker-compose up -d &
 
 For Phase 0, polish is minimal:
 
-- [ ] **T-PHASE0-DOC [P]** Update root `README.md` with developer quickstart: prerequisites (Node 22, pnpm 9, Docker, Git), `pnpm install`, `docker-compose up -d`, `pnpm db:migrate`, `pnpm cro:audit --version`. Reference `docs/specs/mvp/phases/phase-0-setup/spec.md` for the canonical exit-criteria list.
+- [x] **T-PHASE0-DOC [P]** Update root `README.md` with developer quickstart: prerequisites (Node 22, pnpm 10.33.3, Docker 24.x+, Git, **Windows: VCRedist for UCRT**), `pnpm install`, `docker compose up -d --wait`, `cp .env.example .env`, `pnpm db:migrate`, `pnpm cro:audit --version`. References `docs/specs/mvp/phases/phase-0-setup/spec.md` exit criteria + the rest of the corpus (PRD, constitution, INDEX, roadmap).
 - [ ] **T-PHASE0-ROLLUP** Author `docs/specs/mvp/phases/phase-0-setup/phase-0-current.md` per R19 + `docs/specs/mvp/templates/phase-rollup.template.md`. Include: active modules introduced, data contracts in effect (none — Phase 0 has no schemas), system flows operational (`pnpm cro:audit --version`, Postgres+pgvector container), known limitations (no Drizzle, no LLM, no browser), open risks for Phase 1 (Pino logger correlation fields untested until first node uses them).
 
 ---
