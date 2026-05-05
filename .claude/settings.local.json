@@ -50,7 +50,17 @@
       "Bash(awk -F'|' '{print $2, \"|\", $4}')",
       "Bash(cat)",
       "Read(//tmp/**)",
-      "PowerShell(git commit -F .git/COMMIT_MSG_SESSION4.txt)"
+      "PowerShell(git commit -F .git/COMMIT_MSG_SESSION4.txt)",
+      "Bash(pnpm:*)",
+      "Bash(corepack:*)",
+      "Bash(docker:*)",
+      "Bash(docker compose:*)",
+      "Bash(turbo:*)",
+      "Bash(turbo run:*)",
+      "Bash(node:*)",
+      "Bash(npx:*)",
+      "Bash(nvm:*)",
+      "Bash(npm:*)"
     ]
   }
 }
