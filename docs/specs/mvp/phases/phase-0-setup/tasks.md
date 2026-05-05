@@ -140,7 +140,7 @@ pnpm install && pnpm build && pnpm cro:audit --version && docker-compose up -d &
   - **Smoke test:** `pnpm install` succeeds at repo root
   - **Kill criteria:** default block above
 
-- [ ] **T002 [US-1] Create agent-core package skeleton** (AC-02)
+- [x] **T002 [US-1] Create agent-core package skeleton** (AC-02)
   - **Brief:**
     - **Outcome:** `packages/agent-core/` exists with `package.json` (`@neural/agent-core`, type: module), `tsconfig.json` (extends root), `vitest.config.ts`, `src/index.ts` (named-export barrel — empty for now), `src/adapters/README.md` (R9 boundary note from plan.md design), `src/observability/logger.ts` (Pino factory skeleton), `src/observability/index.ts` (re-exports), `tests/unit/.gitkeep`.
     - **Context:** plan.md "Phase 1 Design" item 1 (Pino logger) + item 3 (adapter README) define the contents. Pino dependency added to `packages/agent-core/package.json`.
