@@ -22,6 +22,11 @@
       "types": "./dist/perception/types.d.ts",
       "import": "./dist/perception/types.js",
       "default": "./dist/perception/types.js"
+    },
+    "./analysis/heuristics/types": {
+      "types": "./dist/analysis/heuristics/types.d.ts",
+      "import": "./dist/analysis/heuristics/types.js",
+      "default": "./dist/analysis/heuristics/types.js"
     }
   },
   "scripts": {
