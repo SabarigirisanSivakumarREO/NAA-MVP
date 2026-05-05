@@ -108,15 +108,16 @@ Per [plan.md](plan.md) §1: Week 1 = T0B-001..T0B-005 (infrastructure) → Week 
 - **acceptance:** CLI per [plan.md v0.5 §5](plan.md). Five checks: (1) Zod parse against HeuristicSchemaExtended (T101); (2) all 5 `provenance` fields non-empty (Zod-enforced via T101 `.strict()` + `.min(1)`); (3) `benchmark` discriminated union present + well-formed (Zod-enforced); (4) manifest selectors `archetype` + `page_type` + `device` present (T101 marks `.optional()` but Phase 0b requires presence — lint enforces); (5) banned-phrase regex on **`body`** field (v0.5 patch — T101 body-string design supersedes legacy `recommendation.summary` + `recommendation.details` references). Exit non-zero on any failure. Conformance test covers all 5 fail cases + 1 pass case + D1 BINDING (Zod-error redaction with `NEURAL_TEST_FIXTURE_BODY` sentinel) + AC-13 isolation assertions per spec.md v0.2 (5-channel coverage: gitignore contains `.heuristic-drafts/`; drafting subprocess does NOT import `langsmith` / `@langsmith/*`; drafting subprocess does NOT import `packages/agent-core/src/observability/*` Pino module; drafting subprocess script is NOT imported by any `apps/` or `packages/` runtime module; `apps/dashboard/**/*` source does NOT reference drafting subprocess paths). AC-13 channels (b)/(c)/(d)/(e) are vacuously true if drafting subprocess + apps/dashboard don't yet exist; tests assert and skip with clear TODO when those land.
 - **conformance:** `apps/cli/tests/conformance/heuristic-lint.test.ts` (AC-04, AC-13)
 
-## T0B-005 — `heuristics-repo/README.md` + `.gitignore` for `.heuristic-drafts/`
+## T0B-005 — `heuristics-repo/README.md` + `.gitignore` for `.heuristic-drafts/` ✅ **DONE 2026-05-06**
 
-- **dep:** T0B-001, T0B-002, T0B-003, T0B-004
+- **dep:** T0B-001 ✅ (f54c040), T0B-002 ✅ (2c1bad1), T0B-003 ✅ (8c8eaba), T0B-004 ✅ (b861f04)
 - **spec:** R6, R15.3, R15.3.3
 - **files:**
-  - `heuristics-repo/README.md` (NEW)
-  - `.gitignore` (add `.heuristic-drafts/`)
-- **acceptance:** README covers: authoring workflow (draft → verify → lint → PR), R6 IP discipline (drafting subprocess isolation per [plan.md §6](plan.md)), spot-check protocol (3 rounds at +10/+20/+30; ≤1 of 5 divergence acceptance), link back to PRD F-012 + Phase 0b spec. New author can follow it without engineering-lead clarification.
+  - `heuristics-repo/README.md` (NEW) ✅
+  - `.gitignore` (`.heuristic-drafts/` entry already added in T0B-004 commit b861f04)
+- **acceptance:** README covers: 4-step authoring workflow (draft → verify → lint → PR — each step links to its sibling template) ✅; R6 IP discipline including **D2 BINDING — explicit table of 8 forbidden sharing channels (Slack/email/screenshot/support-ticket/unauthorized-LLM/non-engineering-verifier/pushing .heuristic-drafts/ to git/forwarding committed JSON)** ✅; spot-check protocol (3 rounds at +10/+20/+30; ≤1 of 5 divergence per AC-12; deterministic random sampler suggested) ✅; kill criteria summary table (mirrors plan.md §7) ✅; first-30-min author onboarding checklist ✅; cross-references to PRD F-012, Phase 0b spec/plan v0.5, all 4 sibling templates, T101 schema, downstream Phase 4b + Phase 6 consumers ✅. New author can follow it without engineering-lead clarification (validated when first T103 author ships in week 4).
 - **conformance:** manual review (AC-05); first new author follows it cleanly.
+- **D3 OPTIONAL — pre-commit hook deferred to v1.0.1:** rationale: (a) requires .husky/pre-commit infrastructure scope expansion outside Phase 0b; (b) `.gitignore` already excludes `.heuristic-drafts/` (T0B-004 commit b861f04) so accidental git add will skip the directory; (c) D2 BINDING text in README + T0B-002 + T0B-003 already enforces the discipline at the human-protocol layer; (d) v1.0.1 is the right scope for git-infrastructure additions. Document in v1.0.1 backlog.
 
 ---
 
