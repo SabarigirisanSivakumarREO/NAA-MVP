@@ -13,5 +13,10 @@ dist/
 .next/
 coverage/
 *.log
+*.tsbuildinfo
+
+# Playwright Test artifacts (tests/acceptance/*.spec.ts via @playwright/test)
+playwright-report/
+test-results/
 
 .claude/settings.local.json

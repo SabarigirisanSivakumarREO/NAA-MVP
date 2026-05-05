@@ -122,11 +122,11 @@ pnpm install && pnpm build && pnpm cro:audit --version && docker-compose up -d &
 
 ### Tests for User Story 1 (R3 TDD — write FIRST, ensure FAIL, then implement)
 
-- [ ] **T-PHASE0-TEST [P] [US-1]** Author Phase 0 acceptance test at `tests/acceptance/phase-0-setup.spec.ts` (Playwright Test) covering AC-01 through AC-05 via `child_process.execSync` shell exec. Each AC = one `test()` block. Test MUST FAIL initially (no `package.json` exists yet). Note: this is a Phase 0 acceptance test, not a Phase 8/9 audit acceptance test — naming kept distinct.
+- [x] **T-PHASE0-TEST [P] [US-1]** Author Phase 0 acceptance test at `tests/acceptance/phase-0-setup.spec.ts` (Playwright Test) covering AC-01 through AC-05 via `child_process.execSync` shell exec. Each AC = one `test()` block. Test MUST FAIL initially (no `package.json` exists yet). Note: this is a Phase 0 acceptance test, not a Phase 8/9 audit acceptance test — naming kept distinct.
 
 ### Implementation for User Story 1
 
-- [ ] **T001 [P] [US-1] Initialize monorepo** (AC-01)
+- [x] **T001 [P] [US-1] Initialize monorepo** (AC-01)
   - **Brief:**
     - **Outcome:** Repo root has `package.json` (workspace + scripts), `pnpm-workspace.yaml` (declares `packages/*`, `apps/*`), `turbo.json` (pipelines: build, lint, typecheck, test), `tsconfig.json` (strict, base for all packages), `.gitignore` (node_modules, .env, dist, .turbo, *.log).
     - **Context:** plan.md "Project Structure" table shows exact paths. Tech stack pinned: pnpm 9.x + Turborepo 2.x + TypeScript 5.x + Node 22 LTS engines field.
