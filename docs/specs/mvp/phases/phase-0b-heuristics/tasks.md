@@ -88,12 +88,12 @@ Per [plan.md](plan.md) §1: Week 1 = T0B-001..T0B-005 (infrastructure) → Week 
 - **acceptance:** 8-step protocol per [plan.md §3](plan.md): URL liveness, citation locate, ±20% benchmark re-derivation (quantitative) or text-reference (qualitative), banned-phrase check, manifest-selector check, fill `verified_by`/`verified_date`, run `pnpm heuristic:lint`, commit with PR Contract Proof block. Includes 3-strike re-draft rule + escalation criteria. Adds: R6/R15.3.3 discipline section enumerating forbidden sharing channels (Slack/email/screenshot/support-ticket — sets precedent for T0B-005 D2 BINDING); pre-flight checklist; "what this protocol does NOT cover" disambiguation block (defers to T0B-001/004/005 + spot-check protocol); cross-references to all sibling Phase 0b templates.
 - **conformance:** manual review.
 
-## T0B-003 — PR Contract Proof block extension
+## T0B-003 — PR Contract Proof block extension ✅ **DONE 2026-05-06**
 
-- **dep:** T0B-002, PRD §10.9 PR Contract template
+- **dep:** T0B-002 ✅ (commit 2c1bad1), PRD §10.9 PR Contract template ✅
 - **spec:** R15.3.2 + PRD §10.9
-- **files:** `docs/specs/mvp/templates/heuristic-pr-proof.md`
-- **acceptance:** Per-heuristic Proof block template per [plan.md §4](plan.md): heuristic ID, file path, drafted by, verified by, verified date, source URL (with status / archive note), re-derivation note, lint status, banned-phrase check status, manifest selectors. Linked from PRD §10.9 PR Contract section.
+- **files:** `docs/specs/mvp/templates/heuristic-pr-proof.md` ✅ (v1.0.0 landed)
+- **acceptance:** Per-heuristic Proof block template per [plan.md §4](plan.md): heuristic ID, file path, drafted by, verified by, verified date, source URL (with status / archive note), re-derivation note, lint status, banned-phrase check status, manifest selectors. Linked from PRD §10.9 PR Contract section. Adds: explicit "where this template fits in the PR body" 4-block PR Contract context; multi-heuristic PR pattern (5+ heuristics in batch — typical for T103/T104/T105 week 4); R6.1 "what NEVER to include" guard table (8 forbidden vs 9 allowed fields with rationale per row); reviewer-side guidance on detecting + blocking PRs that leak body / citation_text content; worked example that continues from T0B-001 + T0B-002 BAYMARD-CHECKOUT-001 example for cross-template consistency.
 - **conformance:** manual review; first heuristic PR cites this template in its Proof block.
 
 ## T0B-004 — `pnpm heuristic:lint` CLI helper
