@@ -2,9 +2,9 @@
 title: Tasks — Phase 0 Setup
 artifact_type: tasks
 status: approved
-version: 0.3
+version: 0.4
 created: 2026-04-26
-updated: 2026-04-30
+updated: 2026-05-05
 owner: engineering lead
 authors: [Claude (drafter)]
 
@@ -22,16 +22,16 @@ derived_from:
 req_ids: []
 
 delta:
-  new:
-    - First phase tasks.md landing under R19 phase folder layout
-    - T001-T005 task list pulled verbatim from tasks-v2.md
-    - v0.2 — Dependency graph now explicitly shows T-PHASE0-TEST as the TDD prerequisite preceding T001 (analyze finding F11)
+  new: []
   changed:
     - v0.1 → v0.2 dependency graph reordered to make TDD ordering visible (no task body changes)
     - v0.2 → v0.3 — status bumped draft → approved (R17.4 engineering lead sign-off via 2026-04-30 session); no task body changes
-  impacted: []
+    - v0.3 → v0.4 (2026-05-05 T004 implementation) — T004 Brief reframed from "author docker-compose.yml" to "VERIFY pre-existing docker-compose.yml" per user kickoff directive (compose file authored 2026-04-24 ships 3 services anticipating Phase 4/9 scope; AC-04 query updated to use `pg_available_extensions` per spec.md v0.3 → v0.4 R11.4 patch). T-PHASE0-TEST + T001 + T002 + T003 + T004 marked [x]. AC-NN IDs preserved (R18 append-only). Task body of T005 unchanged (spec drift POSTGRES_URL vs DATABASE_URL still pending T005).
+  impacted:
+    - docs/specs/mvp/phases/phase-0-setup/spec.md AC-04 wording (same v0.3 → v0.4 delta)
+    - tests/acceptance/phase-0-setup.spec.ts AC-04 query (same commit as T004)
   unchanged:
-    - T001..T005 acceptance criteria, file lists, kill criteria block
+    - T001..T003, T005 acceptance criteria, file lists, kill criteria block
 
 governing_rules:
   - Constitution R3 (TDD)
@@ -168,18 +168,18 @@ pnpm install && pnpm build && pnpm cro:audit --version && docker-compose up -d &
   - **Smoke test:** `pnpm cro:audit --version` prints version
   - **Kill criteria:** default block
 
-- [ ] **T004 [P] [US-1] Setup Docker Compose for Postgres** (AC-04)
+- [x] **T004 [P] [US-1] Setup Docker Compose for Postgres** (AC-04)
   - **Brief:**
-    - **Outcome:** `docker-compose.yml` at repo root with one service `postgres` using image `pgvector/pgvector:pg16` (Postgres 16 + pgvector preinstalled), exposing port 5432, healthcheck via `pg_isready`, named volume `neural_postgres_data`, env defaults (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB).
-    - **Context:** plan.md "Phase 1 Design" item 4. Image choice: `pgvector/pgvector:pg16` is community-published; preinstalls pgvector against Postgres 16-bullseye base. Avoids manual `CREATE EXTENSION` + custom Dockerfile.
+    - **Outcome:** `docker-compose.yml` at repo root with `postgres` service using image `pgvector/pgvector:pg16` (Postgres 16 + pgvector binaries preinstalled), exposing port 5432, healthcheck via `pg_isready`, named volume for data persistence, env defaults (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB). Implementation reframed (2026-05-05) from "author docker-compose.yml" to "**verify pre-existing docker-compose.yml** (authored 2026-04-24 alongside the env-var schema; ships 3 services — postgres + valkey + mailpit — anticipating Phase 4 Redis + Phase 9 Email scope)" — the existing compose file already meets the AC-04 contract.
+    - **Context:** plan.md "Phase 1 Design" item 4. Image choice: `pgvector/pgvector:pg16` is community-published; preinstalls pgvector binaries against Postgres 16. CREATE EXTENSION is NOT auto-run by the image (`/docker-entrypoint-initdb.d/` ships empty) — that step belongs to T005's `pnpm db:migrate` stub per spec.md §Assumptions.
     - **Constraints:** Healthcheck must pass within 30 seconds (NF-Phase0-03). No production secrets in compose file — use env defaults overridable via `.env`.
-    - **Non-goals:** No Redis container (Phase 4). No production deployment.
-    - **Acceptance:** `docker-compose up -d` starts container; `docker-compose exec postgres psql -U postgres -d postgres -c "SELECT extversion FROM pg_extension WHERE extname='vector'"` returns a non-null version.
-    - **Integration:** Provides DB target for T005's stub `db:migrate` script.
-    - **Verify:** AC-04 block FAIL → PASS.
-  - **Files:** `docker-compose.yml`
+    - **Non-goals:** No CREATE EXTENSION (T005). No production deployment.
+    - **Acceptance:** `docker compose up -d --wait` brings all 3 services healthy; `docker compose exec -T postgres psql -U neural -d neural -tAc "SELECT default_version FROM pg_available_extensions WHERE name='vector'"` returns a non-null version (binaries preinstalled).
+    - **Integration:** Provides DB target for T005's stub `db:migrate` script (which runs CREATE EXTENSION).
+    - **Verify:** AC-04 block FAIL → PASS (re-runnable across docker compose restarts since binaries are baked into the image).
+  - **Files:** `docker-compose.yml` (pre-existing — verification only); spec.md + tasks.md + tests/acceptance/phase-0-setup.spec.ts AC-04 wording corrected per R11.4 (see spec.md v0.3 → v0.4 delta)
   - **dep:** T001 (root for the compose file)
-  - **Smoke test:** `docker-compose up -d` starts Postgres + pgvector
+  - **Smoke test:** `docker compose up -d --wait` brings all 3 services healthy
   - **Kill criteria:** default block
 
 - [ ] **T005 [US-1] Setup environment variables** (AC-05)

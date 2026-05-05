@@ -90,18 +90,20 @@ test.describe('Phase 0 — Setup acceptance (AC-01..AC-05)', () => {
     expect(stdout.trim()).toMatch(/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/);
   });
 
-  test('AC-04: docker compose brings Postgres healthy; pgvector extension queryable', () => {
+  test('AC-04: docker compose brings Postgres healthy; pgvector binaries preinstalled', () => {
     expect(existsSync(join(REPO_ROOT, 'docker-compose.yml')), 'docker-compose.yml missing').toBe(true);
 
     // --wait blocks until healthcheck reports healthy (Compose v2.17+); 60s budget per spec NF-Phase0-03
     expect(() => shell('docker compose up -d --wait postgres', { timeoutMs: 60_000 })).not.toThrow();
 
-    // Verify pgvector extension exists; -tA = tuples-only + unaligned (no formatting); -c = single command
+    // Verify pgvector binaries available (CREATE EXTENSION is T005's db:migrate scope per spec.md §Assumptions).
+    // pg_available_extensions reports binaries shipped with the image; pg_extension reports CREATEd extensions.
+    // -tA = tuples-only + unaligned (no formatting); -c = single command.
     const result = shell(
-      `docker compose exec -T postgres psql -U neural -d neural -tAc "SELECT extversion FROM pg_extension WHERE extname='vector'"`,
+      `docker compose exec -T postgres psql -U neural -d neural -tAc "SELECT default_version FROM pg_available_extensions WHERE name='vector'"`,
       { timeoutMs: 15_000 },
     );
-    expect(result.trim(), 'pgvector must report a non-null version').toMatch(/^\d+\.\d+/);
+    expect(result.trim(), 'pgvector binaries must report a non-null default_version').toMatch(/^\d+\.\d+/);
   });
 
   test('AC-05: .env.example documents all required keys; .env gitignored; pnpm db:migrate verifies pgvector', () => {
