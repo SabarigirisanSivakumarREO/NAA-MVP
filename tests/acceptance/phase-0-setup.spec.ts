@@ -83,7 +83,9 @@ test.describe('Phase 0 — Setup acceptance (AC-01..AC-05)', () => {
     expect(existsSync(join(REPO_ROOT, 'apps/cli/package.json')), 'apps/cli/package.json missing').toBe(true);
     expect(existsSync(join(REPO_ROOT, 'apps/cli/src/index.ts')), 'apps/cli/src/index.ts missing').toBe(true);
 
-    const stdout = shell('pnpm cro:audit --version', { timeoutMs: 30_000 });
+    // pnpm -s suppresses script-execution headers; captured stdout is exactly
+    // what the CLI itself prints — the contract users would script against.
+    const stdout = shell('pnpm -s cro:audit --version', { timeoutMs: 30_000 });
     // Semver: <major>.<minor>.<patch> with optional pre-release/build metadata
     expect(stdout.trim()).toMatch(/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/);
   });

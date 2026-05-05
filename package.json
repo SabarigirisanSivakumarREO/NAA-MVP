@@ -13,11 +13,13 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "test:integration": "playwright test"
+    "test:integration": "playwright test",
+    "cro:audit": "tsx apps/cli/src/index.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0",
     "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
     "turbo": "^2.3.0",
     "typescript": "^5.7.0",
     "yaml": "^2.6.0"

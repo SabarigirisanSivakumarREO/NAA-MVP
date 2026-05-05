@@ -1,0 +1,21 @@
+{
+  "name": "@neural/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Neural CLI — cro-audit entry point. Phase 0: --version only; subcommands land Phase 5+ + Phase 9.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "bin": {
+    "cro-audit": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "echo \"lint configured in Phase 4 (ESLint with T073)\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "echo \"unit tests land in Phase 5+ alongside subcommands\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}

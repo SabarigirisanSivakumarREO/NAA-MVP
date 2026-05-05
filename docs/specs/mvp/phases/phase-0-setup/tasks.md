@@ -154,7 +154,7 @@ pnpm install && pnpm build && pnpm cro:audit --version && docker-compose up -d &
   - **Smoke test:** `pnpm build` succeeds for agent-core
   - **Kill criteria:** default block
 
-- [ ] **T003 [US-1] Create CLI app skeleton** (AC-03)
+- [x] **T003 [US-1] Create CLI app skeleton** (AC-03)
   - **Brief:**
     - **Outcome:** `apps/cli/` exists with `package.json` (`@neural/cli`, bin: `cro-audit` → `dist/index.js`), `tsconfig.json` (extends root), `src/index.ts` (entry; reads version from package.json; on `--version` writes version + newline to stdout, exit 0), `src/commands/.gitkeep`, `tests/.gitkeep`. Root `package.json` exposes `pnpm cro:audit` script that invokes `apps/cli`.
     - **Context:** plan.md "Phase 1 Design" item 2 specifies the version handler. CLI stdout is user-facing output, NOT server logging — `process.stdout.write` is permitted (R10.6 applies to server-side console.log, not CLI tool output).
