@@ -2,7 +2,7 @@
 title: Phase 0b — Heuristic Authoring — Tasks
 artifact_type: tasks
 status: approved
-version: 0.4
+version: 0.5
 created: 2026-04-28
 updated: 2026-05-06
 owner: engineering lead
@@ -39,6 +39,7 @@ delta:
     - v0.1 → v0.2 applied 1 analyze-driven fix (M2 cascade: T0B-004 acceptance updated to reference expanded AC-13 R6 conformance test scope per spec.md v0.2 — 5-channel coverage)
     - v0.2 → v0.3 — status bumped draft → approved (R17.4 review approved per phase-0b-heuristics/review-notes.md; D1 condition binding for T0B-004 implementer: lint CLI must redact Zod-error `received: <value>` content from stdout/stderr; conformance test must assert with `NEURAL_TEST_FIXTURE_BODY` sentinel string)
     - v0.3 → v0.4 — T0B-001 IMPLEMENTED 2026-05-06 (Day 1 of Phase 0b). T0B-001 acceptance line refreshed to point at `plan.md v0.4 §2` (the body-string design — supersedes v0.3 §2 which referenced §9.1 rich structured shape). Coordinated with spec.md v0.4 + plan.md v0.4 (R11.4 spec-defect patch — T101 body-string design supersedes §9.1 rich shape per supersession callout). T0B-002..T0B-005 acceptance lines unchanged but they all consume T0B-001's template; v0.4 §2 reorientation propagates implicitly. T0B-NNN headers carry status markers (✅ DONE / ⚪ pending) per first-implementation convention since this tasks.md format uses headers not checkboxes.
+    - v0.4 → v0.5 — R11.4 PATH A continuation 2026-05-06 (mid-Day 2 of Phase 0b, before T0B-004 implementation). Coordinated with spec.md v0.5 + plan.md v0.5. T0B-004 acceptance line refreshed to point at `plan.md v0.5 §5` (banned-phrase regex check now targets `body` field per T101 body-string design — was `recommendation.summary + recommendation.details` per legacy §9.1 references missed in v0.4 sweep). T0B-002 + T0B-003 marker statuses unchanged (already ✅ DONE 2026-05-06).
   impacted:
     - tasks-v2.md v2.3.2 → v2.3.3 (Phase 0b section + reduced counts)
     - phase-6-heuristics/tasks.md already references T103-T105 as Phase 0b workstream (no change)
@@ -104,7 +105,7 @@ Per [plan.md](plan.md) §1: Week 1 = T0B-001..T0B-005 (infrastructure) → Week 
   - `apps/cli/src/commands/heuristic-lint.ts` (NEW)
   - `apps/cli/package.json` (add `heuristic:lint` script)
   - `apps/cli/tests/conformance/heuristic-lint.test.ts` (NEW)
-- **acceptance:** CLI per [plan.md §5](plan.md). Five checks: (1) Zod parse against HeuristicSchemaExtended; (2) all 5 `provenance` fields non-empty; (3) `benchmark` discriminated union present + well-formed; (4) manifest selectors `archetype` + `page_type` + `device` present; (5) banned-phrase regex on `recommendation.summary` + `recommendation.details`. Exit non-zero on any failure. Conformance test covers all 5 fail cases + 1 pass case + AC-13 isolation assertions per spec.md v0.2 (5-channel coverage: gitignore contains `.heuristic-drafts/`; drafting subprocess does NOT import `langsmith` / `@langsmith/*`; drafting subprocess does NOT import `packages/agent-core/src/observability/*` Pino module; drafting subprocess script is NOT imported by any `apps/` or `packages/` runtime module; `apps/dashboard/**/*` source does NOT reference drafting subprocess paths).
+- **acceptance:** CLI per [plan.md v0.5 §5](plan.md). Five checks: (1) Zod parse against HeuristicSchemaExtended (T101); (2) all 5 `provenance` fields non-empty (Zod-enforced via T101 `.strict()` + `.min(1)`); (3) `benchmark` discriminated union present + well-formed (Zod-enforced); (4) manifest selectors `archetype` + `page_type` + `device` present (T101 marks `.optional()` but Phase 0b requires presence — lint enforces); (5) banned-phrase regex on **`body`** field (v0.5 patch — T101 body-string design supersedes legacy `recommendation.summary` + `recommendation.details` references). Exit non-zero on any failure. Conformance test covers all 5 fail cases + 1 pass case + D1 BINDING (Zod-error redaction with `NEURAL_TEST_FIXTURE_BODY` sentinel) + AC-13 isolation assertions per spec.md v0.2 (5-channel coverage: gitignore contains `.heuristic-drafts/`; drafting subprocess does NOT import `langsmith` / `@langsmith/*`; drafting subprocess does NOT import `packages/agent-core/src/observability/*` Pino module; drafting subprocess script is NOT imported by any `apps/` or `packages/` runtime module; `apps/dashboard/**/*` source does NOT reference drafting subprocess paths). AC-13 channels (b)/(c)/(d)/(e) are vacuously true if drafting subprocess + apps/dashboard don't yet exist; tests assert and skip with clear TODO when those land.
 - **conformance:** `apps/cli/tests/conformance/heuristic-lint.test.ts` (AC-04, AC-13)
 
 ## T0B-005 — `heuristics-repo/README.md` + `.gitignore` for `.heuristic-drafts/`

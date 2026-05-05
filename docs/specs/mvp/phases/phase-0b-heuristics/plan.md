@@ -2,7 +2,7 @@
 title: Phase 0b — Heuristic Authoring — Implementation Plan
 artifact_type: plan
 status: approved
-version: 0.4
+version: 0.5
 created: 2026-04-28
 updated: 2026-05-06
 owner: engineering lead
@@ -39,6 +39,7 @@ delta:
     - v0.1 → v0.2 applied 1 analyze-driven fix (L3: §10 risk register cross-reference note added explaining overlap with impact.md §9)
     - v0.2 → v0.3 — status bumped draft → approved (R17.4 review approved per phase-0b-heuristics/review-notes.md)
     - v0.3 → v0.4 — R11.4 spec-defect patch (2026-05-06) coordinated with spec.md v0.4. §2 (Drafting Prompt Structure) REQUIRED OUTPUT FIELDS list rewritten from §9.1 rich structured shape (~25 fields) to T101 body-string design (11 top-level fields). T101 (`packages/agent-core/src/analysis/heuristics/types.ts`, landed Day 1 of week 1) is the implementation source-of-truth that supersedes §9.1's structured `detection.*` + `recommendation.*` + `name` + `severity_if_violated` + `reliability_tier` fields. The single `body` string field absorbs §9.1's six prose fields (`detection.lookFor`, `detection.positiveSignals`, `detection.negativeSignals`, `recommendation.summary`, `recommendation.details`, `recommendation.researchBacking`) into one well-structured natural-language container — modern LLMs prefer prose over JSON-fragmented prompt instructions. INPUTS contract clarified: `archetype` accepts an array (T101 enum: D2C/SaaS/B2B/lead_gen/marketplace/media/other), `page_types` accepts an array (T101 enum: homepage/pdp/plp/cart/checkout/pricing/comparison/landing/other), `device` accepts an array (T101 enum: mobile/desktop/tablet/balanced — NOT `mobile`/`desktop`/`both` as v0.3 wrongly stated). Drafting model temperature stays 0.3 per §Assumptions META exemption.
+    - v0.4 → v0.5 — R11.4 PATH A continuation (2026-05-06) coordinated with spec.md v0.5. §5 pseudo-spec banned-phrase regex check target field changed from `parsed.data.recommendation.summary + parsed.data.recommendation.details` (legacy §9.1 references missed in v0.4 sweep) to `parsed.data.body` (T101 body-string design). Derivative of v0.4 supersession — no new design intent. Coordinated with spec.md v0.5 patches to AC-04 + AC-15 + R-04.
   impacted:
     - T0B-001 drafting prompt template (this commit) — produces T101-shaped JSON
     - T0B-004 lint CLI (Day 2 future) — Zod parse against T101's `HeuristicSchemaExtended` exported from `packages/agent-core/src/analysis/heuristics/types.ts`
@@ -366,9 +367,9 @@ export async function heuristicLint(globPattern: string): Promise<number> {
     for (const f of REQUIRED_MANIFEST_SELECTORS) {
       if (!parsed.data[f]) { logError(file, `missing manifest selector ${f}`); failures++; }
     }
-    // 4) Banned-phrase regex check
-    const text = `${parsed.data.recommendation.summary} ${parsed.data.recommendation.details}`;
-    if (BANNED_PHRASE_REGEX.test(text)) {
+    // 4) Banned-phrase regex check (v0.5 patch — T101 body-string design;
+    //    was `recommendation.summary + .details` in v0.4 referencing legacy §9.1)
+    if (BANNED_PHRASE_REGEX.test(parsed.data.body)) {
       logError(file, `banned conversion-rate-prediction phrase detected`);
       failures++;
     }
