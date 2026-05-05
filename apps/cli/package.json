@@ -2,20 +2,28 @@
   "name": "@neural/cli",
   "version": "0.1.0",
   "private": true,
-  "description": "Neural CLI — cro-audit entry point. Phase 0: --version only; subcommands land Phase 5+ + Phase 9.",
+  "description": "Neural CLI — cro-audit + heuristic-lint entry points. Phase 0: --version only; Phase 0b T0B-004: heuristic:lint added; subcommands land Phase 5+ + Phase 9.",
   "license": "UNLICENSED",
   "type": "module",
   "bin": {
-    "cro-audit": "./dist/index.js"
+    "cro-audit": "./dist/index.js",
+    "heuristic-lint": "./dist/commands/heuristic-lint.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "echo \"lint configured in Phase 4 (ESLint with T073)\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "echo \"unit tests land in Phase 5+ alongside subcommands\""
+    "test": "vitest run --passWithNoTests",
+    "heuristic:lint": "tsx src/commands/heuristic-lint.ts"
+  },
+  "dependencies": {
+    "@neural/agent-core": "workspace:*",
+    "glob": "^11.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
-    "typescript": "^5.7.0"
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
   }
 }

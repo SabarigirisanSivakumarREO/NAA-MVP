@@ -1,0 +1,21 @@
+{
+  "id": "TEST-FIXTURE-003",
+  "body": "TEST FIXTURE — NEURAL_TEST_FIXTURE_BODY sentinel. This fixture intentionally omits the benchmark field to exercise check (3) Zod failure for the discriminated union.",
+  "category": "test_fixture",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.5,
+  "effort_category": "quick_win",
+  "preferred_states": ["default"],
+  "status": "active",
+  "provenance": {
+    "source_url": "https://example.com/test-fixture",
+    "citation_text": "TEST FIXTURE citation",
+    "draft_model": "human",
+    "verified_by": "test-fixture",
+    "verified_date": "2026-05-06T00:00:00Z"
+  },
+  "archetype": ["other"],
+  "page_type": ["other"],
+  "device": ["balanced"]
+}

@@ -19,4 +19,9 @@ coverage/
 playwright-report/
 test-results/
 
+# Heuristic drafting transcripts — IP-bearing per Constitution R15.3.3
+# (drafting subprocess writes prompts + LLM responses here for local debugging;
+# NEVER commit per R6.1; T0B-004 conformance test asserts presence of this entry)
+.heuristic-drafts/
+
 .claude/settings.local.json

@@ -97,7 +97,7 @@ Per [plan.md](plan.md) §1: Week 1 = T0B-001..T0B-005 (infrastructure) → Week 
 - **acceptance:** Per-heuristic Proof block template per [plan.md §4](plan.md): heuristic ID, file path, drafted by, verified by, verified date, source URL (with status / archive note), re-derivation note, lint status, banned-phrase check status, manifest selectors. Linked from PRD §10.9 PR Contract section. Adds: explicit "where this template fits in the PR body" 4-block PR Contract context; multi-heuristic PR pattern (5+ heuristics in batch — typical for T103/T104/T105 week 4); R6.1 "what NEVER to include" guard table (8 forbidden vs 9 allowed fields with rationale per row); reviewer-side guidance on detecting + blocking PRs that leak body / citation_text content; worked example that continues from T0B-001 + T0B-002 BAYMARD-CHECKOUT-001 example for cross-template consistency.
 - **conformance:** manual review; first heuristic PR cites this template in its Proof block.
 
-## T0B-004 — `pnpm heuristic:lint` CLI helper
+## T0B-004 — `pnpm heuristic:lint` CLI helper ✅ **DONE 2026-05-06**
 
 - **dep:** T002 (agent-core skeleton), T003 (CLI skeleton), T101 (HeuristicSchemaExtended — Phase 6)
 - **spec:** R15.3, R15.3.1, R15.3.3, R5.3, GR-007
