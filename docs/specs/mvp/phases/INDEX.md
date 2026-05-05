@@ -2,9 +2,9 @@
 title: Neural MVP — Phases Index
 artifact_type: index
 status: approved
-version: 1.7
+version: 1.8
 created: 2026-04-22
-updated: 2026-05-05
+updated: 2026-05-06
 owner: engineering lead
 governing_rules:
   - Constitution R17-R21
@@ -25,7 +25,7 @@ generated_by: pnpm spec:index    # Auto-regenerated when phase folders or sub-ph
 | Phase | Name | Status | Tasks | Folder | Depends on | Blocks |
 |---|---|---|---|---|---|---|
 | 0 | Setup | 🟢 **implemented** (5/5 ACs green; rollup landed 2026-05-05) | M0.1-M0.5 + T-PHASE0-{TEST,DOC,ROLLUP} | `phase-0-setup/` | — | 1 |
-| **0b** | **Heuristic Authoring (LLM-assisted, engineering-owned)** | ⚪ not started — spec shipped v0.1 | T0B-001..T0B-005 + T103/T104/T105 | `phase-0b-heuristics/` | 0 | 6 |
+| **0b** | **Heuristic Authoring (LLM-assisted, engineering-owned)** | 🟡 **in progress — infra COMPLETE 2026-05-06 (T0B-001..T0B-005 ✅); content week 4 (T103/T104/T105)** | T0B-001..T0B-005 + T103/T104/T105 | `phase-0b-heuristics/` | 0 | 6 |
 | 1 | Browser Perception Foundation | ⚪ not started | M1.1-M1.10 (T006-T015) | `phase-1-perception/` | 0 | 1b, 2, 5 |
 | **1b** | **Perception Extensions v2.4** | ⚪ not started | T1B-001..T1B-012 | `phase-1b-perception-extensions/` | 1 | 1c, 6, 7 |
 | **1c** | **PerceptionBundle Envelope v2.5** | ⚪ not started | T1C-001..T1C-012 | `phase-1c-perception-bundle/` | 1b | 7 (EvaluateNode token budget); 13 (state graph master) |
@@ -83,6 +83,82 @@ No drift found in Phase 9 sections — task IDs T156-T175 + T239-T244 + T245-T24
 **Phase 1 v0.3 polish:** 8 analyze findings (M1-M4 + L1-L2 + L5-L6) applied across `phase-1-perception/{spec,plan,tasks,impact}.md`. Mechanical fixes only — no AC-NN / R-NN / SC-NNN ID changes (R18 append-only preserved). 2 carry-over items (L3, L4) added to v2.3.4 punch-list above. R17.4 review APPROVED with conditions C1 BINDING + C2/C3 OPTIONAL per [`phase-1-perception/review-notes.md`](phase-1-perception/review-notes.md) v1.0; status bumped to `approved`.
 
 **Phase 6 v0.4 catch-up polish:** 4 analyze findings (H1 + H2 + H3 + M1) applied as a single v0.4 sync across `phase-6-heuristics/{spec,plan,tasks,impact}.md`. Catch-up consolidates two pending updates that never reached plan/impact: (a) v0.2 Pino redaction-pattern → BenchmarkSchema mapping; (b) v0.3 contract surface for T4B-013 + AC-11 + R-09 + REQ-CONTEXT-DOWNSTREAM-001 + manifest selectors (`archetype` / `page_type` / `device`). H1 closes the R6 enforcement gap in T-PHASE6-LOGGER (3 wrong-syntax paths → 6 correct paths matching spec.md:101 authoritative list). Versions: spec.md v0.3→v0.4; plan.md v0.2→v0.4 (skip v0.3 for catch-up); tasks.md v0.3→v0.4; impact.md v0.1→v0.4 (skip v0.2/v0.3 for catch-up). 2 carry-over items (L1, L3) added to v2.3.4 punch-list above. R17.4 review pending.
+
+---
+
+## v1.8 changes (2026-05-06 — Phase 0b infrastructure layer complete)
+
+Second phase to advance under the per-phase corpus + walking-skeleton model. **Phase 0b infrastructure landed in a single 1-day session (Session 9, 2026-05-06) on `feat/week-1-walking-skeleton` branch.** Branch advanced from `6c56d70` → `a141a49` (6 additional commits = 16 cumulative on branch).
+
+### Phase 0b row flipped: ⚪ not started → 🟡 in progress
+
+5 of 8 tasks marked `✅ DONE 2026-05-06` in `phase-0b-heuristics/tasks.md` v0.5 (T0B-001 + T0B-002 + T0B-003 + T0B-004 + T0B-005). Content tasks T103/T104/T105 remain ⚪ pending in week 4 — flips to 🟢 + R17 implemented + R19 rollup when those land + Phase 6 T112 cross-phase acceptance passes.
+
+### R11.4 spec defects surfaced + patched in flight (Session 9)
+
+Two waves, both PATH A continuations of the §9.1 → T101 supersession pattern:
+
+| Wave | When surfaced | Patch | Commit |
+|---|---|---|---|
+| 1 | T0B-001 brief load (start of Day 2) | spec.md/plan.md/tasks.md v0.3 → v0.4 — §Mandatory References supersession callout (§9.1 LEGACY; T101 source-of-truth at `packages/agent-core/src/analysis/heuristics/types.ts`); plan.md §2 prompt structure rewritten from §9.1 rich-structured (~25 fields) to T101 body-string design (11 fields); R-01 + AC-01 wording cite T101 file path | T0B-001 commit `f54c040` |
+| 2 | T0B-004 brief load (mid-Day-2) | spec.md/plan.md/tasks.md v0.4 → v0.5 — 4 stale references missed in v0.4 sweep (AC-04 + AC-15 + R-04 + plan.md §5 — banned-phrase regex target was `recommendation.summary + recommendation.details`, both nonexistent in T101); patched to target `body` field. Two commits per Day 1 protocol "fix spec before implementing" cadence. | spec patch commit `62d5e03`; impl commit `b861f04` |
+
+v2.3.4 punch-list extended in `f54c040` with §9.1 v2.4 architecture-spec rewrite + Phase 6 spec.md v0.5 polish queue items per CLAUDE.md §8c per-phase JIT analyze pre-flight pattern.
+
+### R23 BINDING conditions resolved
+
+| ID | Source | Condition | Resolution |
+|---|---|---|---|
+| **D1** (BINDING) | Phase 0b R17.4 review (Session 6 review-notes.md) | T0B-004 lint CLI MUST redact Zod-error `received: <value>` content; conformance test asserts via `NEURAL_TEST_FIXTURE_BODY` sentinel | **SATISFIED** in T0B-004 commit `b861f04`. `lintFile()` extracts ONLY `issue.path` + `issue.code` (NOT `issue.message`); 18 conformance tests assert sentinel never appears in stderr/stdout for any of 5 invalid + 1 valid fixture. |
+| **D2** (BINDING) | same | T0B-005 README MUST explicitly forbid Slack/email/screenshot/support-ticket sharing of drafting LLM responses | **SATISFIED** in T0B-005 commit `a141a49`. README §3 "R6 / R15.3.3 IP boundary" 8-row forbidden-channel table covers all 4 BINDING channels + 4 defense-in-depth additional rows with constitutional-rule citations per row. |
+| **D3** (OPTIONAL) | same | Pre-commit hook rejecting `^.heuristic-drafts/` commits | **DEFERRED to v1.0.1** with 4 documented reasons in tasks.md v0.5 T0B-005 entry: (a) `.husky/pre-commit` infrastructure scope expansion outside Phase 0b; (b) `.gitignore` already excludes `.heuristic-drafts/` (T0B-004 commit `b861f04`); (c) D2 BINDING text + T0B-002 + T0B-003 already enforces at human-protocol layer; (d) v1.0.1 is the right scope for git-infrastructure additions. |
+
+### Pre-authorized scope expansion — Vitest wiring at apps/cli
+
+Phase 0 T003 deferred apps/cli test scaffolding to "Phase 5+ alongside subcommands". T0B-004 AC-04 explicitly required `apps/cli/tests/conformance/heuristic-lint.test.ts` to be a real Vitest test → deferral revoked NOW. Wired with minimal `vitest.config.ts` mirroring `packages/agent-core/vitest.config.ts` pattern. `apps/cli/package.json` test script flipped from placeholder echo to `vitest run --passWithNoTests`. Adds `@neural/agent-core: workspace:*` + `glob: ^11.0.0` + `vitest: ^2.1.0` + `tsx: ^4.19.0` deps. Documented as agent reasoning per CLAUDE.md §8b in T0B-004 commit message.
+
+### Test surface growth
+
+| Workspace | Before Session 9 | After Session 9 |
+|---|---|---|
+| @neural/agent-core (unit) | 55 tests (15 perception + 40 heuristics from Day 1 forward-pulled schemas) | 55 tests (unchanged) |
+| @neural/cli (conformance) | 0 tests (placeholder echo) | 18 tests (heuristic-lint conformance) |
+| **Total** | **55** | **73** |
+
+All FULL TURBO cache hits after first run; <1s per workspace.
+
+### Commit chain (`feat/week-1-walking-skeleton` Session 9)
+
+| SHA | Task / Patch | Files | LOC |
+|---|---|---|---|
+| `f54c040` | T0B-001 — drafting prompt template + Phase 0b spec/plan/tasks v0.4 R11.4 patch | 5 / +584 / -71 | net +513 |
+| `2c1bad1` | T0B-002 — verification protocol template (8 steps + 3-strike rule + R6 discipline section) | 2 / +359 / -4 | net +355 |
+| `8c8eaba` | T0B-003 — PR Contract Proof block template | 2 / +242 / -4 | net +238 |
+| `62d5e03` | Phase 0b spec/plan/tasks v0.4 → v0.5 R11.4 PATH A continuation (banned-phrase target = body) | 3 / +13 / -10 | net +3 |
+| `b861f04` | T0B-004 — pnpm heuristic:lint CLI + Vitest at apps/cli + 18 conformance tests | 14 / +916 / -5 | net +911 |
+| `a141a49` | T0B-005 — heuristics-repo/README.md + D2 BINDING + D3 deferred | 2 / +279 / -5 | net +274 |
+| (this) | Session 9 close-out — handover v1.3 + INDEX v1.8 + Session 10 kickoff prompt | (multi) | (close-out) |
+
+### What Phase 0b content authoring (T103/T104/T105) should do next
+
+When week 4 begins, the heuristic-content authoring workstream:
+
+1. Read `heuristics-repo/README.md` (T0B-005) end-to-end + skim 4 sibling templates (T0B-001/002/003/004) — see README §6 "First-30-min author onboarding"
+2. Pick first heuristic from tasks-v2.md Phase 6 section (T103 ~15 Baymard, T104 ~10 Nielsen, T105 ~5 Cialdini)
+3. Run 4-step workflow: Draft (T0B-001 prompt) → Verify (T0B-002 protocol) → Lint (`pnpm heuristic:lint <file>`) → Commit (T0B-003 PR Proof block)
+4. Spot-checks at +10 / +20 / +30 marks per F-012 acceptance (≤1 of 5 divergence per round)
+5. Phase 6 T112 cross-phase acceptance test loads all 30 heuristics → if green, Phase 0b → 🟢 implemented (with R17 bumps + R19 rollup + this row flip 🟡 → 🟢)
+
+### Implementation-roadmap.md week 1 progress
+
+Per [implementation-roadmap.md](../implementation-roadmap.md) §7 Week 1:
+
+- [x] T-PHASE0-TEST + T001-T005 (Phase 0 setup) — done Day 1
+- [x] T014 forward-pulled from Phase 1 (PageStateModel schema) — done Day 1
+- [x] T101 forward-pulled from Phase 6 (HeuristicSchemaExtended) — done Day 1
+- [x] T0B-001..T0B-005 (Phase 0b infra) — **done Day 2**
+- [ ] T-SKELETON-001..010 (walking skeleton stubs) — pending (Session 10)
+- [ ] Wednesday demo (2026-05-06) — run `pnpm cro:audit --url=<peregrine PDP>` end-to-end through stubbed pipeline
 
 ---
 

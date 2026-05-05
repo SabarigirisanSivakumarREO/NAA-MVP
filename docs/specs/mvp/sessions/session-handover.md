@@ -2,12 +2,12 @@
 title: Neural MVP — Rolling Session Handover
 artifact_type: session-handover
 status: complete
-version: 1.2
-last_updated: 2026-05-05
-last_session_number: 8
-last_session_outcome: Day 1 of week 1 walking-skeleton COMPLETE — Phase 0 implementation (5/5 ACs green) + 2 forward-pulled Phase 1/6 schemas (T014 PageStateModel + T101 HeuristicSchema, 55 unit tests). 10 commits pushed to feat/week-1-walking-skeleton. Day 2 (Phase 0b infra T0B-001..T0B-005) + Days 2-3 (walking-skeleton stubs T-SKELETON-001..010) + Days 3-4 (demo prep) remaining for Wednesday demo deadline (2026-05-06 per kickoff)
+version: 1.3
+last_updated: 2026-05-06
+last_session_number: 9
+last_session_outcome: Day 2 of week 1 walking-skeleton COMPLETE for the Phase 0b INFRASTRUCTURE LAYER — T0B-001 (drafting prompt) + T0B-002 (verification protocol) + T0B-003 (PR Contract Proof block) + T0B-004 (pnpm heuristic:lint CLI + Vitest at apps/cli + 18 conformance tests; D1 BINDING SATISFIED) + T0B-005 (heuristics-repo/README.md; D2 BINDING SATISFIED; D3 OPTIONAL deferred to v1.0.1). 6 commits pushed to feat/week-1-walking-skeleton (5 task commits + 1 R11.4 PATH A continuation v0.5 spec patch mid-Day-2). 1 R11.4 spec defect surfaced + patched in flight (banned-phrase regex target body, not recommendation.summary + .details). Test surface grew 55 → 73 (+18 cli conformance). Phase 0b CONTENT layer (T103/T104/T105) still pending week 4 — Phase 0b not yet R17 implemented; INDEX row flipped ⚪ → 🟡 (in-progress). Days 2-3 (walking-skeleton stubs T-SKELETON-001..010) + Days 3-4 (demo prep) remaining for Wednesday demo deadline (2026-05-06 per kickoff; PD-06 resolved — see block 3).
 
-description: "Single rolling handover doc. Replaces per-session handover files from Session 8 onwards. Each session-end Claude updates blocks 1+2+3+5 in place; block 4 is static; block 6 updates when demo target changes. Never create per-session files. Old session detail lives in git history (git log -p docs/specs/mvp/sessions/session-handover.md). Predecessor per-session handovers at session-2026-04-30-handover.md (Session 6) + session-2026-05-01-handover.md (Session 7) preserved for archival reference."
+description: "Single rolling handover doc. Replaces per-session handover files from Session 8 onwards. Each session-end Claude updates blocks 1+2+3+5 in place; block 4 is static; block 6 updates when demo target changes. Never create per-session files. Old session detail lives in git history (git log -p docs/specs/mvp/sessions/session-handover.md). Predecessor per-session handovers at session-2026-04-30-handover.md (Session 6) + session-2026-05-01-handover.md (Session 7) preserved for archival reference. Session 9 (Day 2 of week 1) closed with explicit kickoff prompt for Session 10 at sessions/kickoff-session-10.md so the next session can boot on T-SKELETON work without re-deriving context."
 
 cross_references:
   - docs/specs/mvp/phases/INDEX.md (current phase decision table)
@@ -25,14 +25,14 @@ cross_references:
 
 ## 1. Current state ledger
 
-**As of 2026-05-05 (end of Session 8 / Day 1):**
+**As of 2026-05-06 (end of Session 9 / Day 2):**
 
 ### Phase status
 
 | Phase | Status | Approved in | Implementation timing |
 |---|---|---|---|
 | Phase 0 (Setup) | 🟢 **implemented** (5/5 ACs green; Session 8) | Session 6 | Week 1 — **DONE 2026-05-05** |
-| Phase 0b (Heuristics infra) | ✅ approved | Session 6 | Week 1 — **Day 2 (next session)** |
+| **Phase 0b (Heuristics infra)** | ✅ **approved (v0.5)** · 🟡 **infra COMPLETE; content week 4** | Session 6 (v0.3) → R11.4 patches v0.4 + v0.5 in Sessions 8-9 | T0B-001..T0B-005 ✅ **DONE 2026-05-06**; T103/T104/T105 content week 4 |
 | **Phase 1 (Browser Perception)** | ✅ **approved** · 🟡 T014 done standalone (forward-pulled) | **Session 7** | T014 ✅ Week 1; rest Week 2 |
 | Phase 1b (Perception Ext v2.4) | ⚪ draft | future JIT | Week 3 (ride-along TBD) |
 | Phase 1c (PerceptionBundle v2.5) | ⚪ draft | future JIT | Week 3+ |
@@ -47,57 +47,54 @@ cross_references:
 | Phase 8 (Orchestrator) | ⚪ draft | future JIT | Week 8-9 |
 | Phase 9 (Foundations + Delivery) | ⚪ draft | future JIT | Week 10-12 |
 
-**4 of 15 phases approved · 1 implemented · 2 partial (forward-pulled).** All week-1 + week-2 forward-pulled contract dependencies have spec coverage.
+**4 of 15 phases approved · 1 implemented · 3 partial (Phase 0b infra-DONE/content-pending; Phase 1 + Phase 6 single-task forward-pulled).** All week-1 + week-2 forward-pulled contract dependencies have spec coverage.
 
 ### Week 1 walking-skeleton progress
 
-**Day 1 (2026-05-05) — DONE.** Branch `feat/week-1-walking-skeleton` at `791c5e3` (10 commits, all pushed):
+**Day 1 (2026-05-05) — DONE in Session 8.** 10 commits ending at `791c5e3` (Phase 0 implementation 5/5 ACs + 2 forward-pulled schemas T014 + T101 + 55 unit tests).
+
+**Day 2 (2026-05-06) — DONE in Session 9.** Branch `feat/week-1-walking-skeleton` at `a141a49` (6 additional commits, all pushed; 16 commits cumulative on branch since branch-cut):
 
 ```
-9919449  T-PHASE0-TEST + T001  (workspace + R3.1 baseline + AC-01)
-bb63cd0  T002                  (agent-core skeleton + Pino + AC-02)
-90ab537  T003                  (apps/cli + cro:audit --version + AC-03)
-1e9ff98  T004                  (VERIFY docker stack + spec v0.4 + AC-04)
-bd09040  T005                  (db:migrate stub + spec v0.5 + AC-05)  ★ Phase 0 5/5 GREEN
-42a21fb  T-PHASE0-DOC          (root README.md quickstart)
-5f53b6b  T-PHASE0-ROLLUP       (R19 rollup + R17 implemented + INDEX 🟢)  ★ Phase 0 closed
-077ec86  T014                  (PageStateModel Zod schemas, 15 vitest)
-3d2119c  T101                  (HeuristicSchema base + Extended, 40 vitest)
-791c5e3  T101 follow-up        (mark [x] in phase-6-heuristics/tasks.md)
+f54c040  T0B-001              (drafting prompt template + Phase 0b spec/plan/tasks v0.3 → v0.4 R11.4 patch — supersession callout for §9.1 → T101 body-string design)
+2c1bad1  T0B-002              (verification protocol — 8 steps + 3-strike rule + R6 discipline section setting D2 BINDING precedent)
+8c8eaba  T0B-003              (PR Contract Proof block template — extends PRD §10.9 with per-heuristic verification evidence + R6 "what NEVER to include" guard)
+62d5e03  Phase 0b v0.5 patch  (R11.4 PATH A continuation — banned-phrase regex target body, not recommendation.summary + .details; 4 stale §9.1 references missed in v0.4 sweep)
+b861f04  T0B-004              (pnpm heuristic:lint CLI + Vitest at apps/cli + 18 conformance tests; D1 BINDING SATISFIED — NEURAL_TEST_FIXTURE_BODY sentinel asserted; AC-13 5-channel R6 isolation)
+a141a49  T0B-005              (heuristics-repo/README.md — 4-step workflow + D2 BINDING SATISFIED with 8-row forbidden-channel table; D3 OPTIONAL deferred to v1.0.1)
 ```
 
-**Day 2 (next session, 2026-05-06 AM) — PENDING:** Phase 0b infrastructure (5 tasks)
+**Day 2 deliverables summary:**
+- 5 Phase 0b infra tasks DONE; T0B-001..T0B-005 templates + lint CLI + repo README all at canonical paths
+- 1 R11.4 spec defect surfaced + patched in flight (commit `62d5e03`; spec/plan/tasks bumped v0.4 → v0.5)
+- D1 BINDING (T0B-004) + D2 BINDING (T0B-005) SATISFIED; D3 OPTIONAL deferred to v1.0.1 with documented rationale (4 reasons in tasks.md v0.5 T0B-005 entry)
+- Test surface: 55 → 73 (+18 cli conformance tests; FULL TURBO cache; <1s per workspace)
+- Vitest wiring at apps/cli: scope-expanded from Phase 0 deferral ("Phase 5+") to NOW, per AC-04 requirement; documented in T0B-004 commit message
+- agent-core dist/ is built (cached) — required for `@neural/agent-core/analysis/heuristics/types` exports-map resolution at runtime
+- `.gitignore` adds `.heuristic-drafts/` entry (T0B-004 commit `b861f04`)
 
-| Task | Scope | BINDING |
-|---|---|---|
-| T0B-001 | drafting prompt template (heuristic authoring; Markdown) | — |
-| T0B-002 | verification protocol (R6 channel; Markdown) | — |
-| T0B-003 | PR Contract Proof block template | — |
-| T0B-004 | `pnpm heuristic:lint` CLI (Node.js script) | ⚠️ **D1 BINDING** — Zod-error redaction + `NEURAL_TEST_FIXTURE_BODY` sentinel test |
-| T0B-005 | `heuristics-repo/README.md` | ⚠️ **D2 BINDING** — forbid Slack/email/screenshot/support-ticket sharing; **D3 OPTIONAL** pre-commit hook rejecting `^.heuristic-drafts/` |
-
-**Days 2-3 (next session, 2026-05-06 PM through 2026-05-07) — PENDING:** Walking-skeleton stubs (10 tasks per `implementation-roadmap.md` §6 T-SKELETON-001..010)
+**Days 2-3 (Session 10 — next session) — PENDING:** Walking-skeleton stubs (10 tasks per `implementation-roadmap.md` §6 T-SKELETON-001..010)
 
 - T-SKELETON-001 — orchestrator stub at `packages/agent-core/src/audit.ts` + `apps/cli/src/commands/audit.ts` (REAL — stays through wk 12)
-- T-SKELETON-002 — `BrowserManager` stub returning **synthetic Peregrine PDP PageStateModel** matching T014 schema
-- T-SKELETON-003 — `HeuristicLoader` stub returning 3 synthetic heuristics matching T101 schema (sentinel `NEURAL_TEST_FIXTURE_BODY`)
+- T-SKELETON-002 — `BrowserManager` stub returning **synthetic Peregrine PDP PageStateModel** matching T014 schema (forward-pulled to Day 1; lives at `packages/agent-core/src/perception/types.ts`)
+- T-SKELETON-003 — `HeuristicLoader` stub returning 3 synthetic heuristics matching T101 schema (forward-pulled to Day 1; lives at `packages/agent-core/src/analysis/heuristics/types.ts`); fixtures at `packages/agent-core/tests/fixtures/heuristics/skeleton-{1,2,3}.json` (NEW); body text marked `NEURAL_TEST_FIXTURE_BODY` per R6 + reuses D1 sentinel pattern
 - T-SKELETON-004 — `EvaluateNode` stub (2 stub findings)
 - T-SKELETON-005 — `SelfCritique` stub (passthrough verdict='KEEP')
 - T-SKELETON-006 — `Ground` stub (passthrough)
 - T-SKELETON-007 — `Annotate` stub (no-op)
 - T-SKELETON-008 — `Storage` stub (JSON to `./out/`)
 - T-SKELETON-009 — `Report` stub (TXT to `./out/`)
-- T-SKELETON-010 — `tests/acceptance/walking-skeleton.spec.ts` (real test against stubbed pipeline)
+- T-SKELETON-010 — `tests/acceptance/walking-skeleton.spec.ts` (real Playwright Test against stubbed pipeline; Phase 0 acceptance test pattern at `tests/acceptance/phase-0-setup.spec.ts` is the reference)
 
-**Days 3-4 (next session through 2026-05-08) — PENDING:** Demo prep
+**Days 3-4 (Session 10 — same session, after T-SKELETON-010 lands) — PENDING:** Demo prep (3 items)
 
-- Pin Peregrine URL in demo script
+- Pin Peregrine URL in demo script (Peregrine PDP: https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy — locked in block 6)
 - Author `docs/specs/mvp/demo-scripts/wk-01.md` dry-run script
-- Capture pre-demo happy-path screenshots
-- Wednesday demo (2026-05-06 per kickoff — date math discrepancy with "5 calendar days" claim; see PD-06 below)
+- Capture pre-demo happy-path screenshots (terminal output of `pnpm cro:audit --url=<peregrine PDP>` + content of `./out/` files)
+- Wednesday demo (2026-05-06 — confirmed today per PD-06 resolution in block 3)
 - Post-demo: log feedback to `docs/specs/mvp/demo-feedback.md`
 
-**Total remaining: 18 tasks.** ~6-8 hr focused work spread across Days 2-4 if continuing one-by-one cadence per Session 8 protocol.
+**Total remaining: 13 tasks** (10 T-SKELETON + 3 demo prep + 1 Wednesday demo). ~3-4 hr focused work in Session 10 if continuing one-by-one cadence per Session 8/9 protocol.
 
 ### Operational integration state
 
@@ -117,13 +114,13 @@ These conditions ride along with the implementing task. Delete each row when the
 
 Phase 0 had no R17.4 BINDING conditions from Session 6 review. During implementation (Session 8), 2 R11.4 spec defects surfaced + were patched in same commits as the implementing tasks. No standing conditions remain for Phase 0.
 
-### Phase 0b — Session 6 review
+### Phase 0b — Session 6 review (CONSUMED by Session 9 Day 2 implementation)
 
-| ID | Severity | Condition | Implementing task | Source |
-|---|---|---|---|---|
-| **D1** | BINDING | T0B-004 lint CLI MUST redact Zod-error `received: <value>` content from stdout/stderr (heuristic body content leaks via lint error messages). Emit `<file>: <field-path> — <error_class>` only. Add conformance-test assertion using sentinel string `NEURAL_TEST_FIXTURE_BODY`. | T0B-004 | [phase-0b-heuristics/review-notes.md](../phases/phase-0b-heuristics/review-notes.md) |
-| **D2** | BINDING | T0B-005 README MUST explicitly forbid Slack/email/screenshot/support-ticket sharing of drafting LLM responses. (Workflow doc enforcement of R6 human-protocol channel.) | T0B-005 | same |
-| **D3** | OPTIONAL | Pre-commit hook rejecting `^.heuristic-drafts/` commits. Defer to v1.0.1 if needed. | T0B-005 author or v1.0.1 | same |
+All 3 conditions resolved; rows preserved in compressed form for audit trail (delete on next consolidation):
+
+- **D1 SATISFIED 2026-05-06** — T0B-004 commit `b861f04`. `apps/cli/src/commands/heuristic-lint.ts` `lintFile()` extracts ONLY `issue.path` + `issue.code` (NOT `issue.message`); conformance test at `apps/cli/tests/conformance/heuristic-lint.test.ts` asserts via `NEURAL_TEST_FIXTURE_BODY` sentinel embedded in 5 invalid fixtures + 1 valid fixture; all 18 conformance tests green; manual smoke confirmed sentinel never visible in stderr/stdout for any invocation.
+- **D2 SATISFIED 2026-05-06** — T0B-005 commit `a141a49`. `heuristics-repo/README.md` §3 "R6 / R15.3.3 IP boundary — what you MUST NOT do" includes 8-row forbidden-channel table covering Slack + email + screenshot + support ticket + 4 defense-in-depth additional rows (unauthorized LLM, non-engineering verifier, pushing .heuristic-drafts/ to git, forwarding committed JSON externally). Each row carries constitutional-rule citation.
+- **D3 DEFERRED to v1.0.1 2026-05-06** — T0B-005 entry in tasks.md v0.5 documents 4 deferral reasons: (a) `.husky/pre-commit` infrastructure scope expansion outside Phase 0b; (b) `.gitignore` already excludes `.heuristic-drafts/` (T0B-004 commit `b861f04`); (c) D2 BINDING text + T0B-002 + T0B-003 already enforces at human-protocol layer; (d) v1.0.1 is the right scope for git-infrastructure additions. New backlog item: add to v1.0.1 candidate list.
 
 ### Phase 1 — Session 7 review
 
@@ -153,8 +150,9 @@ Phase 0 had no R17.4 BINDING conditions from Session 6 review. During implementa
 | **PD-02** | Phase 2 forward-pull — bring T-PHASE2-TYPES + T019 + T024 + T048 into week 4 to ease week-5 load? | engineering lead | After Phase 6 ships in week 4 |
 | **PD-03** | Next JIT analyze target = Phase 4 (week-3 dependency: T070 RLS first runtime + T073 LLM cornerstone temperature=0 first runtime + R6 LangSmith trace channel). NOT urgent during week-1 implementation. | engineering lead | Just-before week 3 begins |
 | **PD-04** | Phase 1 T015 integration-test fixture set — current spec is `example.com` (simple) + `amazon.in` (complex/bot) + Shopify demo (TBD). Replace Shopify demo with `peregrineclothing.co.uk` T-shirt PDP (Shopify-powered real D2C — better real-world coverage than `example.com` too)? **Effectively resolved** by Session 8 demo-target lock at the Peregrine PDP — close when T015 lands in week 2 by referencing this PD. | T015 implementer (week 2) | When T015 lands |
-| **PD-05 (NEW Session 8)** | Should `.claude/settings.local.json` be untracked from git (it was committed before .gitignore excluded it; now shows as "modified" forever)? `git rm --cached .claude/settings.local.json` would silently fix; per-user file by design. Cosmetic only — fix when convenient or defer. | engineering lead | next session that touches git hygiene |
-| **PD-06 (NEW Session 8 / end of Day 1)** | Kickoff prompt says "Wednesday demo deadline: 2026-05-06 (5 calendar days from today)" but today's `/currentDate` = 2026-05-05, making 2026-05-06 only 1 calendar day away. Either the date (intended next Wednesday = 2026-05-13) or the "5 calendar days" claim has a typo. Affects demo-prep scheduling: 18 tasks remaining; comfortably hittable in 8 days, very tight in 1 day. **Recommend confirming demo date at start of Day 2 session.** | engineering lead | Day 2 session start |
+| **PD-05 (NEW Session 8)** | Should `.claude/settings.local.json` be untracked from git (it was committed before .gitignore excluded it; now shows as "modified" forever)? `git rm --cached .claude/settings.local.json` would silently fix; per-user file by design. Cosmetic only — fix when convenient or defer. **Status: still modified at end of Session 9; intentionally NOT staged in any Day 2 commit.** | engineering lead | next session that touches git hygiene |
+| ~~**PD-06**~~ **RESOLVED 2026-05-06 (Session 9 mid-Day-2)** | Kickoff prompt's "5 calendar days" framing was authored on/around 2026-05-01 (Session 7 end) when 2026-05-06 was genuinely 5 calendar days away. By Session 8 (2026-05-05) the framing went stale. **User confirmed mid-Session-9: demo IS Wednesday 2026-05-06 (TODAY at session-9 close); session date drifted past kickoff-time framing but the date itself stayed put.** Session 9 commits all dated 2026-05-06. Session 10 should treat demo as TODAY; verify against `/currentDate` at session start. | RESOLVED | n/a |
+| **PD-07 (NEW Session 9 / end of Day 2)** | T0B-004 wired Vitest at apps/cli (was deferred to Phase 5+ in Phase 0 T003 scope). The deferral is now revoked. Other apps/cli scope deferrals (no commander/yargs library; minimal CLI surface) may need similar revocation when T-SKELETON-001 lands an `audit` subcommand. **Recommend assessing whether to add a CLI library (commander.js / yargs) when T-SKELETON-001 wires the audit subcommand**, OR defer to Phase 5 still and use raw `process.argv` parsing as Phase 0 T003 did for `--version`. Lower priority — easy to swap later. | engineering lead | T-SKELETON-001 implementation in Session 10 |
 
 ---
 
@@ -193,6 +191,24 @@ When a new Claude session starts:
 
   **Operating protocol confirmed mid-session (Day 1, post-T003):** one-by-one task cadence (no batching) + manual validation block in `Input → Expected Output` format appended to every task report. Effective from Day 2 onward; applied retroactively to T014 + T101 reports.
 
+- **Session 9 (2026-05-06) — Day 2 of week 1: Phase 0b INFRASTRUCTURE LAYER COMPLETE.** Branch `feat/week-1-walking-skeleton` advanced from `6c56d70` → `a141a49` (6 additional commits). Two phases of work in one session:
+
+  **Phase 0b infrastructure (5 tasks, 5 task commits + 1 mid-flight spec patch = 6 commits total):** T0B-001 (drafting prompt template) + T0B-002 (verification protocol with 8 steps + 3-strike kill criterion) + T0B-003 (PR Contract Proof block extension) + T0B-004 (`pnpm heuristic:lint` CLI + Vitest at apps/cli + 18 conformance tests; **D1 BINDING SATISFIED** — `NEURAL_TEST_FIXTURE_BODY` sentinel asserted across 5 invalid + 1 valid fixture; AC-13 5-channel R6 isolation green) + T0B-005 (`heuristics-repo/README.md` with **D2 BINDING SATISFIED** — 8-row forbidden-channel table covering Slack/email/screenshot/support-ticket + 4 defense-in-depth rows; **D3 OPTIONAL DEFERRED to v1.0.1** with 4 documented reasons). Test surface 55 → 73 (+18 cli conformance tests; FULL TURBO cache after first run).
+
+  **R11.4 spec defects (continuation of Session 8 PATH A pattern; 2 sweep waves on Day 2):** Wave 1 surfaced at T0B-001 brief load — Phase 0b plan.md §2 referenced §9.1 rich-structured schema (~25 fields) but T101 implementation (forward-pulled Day 1, commit `3d2119c`) landed body-string design (11 fields). User confirmed PATH A: T101 canonical, patch upstream specs. Bumped spec.md/plan.md/tasks.md v0.3 → v0.4 in T0B-001 commit `f54c040` with §Mandatory References supersession callout (§9.1 LEGACY; T101 source-of-truth). Wave 2 surfaced at T0B-004 brief load — 4 stale references missed in v0.4 sweep (AC-04, AC-15, R-04, plan.md §5 — banned-phrase regex target was `recommendation.summary + recommendation.details`, both nonexistent in T101). User confirmed Option (a) extending PATH A. Patched v0.4 → v0.5 in commit `62d5e03` (separate from T0B-004 impl `b861f04` — two commits per Day 1 protocol cadence "fix spec before implementing"). v2.3.4 INDEX.md punch-list extended in T0B-001 with §9.1 v2.4 rewrite + Phase 6 spec.md v0.5 polish queue items.
+
+  **Pre-authorized scope expansion — Vitest wiring at apps/cli:** Phase 0 T003 deferred test scaffolding to Phase 5+ ("unit tests land in Phase 5+ alongside subcommands"). T0B-004 AC-04 explicitly required `apps/cli/tests/conformance/heuristic-lint.test.ts` to be a real Vitest test → deferral revoked NOW. Wired with minimal `vitest.config.ts` mirroring agent-core pattern; test script flipped from `echo` placeholder to `vitest run --passWithNoTests`. Adds: `@neural/agent-core: workspace:*` + `glob: ^11.0.0` + `vitest: ^2.1.0` + `tsx: ^4.19.0` deps. Documented as agent reasoning per CLAUDE.md §8b in T0B-004 commit message.
+
+  **Operating protocol carried forward (Day 1 → Day 2):** one-task-per-`/speckit.implement`-invocation cadence; manual validation block (`Input → Expected Output`) appended to every after_implement closeout; hybrid sync/continuous cadence agreed at session start (sync verify for D1/D2 BINDING tasks T0B-004 + T0B-005; continuous for the 3 Markdown templates T0B-001/002/003). Spec patches as separate commits when R11.4 defects surface (followed for `62d5e03` v0.5 patch — preceded `b861f04` T0B-004 impl).
+
+  **Phase 0b status:** infra layer COMPLETE (5/5 T0B-* tasks); content layer (T103/T104/T105 — 30 heuristics) pending week 4. Phase 0b NOT yet R17 implemented — INDEX row 0b flipped ⚪ "not started" → 🟡 "in progress (infra complete; content week 4)". Will flip to 🟢 + R17 implemented + R19 rollup when T103/T104/T105 + Phase 6 T112 cross-phase acceptance all green in week 4.
+
+  **Total Day 2: 6 commits, all pushed. Phase 0b infra COMPLETE; D1 + D2 BINDINGs SATISFIED; D3 deferred to v1.0.1; 73 tests green; 4 R11.4 spec patches in flight.** Session closed before T-SKELETON work to preserve context window for the more code-intensive walking-skeleton tasks (Session 10 will pick up at T-SKELETON-001 with fresh context, per OPTION 1 break).
+
+  Commits: `f54c040` (T0B-001), `2c1bad1` (T0B-002), `8c8eaba` (T0B-003), `62d5e03` (Phase 0b v0.5 spec patch — R11.4 PATH A continuation), `b861f04` (T0B-004 + Vitest wiring), `a141a49` (T0B-005). Plus this close-out commit (handover v1.3 + INDEX row 0b flip + Session 10 kickoff prompt).
+
+  **For Session 10:** Boot via `docs/specs/mvp/sessions/kickoff-session-10.md` (NEW — authored in this close-out commit). 13 tasks remaining for week 1: T-SKELETON-001 (REAL orchestrator) → T-SKELETON-002..009 (9 stubs) → T-SKELETON-010 (acceptance test + demo gate) → demo prep (3 items) → Wednesday demo. Estimated ~3-4 hr if continuing one-by-one cadence.
+
 ---
 
 ## 6. Demo target URL (week 1 + ongoing)
@@ -222,10 +238,11 @@ pnpm cro:audit --url='https://www.peregrineclothing.co.uk/collections/t-shirts/p
 
 ## Cross-references
 
-- [`docs/specs/mvp/phases/INDEX.md`](../phases/INDEX.md) — phase decision table (current at v1.6)
+- [`docs/specs/mvp/phases/INDEX.md`](../phases/INDEX.md) — phase decision table (current at v1.8 after Session 9 close)
 - [`docs/specs/mvp/implementation-roadmap.md`](../implementation-roadmap.md) — week-by-week plan
 - [`docs/specs/mvp/templates/phase-review-prompt.md`](../templates/phase-review-prompt.md) — R17.4 review template
 - [`CLAUDE.md`](../../../CLAUDE.md) §8c + §8d — phase artifact maintenance + R17.4 review gate
+- [`docs/specs/mvp/sessions/kickoff-session-10.md`](kickoff-session-10.md) — copy-paste kickoff for Session 10 (T-SKELETON work)
 - Predecessor per-session handovers (archival; do not read by default):
   - [`session-2026-04-30-handover.md`](session-2026-04-30-handover.md) — Session 6
   - [`session-2026-05-01-handover.md`](session-2026-05-01-handover.md) — Session 7
