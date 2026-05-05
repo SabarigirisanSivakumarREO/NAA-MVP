@@ -2,9 +2,9 @@
 title: Phase 0b — Heuristic Authoring — Implementation Plan
 artifact_type: plan
 status: approved
-version: 0.3
+version: 0.4
 created: 2026-04-28
-updated: 2026-04-30
+updated: 2026-05-06
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -38,8 +38,22 @@ delta:
   changed:
     - v0.1 → v0.2 applied 1 analyze-driven fix (L3: §10 risk register cross-reference note added explaining overlap with impact.md §9)
     - v0.2 → v0.3 — status bumped draft → approved (R17.4 review approved per phase-0b-heuristics/review-notes.md)
-  impacted: []
-  unchanged: []
+    - v0.3 → v0.4 — R11.4 spec-defect patch (2026-05-06) coordinated with spec.md v0.4. §2 (Drafting Prompt Structure) REQUIRED OUTPUT FIELDS list rewritten from §9.1 rich structured shape (~25 fields) to T101 body-string design (11 top-level fields). T101 (`packages/agent-core/src/analysis/heuristics/types.ts`, landed Day 1 of week 1) is the implementation source-of-truth that supersedes §9.1's structured `detection.*` + `recommendation.*` + `name` + `severity_if_violated` + `reliability_tier` fields. The single `body` string field absorbs §9.1's six prose fields (`detection.lookFor`, `detection.positiveSignals`, `detection.negativeSignals`, `recommendation.summary`, `recommendation.details`, `recommendation.researchBacking`) into one well-structured natural-language container — modern LLMs prefer prose over JSON-fragmented prompt instructions. INPUTS contract clarified: `archetype` accepts an array (T101 enum: D2C/SaaS/B2B/lead_gen/marketplace/media/other), `page_types` accepts an array (T101 enum: homepage/pdp/plp/cart/checkout/pricing/comparison/landing/other), `device` accepts an array (T101 enum: mobile/desktop/tablet/balanced — NOT `mobile`/`desktop`/`both` as v0.3 wrongly stated). Drafting model temperature stays 0.3 per §Assumptions META exemption.
+  impacted:
+    - T0B-001 drafting prompt template (this commit) — produces T101-shaped JSON
+    - T0B-004 lint CLI (Day 2 future) — Zod parse against T101's `HeuristicSchemaExtended` exported from `packages/agent-core/src/analysis/heuristics/types.ts`
+    - T103/T104/T105 heuristic content (week 4) — authored against corrected drafting prompt; bodies use prose composition
+    - Spec.md v0.3 → v0.4 — coordinated supersession callout in §Mandatory References
+  unchanged:
+    - §1 Sequencing (Week 1-4 task ordering)
+    - §3 Verification Protocol
+    - §4 PR Contract Proof Block
+    - §5 Pseudo-spec lint CLI design (T0B-004)
+    - §6 R6/R15.3.3 Isolation Strategy
+    - §7 Kill Criteria
+    - §8 Rollout / Acceptance gating
+    - §9 Effort estimate
+    - §10 Risks
 
 governing_rules:
   - Constitution R6 (IP)
@@ -92,66 +106,177 @@ Dependencies (from tasks-v2.md):
 
 ## 2. Drafting Prompt Structure (T0B-001)
 
+> **★ v0.4 supersession (2026-05-06):** This §2 was rewritten to match T101's body-string design (`packages/agent-core/src/analysis/heuristics/types.ts`, landed Day 1 of week 1). The previous v0.3 §2 referenced §9.1's rich structured shape (~25 fields with `name`, `severity_if_violated`, `reliability_tier`, `detection.*`, `recommendation.*`) which is now SUPERSEDED. T101 collapses the six structured prose fields into a single `body` string — better for LLM consumption (modern LLMs prefer prose over JSON-fragmented prompt instructions). All Phase 0b authoring infra (T0B-001..T0B-005) and content (T103/T104/T105) MUST conform to T101. See spec.md v0.4 §Mandatory References #5 for source-of-truth pointer.
+
 The drafting prompt template (`docs/specs/mvp/templates/heuristic-drafting-prompt.md`) is a structured Markdown block fed to Claude Sonnet 4 via direct Anthropic SDK call (NOT via LangSmith — R15.3.3 isolation). Structure:
 
 ```
-SYSTEM: You are a CRO heuristic drafter. Output a single JSON object conforming
-exactly to the schema described below. No prose, no markdown fences. The benchmark
-MUST be derivable from the cited research excerpt; if not, output {"error": "benchmark_not_derivable"}
-and stop. NEVER include conversion-rate predictions ("increase conversions by X%",
-"lift CR by Y%", "boost completion by Z%"). Allowed: descriptive thresholds
-("≤8 fields per Baymard 2024"), citations, and binary indicators.
+SYSTEM: You are a CRO heuristic drafter. Output a single JSON object that conforms
+EXACTLY to the HeuristicSchemaExtended Zod schema exported from
+packages/agent-core/src/analysis/heuristics/types.ts (T101). No prose around the JSON,
+no markdown fences. The benchmark MUST be derivable from the cited research excerpt;
+if not, output {"error": "benchmark_not_derivable"} and stop. NEVER include
+conversion-rate predictions ("increase conversions by X%", "lift CR by Y%",
+"boost completion by Z%"). Allowed: descriptive thresholds ("≤8 fields per
+Baymard 2024"), citations, and binary indicators.
+
+The `body` field is a SINGLE natural-language container that conveys what the LLM
+evaluator needs to identify the violation AND what the recommendation should be.
+Compose it as well-structured prose. Do NOT split into separate JSON fields for
+detection logic / signals / recommendation summary / recommendation details — those
+are all absorbed into `body`.
 
 USER (template):
 Draft a single heuristic for the {source} knowledge base.
 
 INPUTS:
-- source: "baymard" | "nielsen" | "cialdini"
-- source_url: "{verbatim URL or chapter reference}"
+- source: "baymard" | "nielsen" | "cialdini"   (informational; populates `id` prefix + `provenance.source_url`)
+- source_url: "{verbatim URL or stable text reference, e.g., book chapter}"
 - citation_text: "{verbatim excerpt — 100-300 words}"
-- archetype: "{ecommerce | saas | leadgen | marketplace | media | fintech | healthcare | education}"
-- page_types: [{one or more from PageTypeEnum}]
-- device: "desktop" | "mobile" | "both"
+- archetype: ["D2C" | "SaaS" | "B2B" | "lead_gen" | "marketplace" | "media" | "other"]   (array — T101 PRELIMINARY_BUSINESS_ARCHETYPES; Phase 4b T4B-001 ratifies canonical)
+- page_types: ["homepage" | "pdp" | "plp" | "cart" | "checkout" | "pricing" | "comparison" | "landing" | "other"]   (array — T101 PRELIMINARY_PAGE_TYPES)
+- device: ["mobile" | "desktop" | "tablet" | "balanced"]   (array — T101 PRELIMINARY_DEVICES; "balanced" replaces v0.3's "both")
+- draft_model: "{LLM model id, e.g., claude-sonnet-4-20250514}"   (placeholder for provenance.draft_model)
 
-REQUIRED OUTPUT FIELDS (HeuristicSchemaExtended):
-- id: pattern {SOURCE_PREFIX}-{CATEGORY}-{NUMBER:03d} (e.g., BAY-CHECKOUT-001)
-- source: matches input source
-- category: short snake_case category name
-- name: ≤80 chars, descriptive
-- severity_if_violated: "critical" | "high" | "medium" | "low"
-- reliability_tier: 1 | 2 | 3 (Tier 1 visual/structural; Tier 2 content/persuasion; Tier 3 interaction)
-- reliability_note: 1-sentence explanation
-- detection.pageTypes: matches input page_types
-- detection.businessTypes: contains input archetype
-- detection.lookFor: ≥20 chars, what to inspect on the page
-- detection.positiveSignals: array of strings
-- detection.negativeSignals: array of strings
-- detection.dataPoints: subset of DataPointEnum
-- detection.evidenceType: "measurable" | "observable" | "subjective"
-- recommendation.summary: ≤120 chars, no conversion-rate predictions
-- recommendation.details: longer prose, no conversion-rate predictions
-- recommendation.researchBacking: cites the source
-- benchmark: { type: "quantitative" | "qualitative", ... } (per HeuristicSchema §9.1)
-- archetype: matches input
-- page_type: matches input page_types
-- device: matches input device
-- version: "1.0.0"
-- rule_vs_guidance: "rule" if structural and binary; "guidance" otherwise
-- business_impact_weight: 0.0-1.0
-- effort_category: "content" | "design" | "engineering"
-- preferred_states: omit unless heuristic requires interaction (e.g., reviews tab open)
-- status: "active"
-- provenance.source_url: matches input source_url
-- provenance.citation_text: matches input citation_text
-- provenance.draft_model: "{ANTHROPIC_MODEL_ID}"
-- provenance.verified_by: ""   (filled by human verifier)
-- provenance.verified_date: "" (filled by human verifier)
+REQUIRED OUTPUT FIELDS (HeuristicSchemaExtended; T101 — 11 top-level fields):
+
+# --- HeuristicSchemaBase (3 fields, .strict()) ---
+- id: string matching regex /^[A-Z][A-Z0-9_]*-[A-Z][A-Z0-9_]*-\d{3,}$/
+       (e.g., "BAYMARD-CHECKOUT-001", "NIELSEN-USABILITY-005", "CIALDINI-SOCIALPROOF-001"
+        — pack uppercase letters + digits + underscores; numeric suffix ≥3 digits)
+- body: string (min 1 char) — the LLM-evaluable rule text. Compose as one
+       well-structured prose block (3-6 sentences typical) covering:
+         (a) what to inspect on the page,
+         (b) positive signals indicating the heuristic IS satisfied,
+         (c) negative signals indicating violation,
+         (d) the corrective recommendation,
+         (e) the research backing (1 sentence citing source).
+       This single string replaces §9.1's six fields (detection.lookFor +
+       detection.positiveSignals + detection.negativeSignals +
+       recommendation.summary + recommendation.details + recommendation.researchBacking).
+- category: string (min 1) — short snake_case category name
+       (e.g., "checkout", "form_design", "trust_signals", "social_proof").
+       Phase 6 T109 TierValidator maps category → Tier 1/2/3 reliability bucket.
+
+# --- HeuristicSchemaExtended §9.10 fields (6 fields) ---
+- version: string matching /^\d+\.\d+\.\d+$/ — start at "1.0.0"
+- rule_vs_guidance: "rule" | "guidance"
+       — "rule" if violation is binary + structurally detectable
+         (e.g., "guest checkout option present?")
+       — "guidance" if interpretive + needs LLM CoT
+         (e.g., "social proof feels credible enough?")
+- business_impact_weight: number ∈ [0, 1]
+       — heuristic's weight when prioritizing findings; Phase 6 T107
+         prioritizeHeuristics sorts by this descending. Calibrate roughly:
+         critical structural = 0.9, high content = 0.7, medium persuasion = 0.5,
+         low aesthetic = 0.3.
+- effort_category: "quick_win" | "strategic" | "incremental" | "deprioritized"
+       (T101 EFFORT_CATEGORIES enum — NOT v0.3's content/design/engineering;
+        these map to Phase 9 T167 IMPACT_MATRIX 4 quadrants directly)
+- preferred_states: string[]
+       — state-pattern IDs needed to evaluate this heuristic; default ["default"]
+         for heuristics evaluable on initial page load. Use ["authenticated"],
+         ["cart_nonempty"], ["modal_open"], etc. for state-conditional heuristics.
+         Phase 13 master state-graph extension consumes; Phase 7 MVP treats
+         non-"default" states as no-op.
+- status: "draft" | "active" | "deprecated"
+       — set "active" for production-ready heuristics; "draft" while in
+         spot-check; "deprecated" replaces archived heuristics post-v1.0.
+
+# --- benchmark (R15.3 — discriminated union; pick ONE branch) ---
+- benchmark: discriminatedUnion('kind', [Quantitative, Qualitative])
+  # Quantitative branch (.strict()) — for measurable structural violations:
+    - kind: "quantitative"
+    - value: number — the threshold value (e.g., 8 for "≤8 form fields")
+    - unit: string (min 1) — units (e.g., "fields", "ms", "px", "ratio", "percent")
+    - metric: string (min 1) — what is measured (e.g., "form_field_count",
+              "p95_load_time_ms", "min_touch_target_px", "wcag_contrast_ratio")
+  # Qualitative branch (.strict()) — for content/persuasion/usability heuristics:
+    - kind: "qualitative"
+    - standard_text: string (min 1) — the qualitative reference
+              (e.g., "WCAG 2.1 AA contrast ratio for body text",
+                     "Primary CTA visible above fold without scrolling",
+                     "Trust badges placed near payment form, not in footer")
+
+# --- provenance (R15.3.1 — 5 fields, .strict()) ---
+- provenance:
+    source_url: z.string().url() — full URL OR stable text reference
+              (Cialdini chapter references format:
+               "https://example.com/cialdini-chapter-5-liking" — use a stable
+               wayback OR documentation page; pure book references like
+               "Cialdini Chapter 5" do NOT validate as URL — wrap in
+               https://en.wikipedia.org/wiki/<wiki-page> or similar stable URL)
+    citation_text: string (min 1) — the verbatim excerpt from source_url
+              that justifies the body + benchmark
+    draft_model: "human" | LLM model id matching
+              /^(claude|gpt|gemini|llama|mistral|qwen)-[\w.-]+$/i
+              (e.g., "claude-sonnet-4-20250514")
+    verified_by: ""    (LEAVE EMPTY — human verifier fills per R15.3.2)
+    verified_date: "" (LEAVE EMPTY — human verifier fills with ISO-8601 datetime
+              matching /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?(Z|[+-]\d{2}:\d{2})$/
+              e.g., "2026-05-12T14:30:00Z")
+
+# --- Optional manifest selectors (3 fields; ALL optional but RECOMMENDED) ---
+# These enable Phase 4b T4B-013 HeuristicLoader.loadForContext(profile) filtering.
+# Absent / empty = "applies to all" per matchesSelector helper.
+- archetype: array of T101 PRELIMINARY_BUSINESS_ARCHETYPES values
+              (matches input archetype above)
+- page_type: array of T101 PRELIMINARY_PAGE_TYPES values
+              (matches input page_types above)
+- device: array of T101 PRELIMINARY_DEVICES values
+              (matches input device above)
 
 CONSTRAINTS:
-- Output a single JSON object, no wrapping array
-- Strings escape correctly (use \\n for newlines inside strings)
-- Numeric values use JSON number type, not strings
-- Do not invent benchmark values — derive from citation_text only
+- Output a single JSON object, no wrapping array, no markdown fences.
+- The two schemas (HeuristicSchemaBase, HeuristicSchemaExtended) use Zod's .strict() —
+  ANY EXTRA FIELD will be rejected at lint time. DO NOT include legacy §9.1 fields:
+    name, source, severity_if_violated, reliability_tier, reliability_note,
+    detection (any sub-field), recommendation (any sub-field),
+    viewport_applicability.
+  Their semantic content goes into `body` (LLM-readable prose) or is derived
+  from `category` downstream (TierValidator) or `business_impact_weight` (priority).
+- `body` is ONE STRING. Do NOT split into structured fields.
+- Strings escape correctly (use \\n for newlines inside strings).
+- Numeric values use JSON number type, not strings.
+- Do not invent benchmark values — derive from citation_text only.
+- Use only the T101 enum values listed above for archetype / page_type / device /
+  effort_category / status / rule_vs_guidance. ANY OTHER VALUE will fail Zod parse.
+- The id pattern requires ≥3-digit numeric suffix (`-001` not `-1`).
+- The benchmark.kind discriminator picks ONE branch; do NOT include both
+  quantitative + qualitative fields.
+- provenance.verified_by + provenance.verified_date are STRINGS (use "" placeholder
+  for the LLM output — verifier fills before commit).
+- HeuristicSchemaExtended will REJECT a heuristic where verified_by is "" at lint
+  time (Zod .min(1)) — this is intentional: forces human verifier sign-off before
+  commit per R15.3.2.
+
+WORKED EXAMPLE — Baymard checkout heuristic (LLM output target):
+
+{
+  "id": "BAYMARD-CHECKOUT-001",
+  "body": "On the checkout page, look for a guest checkout option that lets users complete their purchase without creating an account. Positive signals include explicit 'Continue as Guest' buttons or 'Skip Account Creation' links presented with equal or greater visual weight than the sign-in/register option. Negative signals include forced account creation flows that block checkout progression, or hidden guest options buried beneath multiple clicks. When the option is missing or de-emphasized, recommend adding a prominent guest checkout button at the top of the checkout flow, visually equivalent to the create-account CTA. Baymard Institute's 2024 Checkout Form Field Study found that 24% of users abandon checkout when forced to register an account before purchasing.",
+  "category": "checkout",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.9,
+  "effort_category": "quick_win",
+  "preferred_states": ["default"],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "Guest checkout option visible at start of checkout flow with equal-or-greater visual weight than account-creation CTA"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/checkout-form-field-study",
+    "citation_text": "24% of users have abandoned a Cart during checkout because the site wanted them to create an account.",
+    "draft_model": "claude-sonnet-4-20250514",
+    "verified_by": "",
+    "verified_date": ""
+  },
+  "archetype": ["D2C", "marketplace"],
+  "page_type": ["checkout"],
+  "device": ["desktop", "mobile", "tablet", "balanced"]
+}
 ```
 
 Notes:
@@ -160,6 +285,7 @@ Notes:
 - One heuristic per call. No batching (keeps cost attribution clean per heuristic).
 - Drafting subprocess uses `Anthropic` SDK directly (not via agent-core's LLMAdapter — that adapter wires LangSmith which violates R15.3.3 for drafting).
 - All drafting transcripts (input prompt + raw output) saved to `.heuristic-drafts/<heuristic-id>.json` (gitignored).
+- The `verified_by: ""` + `verified_date: ""` placeholders intentionally fail T0B-004 lint until human verifier replaces them per R15.3.2 — this is the enforcement seam between drafting and committing.
 
 ---
 

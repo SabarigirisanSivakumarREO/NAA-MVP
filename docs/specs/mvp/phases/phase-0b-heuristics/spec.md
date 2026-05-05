@@ -2,9 +2,9 @@
 title: Phase 0b — Heuristic Authoring (LLM-Assisted, Engineering-Owned)
 artifact_type: spec
 status: approved
-version: 0.3
+version: 0.4
 created: 2026-04-28
-updated: 2026-04-30
+updated: 2026-05-06
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -45,13 +45,16 @@ delta:
   changed:
     - v0.1 → v0.2 applied 6 analyze-driven fixes (M1: R-01 business_types→archetype terminology drift; M2: AC-13 R6 conformance test scope expanded to 5 channels; M3: drafting-subprocess R9 exemption formally documented in Assumptions per R22.2 pattern; M4: NF-01/NF-02 marked observation-only; L2: Pino-vs-CLI wording clarified in Constraints Inherited; L4: AC-01 fixture path pointed at examples.md §10)
     - v0.2 → v0.3 — status bumped draft → approved (R17.4 review approved per phase-0b-heuristics/review-notes.md; 3 polish conditions captured — D1 binding for T0B-004 lint CLI Zod-error redaction; D2 binding for T0B-005 README human-protocol R6 boundary doc; D3 optional pre-commit hook for `.heuristic-drafts/`)
+    - v0.3 → v0.4 — R11.4 spec-defect patch surfaced during T0B-001 implementation (2026-05-06). T101 (HeuristicSchemaExtended; forward-pulled to Day 1 of week 1) landed a body-string LLM-first design (3 base + 6 §9.10 + benchmark + provenance + 3 array-form manifest selectors = 11 top-level fields) that supersedes §9.1 architecture-spec's rich structured shape (~25 fields with `name`, `source`, `severity_if_violated`, `reliability_tier`, `detection.{lookFor, positiveSignals, negativeSignals, dataPoints, evidenceType, pageTypes, businessTypes}`, `recommendation.{summary, details, researchBacking}`). Phase 0b authoring infra now aligns with T101, NOT §9.1. Patches: §Mandatory References #4 demoted to "LEGACY — superseded"; §Mandatory References #5 elevated to source-of-truth pointer at `packages/agent-core/src/analysis/heuristics/types.ts`; supersession callout block added; R-01 wording explicitly cites T101 file path + body-string design. AC-NN/R-NN ID stability preserved (R18 append-only). v2.3.4 punch-list items added to INDEX.md for §9.1 v2.4 rewrite + Phase 6 spec.md v0.5 polish (covered by per-phase JIT analyze pre-flight per CLAUDE.md §8c).
   impacted:
     - Phase 6 implementation unblocked (engine has content to validate + load in T112 integration test)
     - Phase 7 EvaluateNode consumes the 30-heuristic pack via `HeuristicLoader.loadForContext()` filter
     - tasks-v2.md v2.3.2 → v2.3.3 (add Phase 0b section + reduce T103-T105 counts to 15/10/5 per F-012 v1.2)
+    - v0.4 — §9.1 architecture spec marked for v2.4 rewrite punch-list (collapse rich structured fields into body-string per T101); Phase 6 spec.md v0.4 marked for v0.5 polish (AC-01/AC-02/R-01 field references). Both deferred to per-phase JIT analyze pre-flight per CLAUDE.md §8c — no emergency cross-phase sweep required.
   unchanged:
-    - HeuristicSchemaExtended Zod fields (locked by Phase 6 v0.3)
-    - Constitution R6 IP boundary (Phase 0b reuses Phase 6's Pino redaction config + grep test)
+    - HeuristicSchemaExtended Zod fields (locked by T101 v0.4 implementation 2026-05-05; the previous v0.3 entry's "locked by Phase 6 v0.3" wording reflected pre-T101 understanding)
+    - Constitution R6 IP boundary (Phase 0b reuses Phase 6's Pino redaction config + grep test; T101 `body` field is the redaction target, not §9.1's `recommendation.details`)
+    - AC-01..AC-15 + R-01..R-12 stable IDs (R18 append-only)
 
 governing_rules:
   - Constitution R6 (IP protection — LLM-drafted heuristic content is still IP per R15.3.3)
@@ -82,10 +85,11 @@ When reading this spec, agents must already have loaded:
 
 1. `docs/specs/mvp/constitution.md` — **R6** (IP protection — focal); **R15.3** (benchmark + provenance both required); **R15.3.1** (5 provenance fields: `source_url`, `citation_text`, `draft_model`, `verified_by`, `verified_date`); **R15.3.2** (human verifier MUST manually re-derive benchmark within ±20% quantitative or text-reference qualitative BEFORE commit); **R15.3.3** (LLM-drafted heuristic content is still IP — drafting prompts + responses MUST NOT be logged to LangSmith / Pino / dashboard / API / error messages); **R11** (spec discipline); **R20** (impact); **R23** (kill criteria).
 2. `docs/specs/mvp/PRD.md` §4 F-012 (Heuristic Knowledge Base — 30 heuristics MVP per v1.2 amendment) + §10.9 (PR Contract — Proof block must include verification evidence).
-3. `docs/specs/mvp/examples.md` §10 (heuristic authoring examples — ✅ GOOD quantitative + qualitative + ❌ BAD).
-4. `docs/specs/final-architecture/09-heuristic-kb.md` — §9.1 (HeuristicSchema base — `id`, `source`, `category`, `name`, `severity_if_violated`, `reliability_tier`, `detection`, `recommendation`, `benchmark`); §9.10 (extensions — `version`, `rule_vs_guidance`, `business_impact_weight`, `effort_category`, `preferred_states`, `status`).
-5. `docs/specs/mvp/phases/phase-6-heuristics/spec.md` — HeuristicSchemaExtended Zod schema is the runtime validation gate; AC-11/R-09 v0.3 contract for `loadForContext()`.
-6. `docs/specs/mvp/phases/phase-4b-context-capture/spec.md` — T4B-013 `HeuristicLoader.loadForContext(profile)` filters by `archetype + page_type + device` (manifest selectors MUST appear on each heuristic).
+3. `docs/specs/mvp/examples.md` §10 (heuristic authoring examples — ✅ GOOD quantitative + qualitative + ❌ BAD). **NOTE (v0.4):** these examples were authored against §9.1's rich structured shape; treat as conceptual reference only. Field-level examples MUST follow T101's body-string design (see #5 below).
+4. `docs/specs/final-architecture/09-heuristic-kb.md` v2.3 — **LEGACY — SUPERSEDED by T101 implementation (see #5 below).** §9.1 (rich structured `HeuristicSchema`: `id`, `source`, `category`, `name`, `severity_if_violated`, `reliability_tier`, `detection.*`, `recommendation.*`, `benchmark`) + §9.10 extensions. **DO NOT use this section as the field-level contract for Phase 0b authoring or Phase 6 implementation** — it is preserved for historical context until §9.1 v2.4 lands per the v2.3.4 punch-list. The Phase 0b drafting prompt (T0B-001), the lint CLI (T0B-004), and the heuristic JSON content (T103/T104/T105) MUST conform to T101's body-string shape, NOT §9.1's structured shape. Background on supersession in delta block above.
+5. **★ SOURCE-OF-TRUTH (v0.4)** — `packages/agent-core/src/analysis/heuristics/types.ts` (T101; landed 2026-05-05 commit `3d2119c`). Defines `HeuristicSchemaBase` (`id` + `body` LLM-evaluable string + `category`) extended into `HeuristicSchemaExtended` with 6 §9.10 fields (`version`, `rule_vs_guidance`, `business_impact_weight`, `effort_category`, `preferred_states[]`, `status`) + `BenchmarkSchema` discriminated union (kind: 'quantitative'|'qualitative') + `ProvenanceSchema` (5 strict fields per R15.3.1) + 3 OPTIONAL array-form manifest selectors (`archetype` from `PRELIMINARY_BUSINESS_ARCHETYPES`, `page_type` from `PRELIMINARY_PAGE_TYPES`, `device` from `PRELIMINARY_DEVICES` — Phase 4b T4B-001 ratifies canonical enums). 11 top-level fields total. Both schemas use `.strict()` — extra fields are rejected. `body: string` is the SINGLE natural-language container that absorbs what §9.1 split across `detection.lookFor` + `detection.positiveSignals` + `detection.negativeSignals` + `recommendation.summary` + `recommendation.details` + `recommendation.researchBacking`. This is the LLM-first design — modern LLMs prefer prose over JSON-fragmented prompt instructions. Phase 6 spec.md v0.4 references this implementation (still cites §9.1 in AC-01/AC-02 wording; v0.5 polish per per-phase JIT analyze).
+6. `docs/specs/mvp/phases/phase-6-heuristics/spec.md` v0.4 — HeuristicSchemaExtended Zod schema is the runtime validation gate; AC-11/R-09 v0.3 contract for `loadForContext()`. **NOTE (v0.4 Phase 0b):** Phase 6 spec.md AC-01/AC-02/R-01 still cite §9.1 verbatim; v0.5 polish queued in v2.3.4 punch-list to refresh field references to T101 body-string shape. Implementation in week 4 will use T101's actual fields regardless.
+7. `docs/specs/mvp/phases/phase-4b-context-capture/spec.md` — T4B-013 `HeuristicLoader.loadForContext(profile)` filters by `archetype + page_type + device` (manifest selectors MUST appear on each heuristic — array form per T101). Phase 4b T4B-001 ratifies canonical enum values; T101 currently uses preliminary enums.
 
 ---
 
@@ -192,7 +196,7 @@ When Phase 6 implementation begins, the integration test (T112) loads the entire
 
 | ID | Requirement | Cites PRD F-NNN | Linked architecture spec |
 |----|-------------|-----------------|--------------------------|
-| R-01 | System SHALL provide a drafting prompt template (T0B-001) at `docs/specs/mvp/templates/heuristic-drafting-prompt.md` accepting `{source, source_url, citation_text, page_types, archetype, device}` inputs and instructing the LLM to produce a JSON object conforming to `HeuristicSchemaExtended` with all required fields populated and a placeholder `verified_by: ""` + `verified_date: ""` awaiting human input. | F-012 | §09.1, §09.10 |
+| R-01 | System SHALL provide a drafting prompt template (T0B-001) at `docs/specs/mvp/templates/heuristic-drafting-prompt.md` accepting `{source, source_url, citation_text, page_types, archetype, device}` inputs and instructing the LLM to produce a JSON object conforming to **`HeuristicSchemaExtended` as exported from `packages/agent-core/src/analysis/heuristics/types.ts` (T101 source-of-truth — body-string design, NOT §9.1's rich structured shape)** with all required fields populated and a placeholder `verified_by: ""` + `verified_date: ""` awaiting human input. The LLM-evaluable rule text MUST be composed as a single `body` string (well-structured prose), NOT split into `detection.lookFor` + `recommendation.summary` etc. | F-012 | T101 (`types.ts`); §09.10 (semantic only — field names are T101's, not §9.1's) |
 | R-02 | System SHALL provide a verification protocol document (T0B-002) at `docs/specs/mvp/templates/heuristic-verification-protocol.md` codifying R15.3.2: human verifier opens `source_url`, finds the cited passage, re-derives the benchmark, confirms ±20% match (quantitative) or text-reference (qualitative), fills `verified_by` + `verified_date`. Includes reject-and-redraft workflow on divergence. | F-012 | — (constitution R15.3.2) |
 | R-03 | System SHALL extend the PR Contract Proof block template (T0B-003) per PRD §10.9 to require per-heuristic verification evidence: `verified_by` name, `verified_date`, link to `source_url`, and a brief (1-2 sentence) re-derivation note. | F-012 | PRD §10.9 |
 | R-04 | System SHALL provide a `pnpm heuristic:lint <file-or-glob>` CLI helper (T0B-004) that: (a) parses files against `HeuristicSchemaExtended`; (b) verifies all 5 `provenance` fields non-empty; (c) verifies `benchmark` discriminated union present and well-formed; (d) verifies manifest selectors `archetype` + `page_type` + `device` present; (e) runs deterministic R5.3/GR-007 banned-phrase regex check on `recommendation.summary` + `recommendation.details`. Exit non-zero on any failure. | F-012 | §09.1, §09.10 |

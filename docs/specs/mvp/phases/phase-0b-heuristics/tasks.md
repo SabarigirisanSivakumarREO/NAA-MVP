@@ -2,9 +2,9 @@
 title: Phase 0b — Heuristic Authoring — Tasks
 artifact_type: tasks
 status: approved
-version: 0.3
+version: 0.4
 created: 2026-04-28
-updated: 2026-04-30
+updated: 2026-05-06
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -38,11 +38,13 @@ delta:
   changed:
     - v0.1 → v0.2 applied 1 analyze-driven fix (M2 cascade: T0B-004 acceptance updated to reference expanded AC-13 R6 conformance test scope per spec.md v0.2 — 5-channel coverage)
     - v0.2 → v0.3 — status bumped draft → approved (R17.4 review approved per phase-0b-heuristics/review-notes.md; D1 condition binding for T0B-004 implementer: lint CLI must redact Zod-error `received: <value>` content from stdout/stderr; conformance test must assert with `NEURAL_TEST_FIXTURE_BODY` sentinel string)
+    - v0.3 → v0.4 — T0B-001 IMPLEMENTED 2026-05-06 (Day 1 of Phase 0b). T0B-001 acceptance line refreshed to point at `plan.md v0.4 §2` (the body-string design — supersedes v0.3 §2 which referenced §9.1 rich structured shape). Coordinated with spec.md v0.4 + plan.md v0.4 (R11.4 spec-defect patch — T101 body-string design supersedes §9.1 rich shape per supersession callout). T0B-002..T0B-005 acceptance lines unchanged but they all consume T0B-001's template; v0.4 §2 reorientation propagates implicitly. T0B-NNN headers carry status markers (✅ DONE / ⚪ pending) per first-implementation convention since this tasks.md format uses headers not checkboxes.
   impacted:
     - tasks-v2.md v2.3.2 → v2.3.3 (Phase 0b section + reduced counts)
     - phase-6-heuristics/tasks.md already references T103-T105 as Phase 0b workstream (no change)
+    - v0.4 — T0B-001 commit landed; T0B-002..T0B-005 still pending Day 1; T103/T104/T105 still pending week 4
   unchanged:
-    - HeuristicSchemaExtended Zod fields (locked by Phase 6 v0.3)
+    - HeuristicSchemaExtended Zod fields (locked by T101 implementation 2026-05-05; the previous v0.3 entry's "locked by Phase 6 v0.3" wording reflected pre-T101 understanding)
     - PR Contract template baseline (T0B-003 extends it)
 
 governing_rules:
@@ -69,15 +71,16 @@ Per [plan.md](plan.md) §1: Week 1 = T0B-001..T0B-005 (infrastructure) → Week 
 
 ---
 
-## T0B-001 — Drafting prompt template
+## T0B-001 — Drafting prompt template ✅ **DONE 2026-05-06**
 
-- **dep:** T001 (monorepo) only
+- **dep:** T001 (monorepo) only ✅
 - **spec:** REQ-HK-001 + R15.3.1
-- **files:** `docs/specs/mvp/templates/heuristic-drafting-prompt.md`
-- **acceptance:** Markdown template structured per [plan.md §2](plan.md). System block, user block with `{source, source_url, citation_text, archetype, page_types, device}` inputs, output schema reference to HeuristicSchemaExtended, banned-phrasing prohibition. Producing a draft on a known Baymard excerpt yields valid `HeuristicSchemaExtended.parse()`-compatible JSON (manual smoke).
-- **conformance:** manual review (template); validated indirectly via T103-T105 outputs.
+- **files:** `docs/specs/mvp/templates/heuristic-drafting-prompt.md` ✅ (v1.0.0 landed)
+- **acceptance:** Markdown template structured per [plan.md v0.4 §2](plan.md) (body-string design per T101 — supersedes v0.3 §9.1 rich shape). System block, user block with `{source, source_url, citation_text, archetype, page_types, device, draft_model}` inputs, output schema reference to `HeuristicSchemaExtended` from `packages/agent-core/src/analysis/heuristics/types.ts` (T101 source-of-truth), banned-phrasing prohibition (R5.3 / GR-007), worked Baymard checkout example. Producing a draft on a known Baymard excerpt yields valid `HeuristicSchemaExtended.parse()`-compatible JSON (manual smoke; will be machine-validated when T0B-004 lint CLI lands Day 2).
+- **conformance:** manual review (template); validated indirectly via T103-T105 outputs (week 4) + machine-validated via T0B-004 lint CLI on first heuristic JSON (Day 2+).
+- **delta from v0.3:** T0B-001 task acceptance line was originally written against §9.1's rich structured shape (~25 fields); v0.4 reorients to T101's 11-field body-string design per the R11.4 patch documented in spec.md/plan.md/tasks.md v0.4 delta blocks.
 
-## T0B-002 — Verification protocol document
+## T0B-002 — Verification protocol document ⚪ pending
 
 - **dep:** none
 - **spec:** R15.3.2
