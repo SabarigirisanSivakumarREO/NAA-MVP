@@ -81,7 +81,16 @@ export async function audit(input: AuditInput): Promise<AuditOutcome> {
 
   const heuristicLoader = new HeuristicLoader();
   const heuristics = await heuristicLoader.loadAll();
-  logger.info({ node_name: 'loadHeuristics', count: heuristics.length }, 'loaded (placeholder — T-SKELETON-003 enriches)');
+  logger.info(
+    {
+      node_name: 'loadHeuristics',
+      count: heuristics.length,
+      // R6: ids only, NEVER body. Roadmap §6 T-SKELETON-003 special kill
+      // trigger: stub heuristic body content in any log = STOP.
+      heuristic_ids: heuristics.map((h) => h.id),
+    },
+    'loaded (T-SKELETON-003 stub — 3 synthetic fixtures; bodies are R6-marked test fixtures)',
+  );
 
   const evaluateNode = new EvaluateNode();
   const rawFindings = await evaluateNode.run(perception, heuristics);

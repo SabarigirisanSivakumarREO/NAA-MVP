@@ -2,14 +2,14 @@
 title: Neural MVP Implementation Roadmap (Walking Skeleton)
 artifact_type: roadmap
 status: draft
-version: 0.4
+version: 0.5
 created: 2026-04-29
 updated: 2026-05-05
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
 
-supersedes: v0.1 (in-place — see delta block); v0.2 + v0.3 in-place deltas
+supersedes: v0.1 (in-place — see delta block); v0.2 + v0.3 + v0.4 in-place deltas
 supersededBy: null
 
 derived_from:
@@ -26,6 +26,16 @@ breaking: false
 affected_contracts: []
 
 delta:
+  v0_5:
+    new: []
+    changed:
+      - "§6 T-SKELETON-003 fixture-body marker: `\"TEST FIXTURE — not a real heuristic\"` (cosmetic disclaimer text — kept) + ADDS the literal sentinel string `NEURAL_TEST_FIXTURE_BODY` per Phase 0b T0B-004 D1 BINDING precedent (`apps/cli/src/commands/heuristic-lint.ts` + `apps/cli/tests/conformance/heuristic-lint.test.ts` already assert this sentinel for R6 conformance). Cross-package consistency: a single grep pattern can cover both surfaces in week 4 (Phase 6 T-PHASE6-LOGGER R6 conformance suite). T-SKELETON-003 fixtures embed BOTH strings."
+    impacted:
+      - "T-SKELETON-003 implementation (commit alongside this delta, single-commit Option G — same lighter pattern as v0.4)"
+    unchanged:
+      - "T-SKELETON-003 acceptance criteria semantics — fixtures still synthetic + clearly marked + parseable by HeuristicSchemaExtended.strict(); the sentinel addition is additive, not a replacement"
+      - "T0B-004 conformance test surface (apps/cli) — already asserts NEURAL_TEST_FIXTURE_BODY; T-SKELETON-003 fixtures join the same conformance pool"
+      - "12-week cadence; promotion table; stub conventions; everything else"
   v0_4:
     new: []
     changed:
@@ -244,7 +254,7 @@ These tasks are **sequencing-only** and live ONLY in this roadmap. They do not a
 
 - **dep:** T-SKELETON-002 (uses fixtures dir)
 - **files:** `packages/agent-core/src/analysis/heuristics/loader.ts` (NEW — stubbed)
-- **acceptance:** `HeuristicLoader.loadAll(): Promise<HeuristicKB>` returns 3 synthetic heuristics from `packages/agent-core/tests/fixtures/heuristics/skeleton-{1,2,3}.json` (NEW fixtures; `body` text marked "TEST FIXTURE — not a real heuristic" per R6)
+- **acceptance:** `HeuristicLoader.loadAll(): Promise<HeuristicKB>` returns 3 synthetic heuristics from `packages/agent-core/tests/fixtures/heuristics/skeleton-{1,2,3}.json` (NEW fixtures; `body` text marked "TEST FIXTURE — not a real heuristic" + embeds the literal sentinel `NEURAL_TEST_FIXTURE_BODY` per Phase 0b T0B-004 D1 BINDING precedent so a single R6 grep pattern covers both apps/cli heuristic-lint conformance fixtures and agent-core skeleton fixtures in week 4)
 - **stub data:** synthetic; conforms to HeuristicSchemaExtended (T101 schema — also lands week 1 for contract feasibility)
 - **promotion:** replaced by Phase 6 T106 in **week 4** — R20 impact.md (HeuristicLoader interface)
 - **kill criteria:** default block + stub heuristic body content appears in any log → STOP (R6 violation even on stub data)

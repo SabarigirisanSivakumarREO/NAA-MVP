@@ -1,0 +1,27 @@
+{
+  "id": "SKELETON-CHECKOUT-001",
+  "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic placeholder content used by walking-skeleton week-1 to exercise the HeuristicLoader contract without exposing real Baymard / Nielsen / Cialdini IP. Real heuristic content lands via Phase 6 T106 + Phase 0b T103-T105 in week 4.",
+  "category": "checkout_friction",
+  "version": "0.0.1",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.8,
+  "effort_category": "quick_win",
+  "preferred_states": ["default"],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 44,
+    "unit": "px",
+    "metric": "min_touch_target_size"
+  },
+  "provenance": {
+    "source_url": "https://example.test/skeleton-fixture-1",
+    "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+    "draft_model": "human",
+    "verified_by": "skeleton-test-author",
+    "verified_date": "2026-05-05T00:00:00Z"
+  },
+  "archetype": ["D2C"],
+  "page_type": ["pdp"],
+  "device": ["mobile"]
+}
