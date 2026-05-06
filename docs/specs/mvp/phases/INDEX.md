@@ -163,7 +163,8 @@ Per [implementation-roadmap.md](../implementation-roadmap.md) §7 Week 1:
 - [x] T-SKELETON-004 (EvaluateNode → 2 hardcoded raw findings tagged source='skeleton-stub' referencing Peregrine PDP + SKELETON-CHECKOUT-001 + SKELETON-CONTENT-003 + R5.3+GR-007 banned-phrase static-check + 8 unit tests + R5.3 spot-check on artifacts) — **done Day 2-3 (Session 10 2026-05-06)**
 - [x] T-SKELETON-005 (SelfCritiqueNode passthrough confirmation + R5.6 Phase 7 T121 forward-path docstring + verdicts_summary log enrichment + 6 unit tests covering passthrough length/verdict/field-preservation/empty/order/idempotence) — **done Day 2-3 (Session 10 2026-05-06)**
 - [x] T-SKELETON-006 (EvidenceGrounder passthrough confirmation + Phase 7 T122-T130 forward-path docstring with all 9 GR rules detail ★ second critical risk gate ★ + rejection_summary log enrichment + 6 unit tests covering envelope shape/passthrough/empty rejected/field-preservation/empty defensive/idempotence) — **done Day 2-3 (Session 10 2026-05-06)**
-- [ ] T-SKELETON-007..009 (4 placeholder confirmations — Annotate / Storage / Report passthrough/no-op + JSON/TXT writes; placeholders already meet spec) — pending
+- [x] T-SKELETON-007 (AnnotateNode no-op passthrough confirmation + Phase 7 T131 week 9 Sharp severity-color overlay forward-path docstring + annotation_count=0 log placeholder + 5 unit tests covering passthrough length/field-preservation/empty defensive/order/idempotence) — **done Day 2-3 (Session 10 2026-05-06)**
+- [ ] T-SKELETON-008..009 (3 placeholder confirmations — Storage / Report passthrough/no-op + JSON/TXT writes; placeholders already meet spec) — pending
 - [ ] T-SKELETON-010 (Playwright Test acceptance — `pnpm cro:audit --url=...` exits 0 + writes `./out/<slug>-audit.txt` with ≥1 finding line; <30s) — pending
 - [ ] Wednesday demo (2026-05-06) — run `pnpm cro:audit --url=<peregrine PDP>` end-to-end through stubbed pipeline
 

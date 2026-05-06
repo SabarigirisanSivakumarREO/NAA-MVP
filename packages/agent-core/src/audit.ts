@@ -144,7 +144,18 @@ export async function audit(input: AuditInput): Promise<AuditOutcome> {
 
   const annotateNode = new AnnotateNode();
   const annotated = await annotateNode.run(groundResult.grounded);
-  logger.info({ node_name: 'annotate', count: annotated.length }, 'annotated (placeholder — T-SKELETON-007 enriches)');
+  logger.info(
+    {
+      node_name: 'annotate',
+      count: annotated.length,
+      // Week-1 always 0 (no-op passthrough). Phase 7 T131 (week 9) populates
+      // with the count of findings that received a Sharp severity-color
+      // bounding-box overlay (typically equals `count` once every grounded
+      // finding has a resolvable element ref).
+      annotation_count: 0,
+    },
+    'annotated (T-SKELETON-007 stub — no-op passthrough; Phase 7 T131 week 9 introduces Sharp severity-color overlays for Phase 9 PDF delivery)',
+  );
 
   const storeNode = new StoreNode();
   const findingsPath = await storeNode.run({ findings: annotated, outputDir, slug });
