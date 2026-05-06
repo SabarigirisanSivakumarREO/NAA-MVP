@@ -1,0 +1,177 @@
+{
+  "metadata": {
+    "url": "https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy",
+    "title": "Heavyweight T-Shirt – Navy | Peregrine Clothing",
+    "statusCode": 200,
+    "navigationStartedAt": "2026-05-05T00:00:00.000Z",
+    "navigationEndedAt": "2026-05-05T00:00:00.512Z"
+  },
+  "accessibilityTree": {
+    "root": {
+      "role": "WebArea",
+      "name": "Heavyweight T-Shirt – Navy | Peregrine Clothing",
+      "children": [
+        {
+          "role": "banner",
+          "children": [
+            {
+              "role": "navigation",
+              "name": "Primary",
+              "children": [
+                { "role": "link", "name": "Home" },
+                { "role": "link", "name": "T-Shirts" }
+              ]
+            }
+          ]
+        },
+        {
+          "role": "main",
+          "children": [
+            {
+              "role": "navigation",
+              "name": "Breadcrumb",
+              "children": [
+                { "role": "link", "name": "Home" },
+                { "role": "link", "name": "T-Shirts" },
+                { "role": "text", "name": "Heavyweight T-Shirt" }
+              ]
+            },
+            { "role": "img", "name": "Heavyweight T-Shirt in Navy — front view" },
+            { "role": "heading", "level": 1, "name": "Heavyweight T-Shirt" },
+            { "role": "text", "name": "£75.00" },
+            {
+              "role": "radiogroup",
+              "name": "Colour",
+              "children": [
+                { "role": "radio", "name": "Navy", "selected": true },
+                { "role": "radio", "name": "Black", "selected": false },
+                { "role": "radio", "name": "White", "selected": false }
+              ]
+            },
+            {
+              "role": "combobox",
+              "name": "Size",
+              "expanded": false,
+              "required": true
+            },
+            { "role": "button", "name": "Add to bag" },
+            {
+              "role": "region",
+              "name": "Description",
+              "children": [
+                { "role": "text", "name": "Cut from heavyweight 240gsm cotton, this t-shirt has a relaxed fit and reinforced shoulder seams." }
+              ]
+            }
+          ]
+        },
+        {
+          "role": "contentinfo",
+          "children": [
+            { "role": "link", "name": "Returns & Exchanges" },
+            { "role": "link", "name": "Contact" }
+          ]
+        }
+      ]
+    },
+    "totalNodes": 24
+  },
+  "filteredDOM": {
+    "top30": [
+      {
+        "ref": "main h1",
+        "role": "heading",
+        "text": "Heavyweight T-Shirt",
+        "score": 1,
+        "boundingBox": { "x": 640, "y": 180, "width": 360, "height": 36 }
+      },
+      {
+        "ref": "main [data-price]",
+        "role": "text",
+        "text": "£75.00",
+        "score": 0.92,
+        "boundingBox": { "x": 640, "y": 224, "width": 96, "height": 28 }
+      },
+      {
+        "ref": "main button[name='add']",
+        "role": "button",
+        "text": "Add to bag",
+        "score": 0.85,
+        "boundingBox": { "x": 640, "y": 420, "width": 280, "height": 48 }
+      },
+      {
+        "ref": "main img.product-hero",
+        "role": "img",
+        "text": "Heavyweight T-Shirt in Navy — front view",
+        "score": 0.78,
+        "boundingBox": { "x": 80, "y": 180, "width": 520, "height": 520 }
+      },
+      {
+        "ref": "main fieldset[name='colour'] input[value='Navy']",
+        "role": "radio",
+        "text": "Navy",
+        "score": 0.71,
+        "boundingBox": { "x": 640, "y": 280, "width": 40, "height": 40 }
+      },
+      {
+        "ref": "main select[name='size']",
+        "role": "combobox",
+        "text": "Choose size",
+        "score": 0.65,
+        "boundingBox": { "x": 640, "y": 350, "width": 280, "height": 40 }
+      },
+      {
+        "ref": "nav.breadcrumb a:first-of-type",
+        "role": "link",
+        "text": "Home",
+        "score": 0.59,
+        "boundingBox": { "x": 80, "y": 120, "width": 56, "height": 20 }
+      },
+      {
+        "ref": "main section.description p",
+        "role": "text",
+        "text": "Cut from heavyweight 240gsm cotton, this t-shirt has a relaxed fit and reinforced shoulder seams.",
+        "score": 0.54,
+        "boundingBox": { "x": 640, "y": 500, "width": 480, "height": 60 }
+      },
+      {
+        "ref": "header nav a[href='/t-shirts']",
+        "role": "link",
+        "text": "T-Shirts",
+        "score": 0.49,
+        "boundingBox": { "x": 200, "y": 40, "width": 80, "height": 24 }
+      },
+      {
+        "ref": "footer a[href='/contact']",
+        "role": "link",
+        "text": "Contact",
+        "score": 0.45,
+        "boundingBox": { "x": 1100, "y": 900, "width": 80, "height": 24 }
+      }
+    ]
+  },
+  "interactiveGraph": {
+    "clickable": [
+      "main button[name='add']",
+      "main fieldset[name='colour'] input[value='Navy']",
+      "main fieldset[name='colour'] input[value='Black']",
+      "main fieldset[name='colour'] input[value='White']",
+      "nav.breadcrumb a:first-of-type",
+      "header nav a[href='/t-shirts']",
+      "footer a[href='/contact']",
+      "footer a[href='/returns']"
+    ],
+    "typeable": [],
+    "submittable": [
+      "main form[action='/cart/add']"
+    ]
+  },
+  "diagnostics": {
+    "axNodeCount": 24,
+    "mutationsObserved": 2,
+    "stable": true,
+    "lowAxNodeCount": false,
+    "unstable": false,
+    "errors": [],
+    "warnings": ["NEURAL_TEST_FIXTURE: synthetic Peregrine PDP — not from live capture"]
+  }
+}

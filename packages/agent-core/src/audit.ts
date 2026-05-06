@@ -69,7 +69,15 @@ export async function audit(input: AuditInput): Promise<AuditOutcome> {
 
   const browserManager = new BrowserManager();
   const perception = await browserManager.capture(input.url);
-  logger.info({ node_name: 'capture' }, 'captured (placeholder — T-SKELETON-002 enriches)');
+  logger.info(
+    {
+      node_name: 'capture',
+      page_title: perception.metadata.title,
+      ax_node_count: perception.accessibilityTree.totalNodes,
+      filtered_top30_count: perception.filteredDOM.top30.length,
+    },
+    'captured (T-SKELETON-002 — peregrine-pdp.json fixture)',
+  );
 
   const heuristicLoader = new HeuristicLoader();
   const heuristics = await heuristicLoader.loadAll();

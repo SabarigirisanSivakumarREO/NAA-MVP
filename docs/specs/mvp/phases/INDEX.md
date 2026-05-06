@@ -158,7 +158,8 @@ Per [implementation-roadmap.md](../implementation-roadmap.md) §7 Week 1:
 - [x] T101 forward-pulled from Phase 6 (HeuristicSchemaExtended) — done Day 1
 - [x] T0B-001..T0B-005 (Phase 0b infra) — **done Day 2**
 - [x] T-SKELETON-001 (orchestrator + CLI subcommand + 8 placeholder nodes; PD-07 c) — **done Day 2-3 (Session 10 2026-05-05)**
-- [ ] T-SKELETON-002..009 (9 placeholder enrichments — synthetic Peregrine PDP fixture + 3 heuristic fixtures + 2 raw findings + passthrough verdicts + JSON/TXT writes) — pending
+- [x] T-SKELETON-002 (Peregrine PDP fixture + BrowserManager.capture() Zod-parses + page_title log enrichment + 8 unit tests; roadmap v0.3 → v0.4 fixture-name patch) — **done Day 2-3 (Session 10 2026-05-05/06)**
+- [ ] T-SKELETON-003..009 (8 placeholder enrichments — 3 heuristic fixtures + 2 raw findings + passthrough verdicts + JSON/TXT writes) — pending
 - [ ] T-SKELETON-010 (Playwright Test acceptance — `pnpm cro:audit --url=...` exits 0 + writes `./out/<slug>-audit.txt` with ≥1 finding line; <30s) — pending
 - [ ] Wednesday demo (2026-05-06) — run `pnpm cro:audit --url=<peregrine PDP>` end-to-end through stubbed pipeline
 

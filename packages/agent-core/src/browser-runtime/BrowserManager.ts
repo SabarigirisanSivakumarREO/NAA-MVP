@@ -1,52 +1,63 @@
 /**
- * BrowserManager — placeholder for T-SKELETON-001 orchestrator scaffolding.
+ * BrowserManager — week-1 stub: load synthetic Peregrine PDP fixture.
  *
- * Source: docs/specs/mvp/implementation-roadmap.md v0.3 §6 T-SKELETON-002.
+ * Source: docs/specs/mvp/implementation-roadmap.md v0.4 §6 T-SKELETON-002
+ *         (fixture path locked to peregrine-pdp.json per Session 8 PD-04
+ *         demo-target lock; v0.3 → v0.4 patched alongside this commit).
  *
- * Status: minimal placeholder — returns the smallest PageStateModel that
- * satisfies T014 .strict() schema. T-SKELETON-002 enriches to load
- * `packages/agent-core/tests/fixtures/perception/peregrine-pdp.json` per
- * the synthetic-Peregrine-PDP fixture plan.
+ * Status: complete-but-stubbed (per roadmap §3 conventions). Fixture loaded
+ * from `packages/agent-core/tests/fixtures/perception/peregrine-pdp.json`
+ * and returned verbatim through `PageStateModelSchema.strict().parse()`.
  *
- * Phase 1 (T006-T013) supersedes with real Playwright capture in week 2.
+ * Phase 1 T006-T013 supersedes with real Playwright capture in week 2. R20
+ * impact.md required at that transition (PageStateModel contract surface).
  *
- * Determinism (R10/NF-006 stub conventions per roadmap §3): no Math.random,
- * no Date.now in capture body — timestamps are hardcoded ISO-8601 strings
- * matching the Zod regex.
+ * Known week-1 quirks (documented for honesty):
+ *   - The fixture is returned regardless of `url` argument. If you call
+ *     `capture('https://example.com')` you still get the Peregrine PDP
+ *     PageStateModel — `metadata.url` will be the Peregrine URL, not the
+ *     input. Phase 1 fixes this; the orchestrator's Pino `page_url`
+ *     correlation field still carries the user-input URL (not the
+ *     captured metadata.url) so log diagnostics remain accurate.
  *
- * R10 compliance: file ≤ 50 lines (function ≤ 50 lines).
+ * R3.3 stub conventions: throws on fixture load / Zod parse failure are
+ * acceptable runtime errors with specific causes (R3.3 forbids broken
+ * paths in main, NOT all Errors). The orchestrator catches these in
+ * apps/cli/src/commands/audit.ts.
+ *
+ * R10 compliance: file ≤ 100 lines.
  */
-// TODO(T-SKELETON-002): replace empty defaults with synthetic Peregrine PDP
-// fixture loaded from packages/agent-core/tests/fixtures/perception/peregrine-pdp.json.
-import { type PageStateModel } from '../perception/types.js';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { PageStateModelSchema, checkAxTreeDepth, type PageStateModel } from '../perception/types.js';
 
-const PLACEHOLDER_TIMESTAMP = '2026-05-06T00:00:00.000Z';
+const FIXTURE_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  'tests',
+  'fixtures',
+  'perception',
+  'peregrine-pdp.json',
+);
 
 export class BrowserManager {
-  async capture(url: string): Promise<PageStateModel> {
-    return {
-      metadata: {
-        url,
-        title: '',
-        statusCode: 200,
-        navigationStartedAt: PLACEHOLDER_TIMESTAMP,
-        navigationEndedAt: PLACEHOLDER_TIMESTAMP,
-      },
-      accessibilityTree: {
-        root: { role: 'WebArea' },
-        totalNodes: 1,
-      },
-      filteredDOM: { top30: [] },
-      interactiveGraph: { clickable: [], typeable: [], submittable: [] },
-      diagnostics: {
-        axNodeCount: 1,
-        mutationsObserved: 0,
-        stable: true,
-        lowAxNodeCount: false,
-        unstable: false,
-        errors: [],
-        warnings: [],
-      },
-    };
+  async capture(_url: string): Promise<PageStateModel> {
+    const raw = JSON.parse(await readFile(FIXTURE_PATH, 'utf8')) as unknown;
+
+    // T014 safety: check ax-tree depth BEFORE z.parse to prevent stack
+    // overflow on cyclic/deep tree input. Fixtures are trusted, but using
+    // the helper documents the future Phase 1 real-Playwright path which
+    // will receive untrusted browser output.
+    const rawObj = raw as { accessibilityTree?: { root?: unknown } };
+    if (rawObj.accessibilityTree?.root !== undefined) {
+      const result = checkAxTreeDepth(rawObj.accessibilityTree.root);
+      if (!result.ok) {
+        throw new Error(`BrowserManager fixture ax-tree malformed: ${result.reason}`);
+      }
+    }
+
+    return PageStateModelSchema.parse(raw);
   }
 }

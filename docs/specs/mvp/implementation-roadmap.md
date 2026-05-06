@@ -2,14 +2,14 @@
 title: Neural MVP Implementation Roadmap (Walking Skeleton)
 artifact_type: roadmap
 status: draft
-version: 0.3
+version: 0.4
 created: 2026-04-29
-updated: 2026-04-29
+updated: 2026-05-05
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
 
-supersedes: v0.1 (in-place — see delta block); v0.2 in-place delta
+supersedes: v0.1 (in-place — see delta block); v0.2 + v0.3 in-place deltas
 supersededBy: null
 
 derived_from:
@@ -26,6 +26,16 @@ breaking: false
 affected_contracts: []
 
 delta:
+  v0_4:
+    new: []
+    changed:
+      - "§6 T-SKELETON-002 stub-data fixture path: `packages/agent-core/tests/fixtures/perception/example-com.json` → `packages/agent-core/tests/fixtures/perception/peregrine-pdp.json` (Peregrine PDP locked as Wednesday demo target via Session 8 PD-04 effective resolution + handover block 6 + INDEX.md week-1 progress + Session 10 kickoff prompt; T-SKELETON-002 implementation 2026-05-05 lands Peregrine fixture)"
+      - "§7 Week 1 demo example log line `[skeleton] perception captured (stub data — peregrine-pdp.json fixture)` → `[skeleton] perception captured (stub data — peregrine-pdp.json fixture)` for consistency"
+    impacted:
+      - "T-SKELETON-002 implementation (commit alongside this delta, single-commit Option G — lighter than Phase 0b PATH A multi-commit pattern since artifact is status:draft and patch is mechanical/non-AC-changing)"
+    unchanged:
+      - "T-SKELETON-002 acceptance criteria — fixture name swap is cosmetic; the AC `BrowserManager.capture(url): Promise<PageStateModel>` returns hardcoded PageStateModel JSON validating against `PageStateModelSchema` is unchanged"
+      - "12-week cadence; promotion table; stub conventions; everything else"
   v0_3:
     new:
       - Weeks 7-12 detail (replaces "Weeks 8-12 — Sketch pending v0.3" placeholder)
@@ -224,7 +234,7 @@ These tasks are **sequencing-only** and live ONLY in this roadmap. They do not a
 - **dep:** T001
 - **files:** `packages/agent-core/src/browser-runtime/BrowserManager.ts` (NEW — stubbed)
 - **acceptance:** `BrowserManager.capture(url): Promise<PageStateModel>` returns a hardcoded PageStateModel JSON validating against `PageStateModelSchema` (Phase 1 T014 schema — must land in week 1 alongside this stub for contract conformance)
-- **stub data:** loaded from `packages/agent-core/tests/fixtures/perception/example-com.json`
+- **stub data:** loaded from `packages/agent-core/tests/fixtures/perception/peregrine-pdp.json` (Peregrine PDP — Wednesday demo target locked Session 8 PD-04; v0.3 cited `example-com.json` and was patched in v0.4 alongside T-SKELETON-002 implementation 2026-05-05)
 - **promotion:** replaced by Phase 1 T006+T013 in **week 2** — R20 impact.md required (touches PageStateModel contract surface; v0.1 spec already exists)
 - **kill criteria:** default block + stub returns malformed PageStateModel → STOP
 
@@ -317,7 +327,7 @@ These tasks are **sequencing-only** and live ONLY in this roadmap. They do not a
 ```bash
 $ pnpm cro:audit --url=https://example.com
 [skeleton] orchestrator started audit_run=skl-001
-[skeleton] perception captured (stub data — example-com.json fixture)
+[skeleton] perception captured (stub data — peregrine-pdp.json fixture)
 [skeleton] heuristics loaded (3 synthetic)
 [skeleton] evaluate produced 2 raw findings (stub)
 [skeleton] critique passed 2/2 (stub passthrough)
