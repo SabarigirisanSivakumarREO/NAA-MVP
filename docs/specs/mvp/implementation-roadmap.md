@@ -2,14 +2,14 @@
 title: Neural MVP Implementation Roadmap (Walking Skeleton)
 artifact_type: roadmap
 status: draft
-version: 0.6
+version: 0.7
 created: 2026-04-29
 updated: 2026-05-06
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
 
-supersedes: v0.1 (in-place — see delta block); v0.2 + v0.3 + v0.4 + v0.5 in-place deltas
+supersedes: v0.1 (in-place — see delta block); v0.2 + v0.3 + v0.4 + v0.5 + v0.6 in-place deltas
 supersededBy: null
 
 derived_from:
@@ -26,6 +26,16 @@ breaking: false
 affected_contracts: []
 
 delta:
+  v0_7:
+    new: []
+    changed:
+      - "§6 T-SKELETON-009 acceptance signature: `Report.render(audit): Promise<string>` → `Report.render({url, auditRunId, findings, rejectedCount, durationMs}): Promise<string>` (aligns roadmap with already-implemented T-SKELETON-001 placeholder which uses structured `ReportInput` interface — render-specific input cleaner than passing full AuditOutcome; vague `audit` placeholder name in v0.6 didn't specify shape)"
+    impacted:
+      - "T-SKELETON-009 implementation (commit alongside this delta, single-commit Option G — same pattern as v0.4 fixture-name + v0.5 sentinel-naming + v0.6 Promise<string>)"
+    unchanged:
+      - "T-SKELETON-009 acceptance semantics — render plain-text report header + per-finding lines + return string; signature change is structural alignment (not a behavior change); orchestrator already passes these fields"
+      - "Phase 9 T245-T249 supersession week 10 still owns HTML template + Playwright page.pdf() + 8 sections per F-018; R20 impact.md required (R6 channels 3+4 first runtime)"
+      - "12-week cadence; promotion table; stub conventions; everything else"
   v0_6:
     new: []
     changed:
@@ -316,7 +326,7 @@ These tasks are **sequencing-only** and live ONLY in this roadmap. They do not a
 
 - **dep:** T-SKELETON-008
 - **files:** `packages/agent-core/src/delivery/Report.ts` (NEW — stubbed)
-- **acceptance:** `Report.render(audit): Promise<string>` returns plain-text report; written to `./out/<slug>-audit.txt` by orchestrator
+- **acceptance:** `Report.render({url, auditRunId, findings, rejectedCount, durationMs}): Promise<string>` returns plain-text report; written to `./out/<slug>-audit.txt` by orchestrator (v0.7 patched the signature to align with T-SKELETON-001 placeholder which uses structured `ReportInput` interface — render-specific input cleaner than passing full AuditOutcome; v0.6 spec said `Report.render(audit)` without specifying shape)
 - **promotion:** replaced by Phase 9 T245-T249 (HTML template + Playwright `page.pdf()`) in **week 10** — R20 impact.md
 - **kill criteria:** default block
 

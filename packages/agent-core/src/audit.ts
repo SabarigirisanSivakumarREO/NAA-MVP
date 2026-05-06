@@ -179,7 +179,17 @@ export async function audit(input: AuditInput): Promise<AuditOutcome> {
   });
   const reportPath = join(outputDir, `${slug}-audit.txt`);
   await writeFile(reportPath, reportText, 'utf8');
-  logger.info({ node_name: 'report', path: reportPath }, 'rendered');
+  logger.info(
+    {
+      node_name: 'report',
+      path: reportPath,
+      // text/plain in week 1; Phase 9 T245-T249 (week 10) transitions to
+      // application/pdf with branded 8-section layout per F-018.
+      report_format: 'text/plain',
+      bytes_written: Buffer.byteLength(reportText, 'utf8'),
+    },
+    'rendered (T-SKELETON-009 stub — plain-text TXT; Phase 9 T245-T249 week 10 introduces HTML+PDF + R6 channels 3+4 first runtime)',
+  );
 
   logger.info({ node_name: 'orchestrator', duration_ms: durationMs }, 'completed');
 
