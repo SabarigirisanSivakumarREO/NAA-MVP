@@ -27,6 +27,11 @@
       "types": "./dist/analysis/heuristics/types.d.ts",
       "import": "./dist/analysis/heuristics/types.js",
       "default": "./dist/analysis/heuristics/types.js"
+    },
+    "./audit": {
+      "types": "./dist/audit.d.ts",
+      "import": "./dist/audit.js",
+      "default": "./dist/audit.js"
     }
   },
   "scripts": {

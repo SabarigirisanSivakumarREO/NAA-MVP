@@ -6,6 +6,11 @@
 # Dev storage (local_disk ScreenshotStorage writes here — PRD §7.5)
 .storage/
 
+# Audit run output — `pnpm cro:audit --url=...` writes per-run findings JSON
+# + plain-text report here (T-SKELETON-008 + T-SKELETON-009). Phase 9 T156+
+# will move final artifacts to Cloudflare R2; ./out/ remains for local dev.
+out/
+
 # Node / Turborepo / Next.js build artifacts
 node_modules/
 .turbo/

@@ -2,10 +2,10 @@
 title: Neural MVP — Rolling Session Handover
 artifact_type: session-handover
 status: complete
-version: 1.3
-last_updated: 2026-05-06
-last_session_number: 9
-last_session_outcome: Day 2 of week 1 walking-skeleton COMPLETE for the Phase 0b INFRASTRUCTURE LAYER — T0B-001 (drafting prompt) + T0B-002 (verification protocol) + T0B-003 (PR Contract Proof block) + T0B-004 (pnpm heuristic:lint CLI + Vitest at apps/cli + 18 conformance tests; D1 BINDING SATISFIED) + T0B-005 (heuristics-repo/README.md; D2 BINDING SATISFIED; D3 OPTIONAL deferred to v1.0.1). 6 commits pushed to feat/week-1-walking-skeleton (5 task commits + 1 R11.4 PATH A continuation v0.5 spec patch mid-Day-2). 1 R11.4 spec defect surfaced + patched in flight (banned-phrase regex target body, not recommendation.summary + .details). Test surface grew 55 → 73 (+18 cli conformance). Phase 0b CONTENT layer (T103/T104/T105) still pending week 4 — Phase 0b not yet R17 implemented; INDEX row flipped ⚪ → 🟡 (in-progress). Days 2-3 (walking-skeleton stubs T-SKELETON-001..010) + Days 3-4 (demo prep) remaining for Wednesday demo deadline (2026-05-06 per kickoff; PD-06 resolved — see block 3).
+version: 1.4
+last_updated: 2026-05-05
+last_session_number: 10
+last_session_outcome: Session 10 (Day 2-3 of week 1 walking-skeleton; date 2026-05-05 per /currentDate) — T-SKELETON-001 LANDED. Orchestrator at packages/agent-core/src/audit.ts (REAL — stays through wk 12) + CLI subcommand at apps/cli/src/commands/audit.ts (raw process.argv per PD-07 option c) + 8 minimal placeholder node modules at canonical paths (BrowserManager, HeuristicLoader, EvaluateNode, SelfCritiqueNode, EvidenceGrounder, AnnotateNode, StoreNode, Report) ready for T-SKELETON-002..009 enrichment. Pino correlation logging active (audit_run_id + page_url + node_name). 12 files NEW/MODIFIED. Build clean; typecheck clean; 73 tests pass (no regression); 5 manual smokes pass (--url=https://example.com → exit 0; no flag → exit 2; --version preserved → exit 0; Peregrine demo URL → exit 0; invalid URL → exit 2). PD-07 RESOLVED (raw process.argv; CLI library deferred to Phase 5). 9 of 10 walking-skeleton tasks remain (T-SKELETON-002..010) plus 3 demo-prep items + Wednesday demo (2026-05-06).
 
 description: "Single rolling handover doc. Replaces per-session handover files from Session 8 onwards. Each session-end Claude updates blocks 1+2+3+5 in place; block 4 is static; block 6 updates when demo target changes. Never create per-session files. Old session detail lives in git history (git log -p docs/specs/mvp/sessions/session-handover.md). Predecessor per-session handovers at session-2026-04-30-handover.md (Session 6) + session-2026-05-01-handover.md (Session 7) preserved for archival reference. Session 9 (Day 2 of week 1) closed with explicit kickoff prompt for Session 10 at sessions/kickoff-session-10.md so the next session can boot on T-SKELETON work without re-deriving context."
 
@@ -25,7 +25,7 @@ cross_references:
 
 ## 1. Current state ledger
 
-**As of 2026-05-06 (end of Session 9 / Day 2):**
+**As of 2026-05-05 (mid-Session 10 / Day 2-3 of week 1; T-SKELETON-001 just landed):**
 
 ### Phase status
 
@@ -53,7 +53,9 @@ cross_references:
 
 **Day 1 (2026-05-05) — DONE in Session 8.** 10 commits ending at `791c5e3` (Phase 0 implementation 5/5 ACs + 2 forward-pulled schemas T014 + T101 + 55 unit tests).
 
-**Day 2 (2026-05-06) — DONE in Session 9.** Branch `feat/week-1-walking-skeleton` at `a141a49` (6 additional commits, all pushed; 16 commits cumulative on branch since branch-cut):
+**Day 2-3 (2026-05-05; Session 10 in-progress).** Branch `feat/week-1-walking-skeleton` advancing from `dbf17ce` (Session 9 close-out) through T-SKELETON-001 commit. ~17 commits cumulative on branch.
+
+**Day 2 (2026-05-06 per Session 9 frontmatter; Session 9 commits dated 2026-05-06).** Branch `feat/week-1-walking-skeleton` at `a141a49` (6 additional commits, all pushed; 16 commits cumulative on branch since branch-cut):
 
 ```
 f54c040  T0B-001              (drafting prompt template + Phase 0b spec/plan/tasks v0.3 → v0.4 R11.4 patch — supersession callout for §9.1 → T101 body-string design)
@@ -73,18 +75,18 @@ a141a49  T0B-005              (heuristics-repo/README.md — 4-step workflow + D
 - agent-core dist/ is built (cached) — required for `@neural/agent-core/analysis/heuristics/types` exports-map resolution at runtime
 - `.gitignore` adds `.heuristic-drafts/` entry (T0B-004 commit `b861f04`)
 
-**Days 2-3 (Session 10 — next session) — PENDING:** Walking-skeleton stubs (10 tasks per `implementation-roadmap.md` §6 T-SKELETON-001..010)
+**Day 2-3 (Session 10) — IN PROGRESS:** Walking-skeleton stubs (10 tasks per `implementation-roadmap.md` §6 T-SKELETON-001..010)
 
-- T-SKELETON-001 — orchestrator stub at `packages/agent-core/src/audit.ts` + `apps/cli/src/commands/audit.ts` (REAL — stays through wk 12)
-- T-SKELETON-002 — `BrowserManager` stub returning **synthetic Peregrine PDP PageStateModel** matching T014 schema (forward-pulled to Day 1; lives at `packages/agent-core/src/perception/types.ts`)
-- T-SKELETON-003 — `HeuristicLoader` stub returning 3 synthetic heuristics matching T101 schema (forward-pulled to Day 1; lives at `packages/agent-core/src/analysis/heuristics/types.ts`); fixtures at `packages/agent-core/tests/fixtures/heuristics/skeleton-{1,2,3}.json` (NEW); body text marked `NEURAL_TEST_FIXTURE_BODY` per R6 + reuses D1 sentinel pattern
-- T-SKELETON-004 — `EvaluateNode` stub (2 stub findings)
-- T-SKELETON-005 — `SelfCritique` stub (passthrough verdict='KEEP')
-- T-SKELETON-006 — `Ground` stub (passthrough)
-- T-SKELETON-007 — `Annotate` stub (no-op)
-- T-SKELETON-008 — `Storage` stub (JSON to `./out/`)
-- T-SKELETON-009 — `Report` stub (TXT to `./out/`)
-- T-SKELETON-010 — `tests/acceptance/walking-skeleton.spec.ts` (real Playwright Test against stubbed pipeline; Phase 0 acceptance test pattern at `tests/acceptance/phase-0-setup.spec.ts` is the reference)
+- ✅ T-SKELETON-001 — **DONE 2026-05-05**. Orchestrator at `packages/agent-core/src/audit.ts` (REAL; stays through wk 12) + CLI subcommand at `apps/cli/src/commands/audit.ts` (raw process.argv per PD-07 option c; no commander/yargs) + `apps/cli/src/index.ts` routes `--url=` to subcommand and preserves `--version` from Phase 0 + 8 minimal placeholder node modules at canonical paths (`browser-runtime/BrowserManager.ts`, `analysis/heuristics/loader.ts`, `analysis/nodes/{Evaluate,SelfCritique,Annotate,Store}Node.ts`, `analysis/grounding/EvidenceGrounder.ts`, `delivery/Report.ts`) returning typed empty defaults (no throws per R3.3) ready for T-SKELETON-002..009 enrichment. Pino correlation logging active (`audit_run_id` + `page_url` + `node_name`). agent-core exports `./audit` subpath added. `.gitignore` adds `out/`. Local types at `packages/agent-core/src/audit/types.ts` (AuditInput, RawFinding, CritiqueFinding, GroundedFinding, GroundResult, AuditOutcome — Phase 7/8 supersede). 12 files; 73 tests green (no regression); 5 manual smokes pass.
+- ☐ T-SKELETON-002 — `BrowserManager` stub returning **synthetic Peregrine PDP PageStateModel** matching T014 schema (forward-pulled to Day 1; lives at `packages/agent-core/src/perception/types.ts`); fixture at `packages/agent-core/tests/fixtures/perception/peregrine-pdp.json` (NEW); enriches existing placeholder at `packages/agent-core/src/browser-runtime/BrowserManager.ts`
+- ☐ T-SKELETON-003 — `HeuristicLoader` stub returning 3 synthetic heuristics matching T101 schema (forward-pulled to Day 1; lives at `packages/agent-core/src/analysis/heuristics/types.ts`); fixtures at `packages/agent-core/tests/fixtures/heuristics/skeleton-{1,2,3}.json` (NEW); body text marked `NEURAL_TEST_FIXTURE_BODY` per R6 + reuses D1 sentinel pattern; enriches existing placeholder at `packages/agent-core/src/analysis/heuristics/loader.ts`
+- ☐ T-SKELETON-004 — `EvaluateNode` stub (2 stub findings tagged `{ source: 'skeleton-stub' }`); enriches existing placeholder at `packages/agent-core/src/analysis/nodes/EvaluateNode.ts`
+- ☐ T-SKELETON-005 — `SelfCritique` stub (passthrough verdict='KEEP') — current placeholder already does this; T-SKELETON-005 confirms + adds telemetry tag
+- ☐ T-SKELETON-006 — `Ground` stub (passthrough) — current placeholder already does this; T-SKELETON-006 confirms
+- ☐ T-SKELETON-007 — `Annotate` stub (no-op) — current placeholder already does this; T-SKELETON-007 confirms
+- ☐ T-SKELETON-008 — `Storage` stub (JSON to `./out/`) — current placeholder already does this; T-SKELETON-008 enriches with proper telemetry / acceptance hooks
+- ☐ T-SKELETON-009 — `Report` stub (TXT to `./out/`) — current placeholder already does this; T-SKELETON-009 enriches output formatting
+- ☐ T-SKELETON-010 — `tests/acceptance/walking-skeleton.spec.ts` (real Playwright Test against stubbed pipeline; Phase 0 acceptance test pattern at `tests/acceptance/phase-0-setup.spec.ts` is the reference)
 
 **Days 3-4 (Session 10 — same session, after T-SKELETON-010 lands) — PENDING:** Demo prep (3 items)
 
@@ -94,7 +96,7 @@ a141a49  T0B-005              (heuristics-repo/README.md — 4-step workflow + D
 - Wednesday demo (2026-05-06 — confirmed today per PD-06 resolution in block 3)
 - Post-demo: log feedback to `docs/specs/mvp/demo-feedback.md`
 
-**Total remaining: 13 tasks** (10 T-SKELETON + 3 demo prep + 1 Wednesday demo). ~3-4 hr focused work in Session 10 if continuing one-by-one cadence per Session 8/9 protocol.
+**Total remaining: 12 tasks** (9 T-SKELETON-002..010 + 3 demo prep + 1 Wednesday demo). T-SKELETON-001 done. ~2-3 hr focused work remaining in Session 10 at one-by-one cadence; T-SKELETON-005..009 may collapse into faster cadence since their placeholders already meet the spec (each is just confirmation + minor enrichment).
 
 ### Operational integration state
 
@@ -152,7 +154,7 @@ All 3 conditions resolved; rows preserved in compressed form for audit trail (de
 | **PD-04** | Phase 1 T015 integration-test fixture set — current spec is `example.com` (simple) + `amazon.in` (complex/bot) + Shopify demo (TBD). Replace Shopify demo with `peregrineclothing.co.uk` T-shirt PDP (Shopify-powered real D2C — better real-world coverage than `example.com` too)? **Effectively resolved** by Session 8 demo-target lock at the Peregrine PDP — close when T015 lands in week 2 by referencing this PD. | T015 implementer (week 2) | When T015 lands |
 | **PD-05 (NEW Session 8)** | Should `.claude/settings.local.json` be untracked from git (it was committed before .gitignore excluded it; now shows as "modified" forever)? `git rm --cached .claude/settings.local.json` would silently fix; per-user file by design. Cosmetic only — fix when convenient or defer. **Status: still modified at end of Session 9; intentionally NOT staged in any Day 2 commit.** | engineering lead | next session that touches git hygiene |
 | ~~**PD-06**~~ **RESOLVED 2026-05-06 (Session 9 mid-Day-2)** | Kickoff prompt's "5 calendar days" framing was authored on/around 2026-05-01 (Session 7 end) when 2026-05-06 was genuinely 5 calendar days away. By Session 8 (2026-05-05) the framing went stale. **User confirmed mid-Session-9: demo IS Wednesday 2026-05-06 (TODAY at session-9 close); session date drifted past kickoff-time framing but the date itself stayed put.** Session 9 commits all dated 2026-05-06. Session 10 should treat demo as TODAY; verify against `/currentDate` at session start. | RESOLVED | n/a |
-| **PD-07 (NEW Session 9 / end of Day 2)** | T0B-004 wired Vitest at apps/cli (was deferred to Phase 5+ in Phase 0 T003 scope). The deferral is now revoked. Other apps/cli scope deferrals (no commander/yargs library; minimal CLI surface) may need similar revocation when T-SKELETON-001 lands an `audit` subcommand. **Recommend assessing whether to add a CLI library (commander.js / yargs) when T-SKELETON-001 wires the audit subcommand**, OR defer to Phase 5 still and use raw `process.argv` parsing as Phase 0 T003 did for `--version`. Lower priority — easy to swap later. | engineering lead | T-SKELETON-001 implementation in Session 10 |
+| ~~**PD-07**~~ **RESOLVED 2026-05-05 (Session 10 / mid-Day 2-3)** | Engineering lead chose **option (c): defer to Phase 5; use raw `process.argv` parsing for T-SKELETON-001**. Rationale: T-SKELETON-001 needs exactly one flag (`--url=<value>` plus optional `--output=<value>`) — ~10 LOC of `arg.startsWith('--url=')` parsing in `apps/cli/src/commands/audit.ts:33-44`. Phase 0 T003 already set the no-library precedent for `--version`. Phase 5 (T081-T100) brings the real subcommand surface (browse + audit + multi-page) — that's where commander/yargs earns its keep. Vitest revocation in T0B-004 was forced by AC-04 explicit requirement; no equivalent forcing function exists for CLI library now. Trivial swap later: ~10 LOC refactor when Phase 5 lands. T-SKELETON-001 commit landed 2026-05-05 with this decision. | RESOLVED | n/a |
 
 ---
 
@@ -208,6 +210,24 @@ When a new Claude session starts:
   Commits: `f54c040` (T0B-001), `2c1bad1` (T0B-002), `8c8eaba` (T0B-003), `62d5e03` (Phase 0b v0.5 spec patch — R11.4 PATH A continuation), `b861f04` (T0B-004 + Vitest wiring), `a141a49` (T0B-005). Plus this close-out commit (handover v1.3 + INDEX row 0b flip + Session 10 kickoff prompt).
 
   **For Session 10:** Boot via `docs/specs/mvp/sessions/kickoff-session-10.md` (NEW — authored in this close-out commit). 13 tasks remaining for week 1: T-SKELETON-001 (REAL orchestrator) → T-SKELETON-002..009 (9 stubs) → T-SKELETON-010 (acceptance test + demo gate) → demo prep (3 items) → Wednesday demo. Estimated ~3-4 hr if continuing one-by-one cadence.
+
+- **Session 10 (2026-05-05) — Day 2-3 of week 1: T-SKELETON-001 LANDED.** Branch `feat/week-1-walking-skeleton` advanced from `dbf17ce` (Session 9 close-out) by 1 task commit + 1 PR Contract closeout commit. Walking-skeleton orchestrator is now real; 8 placeholder node modules at canonical paths ready for T-SKELETON-002..009 enrichment.
+
+  **T-SKELETON-001 implementation (Option E — orchestrator + CLI + 8 placeholders in single commit per Brief design choice):** REAL `audit({ url })` orchestrator at `packages/agent-core/src/audit.ts` calls 8 nodes in fixed order (`capture → loadHeuristics → evaluate → critique → ground → annotate → store → report`) with Pino correlation logging (`audit_run_id`, `page_url`, `node_name`). REAL CLI subcommand at `apps/cli/src/commands/audit.ts` uses raw `process.argv` parsing (PD-07 option c) — extracts `--url=<value>` + `--output=<value>` in ~6 LOC; no commander/yargs. `apps/cli/src/index.ts` routes `--url=` arg to subcommand; preserves `--version` from Phase 0 T003. 8 minimal placeholder node modules at canonical paths return typed empty defaults (no throws per R3.3): `BrowserManager.capture()` → minimal `PageStateModel` matching T014 `.strict()` schema; `HeuristicLoader.loadAll()` → `[]`; `EvaluateNode.run()` → `[]`; `SelfCritiqueNode.run()` → input passthrough w/ `verdict='KEEP'`; `EvidenceGrounder.ground()` → `{grounded, rejected: []}`; `AnnotateNode.run()` → input passthrough; `StoreNode.run({findings, outputDir, slug})` → writes JSON to `<outputDir>/<slug>-findings.json`; `Report.render({...})` → returns plain-text report string (orchestrator writes to TXT). Local types at `packages/agent-core/src/audit/types.ts`: AuditInput, RawFinding, CritiqueFinding (with `CritiqueVerdict` literal union), GroundedFinding (alias for now), GroundResult, AuditOutcome — all minimal; Phase 7/8 will supersede with full Finding lifecycle types. agent-core `package.json` exports adds `./audit` subpath. `.gitignore` adds `out/` block. 12 files NEW/MODIFIED.
+
+  **Verification:** `pnpm typecheck` clean (3 successful, FULL TURBO cache); `pnpm test` 73 tests green (55 agent-core unit + 18 cli conformance — no regression from Session 9 baseline); 5 manual smokes pass (V4 `--url=https://example.com` exit 0 in 5ms; V5 no flag exit 2 with clean stderr; V6 `--version` exit 0 prints "0.1.0"; V7 Peregrine demo URL exit 0 in 3ms with slug `www-peregrineclothing-co-uk`; V8 `--url=not-a-url` exit 2 with clean stderr). Output files written to `./out/<slug>-findings.json` (JSON array; empty `[]` until T-SKELETON-004 enriches) + `./out/<slug>-audit.txt` (plain-text report header w/ audit_run_id, URL, duration, findings counts).
+
+  **Constitution compliance:** R3.3 ✅ (no broken paths; placeholders return typed empty defaults, never throw); R5.3+GR-007 ✅ (N/A this task — no findings produced); R6 ✅ (orchestrator logs `heuristic_id` only, never body); R7.4 ✅ (filesystem-only writes; no DB); R10 ✅ (orchestrator 100 LOC; placeholders ≤50 LOC; types 73 LOC); R10/R13 ✅ (N/A — no LLM calls); R14 ✅ (correlation fields populated); R20 ✅ (orchestrator API IS the new contract; week-8 LangGraph refactor will need impact.md per roadmap §8 promotion table); R23 ✅ (no kill-criteria triggers).
+
+  **Pending decisions resolved:** PD-07 RESOLVED (raw `process.argv`, no CLI library; defer to Phase 5).
+
+  **Walking-skeleton progress after T-SKELETON-001:** 1 of 10 walking-skeleton tasks done; 9 remaining (T-SKELETON-002..010). Note: T-SKELETON-005..009 placeholders ALREADY satisfy their spec (passthrough/no-op behaviors are exactly what the placeholders do); subsequent T-SKELETON tasks for those modules collapse to confirmation + minor telemetry tagging — should be faster than T-SKELETON-002..004 which need NEW fixtures. INDEX.md week-1 progress checklist updated to reflect this split.
+
+  **Operating protocol carried forward:** one-task-per-`/speckit.implement`-invocation with sync verify cadence (user reviews manual validation block before commit). Every closeout includes Input → Expected Output verification table appended to task report.
+
+  Commits: T-SKELETON-001 implementation commit (this session) + this closeout commit (handover v1.3 → v1.4 + INDEX.md week-1 progress update).
+
+  **For T-SKELETON-002:** Author `packages/agent-core/tests/fixtures/perception/peregrine-pdp.json` matching T014 `PageStateModelSchema` `.strict()`; enrich `BrowserManager.capture()` to load fixture + return parsed PageStateModel. Verify Zod parse passes; verify orchestrator log shows non-empty `metadata.title`. Same one-task-per-invocation + manual validation protocol.
 
 ---
 
