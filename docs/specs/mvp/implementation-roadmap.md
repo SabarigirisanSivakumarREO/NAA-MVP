@@ -2,14 +2,14 @@
 title: Neural MVP Implementation Roadmap (Walking Skeleton)
 artifact_type: roadmap
 status: draft
-version: 0.5
+version: 0.6
 created: 2026-04-29
-updated: 2026-05-05
+updated: 2026-05-06
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
 
-supersedes: v0.1 (in-place — see delta block); v0.2 + v0.3 + v0.4 in-place deltas
+supersedes: v0.1 (in-place — see delta block); v0.2 + v0.3 + v0.4 + v0.5 in-place deltas
 supersededBy: null
 
 derived_from:
@@ -26,6 +26,16 @@ breaking: false
 affected_contracts: []
 
 delta:
+  v0_6:
+    new: []
+    changed:
+      - "§6 T-SKELETON-008 acceptance signature: `StoreNode.run(findings): Promise<void>` → `StoreNode.run({findings, outputDir, slug}): Promise<string>` (returns the path written; aligns roadmap with already-implemented T-SKELETON-001 placeholder which the orchestrator audit.ts:99 USES for log correlation `path` field — `Promise<void>` would force orchestrator to re-derive the path, less useful contract)"
+    impacted:
+      - "T-SKELETON-008 implementation (commit alongside this delta, single-commit Option G — same lighter pattern as v0.4 fixture-name + v0.5 sentinel-naming)"
+    unchanged:
+      - "T-SKELETON-008 acceptance semantics — write findings JSON to `<outputDir>/<slug>-findings.json`; signature change is additive (more useful return type) not a behavior change"
+      - "Phase 4 T070-T072 supersession week 3 still owns DB write transition; R20 impact.md required at all 3 promotion stages (wk 3 / wk 9 / wk 11)"
+      - "12-week cadence; promotion table; stub conventions; everything else"
   v0_5:
     new: []
     changed:
@@ -298,7 +308,7 @@ These tasks are **sequencing-only** and live ONLY in this roadmap. They do not a
 
 - **dep:** T-SKELETON-007
 - **files:** `packages/agent-core/src/analysis/nodes/StoreNode.ts` (NEW — stubbed)
-- **acceptance:** `StoreNode.run(findings): Promise<void>` writes findings to `./out/<slug>-findings.json` (no DB — Phase 4 not yet landed)
+- **acceptance:** `StoreNode.run({findings, outputDir, slug}): Promise<string>` writes findings to `<outputDir>/<slug>-findings.json` (defaults to `./out/`) and returns the absolute path; no DB — Phase 4 not yet landed (v0.6 patched the signature to align with T-SKELETON-001 placeholder which the orchestrator USES for log correlation; v0.5 spec said `Promise<void>` which would have forced orchestrator to re-derive path — less useful contract)
 - **promotion:** replaced by Phase 7 T132 (real PostgresStorage write) in **week 3** when Phase 4 schema lands — R20 impact.md (DB schema + RLS surface)
 - **kill criteria:** default block + stub attempts DB write before Phase 4 lands → STOP
 

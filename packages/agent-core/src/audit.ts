@@ -159,7 +159,14 @@ export async function audit(input: AuditInput): Promise<AuditOutcome> {
 
   const storeNode = new StoreNode();
   const findingsPath = await storeNode.run({ findings: annotated, outputDir, slug });
-  logger.info({ node_name: 'store', path: findingsPath }, 'stored');
+  logger.info(
+    {
+      node_name: 'store',
+      path: findingsPath,
+      findings_count: annotated.length,
+    },
+    'stored (T-SKELETON-008 stub — JSON to filesystem; Phase 4 T070-T072 week 3 introduces Postgres write + RLS; 3-stage promotion wk 3 / wk 9 / wk 11)',
+  );
 
   const durationMs = Date.now() - wallStart;
   const report = new Report();
