@@ -160,7 +160,8 @@ Per [implementation-roadmap.md](../implementation-roadmap.md) §7 Week 1:
 - [x] T-SKELETON-001 (orchestrator + CLI subcommand + 8 placeholder nodes; PD-07 c) — **done Day 2-3 (Session 10 2026-05-05)**
 - [x] T-SKELETON-002 (Peregrine PDP fixture + BrowserManager.capture() Zod-parses + page_title log enrichment + 8 unit tests; roadmap v0.3 → v0.4 fixture-name patch) — **done Day 2-3 (Session 10 2026-05-05/06)**
 - [x] T-SKELETON-003 (3 synthetic heuristic fixtures with NEURAL_TEST_FIXTURE_BODY sentinel + HeuristicLoader.loadAll() glob-loads + Zod-parses + sorts + heuristic_ids log enrichment + 8 unit tests + R6 spot-check; roadmap v0.4 → v0.5 sentinel-alignment patch) — **done Day 2-3 (Session 10 2026-05-06)**
-- [ ] T-SKELETON-004..009 (7 placeholder enrichments — 2 raw findings + passthrough verdicts + JSON/TXT writes) — pending
+- [x] T-SKELETON-004 (EvaluateNode → 2 hardcoded raw findings tagged source='skeleton-stub' referencing Peregrine PDP + SKELETON-CHECKOUT-001 + SKELETON-CONTENT-003 + R5.3+GR-007 banned-phrase static-check + 8 unit tests + R5.3 spot-check on artifacts) — **done Day 2-3 (Session 10 2026-05-06)**
+- [ ] T-SKELETON-005..009 (6 placeholder confirmations — passthrough verdicts + JSON/TXT writes; placeholders already meet spec) — pending
 - [ ] T-SKELETON-010 (Playwright Test acceptance — `pnpm cro:audit --url=...` exits 0 + writes `./out/<slug>-audit.txt` with ≥1 finding line; <30s) — pending
 - [ ] Wednesday demo (2026-05-06) — run `pnpm cro:audit --url=<peregrine PDP>` end-to-end through stubbed pipeline
 

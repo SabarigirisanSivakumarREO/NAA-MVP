@@ -94,7 +94,17 @@ export async function audit(input: AuditInput): Promise<AuditOutcome> {
 
   const evaluateNode = new EvaluateNode();
   const rawFindings = await evaluateNode.run(perception, heuristics);
-  logger.info({ node_name: 'evaluate', count: rawFindings.length }, 'evaluated (placeholder — T-SKELETON-004 enriches)');
+  logger.info(
+    {
+      node_name: 'evaluate',
+      raw_finding_count: rawFindings.length,
+      // R6-safe correlation: ids only (NEVER observation text — that
+      // travels through the data path, not the observability path).
+      finding_ids: rawFindings.map((f) => f.id),
+      source: rawFindings[0]?.source ?? 'none',
+    },
+    'evaluated (T-SKELETON-004 stub — 2 hardcoded raw findings; observations passed R5.3 + GR-007 banned-phrase static-check)',
+  );
 
   const selfCritique = new SelfCritiqueNode();
   const critiqued = await selfCritique.run(rawFindings);
