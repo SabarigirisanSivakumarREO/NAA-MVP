@@ -91,12 +91,12 @@ a141a49  T0B-005              (heuristics-repo/README.md — 4-step workflow + D
 **Days 3-4 (Session 10 — same session, after T-SKELETON-010 lands):** Demo prep (3 items + Wednesday demo + post-demo feedback)
 
 - ✅ Pin Peregrine URL in demo script (Peregrine PDP: https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy — locked in block 6; reflected in roadmap v0.4/v0.5/v0.8 + INDEX week-1 progress + demo-scripts/wk-01.md frontmatter)
-- ✅ Author `docs/specs/mvp/demo-scripts/wk-01.md` dry-run script — **done 2026-05-06** (~280 LOC; 8 sections: TL;DR + pre-demo checklist + 6-step demo flow + verbatim expected output captured from fresh smoke skl-motsbnb6 / 34ms / 716 bytes_written + 5-question Q&A talking points + transparency table mapping each layer to its real-week + week-2 preview + cross-references)
-- ☐ Capture pre-demo happy-path screenshots (terminal output of `pnpm cro:audit --url=<peregrine PDP>` + content of `./out/` files; embed in demo-scripts/wk-01.md or attach separately)
-- ☐ Wednesday demo (2026-05-06 — confirmed today per PD-06 resolution in block 3)
-- ☐ Post-demo: log feedback to `docs/specs/mvp/demo-feedback.md` (NEW; will create after demo)
+- ✅ Author `docs/specs/mvp/demo-scripts/wk-01.md` dry-run script — **done 2026-05-06** (267 LOC; 8 sections: TL;DR + pre-demo checklist + 6-step demo flow + verbatim expected output captured from fresh smoke skl-motsbnb6 / 34ms / 716 bytes_written + 5-question Q&A talking points + transparency table mapping each layer to its real-week + week-2 preview + cross-references; in-flight R5.3 false-positive caught + fixed in Q&A meta-text)
+- ⏭️ Capture pre-demo happy-path screenshots — **DEFERRED per engineering-lead direction 2026-05-06**. Rationale: wk-01.md verbatim output blocks (§4.1 Pino log + §4.2 audit.txt + §4.3 findings.json) already serve as ANSI-rendered copy-paste-ready slides; live demo produces fresh authentic output that's more compelling than pre-captured static screenshots for live screen-share scenarios. If async-share scenarios emerge later (e.g., demo recording for offline review), screenshots can be captured ad-hoc.
+- 🟡 Wednesday demo (2026-05-06) — **ACTIVE**: demo gate PASSED via `pnpm test:integration` 12/12; engineering lead executes live screen share against locked Peregrine PDP URL using wk-01.md as agenda + reference card.
+- ☐ Post-demo: log feedback to `docs/specs/mvp/demo-feedback.md` (NEW; will create after demo completes; Session 10 may close before this lands depending on demo timing).
 
-**Total remaining: 3 tasks** (1 screenshot capture + 1 Wednesday demo + 1 post-demo feedback). **★ T-SKELETON-001 through T-SKELETON-010 ALL DONE — Walking-skeleton 10/10 COMPLETE ★** + demo prep #1+#2 of 3 done. Wednesday demo gate (T-SKELETON-010 acceptance suite) PASSED via `pnpm test:integration` 12/12 green. ~10 min for screenshot capture + Wednesday demo execution + post-demo feedback.
+**Total remaining: 2 tasks** (Wednesday demo execution + post-demo feedback). **★ T-SKELETON-001 through T-SKELETON-010 ALL DONE — Walking-skeleton 10/10 COMPLETE ★** + demo prep #1+#2 done + #3 deferred. Wednesday demo gate PASSED. Active: live demo execution.
 
 ### Operational integration state
 

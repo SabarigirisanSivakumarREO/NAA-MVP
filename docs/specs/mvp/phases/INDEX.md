@@ -171,9 +171,10 @@ Per [implementation-roadmap.md](../implementation-roadmap.md) §7 Week 1:
 ### Demo prep
 
 - [x] Pin Peregrine URL across artifacts (locked Session 8 PD-04; reflected in roadmap v0.4/v0.5/v0.8 + handover block 6 + demo-scripts/wk-01.md)
-- [x] Author `docs/specs/mvp/demo-scripts/wk-01.md` (8 sections: TL;DR + pre-demo checklist + 6-step demo flow + verbatim expected output + Q&A talking points + transparency table + week-2 preview + cross-references; ~280 LOC) — **done Day 3 (Session 10 2026-05-06)**
-- [ ] Capture pre-demo happy-path screenshots (terminal + audit.txt + findings.json) — pending
-- [ ] Wednesday demo execution + post-demo feedback log to `docs/specs/mvp/demo-feedback.md` — pending
+- [x] Author `docs/specs/mvp/demo-scripts/wk-01.md` (8 sections: TL;DR + pre-demo checklist + 6-step demo flow + verbatim expected output + Q&A talking points + transparency table + week-2 preview + cross-references; 267 LOC) — **done Day 3 (Session 10 2026-05-06)**
+- ⏭️ **Capture pre-demo happy-path screenshots** — **deferred per engineering-lead direction 2026-05-06**: wk-01.md verbatim output blocks already serve as ANSI-rendered copy-paste-ready slides + live demo produces fresh authentic output (preferred over pre-captured static screenshots for live screen-share scenarios)
+- 🟡 **Wednesday demo execution** — **ACTIVE 2026-05-06** (gate PASSED via `pnpm test:integration` 12/12; acceptance suite at `tests/acceptance/walking-skeleton.spec.ts` validates entire pipeline; ready for live screen share against locked Peregrine PDP URL)
+- [ ] Post-demo: log feedback to `docs/specs/mvp/demo-feedback.md` (NEW; will create after demo completes)
 - [ ] T-SKELETON-010 (Playwright Test acceptance — `pnpm cro:audit --url=...` exits 0 + writes `./out/<slug>-audit.txt` with ≥1 finding line; <30s) — pending
 - [ ] Wednesday demo (2026-05-06) — run `pnpm cro:audit --url=<peregrine PDP>` end-to-end through stubbed pipeline
 
