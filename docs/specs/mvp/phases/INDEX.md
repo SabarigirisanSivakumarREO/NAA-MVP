@@ -167,6 +167,13 @@ Per [implementation-roadmap.md](../implementation-roadmap.md) §7 Week 1:
 - [x] T-SKELETON-008 (StoreNode JSON-write confirmation with tempdir-isolated tests + 3-stage promotion-path docstring wk 3 / wk 9 / wk 11 + R7.4 append-only forward path + findings_count log enrichment + 6 unit tests with os.tmpdir+mkdtemp+afterEach cleanup; roadmap v0.5 → v0.6 Promise<void> → Promise<string> Option G patch) — **done Day 2-3 (Session 10 2026-05-06)**
 - [x] T-SKELETON-009 (Report plain-text confirmation + Phase 9 T245-T249 week 10 HTML+PDF forward-path docstring + F-018 8-section structure detail + R6 channels 3+4 first runtime note + report_format/bytes_written log enrichment + 6 unit tests covering header/per-finding/order/empty/interpolation/idempotence; roadmap v0.6 → v0.7 audit → ReportInput Option G patch) — **done Day 2-3 (Session 10 2026-05-06)**
 - [x] **★ T-SKELETON-010 ★** (real Playwright Test acceptance suite at tests/acceptance/walking-skeleton.spec.ts — 7 tests: AC-W1 exit-0+<30s + AC-W2 both output files exist + AC-W3 SKELETON-* finding markers + AC-W4 locked observation substrings + AC-W5 findings.json shape (exactly 2 entries) + AC-W6 R5.3 banned-phrase regression guard + AC-W7 R6 sentinel regression guard; pnpm test:integration 12/12 green incl Phase 0 baseline 5/5; wall-clock 15.6s total / AC-W1 at 901ms / AC-W2..W7 1-9ms; roadmap v0.7 → v0.8 example.com → Peregrine PDP + finding-line precision Option G patch) — **done Day 2-3 (Session 10 2026-05-06)** ★ **WALKING-SKELETON 10/10 COMPLETE — Wednesday demo gate PASSED** ★
+
+### Demo prep
+
+- [x] Pin Peregrine URL across artifacts (locked Session 8 PD-04; reflected in roadmap v0.4/v0.5/v0.8 + handover block 6 + demo-scripts/wk-01.md)
+- [x] Author `docs/specs/mvp/demo-scripts/wk-01.md` (8 sections: TL;DR + pre-demo checklist + 6-step demo flow + verbatim expected output + Q&A talking points + transparency table + week-2 preview + cross-references; ~280 LOC) — **done Day 3 (Session 10 2026-05-06)**
+- [ ] Capture pre-demo happy-path screenshots (terminal + audit.txt + findings.json) — pending
+- [ ] Wednesday demo execution + post-demo feedback log to `docs/specs/mvp/demo-feedback.md` — pending
 - [ ] T-SKELETON-010 (Playwright Test acceptance — `pnpm cro:audit --url=...` exits 0 + writes `./out/<slug>-audit.txt` with ≥1 finding line; <30s) — pending
 - [ ] Wednesday demo (2026-05-06) — run `pnpm cro:audit --url=<peregrine PDP>` end-to-end through stubbed pipeline
 
