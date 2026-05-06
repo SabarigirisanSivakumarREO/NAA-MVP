@@ -2,7 +2,7 @@
 title: Neural MVP — Phases Index
 artifact_type: index
 status: approved
-version: 1.8
+version: 1.9
 created: 2026-04-22
 updated: 2026-05-06
 owner: engineering lead
@@ -83,6 +83,95 @@ No drift found in Phase 9 sections — task IDs T156-T175 + T239-T244 + T245-T24
 **Phase 1 v0.3 polish:** 8 analyze findings (M1-M4 + L1-L2 + L5-L6) applied across `phase-1-perception/{spec,plan,tasks,impact}.md`. Mechanical fixes only — no AC-NN / R-NN / SC-NNN ID changes (R18 append-only preserved). 2 carry-over items (L3, L4) added to v2.3.4 punch-list above. R17.4 review APPROVED with conditions C1 BINDING + C2/C3 OPTIONAL per [`phase-1-perception/review-notes.md`](phase-1-perception/review-notes.md) v1.0; status bumped to `approved`.
 
 **Phase 6 v0.4 catch-up polish:** 4 analyze findings (H1 + H2 + H3 + M1) applied as a single v0.4 sync across `phase-6-heuristics/{spec,plan,tasks,impact}.md`. Catch-up consolidates two pending updates that never reached plan/impact: (a) v0.2 Pino redaction-pattern → BenchmarkSchema mapping; (b) v0.3 contract surface for T4B-013 + AC-11 + R-09 + REQ-CONTEXT-DOWNSTREAM-001 + manifest selectors (`archetype` / `page_type` / `device`). H1 closes the R6 enforcement gap in T-PHASE6-LOGGER (3 wrong-syntax paths → 6 correct paths matching spec.md:101 authoritative list). Versions: spec.md v0.3→v0.4; plan.md v0.2→v0.4 (skip v0.3 for catch-up); tasks.md v0.3→v0.4; impact.md v0.1→v0.4 (skip v0.2/v0.3 for catch-up). 2 carry-over items (L1, L3) added to v2.3.4 punch-list above. R17.4 review pending.
+
+---
+
+## v1.9 changes (2026-05-06 — ★ WALKING-SKELETON 10/10 COMPLETE; Wednesday demo gate PASSED ★)
+
+Session 10 close-out 2026-05-06. Week 1 walking-skeleton FULLY DELIVERED across Day 2-3 of Session 10 — T-SKELETON-001 through T-SKELETON-010 ALL DONE; Wednesday demo gate via `pnpm test:integration` PASSED 12/12; demo prep #1+#2 done; demo prep #3 (screenshots) DEFERRED per engineering-lead direction; Wednesday demo executed (post-demo feedback log pending; may land in Session 11).
+
+### Phase row state-flips (no row flips this version)
+
+All 4 approved phases (0, 0b, 1, 6) retain their existing status; Phase 1 + Phase 6 stay 🟡 partial because only T014 + T101 forward-pulled tasks landed (rest of Phase 1 lands week 2; rest of Phase 6 lands week 4). Phase 0 stays 🟢 implemented; Phase 0b stays 🟡 in-progress (infra COMPLETE; content week 4).
+
+### Walking-skeleton commit chain (since Session 9 close `dbf17ce`)
+
+| SHA | Task / Patch | Files | Highlight |
+|---|---|---|---|
+| `20d5f95` | T-SKELETON-001 (orchestrator + CLI + 8 placeholders) | 16 | PD-07 c raw process.argv; foundation contract |
+| `f178b5e` | T-SKELETON-002 (Peregrine PDP fixture + BrowserManager) | 7 | T014 schema; page_title log (roadmap v0.4) |
+| `630838f` | T-SKELETON-003 (3 heuristic fixtures + HeuristicLoader) | 9 | NEURAL_TEST_FIXTURE_BODY sentinel; R6 spot-check (roadmap v0.5) |
+| `7eae758` | T-SKELETON-004 (EvaluateNode 2 hardcoded findings) | 5 | **R5.3 + GR-007 first runtime activation** |
+| `e067b64` | T-SKELETON-005 (SelfCritique passthrough) | 5 | R5.6 forward path; verdicts_summary log |
+| `9e7ef83` | T-SKELETON-006 (EvidenceGrounder passthrough) | 5 | Phase 7 9-GR-rules forward path; rejection_summary |
+| `c108266` | T-SKELETON-007 (AnnotateNode no-op) | 5 | Phase 7 T131 Sharp overlay forward path; annotation_count |
+| `84ed140` | T-SKELETON-008 (StoreNode JSON-write) | 6 | **3-stage promotion path** (wk 3/9/11); R7.4 forward (roadmap v0.6) |
+| `c1ed7a4` | T-SKELETON-009 (Report TXT) | 6 | Phase 9 T245-T249 + R6 channels 3+4 forward path (roadmap v0.7) |
+| `a66970b` | **★ T-SKELETON-010 ★** (acceptance test) | 4 | **Wednesday demo gate PASSED** (roadmap v0.8) |
+| `c7a3770` | wk-01.md demo script authored (267 LOC; 8 sections) | 3 | R5.3 in-flight false-positive fix (Q&A meta-text) |
+| `3aae44a` | demo-prep #3 deferred + Wednesday demo ACTIVE | 2 | tracking-only commit |
+| (this) | Session 10 close-out (handover v1.5 + INDEX v1.9 + Session 11 kickoff) | (multi) | branch push to origin |
+
+12 task/patch commits in Session 10 alone (10 walking-skeleton tasks + 1 demo script + 1 demo-prep tracking flip). Plus this close-out commit = 13 Session 10 commits. **28 cumulative branch commits since branch-cut**, all pushed to origin at session close.
+
+### 5 lightweight Option G roadmap patches (single-commit pattern; status:draft + mechanical/non-AC-changing)
+
+| Patch | Task triggering | Drift | Resolution |
+|---|---|---|---|
+| v0.3 → v0.4 | T-SKELETON-002 | `example-com.json` fixture name vs Peregrine demo lock | rename fixture path in §6 line + §7 demo log line |
+| v0.4 → v0.5 | T-SKELETON-003 | "TEST FIXTURE" body marker vs T0B-004 D1 BINDING NEURAL_TEST_FIXTURE_BODY sentinel | additive — both strings now embedded in fixtures for cross-package R6 grep |
+| v0.5 → v0.6 | T-SKELETON-008 | `Promise<void>` signature vs T-SKELETON-001 placeholder which orchestrator USES for log path correlation | align spec to `Promise<string>` (more useful return type) |
+| v0.6 → v0.7 | T-SKELETON-009 | vague `audit` argument name vs T-SKELETON-001 placeholder using structured `ReportInput` interface | align spec to `Report.render({url, auditRunId, findings, rejectedCount, durationMs})` |
+| v0.7 → v0.8 | T-SKELETON-010 | `https://example.com` URL + `example-com-audit.txt` filename + "at least 1 fake finding line" vs Peregrine PDP demo lock + T-SKELETON-004's exactly-2-finding precision | align spec to Peregrine URL + correct filename + exact-2 finding-line count |
+
+### Test surface end-state
+
+| Suite | Tests | Pass |
+|---|---|---|
+| @neural/agent-core unit | 108 (15 perception + 40 heuristics + 8 BrowserManager + 8 HeuristicLoader + 8 EvaluateNode + 6 SelfCritiqueNode + 6 EvidenceGrounder + 5 AnnotateNode + 6 StoreNode + 6 Report) | ✅ |
+| @neural/cli conformance | 18 (heuristic-lint R6 IP boundary) | ✅ |
+| Playwright integration | 12 (5 Phase 0 acceptance + 7 walking-skeleton acceptance) | ✅ |
+| **Total** | **138** | **✅ all green** |
+
+Walking-skeleton acceptance gate at `tests/acceptance/walking-skeleton.spec.ts` validates entire `pnpm cro:audit --url=<peregrine PDP>` pipeline end-to-end in 901ms (~33× safety margin under 30s cap). R5.3 + R6 regression guards active via AC-W6 + AC-W7.
+
+### Demo prep state
+
+- ✅ #1 Pin Peregrine URL across artifacts (locked across roadmap v0.4-v0.8 + INDEX week-1 progress + wk-01.md frontmatter + walking-skeleton.spec.ts)
+- ✅ #2 Author docs/specs/mvp/demo-scripts/wk-01.md (267 LOC; 8 sections)
+- ⏭️ #3 Capture pre-demo happy-path screenshots — DEFERRED per engineering-lead direction
+- 🟡 Wednesday demo execution (2026-05-06) — gate PASSED via pnpm test:integration; live screen-share executed
+- ☐ Post-demo: log feedback to docs/specs/mvp/demo-feedback.md — pending Session 11
+
+### What Session 11 should do next
+
+Per `docs/specs/mvp/sessions/kickoff-session-11.md` (NEW — authored in this close-out commit):
+
+1. Read handover v1.5 + INDEX v1.9 + roadmap v0.8 + active phase folder `phase-1-perception/`
+2. Run `/speckit.analyze` on Phase 1 (re-verify since Session 7 R17.4 approval; T101 forward-pull may have downstream impacts)
+3. Resolve any CRITICAL/HIGH analyze findings via R11.4 patches
+4. Apply C1 BINDING from Session 7 review notes at T015 implementation time (per-step Playwright timeout budgets ≤20s/site / ≤60s/3-sites; waitUntil:'domcontentloaded' not 'load')
+5. Implement Phase 1 (10 tasks): T-PHASE1-TESTS → T006-T013 → T015 → 4 polish tasks → R17 lifecycle bump approved → implemented → R19 phase-1-current.md rollup → INDEX row 1 flip 🟡 → 🟢
+6. R20 impact.md required at T-SKELETON-002 → real-BrowserManager supersession (PageStateModel contract surface activates per roadmap §8 promotion table)
+
+### Pending decisions for Session 11
+
+- **PD-01 NEW**: Phase 1b + 1c folding decision — slip to weeks 3-4 vs ride-along week 2. Recommend slip; Phase 1 alone is substantial week.
+- **PD-05 STILL OPEN**: .claude/settings.local.json cosmetic git-hygiene fix
+- PD-04 + PD-07 RESOLVED Session 10; inherited
+
+### Implementation-roadmap.md week 1 final state
+
+- [x] T-PHASE0-TEST + T001-T005 (Phase 0 setup) — done Day 1 (Session 8)
+- [x] T014 forward-pulled from Phase 1 — done Day 1 (Session 8)
+- [x] T101 forward-pulled from Phase 6 — done Day 1 (Session 8)
+- [x] T0B-001..T0B-005 (Phase 0b infra) — done Day 2 (Session 9)
+- [x] **★ T-SKELETON-001..010 ★** — **done Day 2-3 (Session 10) ★ WALKING-SKELETON 10/10 COMPLETE ★**
+- [x] **★ Wednesday demo gate ★** — **PASSED via pnpm test:integration 12/12 (Session 10)**
+- [x] Author wk-01.md demo script — done Session 10
+- ⏭️ Capture pre-demo screenshots — DEFERRED per engineering-lead direction
+- 🟡 Wednesday demo execution (2026-05-06) — live screen-share completed
+- ☐ Post-demo feedback log — pending Session 11
 
 ---
 
