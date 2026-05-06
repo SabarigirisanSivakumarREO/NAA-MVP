@@ -125,9 +125,21 @@ export async function audit(input: AuditInput): Promise<AuditOutcome> {
 
   const evidenceGrounder = new EvidenceGrounder();
   const groundResult = await evidenceGrounder.ground(critiqued);
+  // Rejection breakdown by rule_id — week-1 always {} (passthrough).
+  // Phase 7 T122-T130 (week 7) populates with GR-001..GR-008 + GR-012
+  // counts as findings get rejected by the 9 grounding rules.
+  const rejectionSummary = groundResult.rejected.reduce<Record<string, number>>((acc, r) => {
+    acc[r.ruleId] = (acc[r.ruleId] ?? 0) + 1;
+    return acc;
+  }, {});
   logger.info(
-    { node_name: 'ground', grounded: groundResult.grounded.length, rejected: groundResult.rejected.length },
-    'grounded (placeholder — T-SKELETON-006 enriches)',
+    {
+      node_name: 'ground',
+      grounded: groundResult.grounded.length,
+      rejected: groundResult.rejected.length,
+      rejection_summary: rejectionSummary,
+    },
+    'grounded (T-SKELETON-006 stub — passthrough; rejected[] empty; Phase 7 T122-T130 week 7 ships 9 GR rules ★ second risk gate ★)',
   );
 
   const annotateNode = new AnnotateNode();
