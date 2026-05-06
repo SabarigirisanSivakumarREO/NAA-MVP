@@ -108,7 +108,20 @@ export async function audit(input: AuditInput): Promise<AuditOutcome> {
 
   const selfCritique = new SelfCritiqueNode();
   const critiqued = await selfCritique.run(rawFindings);
-  logger.info({ node_name: 'critique', count: critiqued.length }, 'critiqued (placeholder — T-SKELETON-005 enriches)');
+  // Verdict distribution for demo readability + Phase 7 T121 forward
+  // visibility (week 6 introduces REVISE/DOWNGRADE/REJECT verdicts).
+  const verdictsSummary = critiqued.reduce<Record<string, number>>((acc, f) => {
+    acc[f.verdict] = (acc[f.verdict] ?? 0) + 1;
+    return acc;
+  }, {});
+  logger.info(
+    {
+      node_name: 'critique',
+      count: critiqued.length,
+      verdicts_summary: verdictsSummary,
+    },
+    'critiqued (T-SKELETON-005 stub — passthrough verdict=KEEP; Phase 7 T121 week 6 introduces SEPARATE LLM call per R5.6)',
+  );
 
   const evidenceGrounder = new EvidenceGrounder();
   const groundResult = await evidenceGrounder.ground(critiqued);
