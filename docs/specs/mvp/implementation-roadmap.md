@@ -2,14 +2,14 @@
 title: Neural MVP Implementation Roadmap (Walking Skeleton)
 artifact_type: roadmap
 status: draft
-version: 0.7
+version: 0.8
 created: 2026-04-29
 updated: 2026-05-06
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
 
-supersedes: v0.1 (in-place — see delta block); v0.2 + v0.3 + v0.4 + v0.5 + v0.6 in-place deltas
+supersedes: v0.1 (in-place — see delta block); v0.2 + v0.3 + v0.4 + v0.5 + v0.6 + v0.7 in-place deltas
 supersededBy: null
 
 derived_from:
@@ -26,6 +26,18 @@ breaking: false
 affected_contracts: []
 
 delta:
+  v0_8:
+    new: []
+    changed:
+      - "§6 T-SKELETON-010 acceptance URL: `https://example.com` → `https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy` (Peregrine PDP — locked Wednesday demo target via Session 8 PD-04 + handover block 6 + Session 10 user-explicit guidance 2026-05-06; matches T-SKELETON-002 fixture v0.4 patch)"
+      - "§6 T-SKELETON-010 acceptance output filename: `./out/example-com-audit.txt` → `./out/www-peregrineclothing-co-uk-audit.txt` (slug derived from Peregrine hostname per T-SKELETON-001 urlToSlug)"
+      - "§6 T-SKELETON-010 finding-line precision: `at least 1 fake finding line` → `exactly 2 stub finding lines per T-SKELETON-004 spec` (T-SKELETON-004 commit 7eae758 locked 2 hardcoded findings — `at least 1` was loose vs current implementation reality)"
+    impacted:
+      - "T-SKELETON-010 implementation (commit alongside this delta, single-commit Option G — same pattern as v0.4 / v0.5 / v0.6 / v0.7)"
+    unchanged:
+      - "T-SKELETON-010 acceptance semantics — Playwright Test asserting exits 0 + writes audit.txt + finding-line content; <30s wall-clock; URL/filename/precision changes are alignment with downstream T-SKELETON-002 + T-SKELETON-004 implementations"
+      - "Test stays real through wk 12 per §8 promotion table; weeks 5+ un-skip behavior tests against real Claude output"
+      - "12-week cadence; promotion table; stub conventions; everything else"
   v0_7:
     new: []
     changed:
@@ -334,7 +346,7 @@ These tasks are **sequencing-only** and live ONLY in this roadmap. They do not a
 
 - **dep:** T-SKELETON-001..009
 - **files:** `tests/acceptance/walking-skeleton.spec.ts` (NEW)
-- **acceptance:** Playwright Test asserting `pnpm cro:audit --url=https://example.com` exits 0 + writes `./out/example-com-audit.txt` with at least 1 fake finding line; runs in <30s
+- **acceptance:** Playwright Test asserting `pnpm cro:audit --url=https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy` exits 0 + writes `./out/www-peregrineclothing-co-uk-audit.txt` with exactly 2 stub finding lines per T-SKELETON-004 spec; runs in <30s (v0.8 patched URL + filename + finding-line precision to align with downstream T-SKELETON-002 + T-SKELETON-004 implementations)
 - **stub characteristics:** the test itself is REAL; it just runs against a stubbed pipeline in week 1
 - **promotion:** stays real through week 12; weeks 5+ assert on real Claude output by un-skipping behavior tests
 - **kill criteria:** default block
