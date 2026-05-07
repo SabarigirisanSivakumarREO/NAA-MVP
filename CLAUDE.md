@@ -493,7 +493,33 @@ Requirement / vision
 
 ---
 
-## 14. Non-goals (what this project is NOT)
+## 14. Master Agent operating procedure (AI-driven phase implementation)
+
+For phase implementation under the Master Agent orchestration model:
+
+```
+/master <N> --start          → Stage 1 pre-flight + AI Reviewer verdict
+🚦 1-min stamp at Gate 1      → APPROVE / REVISE / RE-SPEC
+                              → Stage 2 impl (parallel subagents) + Stage 2.5 code review
+                              → Stage 3 verification + AI Reviewer verdict
+🚦 1-min stamp at Gate 2      → APPROVE / RETURN-TO-IMPL
+                              → Stage 4 exit (R17 bumps + R19 rollup + INDEX flip)
+```
+
+| Skill | Role |
+|---|---|
+| `neural-master-orchestrator` | Drives the 4 stages + 2 human gates per phase; never edits code itself |
+| `neural-ai-reviewer` | Gate verdicts (correctness + coverage + completeness with adversarial critic); enumerates categorical-surface universes dynamically |
+
+State persists in `.phase-state/<N>.json` (gitignored; resumable across sessions). Phase state schema, pipeline mode, cost ceiling, and risk-gate adjustments documented in skill reference files.
+
+Use when driving a phase from spec to done with minimum-touch human review (~2 min per phase across both gates). Compatible with existing `/speckit.implement` hooks via `.specify/extensions.yml`.
+
+Master checkpoints sessions at 70% context (~700K tokens) with WARN at 50% (500K); resume in fresh session via `/master <N> --resume`. Per-phase state + handoff docs persist in `.phase-state/<N>.json` (gitignored). See `references/context-budget.md` for thresholds and checkpoint protocol.
+
+---
+
+## 15. Non-goals (what this project is NOT)
 
 Explicit to prevent drift:
 

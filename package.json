@@ -16,6 +16,7 @@
     "test:integration": "playwright test",
     "cro:audit": "tsx apps/cli/src/index.ts",
     "heuristic:lint": "tsx apps/cli/src/commands/heuristic-lint.ts",
+    "spec:matrix": "tsx scripts/spec-matrix.ts",
     "db:migrate": "node --env-file-if-exists=.env scripts/db-migrate-stub.mjs"
   },
   "devDependencies": {
