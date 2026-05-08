@@ -60,7 +60,22 @@
       "Bash(node:*)",
       "Bash(npx:*)",
       "Bash(nvm:*)",
-      "Bash(npm:*)"
+      "Bash(npm:*)",
+      "Bash(node_modules/.pnpm/@turbo+windows-64@2.9.9/node_modules/@turbo/windows-64/bin/turbo.exe --version)",
+      "Bash(cmd //c \"node_modules\\\\\\\\.bin\\\\\\\\turbo.CMD --version\")",
+      "PowerShell(pnpm build)",
+      "PowerShell($out = pnpm cro:audit --version 2>$null; Write-Output \"--- raw stdout \\($\\($out.Length\\) chars\\) ---\"; $out; Write-Output \"--- with -s silent flag ---\"; $silent = pnpm -s cro:audit --version 2>$null; Write-Output \"stdout: '$silent' \\($\\($silent.Length\\) chars\\)\")",
+      "Bash(git push *)",
+      "Bash(git status *)",
+      "Bash(echo \"exit code: $?\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(echo \"EXIT_GREP=$?\")",
+      "Bash(exit 1)",
+      "Bash(awk 'NR==82' docs/specs/mvp/sessions/session-handover.md)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)"
     ]
   }
 }
