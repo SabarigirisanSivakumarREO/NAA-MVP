@@ -12,7 +12,6 @@
  * output is ordered descending by score; scores in (0, 1].
  */
 import { describe, expect, test } from 'vitest';
-// @ts-expect-error — module deliberately not yet implemented (T010)
 import { softFilter } from '../../src/perception/SoftFilter.js';
 
 interface AxNode {

@@ -229,7 +229,7 @@ Two foundations must precede the rest:
   - **Smoke test:** apply() drops > 50% of nodes on amazon.in fixture; degenerate-page fixture returns with floor waived flag
   - **Kill criteria:** default block
 
-- [ ] **T010 [US-1] SoftFilter** (AC-05, REQ-BROWSE-PERCEPT-003)
+- [x] **T010 [US-1] SoftFilter** (AC-05, REQ-BROWSE-PERCEPT-003) — **DONE 2026-05-08** (master orchestrator Stage 2 Wave 5; conformance 4/4 PASS; R4.4 multiplicative-only verified by grep gate; score range [0.4, 1.0] on fixture; FilteredElementSchema-validated output)
   - **Brief:**
     - **Outcome:** `perception/SoftFilter.ts` exports `softFilter.apply(tree: AccessibilityTree): FilteredDOM`. Computes `score = baseRoleWeight × textWeight × positionWeight × visibilityWeight` using MULTIPLICATIVE decay (R4.4 — NOT additive). Returns `top30: Array` ordered descending by score.
     - **Context:** plan.md "Phase 1 Design" perception step 3. R4.4 confidence decay rule applies — multiplicative is non-negotiable.
