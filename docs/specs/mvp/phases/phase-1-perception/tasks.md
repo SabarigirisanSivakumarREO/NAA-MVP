@@ -201,7 +201,7 @@ Two foundations must precede the rest:
   - **Smoke test:** Two sequential `applyStealthConfig` calls yield different fingerprint tuples; bot.sannysoft.com NOT a test target in MVP
   - **Kill criteria:** default block + extra: any attempt to add `playwright-extra` dep → STOP, that's v1.1 scope
 
-- [ ] **T008 [P] [US-1] AccessibilityExtractor** (AC-03, REQ-BROWSE-PERCEPT-001)
+- [x] **T008 [P] [US-1] AccessibilityExtractor** (AC-03, REQ-BROWSE-PERCEPT-001) — **DONE 2026-05-08** (master orchestrator Stage 2 Wave 3; conformance 2/2 PASS; hand-rolled YAML parser; single empty-YAML 1000ms retry inside extract() for Chrome lazy-AX-tree behavior on amazon.in)
   - **Brief:**
     - **Outcome:** `perception/AccessibilityExtractor.ts` exports `accessibilityExtractor.extract(page: BrowserPage): Promise<AccessibilityTree>`. Uses `page.ariaSnapshot()` (Playwright 1.57+; returns YAML string — the legacy `accessibility.snapshot()` was removed in 1.57); parses the YAML into the recursive `AccessibilityNodeSchema` shape (role + name + state per entry; nesting via YAML indent depth); recursively walks to count nodes; logs warning at < 50 nodes. Returns `AccessibilityTreeSchema`-validated object. The YAML→object parse step lives ONLY here so downstream HardFilter / SoftFilter / ContextAssembler continue to consume the legacy AX-tree object shape.
     - **Context:** plan.md "Phase 0 Research" item 1 — AX-tree fetch decision (R11.4 v0.3.2 — `ariaSnapshot` not `accessibility.snapshot`). T014 PageStateModel sub-schemas already in place (T014 prereq); `AccessibilityNodeSchema` (`perception/types.ts`) is the parse target. Use `checkAxTreeDepth` (T014) BEFORE `z.parse` to guard against malformed / cyclic YAML.

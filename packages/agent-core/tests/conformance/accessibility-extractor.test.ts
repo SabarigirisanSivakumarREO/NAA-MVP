@@ -12,9 +12,7 @@
  * element (role=searchbox or input[type=search]).
  */
 import { describe, expect, test } from 'vitest';
-// @ts-expect-error — module deliberately not yet implemented (T008)
 import { accessibilityExtractor } from '../../src/perception/AccessibilityExtractor.js';
-// @ts-expect-error — module deliberately not yet implemented (T006)
 import { BrowserManager } from '../../src/browser-runtime/BrowserManager.js';
 
 const AMAZON_IN = 'https://www.amazon.in';
