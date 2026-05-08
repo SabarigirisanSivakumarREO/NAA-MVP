@@ -13,7 +13,10 @@
  *
  * Strategy (deterministic, single retry max per spec):
  *   1. page.screenshot({ type: 'jpeg', quality: 80, fullPage: false }) -> Buffer
- *   2. If buf.length > 150 KB:
+ *   2. If buf.length > 150 KB OR width > 1280: (Stage 2.5 fix — prior versions
+ *        gated only on byte-length, allowing a 1920x1080 JPEG that compresses
+ *        to <=150KB to skip Sharp resize and trip VisualSchema.width.max(1280)
+ *        when StealthConfig rotates to a 1920-wide viewport)
  *        sharp(buf).resize({ width: 1280, withoutEnlargement: true })
  *                  .jpeg({ mozjpeg: true, quality: 70 }).toBuffer()
  *   3. If still > 150 KB after step 2: SINGLE retry max with width: 1024,
@@ -95,17 +98,32 @@ export class ScreenshotExtractor {
   }
 
   /**
-   * Apply Sharp compression iff `buf` exceeds the 150 KB cap. Single retry
-   * max if the first re-encode is still over budget (per spec — kill
-   * criterion: > 1 retry).
+   * Apply Sharp compression iff `buf` exceeds the 150 KB cap OR its native
+   * width exceeds the 1280 px cap (Stage 2.5 fix I1 — width-aware gate
+   * required because StealthConfig rotates to 1920x1080 viewports; a JPEG
+   * that compresses to <=150KB at 1920 wide would otherwise skip Sharp and
+   * trip VisualSchema.width.max(1280) downstream). Single retry max if the
+   * first re-encode is still over budget (per spec — kill criterion: > 1 retry).
    */
   private async shrinkIfNeeded(buf: Buffer): Promise<Buffer> {
-    if (buf.length <= SCREENSHOT_MAX_BYTES) {
+    const initialMeta = await sharp(buf).metadata();
+    const initialWidth = initialMeta.width ?? 0;
+    const oversizeBytes = buf.length > SCREENSHOT_MAX_BYTES;
+    const oversizeWidth = initialWidth > SCREENSHOT_MAX_WIDTH;
+
+    if (!oversizeBytes && !oversizeWidth) {
       return buf;
     }
 
     log.debug(
-      { event: 'screenshot.recompress', sizeBytes: buf.length, cap: SCREENSHOT_MAX_BYTES },
+      {
+        event: 'screenshot.recompress',
+        sizeBytes: buf.length,
+        widthPx: initialWidth,
+        capBytes: SCREENSHOT_MAX_BYTES,
+        capWidth: SCREENSHOT_MAX_WIDTH,
+        reason: oversizeBytes && oversizeWidth ? 'bytes+width' : oversizeBytes ? 'bytes' : 'width',
+      },
       'screenshot exceeds cap; applying sharp recompression',
     );
 

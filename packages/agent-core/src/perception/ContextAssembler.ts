@@ -23,6 +23,7 @@
  * named exports (R10.3, R4.5); Pino with session_id + page_url (R10.6); no `any` (R13).
  * R20: Phase 1 never populates `_extensions` (Phase 7+ scope per T013 kill criterion).
  */
+import type { Logger } from 'pino';
 import { get_encoding } from 'tiktoken';
 import { BrowserManager } from '../browser-runtime/BrowserManager.js';
 import { applyStealthConfig, type StealthOptions } from '../browser-runtime/StealthConfig.js';
@@ -177,6 +178,47 @@ async function tryCaptureVisual(
   }
 }
 
+/**
+ * Page-context script for metadata read. Runs inside Playwright's evaluate
+ * sandbox where `document` + `performance` are real browser globals. Sent
+ * as a string so the Node-side TypeScript checker doesn't try to resolve
+ * DOM lib types (matches the T011 MutationMonitor INIT_SCRIPT pattern).
+ */
+const READ_METADATA_SCRIPT = `(function () {
+  var navTiming = performance.getEntriesByType('navigation')[0];
+  return {
+    title: typeof document !== 'undefined' ? document.title : '',
+    statusCode: (navTiming && navTiming.responseStatus) || 200,
+  };
+})()`;
+
+/**
+ * Read page metadata (title + statusCode) via the existing BrowserPage
+ * `evaluate` seam — no new R9 surface area. Falls back to safe defaults
+ * (`'' / 200`) on evaluate failure so capture always succeeds with a
+ * valid PageStateModel.
+ */
+async function readPageMetadata(
+  session: BrowserSession,
+  sessionLog: Logger,
+): Promise<{ title: string; statusCode: number }> {
+  try {
+    const result = await session.page.evaluate<{ title: string; statusCode: number }>(
+      READ_METADATA_SCRIPT,
+    );
+    return {
+      title: typeof result.title === 'string' ? result.title : '',
+      statusCode: typeof result.statusCode === 'number' ? result.statusCode : 200,
+    };
+  } catch (err) {
+    sessionLog.warn(
+      { event: 'context_assembler.metadata_failed', err: (err as Error).message },
+      'page metadata read failed; using defaults',
+    );
+    return { title: '', statusCode: 200 };
+  }
+}
+
 class ContextAssembler {
   /**
    * Capture the canonical PageStateModel for `url`. Owns session lifecycle —
@@ -206,11 +248,18 @@ class ContextAssembler {
       const dom = softFilter.apply(filtered.tree);
       const visual = await tryCaptureVisual(session, url);
 
+      // Stage 2.5 fix N3 — populate metadata.title + statusCode from real
+      // page data instead of hardcoded empty / 200. Title sourced via
+      // document.title (works inside CAPTCHA walls + dynamic pages).
+      // StatusCode sourced from PerformanceNavigationTiming.responseStatus
+      // (browser-native; available after `domcontentloaded`). Both inside
+      // existing BrowserPage.evaluate seam — no new R9 surface area.
+      const meta = await readPageMetadata(session, sessionLog);
       const navigationEndedAt = new Date();
       const metadata: Metadata = {
         url,
-        title: '',
-        statusCode: 200,
+        title: meta.title,
+        statusCode: meta.statusCode,
         navigationStartedAt: navigationStartedAt.toISOString(),
         navigationEndedAt: navigationEndedAt.toISOString(),
       };
