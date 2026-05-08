@@ -1,7 +1,7 @@
 ---
 title: Tasks — Phase 1 Browser Perception
 artifact_type: tasks
-status: approved
+status: implemented
 version: 0.7
 created: 2026-04-27
 updated: 2026-05-09
@@ -334,7 +334,7 @@ Two foundations must precede the rest:
 - [x] **T-PHASE1-DOC [P]** Update root `README.md` with Phase 1 dev quickstart: `pnpm -F @neural/agent-core test integration/phase1` to validate. Reference [phase-1-perception spec.md](docs/specs/mvp/phases/phase-1-perception/spec.md). — **DONE 2026-05-09** (Wave 8; root README.md +20 LOC; status block + Quickstart step #6 + new Phase 1 perception API subsection w/ TS code sample; flagged perception subpath not in package.json#exports — Phase 2 follow-up)
 - [x] **T-PHASE1-LOGGER** Update `packages/agent-core/src/observability/logger.ts` to register new correlation fields (session_id, page_url, extractor) in default schema. (Strictly speaking, this can fold into T006 — left here as a polish gate to avoid silent schema drift.) — **DONE 2026-05-09** (Wave 8; logger.ts 47→115 LOC; LogBindings interface + createChildLogger helper; doc-comment block enumerates Phase 0 + Phase 1 fields; `extractor` reserved for future explicit binding — currently encoded via Pino `name` channel)
 - [x] **T-PHASE1-ADAPTERS-README** Update `packages/agent-core/src/adapters/README.md` to reference BrowserEngine as the first concrete adapter and the v1.1 stealth-plugin slot. — **DONE 2026-05-09** (Wave 8; adapters/README.md +15 LOC; new "Concrete R9 adapters" + "ESLint enforcement (Phase 4+)" sections; flagged pre-existing aspirational-vs-actual layout drift in canonical pattern tree)
-- [ ] **T-PHASE1-ROLLUP** Author `phase-1-current.md` per R19 + `templates/phase-rollup.template.md`. Sections: active modules (browser-runtime/, perception/), data contracts (BrowserEngine + PageStateModel — both NEW), system flows operational (`contextAssembler.capture(url) → PageStateModel`), known limitations (no stealth plugin until v1.1, no overlay dismissal until Phase 5), open risks for Phase 2 (MCP tool composition against BrowserSession + PageStateModel).
+- [x] **T-PHASE1-ROLLUP** Author `phase-1-current.md` per R19 + `templates/phase-rollup.template.md`. Sections: active modules (browser-runtime/, perception/), data contracts (BrowserEngine + PageStateModel — both NEW), system flows operational (`contextAssembler.capture(url) → PageStateModel`), known limitations (no stealth plugin until v1.1, no overlay dismissal until Phase 5), open risks for Phase 2 (MCP tool composition against BrowserSession + PageStateModel). — **DONE 2026-05-09** (master orchestrator Stage 4 exit; phase-1-current.md authored per template; 9 sections including Stage 2.5 carryover; rollup status: implemented; supersedes phase-0-current.md per R19)
 
 ---
 
