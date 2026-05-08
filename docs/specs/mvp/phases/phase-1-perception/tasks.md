@@ -243,7 +243,7 @@ Two foundations must precede the rest:
   - **Smoke test:** apply() returns 30 items, scores descending, all in (0, 1]
   - **Kill criteria:** default block + extra: any additive confidence math (`-=`, `+=` on scores) → STOP, R4.4 violation
 
-- [ ] **T011 [P] [US-1] MutationMonitor** (AC-06, REQ-BROWSE-PERCEPT-005, REQ-BROWSE-PERCEPT-006)
+- [x] **T011 [P] [US-1] MutationMonitor** (AC-06, REQ-BROWSE-PERCEPT-005, REQ-BROWSE-PERCEPT-006) — **DONE 2026-05-08** (master orchestrator Stage 2 Wave 3; conformance 3/3 PASS — settle 575ms on static, stable:false on dynamic, non-fatal failures; consumes BrowserPage.setContent boundary extension)
   - **Brief:**
     - **Outcome:** `perception/MutationMonitor.ts` exports `mutationMonitor.observe(page: BrowserPage, opts: { timeoutMs: number; settleWindowMs?: number }): Promise<{ stable: boolean; mutationsObserved: number }>`. Injects MutationObserver via `addInitScript` pre-navigation; observer logs mutations to `window.__neuralMutationLog`; method polls until 500 ms passes with no new mutations OR timeout.
     - **Context:** plan.md "Phase 0 Research" item 4 — settle algorithm.

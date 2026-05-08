@@ -14,9 +14,7 @@
  * non-fatal.
  */
 import { describe, expect, test } from 'vitest';
-// @ts-expect-error — module deliberately not yet implemented (T011)
 import { mutationMonitor } from '../../src/perception/MutationMonitor.js';
-// @ts-expect-error — module deliberately not yet implemented (T006)
 import { BrowserManager } from '../../src/browser-runtime/BrowserManager.js';
 
 const STATIC_URL = 'https://example.com';
