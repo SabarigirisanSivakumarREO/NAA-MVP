@@ -187,7 +187,7 @@ Two foundations must precede the rest:
   - **Smoke test:** `BrowserManager().newSession()` opens + closes amazon.in cleanly
   - **Kill criteria:** default block
 
-- [ ] **T007 [US-1] StealthConfig (REDUCED SCOPE)** (AC-02, REQ-BROWSE-HUMAN-005, REQ-BROWSE-HUMAN-006 reduced per v2.3.1)
+- [x] **T007 [US-1] StealthConfig (REDUCED SCOPE)** (AC-02, REQ-BROWSE-HUMAN-005, REQ-BROWSE-HUMAN-006 reduced per v2.3.1) — **DONE 2026-05-08** (master orchestrator Stage 2 Wave 3; conformance 4/4 PASS; 8-string UA pool + 3 viewports + WebGL fingerprint patch; consumes BrowserPage.setViewportSize + BrowserContext.pages() boundary extensions from prior commit)
   - **Brief:**
     - **Outcome:** `packages/agent-core/src/browser-runtime/StealthConfig.ts` exports `applyStealthConfig(context: BrowserContext, opts?: StealthOptions): Promise<void>` that randomizes per-session: (a) user-agent from a pool of 5-10 modern Chrome strings, (b) viewport from 3 sizes (1280×720, 1440×900, 1920×1080), (c) WebGL vendor/renderer via `addInitScript` patching `WebGLRenderingContext.prototype.getParameter`. Two consecutive sessions yield different (UA, viewport, fingerprint) tuples.
     - **Context:** plan.md "Phase 0 Research" item 5. tasks-v2 v2.3.1 explicitly REDUCED scope — NO `playwright-extra` dep, NO `playwright-extra-plugin-stealth`. Acceptance does NOT require bot.sannysoft.com pass.

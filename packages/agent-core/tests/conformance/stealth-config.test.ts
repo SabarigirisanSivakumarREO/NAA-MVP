@@ -15,9 +15,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
-// @ts-expect-error — module deliberately not yet implemented (T007)
 import { applyStealthConfig } from '../../src/browser-runtime/StealthConfig.js';
-// @ts-expect-error — module deliberately not yet implemented (T006)
 import { BrowserManager } from '../../src/browser-runtime/BrowserManager.js';
 
 describe('StealthConfig — AC-02 conformance', () => {
