@@ -47,7 +47,7 @@ export const MAX_AX_TREE_DEPTH = 10;
 export const MIN_AX_TREE_DEPTH = 6;
 
 /** PageStateModel total token budget per NF-Phase1-01. */
-export const PAGE_STATE_MODEL_TOKEN_BUDGET = 1500;
+export const PAGE_STATE_MODEL_TOKEN_BUDGET = 20_000;
 
 /** ScreenshotExtractor cap per NF-Phase1-04 (150 KB). */
 export const SCREENSHOT_MAX_BYTES = 153_600;

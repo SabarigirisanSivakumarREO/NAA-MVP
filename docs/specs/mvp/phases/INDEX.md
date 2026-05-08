@@ -26,7 +26,7 @@ generated_by: pnpm spec:index    # Auto-regenerated when phase folders or sub-ph
 |---|---|---|---|---|---|---|
 | 0 | Setup | 🟢 **implemented** (5/5 ACs green; rollup landed 2026-05-05) | M0.1-M0.5 + T-PHASE0-{TEST,DOC,ROLLUP} | `phase-0-setup/` | — | 1 |
 | **0b** | **Heuristic Authoring (LLM-assisted, engineering-owned)** | 🟡 **in progress — infra COMPLETE 2026-05-06 (T0B-001..T0B-005 ✅); content week 4 (T103/T104/T105)** | T0B-001..T0B-005 + T103/T104/T105 | `phase-0b-heuristics/` | 0 | 6 |
-| 1 | Browser Perception Foundation | ⚪ not started | M1.1-M1.10 (T006-T015) | `phase-1-perception/` | 0 | 1b, 2, 5 |
+| 1 | Browser Perception Foundation | 🟢 **implemented** (10 ACs green; 142/142 tests PASS; rollup landed 2026-05-09; NF-Phase1-01 v0.4 = 20K tokens) | M1.1-M1.10 (T006-T015) + T-PHASE1-{TESTS,DOC,LOGGER,ADAPTERS-README,ROLLUP} | `phase-1-perception/` | 0 | 1b, 2, 5 |
 | **1b** | **Perception Extensions v2.4** | ⚪ not started | T1B-001..T1B-012 | `phase-1b-perception-extensions/` | 1 | 1c, 6, 7 |
 | **1c** | **PerceptionBundle Envelope v2.5** | ⚪ not started | T1C-001..T1C-012 | `phase-1c-perception-bundle/` | 1b | 7 (EvaluateNode token budget); 13 (state graph master) |
 | 2 | MCP Tools (subset) | ⚪ not started | M2.1-M2.20 (T016-T050) | `phase-2-tools/` | 1 | 5 |
@@ -156,7 +156,7 @@ Per `docs/specs/mvp/sessions/kickoff-session-11.md` (NEW — authored in this cl
 
 ### Pending decisions for Session 11
 
-- **PD-01 NEW**: Phase 1b + 1c folding decision — slip to weeks 3-4 vs ride-along week 2. Recommend slip; Phase 1 alone is substantial week.
+- ~~**PD-01**~~ **RESOLVED 2026-05-08 (Session 12 master orchestrator Gate 1 REVISE) — SLIP to weeks 3-4**. Phase 1 alone is substantial (first network/Playwright phase + C1 BINDING + R20 impact + 3-site fixture set); impact.md v0.3.1 explicitly documents 1b/1c as separate phases with their own forward contracts.
 - **PD-05 STILL OPEN**: .claude/settings.local.json cosmetic git-hygiene fix
 - PD-04 + PD-07 RESOLVED Session 10; inherited
 

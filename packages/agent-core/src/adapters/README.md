@@ -54,6 +54,22 @@ Each adapter file:
 - Logs to Pino with correlation fields (`audit_run_id`, `node_name`, `trace_id`) — never the raw heuristic body or full prompt content (R6).
 - Surfaces errors as typed unions, not raw SDK errors.
 
-## Phase 0 status
+## Concrete R9 adapters
 
-This directory is the boundary — no concrete adapters yet. First adapter (LLMAdapter via T073) lands in Phase 4.
+Append to this section as each phase ships its first adapter implementor. Order is chronological by phase landing order so the table doubles as a build log.
+
+### Phase 1 — `BrowserEngine` (FIRST CONCRETE R9 ADAPTER)
+
+- **Interface:** [`BrowserEngine.ts`](./BrowserEngine.ts) — Phase 1 R9 boundary for `playwright`. Defines `BrowserEngine.newSession(opts)` plus the Phase-1-minimal `BrowserPage` / `BrowserContext` / `BrowserSession` wrapper types.
+- **Impl:** [`../browser-runtime/BrowserManager.ts`](../browser-runtime/BrowserManager.ts) — single concrete implementor; the only file in the repo permitted to `import { chromium } from 'playwright'`.
+- **Surface (Phase-1-minimal):** `BrowserPage` exposes `goto`, `ariaSnapshot`, `screenshot`, `addInitScript`, `evaluate`, `waitForLoadState`, `setViewportSize`, `setContent`. `BrowserContext` exposes `addInitScript` + `pages()` (the latter so `StealthConfig` can patch the existing about:blank page that `addInitScript` cannot retroactively reach).
+- **Provenance:** `phase-1-perception/spec.md` AC-01 + R-01; `phase-1-perception/impact.md` §"BrowserEngine (NEW)" (lines 87-114, exact interface canon); `phase-1-perception/tasks.md` T006.
+- **Forward contract:** Phase 2 (MCP tools) and Phase 4 (verification engine) compose against this seam. Adding methods is non-breaking forward-compat; renaming/removing requires an `impact.md` update (R20).
+
+### Phase 2 / 4 / 5 / 7 / 9 — pending
+
+LLMAdapter (Phase 4 T073), StorageAdapter (Phase 4 T070), ScreenshotStorage (Phase 4 T076), MCP server adapter (Phase 2 T019), image annotation (Phase 7 T131), NotificationAdapter (Phase 9 T260) will each land their first concrete implementors and append a section above.
+
+## ESLint enforcement (Phase 4+)
+
+Phase 4 ships the ESLint rule (T073) banning direct `import 'playwright'` (and the rest of the package list at the top of this file) outside the boundary file for that adapter. Until then, code review enforces the rule and `BrowserEngine.ts` carries an explicit comment naming the only legal importer (`browser-runtime/BrowserManager.ts`).

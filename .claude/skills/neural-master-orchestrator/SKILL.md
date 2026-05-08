@@ -73,6 +73,7 @@ When invoked with `--start` or any after-gate command:
 | Semantic code review (Stage 2.5) | `superpowers:code-reviewer` agent |
 | Phase brief at impl start | `neural-dev-workflow-brief` skill (existing hook) |
 | PR contract + R19 rollup at impl end | `neural-dev-workflow-pr` skill (existing hook) |
+| Phase validation doc at Stage 4 exit (5-section ASCII proof artifact) | Master-direct authoring per `docs/specs/mvp/templates/phase-validation.template.md` |
 | Cross-phase R20 propagation | Artifact #9 cross-phase impact propagator |
 | Context budget tracking + session handoff | [`references/context-budget.md`](references/context-budget.md) (50% WARN, 70% checkpoint+handoff) |
 
@@ -120,7 +121,7 @@ Adjustments under risk-gate mode:
 | R14 | Pino correlation fields verified in subagent diffs |
 | R17 | Status bumps gated by AI Reviewer verdict + human stamp |
 | R18 | Spec patches append delta blocks; never line removal |
-| R19 | Phase rollup auto-drafted at exit; human reviews ~5 min |
+| R19 | Phase rollup auto-drafted at exit; human reviews ~5 min. Sibling validation doc auto-drafted at exit per `docs/specs/mvp/templates/phase-validation.template.md` (5 ASCII sections + spot-check list; ~20 min eyes-on review). |
 | R20 | impact.md auto-drafted on shared-contract changes; downstream invalidation |
 | R23 | Kill criteria checked before each stage transition |
 
@@ -144,7 +145,7 @@ Adjustments under risk-gate mode:
 | 2 | Per-task commits per CLAUDE.md §6 format<br>`tasks.md` `[x]` markers |
 | 2.5 | `.phase-state/<N>/code-review-findings.yaml` |
 | 3 | `.phase-state/<N>/verify-test-results.json`<br>`.phase-state/<N>/verify-verdict.yaml` (AI Reviewer output) |
-| 4 | `phase-<N>-current.md` (R19 rollup)<br>`INDEX.md` row status flip 🟡 → 🟢<br>`session-handover.md` close-out append<br>`impact.md` (if R20 fires)<br>Branch push |
+| 4 | `phase-<N>-current.md` (R19 rollup)<br>**`phase-<N>-validation.md`** (5-section ASCII validation doc — module dependency graph, data flow, function call graph, AC→impl→test traceability, resource cost breakdown, trust spot-checks; sibling to rollup)<br>`INDEX.md` row status flip 🟡 → 🟢<br>`session-handover.md` close-out append<br>`impact.md` (if R20 fires)<br>Branch push |
 
 ## Integration with `.specify/extensions.yml` hooks
 

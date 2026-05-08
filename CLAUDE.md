@@ -340,7 +340,8 @@ The phase folders in `docs/specs/mvp/phases/` are the canonical source of truth 
 **Per phase** (when the last task in a phase lands):
 - Bump frontmatter `status:` per R17 lifecycle: `approved` → `implemented` (all tasks done; tests green) → `verified` (conformance + acceptance tests green)
 - Bump `status:` on companion artifacts in the same folder (`spec.md`, `plan.md`, `impact.md`, `checklists/requirements.md`)
-- Author `phase-N-current.md` rollup per R19 (active modules, contracts now in effect, system flows operational, known limitations, open risks for next phase) — template at `docs/specs/mvp/templates/phase-rollup.template.md`
+- Author `phase-N-current.md` rollup per R19 (active modules, contracts now in effect, system flows operational, known limitations, open risks for next phase) — template at [`docs/specs/mvp/templates/phase-rollup.template.md`](docs/specs/mvp/templates/phase-rollup.template.md)
+- Author **`phase-N-validation.md` validation doc** as the rollup's sibling — 5 ASCII sections (module dep graph, data flow, function call graph, AC→impl→test traceability, resource cost breakdown) + a §6 trust spot-check list. Closes the AI-built-code comprehension gap (a human reviewer gains confidence in 20 min of eyes-on review without reading every line). Template at [`docs/specs/mvp/templates/phase-validation.template.md`](docs/specs/mvp/templates/phase-validation.template.md). Mandatory at Stage 4 exit per the master orchestrator skill.
 - Update `docs/specs/mvp/phases/INDEX.md` — flip the phase row's status column (⚪ not started → 🟡 in progress → 🟢 complete)
 
 **Why this matters:** if you only update the personal HTML tracker, the canonical corpus drifts; `/speckit.analyze` will flag phantom incomplete tasks; R17 lifecycle stays stuck on `draft`; phase rollups (R19) never land, so each subsequent phase loses the compressed predecessor state it's supposed to read first per CLAUDE.md §1b.
