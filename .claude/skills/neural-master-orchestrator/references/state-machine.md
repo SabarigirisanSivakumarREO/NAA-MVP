@@ -134,6 +134,21 @@ Master verifies state matches filesystem at every command invocation. Mismatches
 | `verify` | No `verify-verdict.yaml` exists | Reconcile to `code-review` (rollback) |
 | `review-pending` | `review-notes.md` doesn't exist | Reconcile to `preflight` (re-run Stage 1) |
 | State file missing | Filesystem has `phase-<N>-current.md` rollup | Treat as `done`; create state file for record |
+
+## Stage 4 exit deliverables (executed master-direct on `--gate-2 APPROVE`)
+
+When transitioning `exit-pending` → `done`, master MUST produce ALL of the following before declaring the phase complete. Pair the rollup + validation doc as siblings — both at `status: implemented` per R19 + R17:
+
+1. **`phase-<N>-current.md` rollup** — author per [`docs/specs/mvp/templates/phase-rollup.template.md`](../../../../docs/specs/mvp/templates/phase-rollup.template.md). 8 sections (active modules, contracts in effect, system flows, limitations, open risks, conformance gates, what next phase reads, cost+time). Prose-heavy.
+2. **`phase-<N>-validation.md` validation doc** — author per [`docs/specs/mvp/templates/phase-validation.template.md`](../../../../docs/specs/mvp/templates/phase-validation.template.md). 5 ASCII sections + spot-check list (module dep graph, data flow, function call graph, AC→impl→test traceability, resource cost breakdown, trust calibration). Diagram-heavy. Closes the AI-built-code comprehension gap.
+3. **R17 status bumps** — `approved → implemented` on phase-folder spec.md / plan.md / tasks.md / impact.md.
+4. **T-PHASE<N>-ROLLUP `[x]`** in tasks.md.
+5. **INDEX.md row** flipped `⚪ not started` → `🟢 implemented` with summary cell (test count + rollup date + key magnitude e.g. "NF-Phase1-01 v0.4 = 20K tokens").
+6. **`.phase-state/<N>.json`** — set `state: completed`, `completed_at`, `phase_outcome`, `phase_rollup_doc`, `phase_validation_doc`.
+7. **`.phase-state/<N>/transitions.log`** — append final transition entries.
+8. **Branch push** — ONLY after explicit user authorization per `branch_strategy.operations_pending_authorization`. Never auto-push.
+
+**Single commit OR sibling commits:** rollup + validation doc + status bumps + INDEX flip MAY ride a single commit (preferred for atomicity) OR split if the validation doc is materially larger than 300 LOC. The rollup MUST land in the same commit as the status bumps + INDEX flip per R17.4 audit-trail discipline.
 | State file says T7 done at SHA X | `git log` shows no such commit | Reconcile to T7 = queued; re-dispatch |
 
 **Rule:** Filesystem wins. State file is a cache; truth lives in artifacts + git.
