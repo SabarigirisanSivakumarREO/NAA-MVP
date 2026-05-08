@@ -2,9 +2,9 @@
 title: Impact Analysis — Phase 1 Browser Perception (BrowserEngine adapter + PageStateModel)
 artifact_type: impact
 status: approved
-version: 0.3
+version: 0.3.1
 created: 2026-04-27
-updated: 2026-04-30
+updated: 2026-05-08
 owner: engineering lead
 
 supersedes: null
@@ -29,13 +29,19 @@ affected_contracts:
 delta:
   new:
     - v0.2 — explicit "Forward Contract" section now defines what Phase 2 + Phase 7 will import from Phase 1 (analyze finding X2)
+    - v0.3.1 — Forward Contract section EXTENDED to include Phase 1b (Perception Extensions v2.4) + Phase 1c (PerceptionBundle Envelope v2.5) as direct PageStateModel consumers (Session 7 R17.4 review J1 finding / C2 OPTIONAL — consumed by master orchestrator Gate 1 REVISE)
   changed:
     - v0.1 → v0.2 frontmatter affected_contracts standardized to short form (was prose); descriptive prose retained in body (analyze finding C3)
     - v0.2 → v0.3 — frontmatter version sync with parallel spec.md/plan.md/tasks.md polish (analyze findings M1-M4 + L1-L2 + L5-L6); impact.md body unchanged
+    - v0.3 → v0.3.1 (2026-05-08 master orchestrator Gate 1 REVISE) — Forward Contract section appended with Phase 1b + Phase 1c rows (per Session 7 review J1 / standing condition C2 OPTIONAL). Aligns impact.md with `tasks-v2.md:236` T1B-001 PricingExtractor `dep: T013, T014` + INDEX.md row 1c "wraps PageStateModel into a PerceptionBundle envelope". Frontmatter sync with parallel spec.md/plan.md/tasks.md REVISE patches. No risk level / breaking flag changes.
   impacted:
     - spec.md + plan.md + tasks.md (v0.2 → v0.3) — frontmatter sync
+    - spec.md (v0.3 → v0.3.1) + plan.md (v0.3 → v0.3.1) + tasks.md (v0.4 → v0.5) — parallel sync for v0.3.1 master orchestrator REVISE
   unchanged:
-    - All prior content (v0.1 + v0.2 sections preserved verbatim — BrowserEngine + PageStateModel before/after, Forward Contract, risk level MEDIUM)
+    - BrowserEngine + PageStateModel before/after sections (lines 87-138 v0.2 verbatim)
+    - Risk level MEDIUM, breaking: false
+    - Provenance section + Verification section + Approval section
+    - All v0.2 Forward Contract rows for Phase 2, 5, 7 (only Phase 1b + 1c are NEW additions)
 
 governing_rules:
   - Constitution R9 (Loose Coupling / Adapter Pattern)
@@ -184,6 +190,24 @@ Per analyze finding X2, this section makes the Phase 1 → downstream import sur
 |---|---|---|
 | `packages/agent-core/src/browser-runtime/OverlayDismisser.ts` | `BrowserSession` | Operates on session.page; emits Diagnostics updates |
 | `packages/agent-core/src/orchestration/nodes/BrowseNode.ts` | `ContextAssembler`, `PageStateModel` | Wraps capture flow into LangGraph node |
+
+### Phase 1b (Perception Extensions v2.4 — T1B-001..T1B-012) WILL import *(NEW v0.3.1; Session 7 review C2 OPTIONAL consumed)*
+
+| Phase 1b module | Imports from Phase 1 | Purpose |
+|---|---|---|
+| `packages/agent-core/src/perception/extensions/PricingExtractor.ts` (T1B-001) | `PageStateModel`, `PageStateModelSchema`, `BrowserSession` from `@neural/agent-core/perception` + `@neural/agent-core/adapters` | Reads `session.page` via the Phase 1 wrapper; produces v2.4 pricing-block enrichment data; namespaces under `_extensions.pricing` per the forward-compatibility seam |
+| Phase 1b general extension layer | `PageStateModel._extensions: Record<string, unknown>` (RESERVED in T014) | Phase 1b extensions populate `_extensions.<extension_name>` keys (e.g., `_extensions.pricing`, `_extensions.trustSignals`) — Phase 1's reserved seam absorbs Phase 1b enrichment without forcing a Phase 1 schema migration |
+
+**Forward stability promise carried forward to Phase 1b:** `T1B-001` per `docs/specs/mvp/tasks-v2.md` line 236 has `dep: T013, T014` — direct PageStateModel + ContextAssembler consumer. The Phase 1 `_extensions` seam (reserved in T014, documented in spec.md Key Entities + plan.md design item 7) is the intended cross-phase contract that Phase 1b populates without bumping `PageStateModelSchema`.
+
+### Phase 1c (PerceptionBundle Envelope v2.5 — T1C-001..T1C-012) WILL import *(NEW v0.3.1; Session 7 review C2 OPTIONAL consumed)*
+
+| Phase 1c module | Imports from Phase 1 | Purpose |
+|---|---|---|
+| `packages/agent-core/src/perception/bundle/PerceptionBundle.ts` (T1C-001) | `PageStateModel`, `PageStateModelSchema` from `@neural/agent-core/perception` | Wraps the Phase 1 `PageStateModel` into a `PerceptionBundle` envelope (v2.5) — adds outer-layer metadata (capture pipeline version, bundle id, parent-bundle pointer for multi-page audits) WITHOUT modifying the inner `PageStateModel` shape |
+| Phase 1c bundle-envelope schema | `PageStateModelSchema` (full schema; not just inferred type) | The bundle wraps the schema, NOT a flattened inferred type — preserves `.strict()` validation when the bundle is parsed |
+
+**Forward stability promise carried forward to Phase 1c:** Per `INDEX.md` row 1c, Phase 1c "wraps PageStateModel into a PerceptionBundle envelope". The wrapping is additive (envelope around inner schema); does NOT force Phase 1 schema bump. Adding new envelope fields in v2.5+ requires Phase 1c's own impact.md, NOT a Phase 1 update.
 
 ---
 

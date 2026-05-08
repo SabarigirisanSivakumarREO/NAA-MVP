@@ -2,9 +2,9 @@
 title: Implementation Plan — Phase 1 Browser Perception
 artifact_type: plan
 status: approved
-version: 0.3
+version: 0.3.1
 created: 2026-04-27
-updated: 2026-04-30
+updated: 2026-05-08
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -46,10 +46,17 @@ delta:
   changed:
     - v0.1 → v0.2 — analyze-driven fixes (A1, A4, X2); design content sharpened, no scope changes
     - v0.2 → v0.3 — analyze-driven polish — M1 (R10→R13 stale xref for temperature=0 in Constitution Check); M2 (constitution citation R1-R23 → R1-R26 in derived_from); L5 (HardFilter return shape includes `reductionFloorWaived`); L6 (architecture.md derived_from collapsed from 2 lines to 1); no scope changes
+    - v0.3 → v0.3.1 (2026-05-08 master orchestrator Gate 1 REVISE) — three additions, no scope changes:
+      (a) absorbs PD-04 RESOLVED — "Shopify demo storefront (URL TBD)" → "Peregrine PDP" (https://www.peregrineclothing.co.uk/...) in §Phase 1 Design Test strategy fixture list (master orchestrator finding M2-B1 closed);
+      (b) NEW §"T015 integration test timeout budget (C1 BINDING)" added between §Per-extractor design and §Test strategy — pins per-step Playwright timeouts ≤ 20 s/site (≤ 60 s/3-sites) with `waitUntil: 'domcontentloaded'` per Session 7 R17.4 review C1 BINDING (master orchestrator finding M1-C1 closed; addresses doom-finding D5 from review-notes.md preventively);
+      (c) NEW §"Effort estimate" added after §Phase 1 Design (C3 OPTIONAL from Session 7 review consumed) — per-task hour table totaling ~24-30 h engineering for week-sequencing calibration parity with Phase 0b's plan.md.
   impacted:
-    - spec.md + impact.md + tasks.md (v0.2 → v0.3) for parallel polish sync
+    - spec.md (v0.3 → v0.3.1) — Peregrine swap parallel sync
+    - tasks.md (v0.4 → v0.5) — Peregrine swap + C1 BINDING transcribed in T015 brief + T-PHASE1-TESTS Brief format polish
+    - impact.md (v0.3 → v0.3.1) — Phase 1b + 1c rows added to Forward Contract (C2 OPTIONAL consumed)
   unchanged:
-    - Tech stack table, Project Structure narrative, Approval Gates
+    - Tech stack table, Project Structure narrative, Approval Gates, Phase 0 Research items 1-5, Per-extractor design items 1-7, Constitution Check, Complexity Tracking
+    - All AC-NN / R-NN / SC-NNN IDs (R18 append-only preserved)
 
 governing_rules:
   - Constitution R4 (Browser Agent Rules)
@@ -268,14 +275,59 @@ All schemas `.strict()` (no extra props).
 
 7. **PageStateModel `_extensions` field** (T014 — forward-compatibility seam per analyze X2): `_extensions?: Record<string, unknown>` reserved at the top level of `PageStateModelSchema`. Phase 1 MUST NOT populate this field. Documented at T014 + impact.md "Forward Contract" section. Phase 7 namespaces enrichment under `_extensions.deepPerceive` to avoid forcing a Phase 1 schema migration when the deep_perceive node lands.
 
+### T015 integration test timeout budget (C1 BINDING from Session 7 R17.4 review)
+
+Per `phase-1-perception/review-notes.md` C1 BINDING + the doom-finding D5 mitigation, T015 MUST pin per-step Playwright timeouts summing to ≤ 20 s per site (≤ 60 s for 3 sites — satisfies NF-Phase1-03 with margin). Default Playwright `'load'` event + 30 s timeout × 3 sites ≈ 141 s worst-case → exceeds NF-Phase1-03; existing T015 kill criterion (wall-clock > 60 s) triggers reactively. This budget table is the **preventive** complement.
+
+| Step | Budget | Implementation note |
+|---|---|---|
+| `page.goto({ waitUntil: 'domcontentloaded', timeout: 10000 })` | 10 s | **Use `'domcontentloaded'`, NOT `'load'`** — fail-fast on cold-start CDN; SPA `'load'` event can hang on progressive render past the 30 s default. This is the central C1 BINDING requirement. |
+| `mutationMonitor.observe({ timeoutMs: 5000 })` | 5 s | Settle window per AC-06 (spec.md says 10 s default; 5 s is the T015 integration-test override to fit budget). Static pages settle < 2 s per NF-Phase1-02; 5 s is comfortable. |
+| `accessibilityExtractor.extract()` | 3 s soft-budget | Warn via Pino timing log if exceeded; do NOT throw. amazon.in deep DOM is the worst case. |
+| `screenshotExtractor.capture()` | 1 s soft-budget | Sharp resize is the slow path; native Playwright JPEG with quality 80 typically returns < 500 ms. |
+| `tokenize()` | < 1 s | Not in critical path; cl100k_base on a < 1500 token JSON is sub-second. |
+| **Per-site total (worst case)** | **≤ 20 s** | Sums to budget; leaves margin. |
+| **3-site total (NF-Phase1-03)** | **≤ 60 s** | Acceptance gate. |
+
+T015 implementer documents this budget table in `tests/integration/phase1.test.ts` header comment + sets corresponding timeouts in the Playwright + extractor calls. PR Contract MUST cite this section in the "Review focus" block (PRD §10.9). Master orchestrator subagent dispatch will inject this section reference into the T015 brief at Stage 2.
+
 ### Test strategy
 
 Per R3.1 TDD, T-PHASE1-TESTS (acceptance test for AC-01..AC-10) authored FIRST and observed FAILING before any extractor lands. Conformance tests (per AC) authored alongside or just before each implementation task; all must FAIL initially.
 
-The T015 integration test fixture URLs:
+The T015 integration test fixture URLs (PD-04 RESOLVED Session 8):
 - `https://example.com` (simple control)
 - `https://www.amazon.in` (complex e-commerce; bot detection MAY produce CAPTCHA wall — acceptance still passes if PageStateModel < 1500 tokens, per spec edge case)
-- A Shopify demo storefront (specific URL TBD at implementation time; if unavailable, test marks `skip` rather than fail)
+- `https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy` (Peregrine PDP — Shopify-powered D2C; replaces prior "Shopify demo (TBD)" placeholder; walking-skeleton acceptance suite + roadmap v0.8 + T-SKELETON-002 fixture all already lock this URL). If unavailable at T015 runtime, the test marks that case `skip` rather than failing the suite.
+
+---
+
+## Effort estimate (C3 — calibration parity with Phase 0b)
+
+Per Session 7 review C3 OPTIONAL (`review-notes.md` recommendation: "Add per-task hour estimate + phase-level total to plan.md §9. Phase 0b had ~26h+~7h; Phase 1 should too for week-sequencing calibration"). Estimates assume single focused engineer; not parallel-distributed:
+
+| Task | Estimated hours | Notes |
+|---|---|---|
+| T-PHASE1-TESTS | 2-3 h | Mechanical scaffolding — 9 conformance test stubs + 1 integration test stub; all must FAIL initially per R3.1 TDD |
+| T006 BrowserManager | 3-4 h | First R9 concrete adapter; precedent-setting; BrowserEngine interface + BrowserSession re-typed wrapper |
+| T007 StealthConfig (reduced) | 1-2 h | Per-session UA + viewport + WebGL rotation; no playwright-extra; pool size 5-10 |
+| T008 AccessibilityExtractor | 1-2 h | Wrapper around `page.accessibility.snapshot({ interestingOnly: false })` + recursive node count |
+| T009 HardFilter | 2 h | Pure function; 4 exclusion criteria; degenerate-page floor (`reductionFloorWaived`) |
+| T010 SoftFilter | 2 h | Multiplicative weight composition (R4.4); top-30 ranking |
+| T011 MutationMonitor | 2-3 h | `addInitScript` injection + `window.__neuralMutationLog` poll; 500 ms settle window |
+| T012 ScreenshotExtractor | 2 h | Playwright JPEG quality 80 + Sharp recompression on > 150 KB; 1 retry max |
+| T013 ContextAssembler | 4-6 h | **Highest integration risk** — orchestrates 6 components + BrowserEngine; deterministic shrink ladder; session lifecycle in `finally` |
+| T015 Phase 1 integration test | 3-4 h | C1 BINDING timeout budget (table above); 3 real sites (example.com + amazon.in + Peregrine PDP); CAPTCHA wall edge case for amazon.in |
+| T014 PageStateModel types | DONE (forward-pulled week 1; commit `077ec86`; ~3 h actual) | Already implemented per `tasks.md` v0.4 |
+| T-PHASE1-DOC | 0.5 h | Root README quickstart update |
+| T-PHASE1-LOGGER | 0.5 h | Pino correlation field registration (session_id, page_url, extractor) |
+| T-PHASE1-ADAPTERS-README | 0.5 h | adapters/README.md references BrowserEngine as first concrete |
+| T-PHASE1-ROLLUP | 0.5-1 h | R19 phase-1-current.md per template |
+| **Phase 1 total (T006-T013, T015 + 4 polish)** | **~24-30 h engineering** | Single-engineer focused; 3-4 days at 8 hr/day. Excludes T014 (already DONE). |
+
+Calibration parity with Phase 0b's `~26h engineering + ~7h verifier`. Phase 1 has no separate verifier role (engineering owns conformance + integration tests inline per R3.1).
+
+Risk-tier note: T013 + T015 are MEDIUM-risk integration-heavy tasks per their inline kill criteria (extended >2hr triggers). Budget some calendar buffer beyond pure hours for those two specifically.
 
 ---
 

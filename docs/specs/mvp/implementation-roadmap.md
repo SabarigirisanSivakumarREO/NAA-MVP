@@ -699,7 +699,7 @@ Re-stated for clarity (apply per-task, including to stubs):
 - `docs/specs/mvp/phases/INDEX.md` v1.3 (phase order)
 - `docs/specs/mvp/phases/phase-{0,0b,1,1b,1c,2,3,4,4b,5,5b,6,7,8,9}-*/tasks.md` (canonical task definitions — ALL 15 phase folders are the cherry-pick source)
 - `docs/specs/mvp/tasks-v2.md` v2.3.3 (legacy reference catalog; NOT the cherry-pick source)
-- Note: Phase 1b + 1c (perception extensions v2.4 + PerceptionBundle envelope v2.5) are not separately scheduled in this roadmap; they fold into Phase 1 work (week 2) since their task counts (12 each) are scoped extensions of the same browser-runtime/perception layer
+- Note: Phase 1b + 1c (perception extensions v2.4 + PerceptionBundle envelope v2.5) **SLIP to weeks 3-4** per PD-01 RESOLVED 2026-05-08 (Session 12 master orchestrator Gate 1 REVISE). Rationale: Phase 1 alone is substantial (first network/Playwright phase + C1 BINDING + R20 impact + 3-site fixture set); +24 tasks (T1B-001..T1B-012 + T1C-001..T1C-012) is ~3.4× scope expansion. Phase 1b + 1c will be JIT-scheduled when their pre-flight gates fire — not bundled into week 2.
 
 ---
 
@@ -711,4 +711,4 @@ Re-stated for clarity (apply per-task, including to stubs):
 - **If a referenced task ID changes upstream**, update upstream first; this roadmap re-references after.
 - **`/speckit.analyze`** treats this file as an implementation overlay, not a Spec Kit artifact (does not affect spec/plan/tasks consistency).
 - **Stub-to-real promotion** weeks 5 and 7 are HIGH-risk gates — extra reviewer required per PRD §10.9 PR Contract risk-tier guidance.
-- **Phase 1b + 1c folding**: confirm with engineering lead whether v2.4 perception extensions (T1B-001..T1B-012) and v2.5 PerceptionBundle envelope (T1C-001..T1C-012) ride alongside Phase 1 in week 2 OR slip to weeks 3-4. Current draft assumes week 2 ride-along; if too heavy, split into a week-2/3 stretch.
+- ~~**Phase 1b + 1c folding**~~ **RESOLVED 2026-05-08 (Session 12 master orchestrator Gate 1 REVISE) — SLIP to weeks 3-4.** Phase 1b (T1B-001..T1B-012 perception extensions v2.4) and Phase 1c (T1C-001..T1C-012 PerceptionBundle envelope v2.5) are JIT-scheduled in weeks 3-4. Phase 1 ships standalone in week 2.

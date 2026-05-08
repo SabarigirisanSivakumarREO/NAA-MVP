@@ -156,7 +156,7 @@ Per `docs/specs/mvp/sessions/kickoff-session-11.md` (NEW — authored in this cl
 
 ### Pending decisions for Session 11
 
-- **PD-01 NEW**: Phase 1b + 1c folding decision — slip to weeks 3-4 vs ride-along week 2. Recommend slip; Phase 1 alone is substantial week.
+- ~~**PD-01**~~ **RESOLVED 2026-05-08 (Session 12 master orchestrator Gate 1 REVISE) — SLIP to weeks 3-4**. Phase 1 alone is substantial (first network/Playwright phase + C1 BINDING + R20 impact + 3-site fixture set); impact.md v0.3.1 explicitly documents 1b/1c as separate phases with their own forward contracts.
 - **PD-05 STILL OPEN**: .claude/settings.local.json cosmetic git-hygiene fix
 - PD-04 + PD-07 RESOLVED Session 10; inherited
 

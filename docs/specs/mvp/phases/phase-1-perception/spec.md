@@ -2,9 +2,9 @@
 title: Phase 1 — Browser Perception Foundation
 artifact_type: spec
 status: approved
-version: 0.3
+version: 0.3.1
 created: 2026-04-27
-updated: 2026-04-30
+updated: 2026-05-08
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -51,6 +51,7 @@ delta:
     - v0.1 → v0.2 frontmatter affected_contracts standardized to short form (was prose); descriptive prose retained in body (analyze finding C3)
     - v0.1 → v0.2 4 polish fixes from /speckit.analyze report (A1, A4, C3, X2) without changing AC-NN IDs (R18 append-only preserved)
     - v0.2 → v0.3 6 polish fixes from /speckit.analyze report — M1 (R10→R13 stale xref for temperature=0); M2 (constitution citation R1-R23 → R1-R26); M3 (R-05 drops misattributed REQ-BROWSE-PERCEPT-002 since AccessibilityExtractor does no filtering); M4 (R-09 cites REQ-BROWSE-PERCEPT-004 for screenshot fallback); L1 (dedupe BrowserEngine heading); L2 (token-budget operator standardized to `<` not `≤`); no AC-NN/R-NN/SC-NNN IDs changed (R18 append-only preserved)
+    - v0.3 → v0.3.1 (2026-05-08 master orchestrator Gate 1 REVISE) — mechanical R11.4 patch absorbing PD-04 RESOLVED (Session 8): "Shopify demo (TBD)" / "Shopify demo storefront" / "a Shopify demo" → "Peregrine PDP" (https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy) across summary, US-1 Independent Test, AS-10 acceptance scenario, AC-08, AC-10, SC-001, Assumptions. Walking-skeleton.spec.ts + roadmap v0.8 + T-SKELETON-002 fixture all already lock Peregrine; spec corpus catches up. No AC-NN/R-NN/SC-NNN IDs changed (R18 append-only preserved). Master orchestrator finding M2-B1 closed.
   impacted:
     - Constitution R9 — first concrete adapter implementation lands here (BrowserEngine)
     - tasks-v2.md v2.3.1 — T007 scope reduction reflected in this spec
@@ -74,7 +75,7 @@ governing_rules:
 
 # Feature Specification: Phase 1 — Browser Perception Foundation
 
-> **Summary (~150 tokens — agent reads this first):** Build the browser perception pipeline. Open a Playwright Chromium session via the new `BrowserEngine` adapter, capture an accessibility tree from any public web page, filter it down to a compact action-oriented `PageStateModel` under 1500 tokens, monitor DOM mutations for stability within 2 seconds, and produce a JPEG screenshot fallback. Ten tasks (T006-T015) cover BrowserManager (R9 adapter implementation), reduced-scope StealthConfig (UA + viewport + WebGL rotation only — full stealth plugin deferred to v1.1 per tasks-v2 v2.3.1), AccessibilityExtractor + HardFilter + SoftFilter, MutationMonitor, ScreenshotExtractor, ContextAssembler, PageStateModel Zod schemas, and a Phase 1 integration test on three sites (example.com, amazon.in, Shopify demo). No MCP tools, no LLM calls, no verification — pure perception.
+> **Summary (~150 tokens — agent reads this first):** Build the browser perception pipeline. Open a Playwright Chromium session via the new `BrowserEngine` adapter, capture an accessibility tree from any public web page, filter it down to a compact action-oriented `PageStateModel` under 1500 tokens, monitor DOM mutations for stability within 2 seconds, and produce a JPEG screenshot fallback. Ten tasks (T006-T015) cover BrowserManager (R9 adapter implementation), reduced-scope StealthConfig (UA + viewport + WebGL rotation only — full stealth plugin deferred to v1.1 per tasks-v2 v2.3.1), AccessibilityExtractor + HardFilter + SoftFilter, MutationMonitor, ScreenshotExtractor, ContextAssembler, PageStateModel Zod schemas, and a Phase 1 integration test on three sites (example.com, amazon.in, Peregrine PDP). No MCP tools, no LLM calls, no verification — pure perception.
 
 **Feature Branch:** `phase-1-perception` (created at implementation time)
 **Input:** Phase 1 scope from `docs/specs/mvp/phases/INDEX.md` row 1 + `tasks-v2.md` T006-T015 (v2.3.1)
@@ -120,7 +121,7 @@ The browser agent receives a target URL, opens a Chromium session, navigates, wa
 
 **Why this priority:** This is the single user story for Phase 1. Without a working `PageStateModel`, no Phase 2 MCP tool can act, and no Phase 7 deep-perception can analyze. It is the entire MVP slice for this phase.
 
-**Independent Test:** Run `pnpm -F @neural/agent-core test integration/phase1` against three target sites: example.com (simple), amazon.in (complex e-commerce), a Shopify demo store. All three produce a valid `PageStateModel` < 1500 tokens.
+**Independent Test:** Run `pnpm -F @neural/agent-core test integration/phase1` against three target sites: example.com (simple control), amazon.in (complex e-commerce, MAY produce CAPTCHA wall), Peregrine PDP (Shopify-powered D2C; URL pinned in tasks.md T015). All three produce a valid `PageStateModel` < 1500 tokens.
 
 **Acceptance Scenarios:**
 
@@ -133,7 +134,7 @@ The browser agent receives a target URL, opens a Chromium session, navigates, wa
 7. **Given** a stabilized page, **When** `screenshotExtractor.capture(page)` runs, **Then** a JPEG buffer ≤ 150 KB and ≤ 1280 px wide is returned.
 8. **Given** all extractors, **When** `contextAssembler.capture(url)` runs end-to-end, **Then** a `PageStateModel` is returned with sections `metadata` + `accessibilityTree` + `filteredDOM` + `interactiveGraph` + `visual?` + `diagnostics`, total tokenized size < 1500 tokens.
 9. **Given** the `PageStateModel` Zod schema in `perception/types.ts`, **When** any extractor output is validated, **Then** every sub-type validates without `any` or unchecked fields.
-10. **Given** the integration test `tests/integration/phase1.test.ts`, **When** it runs against example.com, amazon.in, and a Shopify demo, **Then** all three sites yield a `< 1500 token` `PageStateModel` and the test exits 0.
+10. **Given** the integration test `tests/integration/phase1.test.ts`, **When** it runs against example.com, amazon.in, and the Peregrine PDP, **Then** all three sites yield a `< 1500 token` `PageStateModel` and the test exits 0.
 
 ### Edge Cases
 
@@ -157,9 +158,9 @@ The browser agent receives a target URL, opens a Chromium session, navigates, wa
 | AC-05 | `softFilter.apply(tree)` returns top 30 elements by relevance score; score uses multiplicative decay per R4.4 (NOT additive); output is ordered descending by score | `packages/agent-core/tests/conformance/soft-filter.test.ts` | T010 |
 | AC-06 | `mutationMonitor.observe(page, opts)` injects a `MutationObserver` via `addInitScript`, polls for settle (no mutations in 500 ms window), reports `stable: true` within 2 s on static pages and `stable: false` after 10 s timeout; failures are non-fatal | `packages/agent-core/tests/conformance/mutation-monitor.test.ts` | T011 |
 | AC-07 | `screenshotExtractor.capture(page)` returns a JPEG `Buffer` ≤ 150 KB and ≤ 1280 px wide; uses Sharp for compression if Playwright's native output exceeds the cap | `packages/agent-core/tests/conformance/screenshot-extractor.test.ts` | T012 |
-| AC-08 | `contextAssembler.capture(url)` returns a complete `PageStateModel` with all 6 sections; total tokenized size < 1500 tokens for example.com, amazon.in, Shopify demo | `packages/agent-core/tests/conformance/context-assembler.test.ts` | T013 |
+| AC-08 | `contextAssembler.capture(url)` returns a complete `PageStateModel` with all 6 sections; total tokenized size < 1500 tokens for example.com, amazon.in, Peregrine PDP | `packages/agent-core/tests/conformance/context-assembler.test.ts` | T013 |
 | AC-09 | `perception/types.ts` exports Zod schemas for: `PageStateModel`, `Metadata`, `AccessibilityTree`, `FilteredDOM`, `InteractiveGraph`, `Visual`, `Diagnostics`; every schema validates fixture data without `z.any()` or unchecked unions | `packages/agent-core/tests/conformance/perception-types.test.ts` | T014 |
-| AC-10 | `tests/integration/phase1.test.ts` runs ContextAssembler against 3 fixture URLs (example.com, amazon.in, Shopify demo); all 3 produce valid PageStateModel < 1500 tokens and the test suite exits 0 | `packages/agent-core/tests/integration/phase1.test.ts` (this test IS the conformance proof) | T015 |
+| AC-10 | `tests/integration/phase1.test.ts` runs ContextAssembler against 3 fixture URLs (example.com, amazon.in, Peregrine PDP per PD-04 RESOLVED); all 3 produce valid PageStateModel < 1500 tokens and the test suite exits 0 | `packages/agent-core/tests/integration/phase1.test.ts` (this test IS the conformance proof) | T015 |
 
 AC-NN IDs are append-only on subsequent edits per Constitution R18.
 
@@ -227,7 +228,7 @@ If any stage brings the model back under 1500 tokens, accept with `diagnostics.w
 
 ## Success Criteria
 
-- **SC-001:** A new browser session yields a usable PageStateModel for example.com, amazon.in, and a Shopify demo in under 60 seconds total (NF-Phase1-03).
+- **SC-001:** A new browser session yields a usable PageStateModel for example.com, amazon.in, and the Peregrine PDP in under 60 seconds total (NF-Phase1-03).
 - **SC-002:** All 10 acceptance criteria (AC-01 through AC-10) pass in CI.
 - **SC-003:** No direct `import ... from 'playwright'` exists outside `BrowserManager.ts` and `adapters/BrowserEngine.ts` (R9 boundary verified by grep).
 - **SC-004:** The `BrowserEngine` adapter interface lets Phase 4+ (LLMAdapter / verification) compose against a stable seam without further changes.
@@ -275,7 +276,7 @@ All boxes ticked → spec eligible for `validated → approved` after impact.md 
 - **Playwright headless Chromium is the only browser engine in MVP.** Firefox + WebKit support deferred indefinitely.
 - **AX-tree from Playwright is the primary perception source.** Falls back to screenshot only when AX-tree returns < 10 nodes (handled in Phase 5; Phase 1 just logs `lowAxNodeCount`).
 - **Network conditions are unrestricted in tests.** Phase 1 integration tests assume the developer has internet access; offline / cached fixtures land in v1.2 per PRD §3.2.
-- **Shopify demo URL** is a stable Shopify test storefront URL provided in the test fixture (e.g., a publicly-accessible demo); if unavailable, the test marks that case `skip` rather than failing the suite.
+- **Peregrine PDP URL** is `https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy` (Shopify-powered D2C; locked Session 8 PD-04 RESOLVED — replaces the prior "Shopify demo (TBD)" placeholder). The walking-skeleton acceptance suite already asserts against this URL. If unavailable at T015 runtime (storefront down / colour variant retired), the test marks that case `skip` rather than failing the suite.
 - **Reduced T007 stealth scope is acceptable for the integration test on amazon.in.** If amazon.in's bot detection produces a CAPTCHA wall, Phase 1 acceptance still passes if the PageStateModel of the CAPTCHA wall is valid and < 1500 tokens. T007's purpose is per-session rotation, not detection evasion.
 - **PageStateModel token count is computed via `tiktoken` cl100k_base** (Claude/GPT-4 family tokenizer) — pinned in Phase 1 deps.
 - **`addInitScript` for fingerprint rotation** runs before navigation; no race with page-load fingerprinting code in MVP scope.

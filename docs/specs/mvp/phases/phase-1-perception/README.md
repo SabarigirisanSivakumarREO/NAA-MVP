@@ -36,7 +36,7 @@ governing_rules:
 
 ## Goal
 
-After Phase 1, calling `contextAssembler.capture(url)` returns a complete `PageStateModel` (metadata + accessibilityTree + filteredDOM + interactiveGraph + visual + diagnostics) under 1500 tokens for example.com, amazon.in, and a Shopify demo storefront. The browser closes cleanly. No detected automation arms race in MVP — basic per-session UA/viewport/fingerprint rotation only (full stealth deferred to v1.1).
+After Phase 1, calling `contextAssembler.capture(url)` returns a complete `PageStateModel` (metadata + accessibilityTree + filteredDOM + interactiveGraph + visual + diagnostics) under 1500 tokens for example.com, amazon.in, and the Peregrine PDP (Shopify-powered D2C; URL pinned in tasks.md T015 per PD-04 RESOLVED). The browser closes cleanly. No detected automation arms race in MVP — basic per-session UA/viewport/fingerprint rotation only (full stealth deferred to v1.1).
 
 ## Tasks
 

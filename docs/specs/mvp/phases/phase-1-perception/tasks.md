@@ -2,9 +2,9 @@
 title: Tasks — Phase 1 Browser Perception
 artifact_type: tasks
 status: approved
-version: 0.4
+version: 0.5
 created: 2026-04-27
-updated: 2026-05-05
+updated: 2026-05-08
 owner: engineering lead
 authors: [Claude (drafter)]
 
@@ -44,10 +44,16 @@ delta:
     - v0.1 → v0.2 — analyze-driven polish (A1, A4, X2 + C5); no task scope changes
     - v0.2 → v0.3 — frontmatter version sync with parallel spec.md/plan.md/impact.md polish (analyze findings M1-M4 + L1-L2 + L5-L6); ONE body edit on line 183 (T008 header) to propagate M3 — drops misattributed `REQ-BROWSE-PERCEPT-002` from T008, leaving only `REQ-BROWSE-PERCEPT-001`. PERCEPT-002 is HardFilter (T009 / R-06) per `docs/specs/final-architecture/06-browse-mode.md:370`; AccessibilityExtractor does no filtering. L3 (T-PHASE1-* tasks not in tasks-v2.md) and L4 (tasks-v2 v2.3.1 → v2.3.3 citation) deferred to v2.3.4 punch-list per INDEX.md v1.4.
     - v0.3 → v0.4 (2026-05-05 Session 8) — T014 marked `[x]` standalone (forward-pulled to week 1 per `implementation-roadmap.md` §6 cross-week ordering note: "T014 MUST land in week 1 alongside T-SKELETON-002 for contract test feasibility"). T014 implementation files: `packages/agent-core/src/perception/types.ts` (PageStateModel + sub-schemas, MAX_AX_TREE_DEPTH constant, checkAxTreeDepth helper) + `packages/agent-core/tests/unit/perception/types.test.ts` (15 tests covering AC-09). Phase 1 overall status remains `approved` — only T014 is forward-pulled; T006-T013 + T015 + T-PHASE1-{TESTS,DOC,LOGGER,ADAPTERS-README,ROLLUP} still `[ ]` and execute in week 2 per the roadmap.
+    - v0.4 → v0.5 (2026-05-08 master orchestrator Gate 1 REVISE) — three coordinated patches, no AC-NN/T-NNN scope changes:
+      (a) absorbs PD-04 RESOLVED — "Shopify demo" → "Peregrine PDP" across goal §, T013 Acceptance, T015 Outcome + Constraints + per-task kill criteria (master orchestrator finding M2-B1 closed);
+      (b) C1 BINDING from Session 7 R17.4 review transcribed into T015 brief — adds explicit `Constraints` line citing plan.md §"T015 integration test timeout budget", new `Verify` step asserting `waitUntil: 'domcontentloaded'` is used (not `'load'`), new per-task kill criterion for budget-table compliance (master orchestrator finding M1-C1 closed);
+      (c) T-PHASE1-TESTS expanded from single bullet to full Brief format (Outcome / Context / Constraints / Non-goals / Acceptance / Integration / Verify) parity with T006-T015 (master orchestrator finding L1-C2 closed).
   impacted:
     - spec.md + plan.md + impact.md (v0.2 → v0.3) — frontmatter sync
+    - spec.md (v0.3 → v0.3.1) + plan.md (v0.3 → v0.3.1) + impact.md (v0.3 → v0.3.1) parallel sync for v0.5 patches
   unchanged:
-    - T006, T007, T009-T015 + T-PHASE1-* polish tasks (TESTS, DOC, LOGGER, ADAPTERS-README, ROLLUP) — bodies, dependency graph, default + per-task kill criteria all preserved verbatim from v0.2 (only T008 header REQ-ID list trimmed for M3)
+    - T006, T007, T009-T012, T014 + T-PHASE1-{DOC,LOGGER,ADAPTERS-README,ROLLUP} polish tasks — bodies, dependency graph, default + per-task kill criteria all preserved verbatim from v0.4
+    - All AC-NN and T-NNN IDs (R18 append-only preserved); v0.5 changes are bodies only on T015 + T-PHASE1-TESTS plus mechanical Peregrine swap
 
 governing_rules:
   - Constitution R3 (TDD)
@@ -136,7 +142,19 @@ Add Phase 1 deps to `packages/agent-core/package.json`:
 
 Two foundations must precede the rest:
 
-- [ ] **T-PHASE1-TESTS [P] [SETUP]** Author all 9 conformance test files at `packages/agent-core/tests/conformance/*.test.ts` + the Phase 1 integration test at `packages/agent-core/tests/integration/phase1.test.ts`. Every `test()` block per AC-01 through AC-10 MUST FAIL initially (modules don't exist yet). R3.1 TDD enforcement.
+- [ ] **T-PHASE1-TESTS [P] [SETUP]** Author Phase 1 conformance + integration test scaffold (R3.1 TDD)
+  - **Brief:**
+    - **Outcome:** All 9 conformance test files exist at `packages/agent-core/tests/conformance/*.test.ts` (one per extractor + types, paths per spec.md AC table) plus the Phase 1 integration test at `packages/agent-core/tests/integration/phase1.test.ts`. Every `test()` block carries an `@AC-NN` doc-comment anchor matching spec.md AC-01 through AC-10. All tests MUST FAIL initially because the modules under test don't exist yet (T006-T015 close the loop). `pnpm test` exits non-zero on each test, but `pnpm typecheck` passes (test files are syntactically + type-correct stubs).
+    - **Context:** R3.1 TDD enforcement — tests authored FIRST then implementation closes the loop. spec.md AC table (lines 153-162) is the canonical mapping of AC-NN → conformance test path → linked task. plan.md File table (lines 213-222) lists each conformance test file. Spec corpus already pre-defines `expected_test` paths via `pnpm spec:matrix` output; T-PHASE1-TESTS lands them.
+    - **Constraints:** Vitest `describe + test` blocks. Each test file < 100 lines (stubs only). Each test block carries `@AC-NN` doc-comment for `spec:matrix` anchor detection. NO actual implementation logic — just `expect(<not-yet-implemented>).toBe(...)` style stubs that fail because the import fails or `vi.fn()` returns undefined. NO disabled tests (`.skip` / `.todo` forbidden — every test must FAIL, not skip).
+    - **Non-goals:** No implementation of extractors. No fixture data (Phase 1 fixtures land per-task with their conformance pair). No mocking strategy beyond placeholder `vi.fn()`.
+    - **Acceptance:** All 10 test files exist; `pnpm spec:matrix --phase=1 --json` reports `coverage_pct: 100` for AC anchors (test PLAN coverage); `pnpm test` reports 10 failing test files (one per AC) with import / runtime errors expected; `pnpm typecheck` passes.
+    - **Integration:** Foundation gate — T006-T013 + T015 each turn one or more of these tests GREEN as their implementations land. Drives the TDD loop.
+    - **Verify:** `pnpm spec:matrix --phase=1` shows AC anchors detected (10/10 anchored); `pnpm test:conformance` reports failures with module-not-found errors (expected pre-T006).
+  - **Files:** `packages/agent-core/tests/conformance/{browser-manager,stealth-config,accessibility-extractor,hard-filter,soft-filter,mutation-monitor,screenshot-extractor,context-assembler,perception-types}.test.ts` + `packages/agent-core/tests/integration/phase1.test.ts`
+  - **dep:** T002 (Phase 0)
+  - **Smoke test:** `pnpm spec:matrix --phase=1 --json | jq '.summary.coverage_pct'` returns 100 (AC anchors all present); `pnpm test 2>&1 | grep -c "10 failed"` equals 1
+  - **Kill criteria:** default block + extra: any attempt to use `.skip` or `.todo` to bypass failing → STOP, R3.1 violation
 - [ ] **T014 [SETUP]** PageStateModel types + Zod schemas (`perception/types.ts`). Even though it's listed last in tasks-v2 ordering, type definitions block 4 of 5 extractors. Land BEFORE T008-T013.
 
 **Checkpoint:** Conformance tests + integration test exist and FAIL. PageStateModel + sub-schemas exported. Then T006 → T007 → T008 ... → T013 → T015 can proceed.
@@ -145,7 +163,7 @@ Two foundations must precede the rest:
 
 ## Phase 3 — User Story 1: Browser captures usable PageStateModel for any public URL (Priority: P1) 🎯 MVP
 
-**Goal:** ContextAssembler.capture(url) returns a complete < 1500-token PageStateModel for example.com, amazon.in, and Shopify demo.
+**Goal:** ContextAssembler.capture(url) returns a complete < 1500-token PageStateModel for example.com, amazon.in, and Peregrine PDP.
 
 **Independent Test:** `pnpm -F @neural/agent-core test integration/phase1` — all 3 sites pass.
 
@@ -258,7 +276,7 @@ Two foundations must precede the rest:
     - **Context:** plan.md v0.2 "Phase 1 Design" perception step 6. This task integrates 6 components plus the BrowserEngine — highest integration risk in Phase 1.
     - **Constraints:** File < 250 lines. Methods < 50 lines (likely 1-2 helper methods + 3 shrink helpers, one per stage). Pino correlation: session_id + page_url + extractor (set per sub-call via child logger).
     - **Non-goals:** No retry on extractor failures (each extractor handles its own); ContextAssembler aggregates errors into `diagnostics.errors`. Does NOT populate `_extensions` (Phase 7+ responsibility).
-    - **Acceptance:** AC-08 — PageStateModel returned for example.com / amazon.in / Shopify demo, < 1500 tokens each.
+    - **Acceptance:** AC-08 — PageStateModel returned for example.com / amazon.in / Peregrine PDP, < 1500 tokens each.
     - **Integration:** Output is the contract for Phase 2 MCP tools (`browser_get_state`).
     - **Verify:** `pnpm test:conformance -- context-assembler` green.
   - **Files:** `packages/agent-core/src/perception/ContextAssembler.ts`, `packages/agent-core/src/perception/index.ts` (barrel); modify `packages/agent-core/package.json` to add `tiktoken` dep
@@ -284,22 +302,25 @@ Two foundations must precede the rest:
   - **Smoke test:** `PageStateModelSchema.parse(<fixture>)` succeeds; cyclic AX-tree fixture parses without infinite recursion; Phase 1 capture leaves `_extensions === undefined`
   - **Kill criteria:** default block + extra: any attempt to populate `_extensions` from Phase 1 code → STOP, that's Phase 7+ scope
 
-- [ ] **T015 [US-1] Phase 1 integration test** (AC-10) **— extended kill criteria**
+- [ ] **T015 [US-1] Phase 1 integration test** (AC-10) **— C1 BINDING + extended kill criteria**
   - **Brief:**
-    - **Outcome:** `tests/integration/phase1.test.ts` runs ContextAssembler against 3 fixture URLs (example.com, amazon.in, Shopify demo); asserts PageStateModel < 1500 tokens each + valid Zod parse + no zombie processes.
-    - **Context:** This is the gate for Phase 1 exit. Vitest integration suite (NOT Playwright Test — internal Playwright API used; Playwright Test is for `tests/acceptance/` Phase 9).
-    - **Constraints:** File < 200 lines. Wall-clock < 60 s for all 3 sites (NF-Phase1-03). Skips Shopify demo if URL unavailable (no failure on infra issue).
-    - **Non-goals:** No analysis. No LLM. No DB writes.
-    - **Acceptance:** AC-10 — exits 0; 3 sites produce valid < 1500-token PageStateModel.
-    - **Integration:** Phase 1 acceptance gate. After this passes, Phase 1 complete; rollup follows.
-    - **Verify:** `pnpm -F @neural/agent-core test integration/phase1` exits 0 within 60 s.
+    - **Outcome:** `packages/agent-core/tests/integration/phase1.test.ts` runs ContextAssembler against 3 fixture URLs: `https://example.com` (simple control), `https://www.amazon.in` (complex e-commerce; CAPTCHA wall acceptable), `https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy` (Peregrine PDP — Shopify-powered D2C; PD-04 RESOLVED Session 8). Asserts PageStateModel < 1500 tokens each + valid Zod parse via `PageStateModelSchema.parse()` + no zombie Chromium processes after `session.close()`.
+    - **C1 BINDING (from Session 7 R17.4 review — `phase-1-perception/review-notes.md` C1):** This task MUST consume the per-step Playwright timeout budget table defined in plan.md §"T015 integration test timeout budget (C1 BINDING)". Specifically: `page.goto({ waitUntil: 'domcontentloaded', timeout: 10000 })` (NOT `'load'`); `mutationMonitor.observe({ timeoutMs: 5000 })`; soft-budgets 3 s for AX extract + 1 s for screenshot. Per-site total ≤ 20 s; 3-site total ≤ 60 s (NF-Phase1-03). Document the budget table in `phase1.test.ts` header comment. PR Contract MUST cite this section in the "Review focus" block (PRD §10.9).
+    - **Context:** This is the Phase 1 acceptance gate. Vitest integration suite (NOT Playwright Test — internal Playwright API used; Playwright Test is for `tests/acceptance/` Phase 9). The walking-skeleton acceptance suite at `tests/acceptance/walking-skeleton.spec.ts` is a separate gate; Phase 1 supersession of T-SKELETON-002 (BrowserManager fixture stub) must keep AC-W1..W7 green.
+    - **Constraints:** File < 200 lines. Wall-clock < 60 s for all 3 sites (NF-Phase1-03 enforced via C1 BINDING budget table — see plan.md). Skips Peregrine PDP fixture if URL unavailable at runtime (storefront down / variant retired); does NOT retry on flake (per kill criterion). `waitUntil: 'domcontentloaded'` everywhere (`'load'` is FORBIDDEN per C1 BINDING).
+    - **Non-goals:** No analysis. No LLM. No DB writes. No bot-detection evasion (T007 reduced scope; full stealth is v1.1).
+    - **Acceptance:** AC-10 — exits 0; 3 sites produce valid < 1500-token PageStateModel; wall-clock under 60 s; `waitUntil` value is `'domcontentloaded'` in all `page.goto` calls (grep test asserts).
+    - **Integration:** Phase 1 acceptance gate. After this passes, Phase 1 complete; T-PHASE1-ROLLUP follows. Walking-skeleton.spec.ts must remain green throughout Phase 1 (T013 supersession of T-SKELETON-002 stub).
+    - **Verify:** `pnpm -F @neural/agent-core test integration/phase1` exits 0 within 60 s; `grep -n "waitUntil" packages/agent-core/tests/integration/phase1.test.ts | grep -v "domcontentloaded"` returns no matches (C1 BINDING enforcement); `pnpm test:integration` (= walking-skeleton acceptance) still 12/12 green.
   - **Files:** `packages/agent-core/tests/integration/phase1.test.ts`
   - **dep:** T013 (and transitively all of T006-T014)
   - **Smoke test:** is itself the smoke test
   - **Per-task kill criteria (extends default):**
-    - "Wall-clock > 60 s for 3 sites" → R23 trigger; ContextAssembler is too slow.
-    - "amazon.in CAPTCHA wall produces invalid PageStateModel (e.g., 0 nodes)" → re-evaluate spec assumption; per spec edge case, the CAPTCHA wall PageStateModel should still validate.
-    - "Shopify demo URL flakes 3+ times" → mark `skip` rather than retry; flag for fixture refresh.
+    - "Wall-clock > 60 s for 3 sites" → R23 trigger; ContextAssembler is too slow OR per-step budget exceeded — investigate which step blew its allocation.
+    - "Per-step budget exceeded (e.g., `page.goto` > 10 s)" → R23 trigger (C1 BINDING violation); fix the step budget OR re-evaluate fixture.
+    - "`waitUntil: 'load'` appears in any `page.goto` call" → R23 trigger immediately (C1 BINDING violation); SPA progressive render will exceed budget.
+    - "amazon.in CAPTCHA wall produces invalid PageStateModel (e.g., 0 nodes)" → re-evaluate spec edge case; CAPTCHA wall PageStateModel should still validate.
+    - "Peregrine PDP URL flakes 3+ times" → mark `skip` rather than retry; flag fixture refresh in PR Contract.
 
 **Checkpoint:** After T006-T015 + T-PHASE1-TESTS green, all 10 ACs pass. Phase 1 ready for rollup (R19) → `phase-1-current.md`.
 

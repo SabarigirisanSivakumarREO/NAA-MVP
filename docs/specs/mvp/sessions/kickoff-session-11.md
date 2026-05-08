@@ -82,30 +82,42 @@ Current state (verify against handover block 1):
 - Walking-skeleton acceptance suite at tests/acceptance/walking-skeleton.spec.ts
   is THE Phase 1 supersession gate — must stay green through T006-T015
 
-Remaining week-2 tasks (10 total per implementation-roadmap.md §7 Week 2):
-☐ T-PHASE1-TESTS — Phase 1 conformance test scaffold (TDD R3.1 first;
-   see Phase 1 tasks.md polish-task list)
-☐ T006 — BrowserEngine adapter (Playwright wrapper; pin Chromium version)
-☐ T007 — OverlayDismisser (banners, modals dismissed before capture)
-☐ T008 — RateLimiter (per-domain throttling + robots/ToS check stub
-   until Phase 4 T080a RobotsChecker lands week 5)
-☐ T009 — Page navigation with waitUntil: 'domcontentloaded' (per Phase 1
-   C1 BINDING from Session 7 review — see handover block 2)
+Remaining week-2 tasks per AUTHORITATIVE phase-1-perception/tasks.md v0.5:
+   (NOTE: this kickoff list was misnumbered in v1.5 — corrected 2026-05-08
+    Session 12 master orchestrator Gate 1 REVISE per finding L2-F1.
+    If anything below disagrees with tasks.md v0.5, tasks.md wins.)
+
+☐ T-PHASE1-TESTS — Author 9 conformance test stubs + 1 integration test stub
+   (TDD R3.1 first; full Brief format added in tasks.md v0.5; expected to
+   FAIL initially until T006-T015 close the loop)
+☐ T006 — BrowserManager (Playwright Chromium wrapper implementing the
+   BrowserEngine adapter; first R9 concrete adapter)
+☐ T007 — StealthConfig (REDUCED scope: per-session UA + viewport + WebGL
+   fingerprint rotation; NO playwright-extra; full stealth deferred to v1.1)
+☐ T008 — AccessibilityExtractor (page.accessibility.snapshot wrapper;
+   warns at <50 nodes)
+☐ T009 — HardFilter (removes hidden/disabled/aria-hidden/zero-dim;
+   degenerate-page floor per spec.md AC-04 v0.2)
 ☐ T010 — SoftFilter top-30 ranking (R4.4 multiplicative-decay invariant;
    verifiable via grep test in T-PHASE1-TESTS)
-☐ T011 — InteractiveGraph extractor (clickable / typeable / submittable
-   selector arrays)
-☐ T012 — MutationMonitor (observes page settling; 100ms quiescence window
-   per spec)
+☐ T011 — MutationMonitor (addInitScript-injected MutationObserver; 500 ms
+   quiescence window; 10 s timeout)
+☐ T012 — ScreenshotExtractor (Playwright JPEG quality 80 + Sharp
+   recompression on >150 KB; ≤1280 px wide)
 ☐ T013 — ContextAssembler (composes real PageStateModel matching T014
-   schema; supersedes T-SKELETON-002 stub) — R20 impact.md required at
-   this supersession
-☐ T015 — Phase 1 integration test (3-site fixture set including Peregrine
-   PDP per PD-04 effective resolution; per-step Playwright timeout budgets
-   ≤20s/site / ≤60s/3-sites per C1 BINDING)
-☐ Phase 1 polish tasks: T-PHASE1-LOGGER + T-PHASE1-ADAPTERS-README +
-   T-PHASE1-DOC + T-PHASE1-ROLLUP (final R17 lifecycle bump
-   approved → implemented + R19 phase-1-current.md rollup per CLAUDE.md §8c)
+   schema; deterministic shrink ladder; supersedes T-SKELETON-002 stub) —
+   R20 forward-compatibility seam already covered by impact.md v0.3.1
+☐ T015 — Phase 1 integration test (3-site fixture: example.com + amazon.in
+   + Peregrine PDP per PD-04 RESOLVED; C1 BINDING per-step Playwright
+   timeout budgets ≤20 s/site / ≤60 s/3-sites with waitUntil:'domcontentloaded'
+   — budget table now in plan.md §"T015 integration test timeout budget"
+   v0.3.1; T015 brief in tasks.md v0.5 cites it explicitly)
+☐ Phase 1 polish tasks: T-PHASE1-DOC + T-PHASE1-LOGGER + T-PHASE1-ADAPTERS-README
+   + T-PHASE1-ROLLUP (final R17 lifecycle bump approved → implemented +
+   R19 phase-1-current.md rollup per CLAUDE.md §8c)
+
+(T014 PageStateModel schemas was forward-pulled to week 1 commit `077ec86`
+ per implementation-roadmap.md §6; already DONE.)
 
 Pre-implementation gates (per CLAUDE.md §8c + §8d):
 1. Run /speckit.analyze on Phase 1 — re-verify mechanical consistency
