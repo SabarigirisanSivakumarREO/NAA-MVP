@@ -215,7 +215,7 @@ Two foundations must precede the rest:
   - **Smoke test:** Extract AX-tree from amazon.in returns > 50 nodes including searchbox
   - **Kill criteria:** default block
 
-- [ ] **T009 [US-1] HardFilter** (AC-04, REQ-BROWSE-PERCEPT-002)
+- [x] **T009 [US-1] HardFilter** (AC-04, REQ-BROWSE-PERCEPT-002) — **DONE 2026-05-08** (master orchestrator Stage 2 Wave 4; conformance 4/4 PASS; pure recursive prune; degenerate-page floor flag; reductionPct on percent scale 0-100; test fixture's typical-page reduction is 48.4% — Stage 2.5 follow-up to strengthen fixture for strict >50% spec verification, T015 integration test will validate against real amazon.in DOM)
   - **Brief:**
     - **Outcome:** `perception/HardFilter.ts` exports `hardFilter.apply(tree: AccessibilityTree): { tree: AccessibilityTree; reductionPct: number; reductionFloorWaived: boolean }`. Recursively prunes nodes where any of: `hidden=true`, `disabled=true`, `aria-hidden="true"`, `boundingBox.width=0 OR height=0`. Computes reduction percent. **Degenerate-page floor (per spec v0.2 AC-04):** if input has < 20 pre-filter nodes, reduction floor (> 50%) is waived; filter is still applied but no minimum reduction enforced; `reductionFloorWaived: true` in return payload.
     - **Context:** plan.md "Phase 1 Design" perception step 2. spec.md AC-04 v0.2 documents floor. Pure function.

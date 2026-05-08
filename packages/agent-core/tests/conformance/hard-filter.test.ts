@@ -13,7 +13,6 @@
  * floor is waived and `reductionFloorWaived: true` is returned.
  */
 import { describe, expect, test } from 'vitest';
-// @ts-expect-error — module deliberately not yet implemented (T009)
 import { hardFilter } from '../../src/perception/HardFilter.js';
 
 interface AxNode {
