@@ -34,4 +34,7 @@ test-results/
 # + cost tracking + verdict YAMLs per phase. Local-only; never committed.
 .phase-state/
 
+# Claude Code session-internal worktrees (auto-managed; embedded git repos)
+.claude/worktrees/
+
 .claude/settings.local.json
