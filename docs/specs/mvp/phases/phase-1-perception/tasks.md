@@ -142,7 +142,7 @@ Add Phase 1 deps to `packages/agent-core/package.json`:
 
 Two foundations must precede the rest:
 
-- [ ] **T-PHASE1-TESTS [P] [SETUP]** Author Phase 1 conformance + integration test scaffold (R3.1 TDD)
+- [x] **T-PHASE1-TESTS [P] [SETUP]** Author Phase 1 conformance + integration test scaffold (R3.1 TDD) — **DONE 2026-05-08 commit `e8d8b78`** (master orchestrator Stage 2 Wave 1; 10 files / 897 lines; spec:matrix coverage_pct: 100; AC-09 passes per T014 forward-pull exception; 9 others fail per R3.1 expected state)
   - **Brief:**
     - **Outcome:** All 9 conformance test files exist at `packages/agent-core/tests/conformance/*.test.ts` (one per extractor + types, paths per spec.md AC table) plus the Phase 1 integration test at `packages/agent-core/tests/integration/phase1.test.ts`. Every `test()` block carries an `@AC-NN` doc-comment anchor matching spec.md AC-01 through AC-10. All tests MUST FAIL initially because the modules under test don't exist yet (T006-T015 close the loop). `pnpm test` exits non-zero on each test, but `pnpm typecheck` passes (test files are syntactically + type-correct stubs).
     - **Context:** R3.1 TDD enforcement — tests authored FIRST then implementation closes the loop. spec.md AC table (lines 153-162) is the canonical mapping of AC-NN → conformance test path → linked task. plan.md File table (lines 213-222) lists each conformance test file. Spec corpus already pre-defines `expected_test` paths via `pnpm spec:matrix` output; T-PHASE1-TESTS lands them.
@@ -171,7 +171,7 @@ Two foundations must precede the rest:
 
 ### Implementation tasks
 
-- [ ] **T006 [US-1] BrowserManager** (AC-01, REQ-BROWSE-NODE-003)
+- [x] **T006 [US-1] BrowserManager** (AC-01, REQ-BROWSE-NODE-003) — **DONE 2026-05-08** (master orchestrator Stage 2 Wave 2; BrowserEngine.ts + BrowserManager.ts modified; AC-01 conformance 2/2 PASS; walking-skeleton 12/12 GREEN preserved; R9 boundary verified — `from 'playwright'` only in BrowserManager.ts; smoke test: zombie process delta = 0)
   - **Brief:**
     - **Outcome:** `packages/agent-core/src/adapters/BrowserEngine.ts` exports `BrowserEngine` interface + `SessionOptsSchema` + `BrowserSession` types. `packages/agent-core/src/browser-runtime/BrowserManager.ts` exports `BrowserManager` class implementing `BrowserEngine` via Playwright Chromium. `BrowserManager.newSession(opts?)` launches headless Chromium, applies opts, returns BrowserSession with Pino child logger (correlation field `session_id` = uuid).
     - **Context:** plan.md "Phase 1 Design" — adapter interface design. impact.md captures the contract. R9 enforced: BrowserManager + BrowserEngine.ts are the ONLY files importing `playwright`. BrowserSession.page is the Phase-1-minimal wrapper exposing only goto/accessibility.snapshot/screenshot/addInitScript/evaluate/waitForLoadState.
