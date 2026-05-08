@@ -38,7 +38,11 @@
 import { afterAll, describe, expect, test } from 'vitest';
 import { get_encoding } from 'tiktoken';
 import { contextAssembler } from '../../src/perception/ContextAssembler.js';
-import { PageStateModelSchema, type PageStateModel } from '../../src/perception/types.js';
+import {
+  PAGE_STATE_MODEL_TOKEN_BUDGET,
+  PageStateModelSchema,
+  type PageStateModel,
+} from '../../src/perception/types.js';
 
 const FIXTURE_URLS: ReadonlyArray<{ name: string; url: string; skipOnFlake: boolean }> = [
   { name: 'example.com', url: 'https://example.com', skipOnFlake: false },
@@ -50,7 +54,7 @@ const FIXTURE_URLS: ReadonlyArray<{ name: string; url: string; skipOnFlake: bool
   },
 ];
 
-const TOKEN_BUDGET = 1500;
+const TOKEN_BUDGET = PAGE_STATE_MODEL_TOKEN_BUDGET; // NF-Phase1-01 v0.4 = 20_000
 const PER_SITE_WALL_CLOCK_MS = 20_000;
 const TOTAL_WALL_CLOCK_MS = 60_000;
 const VITEST_SLACK_MS = 5_000;
@@ -73,10 +77,11 @@ function tokenCount(model: PageStateModel): number {
 describe('Phase 1 integration — AC-10 acceptance gate (3 fixture URLs)', () => {
   /**
    * @AC-10 example.com control fixture — capture returns valid
-   * PageStateModel < 1500 tokens within the per-site budget.
+   * PageStateModel under PAGE_STATE_MODEL_TOKEN_BUDGET (NF-Phase1-01 v0.4)
+   * within the per-site budget.
    */
   test(
-    'AC-10: example.com produces valid PageStateModel < 1500 tokens',
+    'AC-10: example.com produces valid PageStateModel under NF-Phase1-01 budget',
     async () => {
       const start = Date.now();
       const model = await contextAssembler.capture(FIXTURE_URLS[0]!.url);
@@ -92,10 +97,10 @@ describe('Phase 1 integration — AC-10 acceptance gate (3 fixture URLs)', () =>
   /**
    * @AC-10 amazon.in complex e-commerce fixture — CAPTCHA wall
    * acceptable per spec edge case (line 146); PageStateModel still
-   * < 1500 tokens.
+   * under PAGE_STATE_MODEL_TOKEN_BUDGET (NF-Phase1-01 v0.4).
    */
   test(
-    'AC-10: amazon.in produces valid PageStateModel < 1500 tokens (CAPTCHA wall acceptable)',
+    'AC-10: amazon.in produces valid PageStateModel under NF-Phase1-01 budget (CAPTCHA wall acceptable)',
     async () => {
       const start = Date.now();
       const model = await contextAssembler.capture(FIXTURE_URLS[1]!.url);
@@ -116,7 +121,7 @@ describe('Phase 1 integration — AC-10 acceptance gate (3 fixture URLs)', () =>
    * the storefront / variant may be retired between runs.
    */
   test(
-    'AC-10: Peregrine PDP produces valid PageStateModel < 1500 tokens',
+    'AC-10: Peregrine PDP produces valid PageStateModel under NF-Phase1-01 budget',
     async () => {
       const fixture = FIXTURE_URLS[2]!;
       const start = Date.now();

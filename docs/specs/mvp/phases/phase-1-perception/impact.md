@@ -2,9 +2,9 @@
 title: Impact Analysis — Phase 1 Browser Perception (BrowserEngine adapter + PageStateModel)
 artifact_type: impact
 status: approved
-version: 0.3.2
+version: 0.4
 created: 2026-04-27
-updated: 2026-05-08
+updated: 2026-05-09
 owner: engineering lead
 
 supersedes: null
@@ -35,6 +35,7 @@ delta:
     - v0.2 → v0.3 — frontmatter version sync with parallel spec.md/plan.md/tasks.md polish (analyze findings M1-M4 + L1-L2 + L5-L6); impact.md body unchanged
     - v0.3 → v0.3.1 (2026-05-08 master orchestrator Gate 1 REVISE) — Forward Contract section appended with Phase 1b + Phase 1c rows (per Session 7 review J1 / standing condition C2 OPTIONAL). Aligns impact.md with `tasks-v2.md:236` T1B-001 PricingExtractor `dep: T013, T014` + INDEX.md row 1c "wraps PageStateModel into a PerceptionBundle envelope". Frontmatter sync with parallel spec.md/plan.md/tasks.md REVISE patches. No risk level / breaking flag changes.
     - v0.3.1 → v0.3.2 (2026-05-08 Stage 2 Wave 2 R11.4 — surfaced by T006 dispatch) — BrowserPage minimal-surface narrative (line ~122) updated to cite `ariaSnapshot` instead of removed `accessibility.snapshot` (Playwright 1.57+ removed the legacy API). BrowserEngine "Before/After" interface block (line 100-119) preserved verbatim — the canonical TypeScript interface lives in `packages/agent-core/src/adapters/BrowserEngine.ts` (also patched in same commit), and that file is the Single Source of Truth for the type signature; this impact.md narrative tracks the high-level minimal-surface contract. No risk level / breaking flag changes; the Phase 1 BrowserEngine forward contract is still additive (new shared contract introduced; no prior consumers existed). Frontmatter sync with parallel spec.md (v0.3.2) / plan.md (v0.3.2) / tasks.md (v0.6).
+    - v0.3.2 → v0.4 (2026-05-09 Wave 7 R11.4 — surfaced by T015) — three "1500"-token references updated to "20,000" tokens to align with spec.md v0.4 NF-Phase1-01 amendment: PageStateModel "After" sub-schema narrative (line ~144), Risks "token-budget invariant" bullet (line ~158; brittleness wording preserved — invariant is now "PageStateModel < 20,000 tokens" but the regression-detection point still applies), Verification table row (line ~220) acceptance criterion. Frontmatter sync with parallel spec.md / plan.md / tasks.md v0.4 + v0.7. No risk level / breaking flag changes; the relaxation is additive (more headroom for downstream consumers), not breaking.
   impacted:
     - spec.md + plan.md + tasks.md (v0.2 → v0.3) — frontmatter sync
     - spec.md (v0.3 → v0.3.1) + plan.md (v0.3 → v0.3.1) + tasks.md (v0.4 → v0.5) — parallel sync for v0.3.1 master orchestrator REVISE
@@ -141,7 +142,7 @@ export const PageStateModelSchema = z.object({
 export type PageStateModel = z.infer<typeof PageStateModelSchema>;
 ```
 
-Sub-schemas (Metadata, AccessibilityTree, FilteredDOM, InteractiveGraph, Visual, Diagnostics) defined in same file. Total JSON-stringified size MUST tokenize to < 1500 tokens via `cl100k_base` per NF-Phase1-01.
+Sub-schemas (Metadata, AccessibilityTree, FilteredDOM, InteractiveGraph, Visual, Diagnostics) defined in same file. Total JSON-stringified size MUST tokenize to < 20,000 tokens via `cl100k_base` per NF-Phase1-01 v0.4.
 
 ## Breaking changes
 
@@ -155,7 +156,7 @@ Not applicable (additive). Future schema changes to either contract will require
 
 **Why MEDIUM (not LOW):**
 - This sets the *pattern* for all future adapters and shared schemas in Neural. A subtle mistake (e.g., leaking `playwright.Page` directly through `BrowserSession.page` instead of re-typing) would compound across every consumer.
-- The token-budget invariant (`PageStateModel < 1500 tokens`) is brittle: if a sub-schema (e.g., FilteredDOM) bloats in a later phase, the whole pipeline silently regresses unless conformance tests catch it.
+- The token-budget invariant (`PageStateModel < 20,000 tokens` v0.4) is brittle: if a sub-schema (e.g., FilteredDOM) bloats in a later phase, the whole pipeline silently regresses unless conformance tests catch it.
 
 **Why not HIGH:**
 - No DB schema, no auth, no payments, no untrusted-input paths touched.
@@ -217,7 +218,7 @@ Per analyze finding X2, this section makes the Phase 1 → downstream import sur
 | Check | Test |
 |---|---|
 | BrowserEngine interface stable across Phase 1 implementations | Type-check passes; `BrowserManager extends BrowserEngine` compiles |
-| PageStateModel < 1500 tokens on 3 sites | `tests/integration/phase1.test.ts` (T015) — AC-10 |
+| PageStateModel < 20,000 tokens on 3 sites (v0.4) | `tests/integration/phase1.test.ts` (T015) — AC-10 |
 | No raw Playwright type leakage upstream | Grep: `from 'playwright'` MUST only appear in `adapters/BrowserEngine.ts` + `browser-runtime/BrowserManager.ts` (verified manually + ESLint rule lands Phase 4) |
 | Zod schemas catch malformed extractor output | `tests/conformance/perception-types.test.ts` (T014) — AC-09 |
 

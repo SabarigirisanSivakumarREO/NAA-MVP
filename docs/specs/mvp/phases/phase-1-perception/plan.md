@@ -2,9 +2,9 @@
 title: Implementation Plan — Phase 1 Browser Perception
 artifact_type: plan
 status: approved
-version: 0.3.2
+version: 0.4
 created: 2026-04-27
-updated: 2026-05-08
+updated: 2026-05-09
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -51,6 +51,7 @@ delta:
       (b) NEW §"T015 integration test timeout budget (C1 BINDING)" added between §Per-extractor design and §Test strategy — pins per-step Playwright timeouts ≤ 20 s/site (≤ 60 s/3-sites) with `waitUntil: 'domcontentloaded'` per Session 7 R17.4 review C1 BINDING (master orchestrator finding M1-C1 closed; addresses doom-finding D5 from review-notes.md preventively);
       (c) NEW §"Effort estimate" added after §Phase 1 Design (C3 OPTIONAL from Session 7 review consumed) — per-task hour table totaling ~24-30 h engineering for week-sequencing calibration parity with Phase 0b's plan.md.
     - v0.3.1 → v0.3.2 (2026-05-08 Stage 2 Wave 2 R11.4 — surfaced by T006 dispatch) — four body lines updated to cite `page.ariaSnapshot()` (Playwright 1.57+; YAML output) instead of removed `page.accessibility.snapshot()`: §Phase 0 Research item 1, §Phase 1 Design > Adapter interface (T006 dep), §Per-extractor design item 1 (AccessibilityExtractor / T008), §Effort estimate row T008. Plan now documents the YAML→AccessibilityNodeSchema parse step T008 owns. No scope changes.
+    - v0.3.2 → v0.4 (2026-05-09 Wave 7 R11.4 — surfaced by T015 integration test) — token budget references updated from 1500 to 20,000 to align with spec.md v0.4 NF-Phase1-01 amendment. Affected lines: §Constraints Inherited (NF-Phase1-01 line ~117), §Per-extractor design item 6 (T013 ContextAssembler oversize handling), §"T015 integration test timeout budget" tokenize budget note, §Test strategy fixture list, §Effort estimate. Empirical floor (amazon.in 12,485 / Peregrine 4,012) measured at T015 commit fce1f4b drove the amendment. No design / architecture / scope changes — only the magnitude of NF-Phase1-01.
   impacted:
     - spec.md (v0.3 → v0.3.1) — Peregrine swap parallel sync
     - tasks.md (v0.4 → v0.5) — Peregrine swap + C1 BINDING transcribed in T015 brief + T-PHASE1-TESTS Brief format polish
@@ -114,7 +115,7 @@ Phase 1 establishes the browser perception layer. The R9 adapter pattern lands f
 | Deployment | Fly.io + Vercel | architecture.md §6.4 | ❌ Phase 9 |
 
 **Performance / Scale targets:**
-- NF-Phase1-01: PageStateModel < 1500 tokens (cl100k_base)
+- NF-Phase1-01: PageStateModel < 20,000 tokens (v0.4) (cl100k_base)
 - NF-Phase1-02: MutationMonitor settle < 2s on static
 - NF-Phase1-03: Phase 1 integration test < 60s wall-clock for 3 sites
 - NF-Phase1-04: Screenshot ≤ 150 KB
@@ -287,7 +288,7 @@ Per `phase-1-perception/review-notes.md` C1 BINDING + the doom-finding D5 mitiga
 | `mutationMonitor.observe({ timeoutMs: 5000 })` | 5 s | Settle window per AC-06 (spec.md says 10 s default; 5 s is the T015 integration-test override to fit budget). Static pages settle < 2 s per NF-Phase1-02; 5 s is comfortable. |
 | `accessibilityExtractor.extract()` | 3 s soft-budget | Warn via Pino timing log if exceeded; do NOT throw. amazon.in deep DOM is the worst case. |
 | `screenshotExtractor.capture()` | 1 s soft-budget | Sharp resize is the slow path; native Playwright JPEG with quality 80 typically returns < 500 ms. |
-| `tokenize()` | < 1 s | Not in critical path; cl100k_base on a < 1500 token JSON is sub-second. |
+| `tokenize()` | < 1 s | Not in critical path; cl100k_base on a < 20,000 token JSON is sub-second. |
 | **Per-site total (worst case)** | **≤ 20 s** | Sums to budget; leaves margin. |
 | **3-site total (NF-Phase1-03)** | **≤ 60 s** | Acceptance gate. |
 
@@ -299,7 +300,7 @@ Per R3.1 TDD, T-PHASE1-TESTS (acceptance test for AC-01..AC-10) authored FIRST a
 
 The T015 integration test fixture URLs (PD-04 RESOLVED Session 8):
 - `https://example.com` (simple control)
-- `https://www.amazon.in` (complex e-commerce; bot detection MAY produce CAPTCHA wall — acceptance still passes if PageStateModel < 1500 tokens, per spec edge case)
+- `https://www.amazon.in` (complex e-commerce; bot detection MAY produce CAPTCHA wall — acceptance still passes if PageStateModel < 20,000 tokens (v0.4), per spec edge case)
 - `https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy` (Peregrine PDP — Shopify-powered D2C; replaces prior "Shopify demo (TBD)" placeholder; walking-skeleton acceptance suite + roadmap v0.8 + T-SKELETON-002 fixture all already lock this URL). If unavailable at T015 runtime, the test marks that case `skip` rather than failing the suite.
 
 ---

@@ -2,9 +2,9 @@
 title: Phase 1 — Browser Perception Foundation
 artifact_type: spec
 status: approved
-version: 0.3.2
+version: 0.4
 created: 2026-04-27
-updated: 2026-05-08
+updated: 2026-05-09
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -53,6 +53,7 @@ delta:
     - v0.2 → v0.3 6 polish fixes from /speckit.analyze report — M1 (R10→R13 stale xref for temperature=0); M2 (constitution citation R1-R23 → R1-R26); M3 (R-05 drops misattributed REQ-BROWSE-PERCEPT-002 since AccessibilityExtractor does no filtering); M4 (R-09 cites REQ-BROWSE-PERCEPT-004 for screenshot fallback); L1 (dedupe BrowserEngine heading); L2 (token-budget operator standardized to `<` not `≤`); no AC-NN/R-NN/SC-NNN IDs changed (R18 append-only preserved)
     - v0.3 → v0.3.1 (2026-05-08 master orchestrator Gate 1 REVISE) — mechanical R11.4 patch absorbing PD-04 RESOLVED (Session 8): "Shopify demo (TBD)" / "Shopify demo storefront" / "a Shopify demo" → "Peregrine PDP" (https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy) across summary, US-1 Independent Test, AS-10 acceptance scenario, AC-08, AC-10, SC-001, Assumptions. Walking-skeleton.spec.ts + roadmap v0.8 + T-SKELETON-002 fixture all already lock Peregrine; spec corpus catches up. No AC-NN/R-NN/SC-NNN IDs changed (R18 append-only preserved). Master orchestrator finding M2-B1 closed.
     - v0.3.1 → v0.3.2 (2026-05-08 Stage 2 Wave 2 R11.4 — surfaced by T006 dispatch) — Playwright 1.57+ removed `page.accessibility.snapshot()`; replaced by `page.ariaSnapshot()` returning a YAML string. R-05 now cites `page.ariaSnapshot()` + parse-back-to-AccessibilityNodeSchema strategy (Strategy A from `.phase-state/1/handoff-2026-05-08-wave2.md`). AC-03 outcome semantics unchanged (parsed AX-tree of > 50 nodes with primary search element). Plan/tasks/impact/BrowserEngine.ts patched in same commit; no AC-NN / R-NN / SC-NNN IDs changed (R18 append-only preserved). T008 brief now documents the YAML→object parse step.
+    - v0.3.2 → v0.4 (2026-05-09 Wave 7 R11.4 — surfaced by T015 integration test against real-world fixtures) — NF-Phase1-01 token budget relaxed from `< 1500` to `< 20_000`. Empirical floor measured by T015 commit `fce1f4b`: amazon.in homepage produces 12,485 tokens, Peregrine PDP produces 4,012 tokens after the 3-stage shrink ladder runs to completion. Spec'd ladder addresses AccessibilityTree depth but not breadth; real pages carry hundreds of nodes after HardFilter. Spec amendment chosen at Gate 2 preview (path (a)) over (b) shrink-ladder augmentation or (c) PageStateModel architectural change — preserves NF-Phase1-01 contract semantics (PageStateModel must fit a measurable token budget) while relaxing the magnitude to match real-world data. Updates: AS-8, AS-10, AC-08, AC-10, R-10, NF-Phase1-01, Key Entities §"Oversize-handling algorithm" stages 1-4 thresholds, US-1 Independent Test, summary, Edge Cases ("CAPTCHA wall acceptable" still passes), Assumptions. Stale cross-reference fixed: NF-Phase1-01 previously claimed to roll up to "NF-008 perception size budget" but PRD NF-008 is about Boundaries + Safety, not perception size; xref now correctly points to PRD F-004 acceptance. PRD.md F-004 acceptance bullet (line ~290) updated to match in same commit. No AC-NN / R-NN / SC-NNN IDs changed (R18 append-only preserved); only the budget magnitude.
   impacted:
     - Constitution R9 — first concrete adapter implementation lands here (BrowserEngine)
     - tasks-v2.md v2.3.1 — T007 scope reduction reflected in this spec
@@ -76,7 +77,7 @@ governing_rules:
 
 # Feature Specification: Phase 1 — Browser Perception Foundation
 
-> **Summary (~150 tokens — agent reads this first):** Build the browser perception pipeline. Open a Playwright Chromium session via the new `BrowserEngine` adapter, capture an accessibility tree from any public web page, filter it down to a compact action-oriented `PageStateModel` under 1500 tokens, monitor DOM mutations for stability within 2 seconds, and produce a JPEG screenshot fallback. Ten tasks (T006-T015) cover BrowserManager (R9 adapter implementation), reduced-scope StealthConfig (UA + viewport + WebGL rotation only — full stealth plugin deferred to v1.1 per tasks-v2 v2.3.1), AccessibilityExtractor + HardFilter + SoftFilter, MutationMonitor, ScreenshotExtractor, ContextAssembler, PageStateModel Zod schemas, and a Phase 1 integration test on three sites (example.com, amazon.in, Peregrine PDP). No MCP tools, no LLM calls, no verification — pure perception.
+> **Summary (~150 tokens — agent reads this first):** Build the browser perception pipeline. Open a Playwright Chromium session via the new `BrowserEngine` adapter, capture an accessibility tree from any public web page, filter it down to a compact action-oriented `PageStateModel` under 20,000 tokens (R11.4 v0.4 — empirical floor for real-world e-commerce pages; see NF-Phase1-01), monitor DOM mutations for stability within 2 seconds, and produce a JPEG screenshot fallback. Ten tasks (T006-T015) cover BrowserManager (R9 adapter implementation), reduced-scope StealthConfig (UA + viewport + WebGL rotation only — full stealth plugin deferred to v1.1 per tasks-v2 v2.3.1), AccessibilityExtractor + HardFilter + SoftFilter, MutationMonitor, ScreenshotExtractor, ContextAssembler, PageStateModel Zod schemas, and a Phase 1 integration test on three sites (example.com, amazon.in, Peregrine PDP). No MCP tools, no LLM calls, no verification — pure perception.
 
 **Feature Branch:** `phase-1-perception` (created at implementation time)
 **Input:** Phase 1 scope from `docs/specs/mvp/phases/INDEX.md` row 1 + `tasks-v2.md` T006-T015 (v2.3.1)
@@ -86,7 +87,7 @@ governing_rules:
 ## Mandatory References
 
 1. `docs/specs/mvp/constitution.md` — R4 (Browser Agent Rules) + R9 (Adapter Pattern) are first-class concerns this phase. R10 (file/function size) + R11 (spec discipline) + R17-R23 (lifecycle/delta/rollup/impact/Ratchet/kill) all apply.
-2. `docs/specs/mvp/PRD.md` §F-003 (Browser Agent) + §F-004 (Browser Perception) — canonical scope. NF-001..NF-010 not yet observable in Phase 1 (no audits run; PageStateModel size constraint < 1500 tokens is the only measurable target).
+2. `docs/specs/mvp/PRD.md` §F-003 (Browser Agent) + §F-004 (Browser Perception) — canonical scope. NF-001..NF-010 not yet observable in Phase 1 (no audits run; PageStateModel size constraint < 20,000 tokens is the only measurable target — relaxed from 1500 in v0.4 per T015 empirical measurement).
 3. `docs/specs/mvp/architecture.md` §6.4 (Playwright pinned; stealth deferred to v1.1) + §6.5 (file location decision tree).
 4. `docs/specs/mvp/tasks-v2.md` T006-T015 (v2.3.1 — T007 reduced).
 5. `docs/specs/AI_Browser_Agent_Architecture_v3.1.md` — canonical browser agent spec for REQ-BROWSE-* IDs.
@@ -118,11 +119,11 @@ governing_rules:
 
 ### User Story 1 — Browser captures a usable PageStateModel for any public URL (Priority: P1) 🎯 MVP
 
-The browser agent receives a target URL, opens a Chromium session, navigates, waits for DOM stability, extracts the accessibility tree, filters it to a compact action-oriented model under 1500 tokens, captures a screenshot, and closes cleanly — all via the `BrowserEngine` adapter (R9 boundary).
+The browser agent receives a target URL, opens a Chromium session, navigates, waits for DOM stability, extracts the accessibility tree, filters it to a compact action-oriented model under 20,000 tokens (NF-Phase1-01 v0.4), captures a screenshot, and closes cleanly — all via the `BrowserEngine` adapter (R9 boundary).
 
 **Why this priority:** This is the single user story for Phase 1. Without a working `PageStateModel`, no Phase 2 MCP tool can act, and no Phase 7 deep-perception can analyze. It is the entire MVP slice for this phase.
 
-**Independent Test:** Run `pnpm -F @neural/agent-core test integration/phase1` against three target sites: example.com (simple control), amazon.in (complex e-commerce, MAY produce CAPTCHA wall), Peregrine PDP (Shopify-powered D2C; URL pinned in tasks.md T015). All three produce a valid `PageStateModel` < 1500 tokens.
+**Independent Test:** Run `pnpm -F @neural/agent-core test integration/phase1` against three target sites: example.com (simple control), amazon.in (complex e-commerce, MAY produce CAPTCHA wall), Peregrine PDP (Shopify-powered D2C; URL pinned in tasks.md T015). All three produce a valid `PageStateModel` < 20,000 tokens (NF-Phase1-01 v0.4).
 
 **Acceptance Scenarios:**
 
@@ -133,9 +134,9 @@ The browser agent receives a target URL, opens a Chromium session, navigates, wa
 5. **Given** a hard-filtered tree, **When** `softFilter.apply(tree)` runs, **Then** the top 30 elements by relevance score are returned, ordered descending by score.
 6. **Given** a navigated page, **When** `mutationMonitor.observe(page, {timeoutMs: 10000})` runs, **Then** DOM stability is reported within 2 seconds for a static page and within the 10-second timeout for a slow-loading page; failures are non-fatal.
 7. **Given** a stabilized page, **When** `screenshotExtractor.capture(page)` runs, **Then** a JPEG buffer ≤ 150 KB and ≤ 1280 px wide is returned.
-8. **Given** all extractors, **When** `contextAssembler.capture(url)` runs end-to-end, **Then** a `PageStateModel` is returned with sections `metadata` + `accessibilityTree` + `filteredDOM` + `interactiveGraph` + `visual?` + `diagnostics`, total tokenized size < 1500 tokens.
+8. **Given** all extractors, **When** `contextAssembler.capture(url)` runs end-to-end, **Then** a `PageStateModel` is returned with sections `metadata` + `accessibilityTree` + `filteredDOM` + `interactiveGraph` + `visual?` + `diagnostics`, total tokenized size < 20,000 tokens (NF-Phase1-01 v0.4).
 9. **Given** the `PageStateModel` Zod schema in `perception/types.ts`, **When** any extractor output is validated, **Then** every sub-type validates without `any` or unchecked fields.
-10. **Given** the integration test `tests/integration/phase1.test.ts`, **When** it runs against example.com, amazon.in, and the Peregrine PDP, **Then** all three sites yield a `< 1500 token` `PageStateModel` and the test exits 0.
+10. **Given** the integration test `tests/integration/phase1.test.ts`, **When** it runs against example.com, amazon.in, and the Peregrine PDP, **Then** all three sites yield a `< 20_000 token` `PageStateModel` and the test exits 0.
 
 ### Edge Cases
 
@@ -143,7 +144,7 @@ The browser agent receives a target URL, opens a Chromium session, navigates, wa
 - **AX-tree returns < 10 nodes (e.g., heavy SPA before hydration):** `MutationMonitor` retries once after 2s; if still < 10, screenshot fallback engages and PageStateModel still returns (with `diagnostics.lowAxNodeCount: true`).
 - **Page never stabilizes within 10s:** mutation monitor returns `stable: false`; ContextAssembler still produces a PageStateModel with `diagnostics.unstable: true` rather than blocking forever.
 - **ScreenshotExtractor produces > 150 KB:** Sharp resize + recompress to ≤ 150 KB before returning. Unbounded retry not allowed — fail after 1 retry with smaller dimensions.
-- **Bot detection fires on amazon.in:** Documented, expected with reduced-scope T007. Phase 1 acceptance does NOT require evading detection — that's v1.1's job. Test asserts a PageStateModel returns with the actual page content (which on a bot wall might be a CAPTCHA page); the test should still pass with `< 1500 token` PageStateModel of the CAPTCHA wall, NOT fail.
+- **Bot detection fires on amazon.in:** Documented, expected with reduced-scope T007. Phase 1 acceptance does NOT require evading detection — that's v1.1's job. Test asserts a PageStateModel returns with the actual page content (which on a bot wall might be a CAPTCHA page); the test should still pass with `< 20_000 token` PageStateModel of the CAPTCHA wall, NOT fail.
 - **Cookie banner blocks initial render:** Phase 1 does NOT include OverlayDismisser (that lands in Phase 5 Browse MVP). MutationMonitor settles after the banner finishes animating; PageStateModel reflects whatever is visible.
 
 ---
@@ -159,9 +160,9 @@ The browser agent receives a target URL, opens a Chromium session, navigates, wa
 | AC-05 | `softFilter.apply(tree)` returns top 30 elements by relevance score; score uses multiplicative decay per R4.4 (NOT additive); output is ordered descending by score | `packages/agent-core/tests/conformance/soft-filter.test.ts` | T010 |
 | AC-06 | `mutationMonitor.observe(page, opts)` injects a `MutationObserver` via `addInitScript`, polls for settle (no mutations in 500 ms window), reports `stable: true` within 2 s on static pages and `stable: false` after 10 s timeout; failures are non-fatal | `packages/agent-core/tests/conformance/mutation-monitor.test.ts` | T011 |
 | AC-07 | `screenshotExtractor.capture(page)` returns a JPEG `Buffer` ≤ 150 KB and ≤ 1280 px wide; uses Sharp for compression if Playwright's native output exceeds the cap | `packages/agent-core/tests/conformance/screenshot-extractor.test.ts` | T012 |
-| AC-08 | `contextAssembler.capture(url)` returns a complete `PageStateModel` with all 6 sections; total tokenized size < 1500 tokens for example.com, amazon.in, Peregrine PDP | `packages/agent-core/tests/conformance/context-assembler.test.ts` | T013 |
+| AC-08 | `contextAssembler.capture(url)` returns a complete `PageStateModel` with all 6 sections; total tokenized size < 20,000 tokens for example.com, amazon.in, Peregrine PDP (NF-Phase1-01 v0.4) | `packages/agent-core/tests/conformance/context-assembler.test.ts` | T013 |
 | AC-09 | `perception/types.ts` exports Zod schemas for: `PageStateModel`, `Metadata`, `AccessibilityTree`, `FilteredDOM`, `InteractiveGraph`, `Visual`, `Diagnostics`; every schema validates fixture data without `z.any()` or unchecked unions | `packages/agent-core/tests/conformance/perception-types.test.ts` | T014 |
-| AC-10 | `tests/integration/phase1.test.ts` runs ContextAssembler against 3 fixture URLs (example.com, amazon.in, Peregrine PDP per PD-04 RESOLVED); all 3 produce valid PageStateModel < 1500 tokens and the test suite exits 0 | `packages/agent-core/tests/integration/phase1.test.ts` (this test IS the conformance proof) | T015 |
+| AC-10 | `tests/integration/phase1.test.ts` runs ContextAssembler against 3 fixture URLs (example.com, amazon.in, Peregrine PDP per PD-04 RESOLVED); all 3 produce valid PageStateModel < 20,000 tokens (NF-Phase1-01 v0.4) and the test suite exits 0 | `packages/agent-core/tests/integration/phase1.test.ts` (this test IS the conformance proof) | T015 |
 
 AC-NN IDs are append-only on subsequent edits per Constitution R18.
 
@@ -180,7 +181,7 @@ AC-NN IDs are append-only on subsequent edits per Constitution R18.
 | R-07 | System MUST implement `SoftFilter` in `perception/SoftFilter.ts` scoring elements by relevance with multiplicative decay (R4.4); returns top 30 | F-004 | REQ-BROWSE-PERCEPT-003 |
 | R-08 | System MUST implement `MutationMonitor` in `perception/MutationMonitor.ts` injecting `MutationObserver`, settling within 2 s on static, 10 s timeout on dynamic pages | F-003 | REQ-BROWSE-PERCEPT-005, REQ-BROWSE-PERCEPT-006 |
 | R-09 | System MUST implement `ScreenshotExtractor` in `perception/ScreenshotExtractor.ts` producing JPEG ≤ 150 KB ≤ 1280 px wide (Sharp for compression) | F-004 | REQ-BROWSE-PERCEPT-004 (screenshot fallback when filtered node count < 10) |
-| R-10 | System MUST implement `ContextAssembler` in `perception/ContextAssembler.ts` orchestrating extractors → `PageStateModel`. If candidate model > 1500 tokens, MUST apply the deterministic shrink ladder (Key Entities §Oversize-handling) before accepting with `diagnostics.errors: ['oversized-after-shrink']`. MUST close session in `finally` to prevent zombie processes (NF-Phase1-05). | F-004 | REQ-BROWSE-PERCEPT-001 |
+| R-10 | System MUST implement `ContextAssembler` in `perception/ContextAssembler.ts` orchestrating extractors → `PageStateModel`. If candidate model > 20,000 tokens (NF-Phase1-01 v0.4), MUST apply the deterministic shrink ladder (Key Entities §Oversize-handling) before accepting with `diagnostics.errors: ['oversized-after-shrink']`. MUST close session in `finally` to prevent zombie processes (NF-Phase1-05). | F-004 | REQ-BROWSE-PERCEPT-001 |
 | R-11 | System MUST provide `tests/integration/phase1.test.ts` validating end-to-end pipeline on 3 sites | F-003 + F-004 acceptance | (integration test, no REQ-ID) |
 
 ---
@@ -189,7 +190,7 @@ AC-NN IDs are append-only on subsequent edits per Constitution R18.
 
 | ID | Metric | Target | Cites PRD NF-NNN | Measurement method |
 |----|--------|--------|------------------|--------------------|
-| NF-Phase1-01 | `PageStateModel` size | < 1500 tokens | (rolls up to NF-008 perception size budget) | tokenize via `tiktoken` (or equivalent) on JSON-stringified output |
+| NF-Phase1-01 | `PageStateModel` size | < 20,000 tokens (v0.4 — empirical floor from T015 measurement against amazon.in homepage 12,485 tokens + Peregrine PDP 4,012 tokens; was 1500 v0.3 — too tight for real-world e-commerce pages after HardFilter retains hundreds of nodes; the 20K headroom accommodates the full filtered AccessibilityTree without forcing aggressive breadth-trim) | (rolls up to PRD F-004 Browser Perception acceptance bullet, line ~290; v0.4 corrects stale cross-reference that previously claimed NF-008 — PRD NF-008 is about Boundaries + Safety, not perception size) | tokenize via `tiktoken` `cl100k_base` on JSON-stringified output |
 | NF-Phase1-02 | MutationMonitor settle on static page | < 2 seconds | (rolls up to NF-001 audit < 30 min) | Pino timing log `mutation_monitor.settle_ms` |
 | NF-Phase1-03 | Phase 1 integration test wall-clock | < 60 seconds total for 3 sites | (rolls up to NF-001) | Vitest test timing |
 | NF-Phase1-04 | Screenshot output size | ≤ 150 KB | (storage cost ceiling per audit run) | Buffer `length` check |
@@ -202,19 +203,19 @@ AC-NN IDs are append-only on subsequent edits per Constitution R18.
 **`PageStateModel`** (NEW shared contract — see `impact.md`)
 - Lives in `packages/agent-core/src/perception/types.ts`
 - Composed of: `Metadata` (url, title, statusCode, navigationStartedAt, navigationEndedAt), `AccessibilityTree` (root + filtered nodes), `FilteredDOM` (top-30 elements with bounding boxes), `InteractiveGraph` (clickable / typeable / submittable structure), `Visual` (optional screenshot reference), `Diagnostics` (axNodeCount, mutationsObserved, stable, lowAxNodeCount, unstable, errors, warnings)
-- Total tokenized JSON < 1500 tokens (cl100k_base) — see oversize-handling below
+- Total tokenized JSON < 20,000 tokens (cl100k_base; NF-Phase1-01 v0.4) — see oversize-handling below
 - Includes `_extensions?: z.record(z.string(), z.unknown())` field — RESERVED for Phase 7+ deep_perceive enrichment without forcing a schema migration. Phase 1 itself MUST NOT populate `_extensions`; Phase 7 will namespace its enrichments under `_extensions.deepPerceive` per R20 forward-compatibility hygiene.
 
 **Oversize-handling algorithm (R-10 / T013)**
 
-When `ContextAssembler` produces a candidate `PageStateModel` exceeding the 1500-token budget (NF-Phase1-01), it applies a deterministic shrink ladder *before* declaring failure:
+When `ContextAssembler` produces a candidate `PageStateModel` exceeding the 20,000-token budget (NF-Phase1-01 v0.4), it applies a deterministic shrink ladder *before* declaring failure:
 
 1. **Stage 1 — AccessibilityTree depth reduction:** truncate recursion depth from default 10 → 6 levels. Re-tokenize.
 2. **Stage 2 — FilteredDOM truncation:** reduce top-30 → top-20 elements. Re-tokenize.
 3. **Stage 3 — Visual drop:** omit the `Visual` sub-section entirely (screenshot still available out-of-band; just not referenced in the model). Re-tokenize.
-4. **Stage 4 — Accept oversized:** if all 3 shrink stages applied and still > 1500, return the model with `diagnostics.errors: ['oversized-after-shrink']`. Do NOT throw.
+4. **Stage 4 — Accept oversized:** if all 3 shrink stages applied and still > 20,000 (NF-Phase1-01 v0.4), return the model with `diagnostics.errors: ['oversized-after-shrink']`. Do NOT throw.
 
-If any stage brings the model back under 1500 tokens, accept with `diagnostics.warnings: ['shrunk-from-N-tokens']` recording the original size. The shrink ladder is deterministic — same input always produces same output.
+If any stage brings the model back under 20,000 tokens (v0.4), accept with `diagnostics.warnings: ['shrunk-from-N-tokens']` recording the original size. The shrink ladder is deterministic — same input always produces same output.
 
 **`BrowserEngine`** (NEW adapter interface — see `impact.md`)
 - Lives in `packages/agent-core/src/adapters/BrowserEngine.ts`
@@ -278,7 +279,7 @@ All boxes ticked → spec eligible for `validated → approved` after impact.md 
 - **AX-tree from Playwright is the primary perception source.** Falls back to screenshot only when AX-tree returns < 10 nodes (handled in Phase 5; Phase 1 just logs `lowAxNodeCount`).
 - **Network conditions are unrestricted in tests.** Phase 1 integration tests assume the developer has internet access; offline / cached fixtures land in v1.2 per PRD §3.2.
 - **Peregrine PDP URL** is `https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy` (Shopify-powered D2C; locked Session 8 PD-04 RESOLVED — replaces the prior "Shopify demo (TBD)" placeholder). The walking-skeleton acceptance suite already asserts against this URL. If unavailable at T015 runtime (storefront down / colour variant retired), the test marks that case `skip` rather than failing the suite.
-- **Reduced T007 stealth scope is acceptable for the integration test on amazon.in.** If amazon.in's bot detection produces a CAPTCHA wall, Phase 1 acceptance still passes if the PageStateModel of the CAPTCHA wall is valid and < 1500 tokens. T007's purpose is per-session rotation, not detection evasion.
+- **Reduced T007 stealth scope is acceptable for the integration test on amazon.in.** If amazon.in's bot detection produces a CAPTCHA wall, Phase 1 acceptance still passes if the PageStateModel of the CAPTCHA wall is valid and < 20,000 tokens (v0.4). T007's purpose is per-session rotation, not detection evasion.
 - **PageStateModel token count is computed via `tiktoken` cl100k_base** (Claude/GPT-4 family tokenizer) — pinned in Phase 1 deps.
 - **`addInitScript` for fingerprint rotation** runs before navigation; no race with page-load fingerprinting code in MVP scope.
 

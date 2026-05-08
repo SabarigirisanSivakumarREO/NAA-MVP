@@ -13,9 +13,10 @@
  *   → accessibilityExtractor.extract → hardFilter.apply → softFilter.apply
  *   → screenshotExtractor.capture (best-effort) → assemble → fitToTokenBudget.
  *
- * Deterministic shrink ladder (NF-Phase1-01): if tokens >= 1500, apply in order
- * and re-tokenize after each: (1) AX depth 10 → 6, (2) FilteredDOM top-30 →
- * top-20, (3) drop `visual`, (4) accept with diagnostics.errors:
+ * Deterministic shrink ladder (NF-Phase1-01 v0.4 — budget 20,000 tokens):
+ * if tokens >= PAGE_STATE_MODEL_TOKEN_BUDGET, apply in order and re-tokenize
+ * after each: (1) AX depth 10 → 6, (2) FilteredDOM top-30 → top-20,
+ * (3) drop `visual`, (4) accept with diagnostics.errors:
  * ['oversized-after-shrink']. Same input → same output. NEVER throws on oversize.
  *
  * R10: file ≤ 250 lines target (R10.1 cap 300); functions ≤ 50 lines (R10.2);

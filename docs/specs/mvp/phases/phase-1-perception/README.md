@@ -32,11 +32,11 @@ governing_rules:
 
 # Phase 1 — Browser Perception Foundation
 
-> **Summary (~150 tokens):** Establish the browser agent's perception pipeline. Open a Playwright Chromium session, capture an accessibility tree, filter it down to a compact action-oriented `PageStateModel` under 1500 tokens, monitor DOM mutations for stability, and produce a screenshot fallback. 10 tasks (T006-T015): BrowserManager + reduced-scope StealthConfig (v1.1 stealth plugin deferred per tasks-v2.md v2.3.1), AccessibilityExtractor + HardFilter + SoftFilter, MutationMonitor, ScreenshotExtractor, ContextAssembler, PageStateModel Zod types, Phase 1 integration test on 3 sites. No MCP tools, no LLM calls, no verification — pure perception. Blocks Phase 2 (MCP tools) and Phase 5 (Browse MVP).
+> **Summary (~150 tokens):** Establish the browser agent's perception pipeline. Open a Playwright Chromium session, capture an accessibility tree, filter it down to a compact action-oriented `PageStateModel` under 20,000 tokens (NF-Phase1-01 v0.4), monitor DOM mutations for stability, and produce a screenshot fallback. 10 tasks (T006-T015): BrowserManager + reduced-scope StealthConfig (v1.1 stealth plugin deferred per tasks-v2.md v2.3.1), AccessibilityExtractor + HardFilter + SoftFilter, MutationMonitor, ScreenshotExtractor, ContextAssembler, PageStateModel Zod types, Phase 1 integration test on 3 sites. No MCP tools, no LLM calls, no verification — pure perception. Blocks Phase 2 (MCP tools) and Phase 5 (Browse MVP).
 
 ## Goal
 
-After Phase 1, calling `contextAssembler.capture(url)` returns a complete `PageStateModel` (metadata + accessibilityTree + filteredDOM + interactiveGraph + visual + diagnostics) under 1500 tokens for example.com, amazon.in, and the Peregrine PDP (Shopify-powered D2C; URL pinned in tasks.md T015 per PD-04 RESOLVED). The browser closes cleanly. No detected automation arms race in MVP — basic per-session UA/viewport/fingerprint rotation only (full stealth deferred to v1.1).
+After Phase 1, calling `contextAssembler.capture(url)` returns a complete `PageStateModel` (metadata + accessibilityTree + filteredDOM + interactiveGraph + visual + diagnostics) under 20,000 tokens (NF-Phase1-01 v0.4) for example.com, amazon.in, and the Peregrine PDP (Shopify-powered D2C; URL pinned in tasks.md T015 per PD-04 RESOLVED). The browser closes cleanly. No detected automation arms race in MVP — basic per-session UA/viewport/fingerprint rotation only (full stealth deferred to v1.1).
 
 ## Tasks
 
@@ -58,7 +58,7 @@ Full task descriptions in `tasks.md` (this folder). Cross-reference: `docs/specs
 ## Exit criteria
 
 - [ ] `pnpm test` passes for `packages/agent-core/tests/integration/phase1.test.ts` (T015)
-- [ ] PageStateModel produced for 3 sites under 1500 tokens each
+- [ ] PageStateModel produced for 3 sites under 20,000 tokens (NF-Phase1-01 v0.4) each
 - [ ] BrowserManager opens + closes cleanly without dangling handles
 - [ ] All Zod schemas in `perception/types.ts` validate fixture data
 - [ ] No direct Playwright imports outside `adapters/BrowserEngine.ts` + `browser-runtime/` (R9)

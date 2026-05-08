@@ -2,9 +2,9 @@
 title: Tasks — Phase 1 Browser Perception
 artifact_type: tasks
 status: approved
-version: 0.6
+version: 0.7
 created: 2026-04-27
-updated: 2026-05-08
+updated: 2026-05-09
 owner: engineering lead
 authors: [Claude (drafter)]
 
@@ -49,6 +49,7 @@ delta:
       (b) C1 BINDING from Session 7 R17.4 review transcribed into T015 brief — adds explicit `Constraints` line citing plan.md §"T015 integration test timeout budget", new `Verify` step asserting `waitUntil: 'domcontentloaded'` is used (not `'load'`), new per-task kill criterion for budget-table compliance (master orchestrator finding M1-C1 closed);
       (c) T-PHASE1-TESTS expanded from single bullet to full Brief format (Outcome / Context / Constraints / Non-goals / Acceptance / Integration / Verify) parity with T006-T015 (master orchestrator finding L1-C2 closed).
     - v0.5 → v0.6 (2026-05-08 Stage 2 Wave 2 R11.4 — surfaced by T006 dispatch) — two body lines updated to cite `page.ariaSnapshot()` (Playwright 1.57+; YAML output) instead of removed `page.accessibility.snapshot()`: T006 Context (BrowserSession.page minimal-surface enumeration), T008 Outcome + Context (now documents YAML→`AccessibilityNodeSchema` parse-back step T008 owns). Smoke test phrasing ("Extract AX-tree from amazon.in returns > 50 nodes") preserved — semantic outcome unchanged. No AC-NN / T-NNN scope changes.
+    - v0.6 → v0.7 (2026-05-09 Wave 7 R11.4 — surfaced by T015) — token budget references updated from 1500 to 20,000 to align with spec.md v0.4 NF-Phase1-01 amendment: default kill criteria (line ~116; example.com control fixture), §"User Story 1" goal line, T013 Acceptance + per-task kill criteria, T015 Acceptance. T015 marked [x] (5/5 PASS expected after spec corpus + types.ts constant + test budget bump). No AC-NN / T-NNN scope changes; only the magnitude of the kill threshold.
   impacted:
     - spec.md + plan.md + impact.md (v0.2 → v0.3) — frontmatter sync
     - spec.md (v0.3 → v0.3.1) + plan.md (v0.3 → v0.3.1) + impact.md (v0.3 → v0.3.1) parallel sync for v0.5 patches
@@ -113,7 +114,7 @@ kill_criteria:
     - "pnpm test:conformance -- <component> fails after task supposedly complete"
     - "implementation reveals spec defect (R11.4 — fix spec first)"
     - "Playwright type leaks outside BrowserManager.ts + BrowserEngine.ts (R9 violation)"
-    - "PageStateModel exceeds 1500 tokens for control fixture example.com (NF-Phase1-01 violated)"
+    - "PageStateModel exceeds 20,000 tokens for control fixture example.com (NF-Phase1-01 v0.4 violated)"
   scope:
     - "diff introduces forbidden pattern (R13: any without TODO, console.log, direct SDK import outside adapter, disabled test)"
     - "task expands beyond plan.md file table"
@@ -165,7 +166,7 @@ Two foundations must precede the rest:
 
 ## Phase 3 — User Story 1: Browser captures usable PageStateModel for any public URL (Priority: P1) 🎯 MVP
 
-**Goal:** ContextAssembler.capture(url) returns a complete < 1500-token PageStateModel for example.com, amazon.in, and Peregrine PDP.
+**Goal:** ContextAssembler.capture(url) returns a complete < 20,000-token PageStateModel for example.com, amazon.in, and Peregrine PDP (NF-Phase1-01 v0.4).
 
 **Independent Test:** `pnpm -F @neural/agent-core test integration/phase1` — all 3 sites pass.
 
@@ -278,14 +279,14 @@ Two foundations must precede the rest:
     - **Context:** plan.md v0.2 "Phase 1 Design" perception step 6. This task integrates 6 components plus the BrowserEngine — highest integration risk in Phase 1.
     - **Constraints:** File < 250 lines. Methods < 50 lines (likely 1-2 helper methods + 3 shrink helpers, one per stage). Pino correlation: session_id + page_url + extractor (set per sub-call via child logger).
     - **Non-goals:** No retry on extractor failures (each extractor handles its own); ContextAssembler aggregates errors into `diagnostics.errors`. Does NOT populate `_extensions` (Phase 7+ responsibility).
-    - **Acceptance:** AC-08 — PageStateModel returned for example.com / amazon.in / Peregrine PDP, < 1500 tokens each.
+    - **Acceptance:** AC-08 — PageStateModel returned for example.com / amazon.in / Peregrine PDP, < 20,000 tokens each (NF-Phase1-01 v0.4).
     - **Integration:** Output is the contract for Phase 2 MCP tools (`browser_get_state`).
     - **Verify:** `pnpm test:conformance -- context-assembler` green.
   - **Files:** `packages/agent-core/src/perception/ContextAssembler.ts`, `packages/agent-core/src/perception/index.ts` (barrel); modify `packages/agent-core/package.json` to add `tiktoken` dep
   - **dep:** T006, T007, T008, T009, T010, T011, T012, T014
   - **Smoke test:** Capture from example.com returns PageStateModel < 500 tokens
   - **Per-task kill criteria (extends default):**
-    - "PageStateModel exceeds 1500 tokens for example.com fixture" → R23 trigger; investigate sub-schema bloat (most likely AccessibilityTree retained too many fields).
+    - "PageStateModel exceeds 20,000 tokens for example.com fixture (NF-Phase1-01 v0.4)" → R23 trigger; investigate sub-schema bloat (most likely AccessibilityTree retained too many fields).
     - "Session leaks (zombie Chromium process after capture())" → R23 trigger; missing `finally { await session.close() }`.
     - "Wall-clock for single capture() > 30 s on example.com" → R23 trigger; perception extractor inefficiency.
 
@@ -304,14 +305,14 @@ Two foundations must precede the rest:
   - **Smoke test:** `PageStateModelSchema.parse(<fixture>)` succeeds; cyclic AX-tree fixture parses without infinite recursion; Phase 1 capture leaves `_extensions === undefined`
   - **Kill criteria:** default block + extra: any attempt to populate `_extensions` from Phase 1 code → STOP, that's Phase 7+ scope
 
-- [ ] **T015 [US-1] Phase 1 integration test** (AC-10) **— C1 BINDING + extended kill criteria**
+- [x] **T015 [US-1] Phase 1 integration test** (AC-10) **— C1 BINDING + extended kill criteria** — **DONE 2026-05-09** (master orchestrator Stage 2 Wave 7 + R11.4 v0.4 amendment; integration 5/5 PASS — example.com 1.9s, amazon.in 3.1s, peregrine 5.3s, 3-site total 9.5s; NF-Phase1-01 v0.4 budget 20,000 tokens passes for all 3 fixtures; C1 BINDING budget table + waitUntil:'domcontentloaded' enforced)
   - **Brief:**
     - **Outcome:** `packages/agent-core/tests/integration/phase1.test.ts` runs ContextAssembler against 3 fixture URLs: `https://example.com` (simple control), `https://www.amazon.in` (complex e-commerce; CAPTCHA wall acceptable), `https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy` (Peregrine PDP — Shopify-powered D2C; PD-04 RESOLVED Session 8). Asserts PageStateModel < 1500 tokens each + valid Zod parse via `PageStateModelSchema.parse()` + no zombie Chromium processes after `session.close()`.
     - **C1 BINDING (from Session 7 R17.4 review — `phase-1-perception/review-notes.md` C1):** This task MUST consume the per-step Playwright timeout budget table defined in plan.md §"T015 integration test timeout budget (C1 BINDING)". Specifically: `page.goto({ waitUntil: 'domcontentloaded', timeout: 10000 })` (NOT `'load'`); `mutationMonitor.observe({ timeoutMs: 5000 })`; soft-budgets 3 s for AX extract + 1 s for screenshot. Per-site total ≤ 20 s; 3-site total ≤ 60 s (NF-Phase1-03). Document the budget table in `phase1.test.ts` header comment. PR Contract MUST cite this section in the "Review focus" block (PRD §10.9).
     - **Context:** This is the Phase 1 acceptance gate. Vitest integration suite (NOT Playwright Test — internal Playwright API used; Playwright Test is for `tests/acceptance/` Phase 9). The walking-skeleton acceptance suite at `tests/acceptance/walking-skeleton.spec.ts` is a separate gate; Phase 1 supersession of T-SKELETON-002 (BrowserManager fixture stub) must keep AC-W1..W7 green.
     - **Constraints:** File < 200 lines. Wall-clock < 60 s for all 3 sites (NF-Phase1-03 enforced via C1 BINDING budget table — see plan.md). Skips Peregrine PDP fixture if URL unavailable at runtime (storefront down / variant retired); does NOT retry on flake (per kill criterion). `waitUntil: 'domcontentloaded'` everywhere (`'load'` is FORBIDDEN per C1 BINDING).
     - **Non-goals:** No analysis. No LLM. No DB writes. No bot-detection evasion (T007 reduced scope; full stealth is v1.1).
-    - **Acceptance:** AC-10 — exits 0; 3 sites produce valid < 1500-token PageStateModel; wall-clock under 60 s; `waitUntil` value is `'domcontentloaded'` in all `page.goto` calls (grep test asserts).
+    - **Acceptance:** AC-10 — exits 0; 3 sites produce valid < 20,000-token PageStateModel (NF-Phase1-01 v0.4); wall-clock under 60 s; `waitUntil` value is `'domcontentloaded'` in all `page.goto` calls (grep test asserts).
     - **Integration:** Phase 1 acceptance gate. After this passes, Phase 1 complete; T-PHASE1-ROLLUP follows. Walking-skeleton.spec.ts must remain green throughout Phase 1 (T013 supersession of T-SKELETON-002 stub).
     - **Verify:** `pnpm -F @neural/agent-core test integration/phase1` exits 0 within 60 s; `grep -n "waitUntil" packages/agent-core/tests/integration/phase1.test.ts | grep -v "domcontentloaded"` returns no matches (C1 BINDING enforcement); `pnpm test:integration` (= walking-skeleton acceptance) still 12/12 green.
   - **Files:** `packages/agent-core/tests/integration/phase1.test.ts`
