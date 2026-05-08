@@ -59,6 +59,15 @@ export type SessionOpts = z.infer<typeof SessionOptsSchema>;
  *   - addInitScript: MutationMonitor observer injection
  *   - evaluate: HardFilter / SoftFilter element measurement
  *   - waitForLoadState: ContextAssembler stabilization
+ *   - setViewportSize: T007 StealthConfig per-session viewport rotation
+ *     (must run on the existing about:blank page before any navigation;
+ *     `addInitScript` cannot retroactively resize a page that has already
+ *     loaded). Added as part of T007 reduced-scope stealth surface.
+ *   - setContent: T011 MutationMonitor conformance test surface — load
+ *     synthetic HTML (static or mutating) without going to a real network
+ *     URL. Used by `mutation-monitor.test.ts` AC-06 dynamic-page +
+ *     non-fatal-failure scenarios. Forward-compatible (Phase 5
+ *     OverlayDismisser fixtures may also use this).
  *
  * Phase 2 (MCP tools) + Phase 4 (verification engine) will EXTEND this
  * interface; extensions need their own impact.md if they cross other
@@ -77,15 +86,27 @@ export interface BrowserPage {
     state?: 'load' | 'domcontentloaded' | 'networkidle',
     opts?: { timeout?: number },
   ): Promise<void>;
+  setViewportSize(size: { width: number; height: number }): Promise<void>;
+  setContent(
+    html: string,
+    opts?: { waitUntil?: 'load' | 'domcontentloaded' | 'networkidle'; timeout?: number },
+  ): Promise<void>;
 }
 
 /**
- * Phase-1-minimal context wrapper. Phase 1 only needs `addInitScript` at
- * context level (T007 StealthConfig fingerprint patch must execute on every
- * page in the context, including same-origin navigations).
+ * Phase-1-minimal context wrapper. Phase 1 needs:
+ *   - addInitScript: T007 StealthConfig + T011 MutationMonitor — script
+ *     runs on every NEW page in the context (including same-origin
+ *     navigations).
+ *   - pages(): T007 StealthConfig must reach the EXISTING about:blank page
+ *     created by `BrowserManager.newSession()` to apply UA / viewport /
+ *     fingerprint patches retroactively. `addInitScript` only fires on
+ *     subsequent navigations, so existing-page patches go through
+ *     `page.evaluate` + `page.setViewportSize` reached via this method.
  */
 export interface BrowserContext {
   addInitScript(scriptOrFn: string | (() => void)): Promise<void>;
+  pages(): readonly BrowserPage[];
 }
 
 /**

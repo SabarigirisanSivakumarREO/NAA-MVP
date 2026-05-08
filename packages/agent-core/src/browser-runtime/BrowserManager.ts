@@ -132,12 +132,22 @@ export class BrowserManager implements BrowserEngine {
       evaluate: <T = unknown>(fn: string | ((...args: unknown[]) => T), ...args: unknown[]) =>
         playwrightPage.evaluate(fn as never, ...args) as Promise<T>,
       waitForLoadState: (state, waitOpts) => playwrightPage.waitForLoadState(state, waitOpts),
+      setViewportSize: (size) => playwrightPage.setViewportSize(size),
+      setContent: (html, contentOpts) => playwrightPage.setContent(html, contentOpts),
     };
+
+    // T007 stealth surface: `pages()` exposes the existing-page list so
+    // StealthConfig can patch the about:blank page created above. We hold
+    // a single-page array (Phase 1 only opens one page per session); the
+    // adapter contract is `readonly BrowserPage[]` so callers cannot grow
+    // the list out of band.
+    const wrappedPages: BrowserPage[] = [page];
 
     const context: BrowserContext = {
       addInitScript: async (scriptOrFn) => {
         await playwrightContext.addInitScript(scriptOrFn as never);
       },
+      pages: () => wrappedPages,
     };
 
     let closed = false;
