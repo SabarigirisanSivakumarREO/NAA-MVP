@@ -2,7 +2,9 @@
 
 > Conversion-rate optimization audit platform for REO Digital. Walks a real D2C product page; runs Claude through a deep-perceive → evaluate → self-critique → ground → annotate pipeline; emits grounded, consultant-reviewable findings + a branded PDF.
 
-**Status:** Phase 0 (workspace + scaffolding) implemented; Phase 1+ (browser perception, MCP tools, analysis, orchestration, delivery) in progress per the [walking-skeleton roadmap](docs/specs/mvp/implementation-roadmap.md).
+**Status:** Phase 0 (workspace + scaffolding) and Phase 1 (browser perception foundation) implemented; Phase 2+ (MCP tools, analysis, orchestration, delivery) in progress per the [walking-skeleton roadmap](docs/specs/mvp/implementation-roadmap.md).
+
+Phase 1 ships the `contextAssembler.capture(url)` API in `@neural/agent-core` — opens a Playwright Chromium session, captures an accessibility tree, filters to a compact `PageStateModel` (under 20,000 tokens — NF-Phase1-01 v0.4), monitors DOM mutations, and produces a JPEG screenshot. Phase 1 acceptance is green for example.com, amazon.in, and a Peregrine PDP fixture (5/5 integration tests pass; full 3-site capture in ~9.5 s wall-clock).
 
 ---
 
@@ -43,9 +45,31 @@ pnpm db:migrate
 # 5. Smoke-test the CLI
 pnpm cro:audit --version
 # Expected: "0.1.0"
+
+# 6. Validate Phase 1 perception (3-site integration suite, < 60s wall-clock)
+pnpm -F @neural/agent-core test integration/phase1
+# Expected: 5 passed (example.com, amazon.in, peregrine — all under 20,000 tokens)
 ```
 
-If all five commands succeed, you're at Phase 0 green. Phase 1+ subcommands (the actual audit) land per the [implementation roadmap](docs/specs/mvp/implementation-roadmap.md).
+If all six commands succeed, you're at Phase 1 green. The `pnpm cro:audit --url=<URL>` end-to-end CLI wires up in Phase 5+ (Browse MVP) per the [implementation roadmap](docs/specs/mvp/implementation-roadmap.md); today the CLI exposes `--version` only, with the walking-skeleton fixture stubbed behind it.
+
+### Phase 1 perception API
+
+Within the monorepo (consumers in `packages/*` and `apps/*`), import `contextAssembler` from the perception module to capture a `PageStateModel` from any public URL. The public sub-path export will be promoted in Phase 2 once MCP tools land — for now, workspace consumers use the source path (mirroring `packages/agent-core/tests/integration/phase1.test.ts`):
+
+```ts
+import { contextAssembler } from '@neural/agent-core/dist/perception/index.js';
+import type { PageStateModel } from '@neural/agent-core/perception/types';
+
+const model: PageStateModel = await contextAssembler.capture('https://example.com');
+
+console.log(model.metadata.title);                       // page <title>
+console.log(model.accessibilityTree.totalNodes);         // > 50 typical
+console.log(model.filteredDOM.top30.length);             // ≤ 30 high-relevance nodes
+console.log(model.diagnostics.tokenCount);               // < 20,000 (NF-Phase1-01 v0.4)
+```
+
+`contextAssembler` owns the full session lifecycle (open → navigate → extract → close) and never throws on token-budget overruns — the deterministic shrink ladder degrades gracefully and surfaces `diagnostics.errors`. See [`docs/specs/mvp/phases/phase-1-perception/spec.md`](docs/specs/mvp/phases/phase-1-perception/spec.md) for the full contract.
 
 ---
 
