@@ -50,7 +50,11 @@ export type SessionOpts = z.infer<typeof SessionOptsSchema>;
  * Phase-1-minimal page wrapper. Methods exposed are ONLY those Phase 1
  * perception layer needs:
  *   - goto: AccessibilityExtractor entry navigation
- *   - accessibility.snapshot: AccessibilityExtractor data fetch
+ *   - ariaSnapshot: AccessibilityExtractor data fetch (Playwright 1.57+;
+ *     returns YAML string. T008 AccessibilityExtractor owns the YAML→
+ *     AccessibilityNodeSchema parse-back step so downstream consumers see
+ *     the legacy AX-tree object shape. Replaces removed
+ *     `accessibility.snapshot()` API per Phase 1 spec.md v0.3.2 R-05.)
  *   - screenshot: ScreenshotExtractor JPEG capture
  *   - addInitScript: MutationMonitor observer injection
  *   - evaluate: HardFilter / SoftFilter element measurement
@@ -65,7 +69,7 @@ export interface BrowserPage {
     url: string,
     opts?: { waitUntil?: 'load' | 'domcontentloaded' | 'networkidle'; timeout?: number },
   ): Promise<void>;
-  accessibility: { snapshot(opts?: { interestingOnly?: boolean }): Promise<unknown> };
+  ariaSnapshot(opts?: { ref?: boolean; timeout?: number }): Promise<string>;
   screenshot(opts?: { type?: 'jpeg' | 'png'; quality?: number; fullPage?: boolean }): Promise<Buffer>;
   addInitScript(scriptOrFn: string | (() => void)): Promise<void>;
   evaluate<T = unknown>(fn: string | ((...args: unknown[]) => T), ...args: unknown[]): Promise<T>;

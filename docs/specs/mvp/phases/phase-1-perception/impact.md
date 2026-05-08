@@ -2,7 +2,7 @@
 title: Impact Analysis — Phase 1 Browser Perception (BrowserEngine adapter + PageStateModel)
 artifact_type: impact
 status: approved
-version: 0.3.1
+version: 0.3.2
 created: 2026-04-27
 updated: 2026-05-08
 owner: engineering lead
@@ -34,6 +34,7 @@ delta:
     - v0.1 → v0.2 frontmatter affected_contracts standardized to short form (was prose); descriptive prose retained in body (analyze finding C3)
     - v0.2 → v0.3 — frontmatter version sync with parallel spec.md/plan.md/tasks.md polish (analyze findings M1-M4 + L1-L2 + L5-L6); impact.md body unchanged
     - v0.3 → v0.3.1 (2026-05-08 master orchestrator Gate 1 REVISE) — Forward Contract section appended with Phase 1b + Phase 1c rows (per Session 7 review J1 / standing condition C2 OPTIONAL). Aligns impact.md with `tasks-v2.md:236` T1B-001 PricingExtractor `dep: T013, T014` + INDEX.md row 1c "wraps PageStateModel into a PerceptionBundle envelope". Frontmatter sync with parallel spec.md/plan.md/tasks.md REVISE patches. No risk level / breaking flag changes.
+    - v0.3.1 → v0.3.2 (2026-05-08 Stage 2 Wave 2 R11.4 — surfaced by T006 dispatch) — BrowserPage minimal-surface narrative (line ~122) updated to cite `ariaSnapshot` instead of removed `accessibility.snapshot` (Playwright 1.57+ removed the legacy API). BrowserEngine "Before/After" interface block (line 100-119) preserved verbatim — the canonical TypeScript interface lives in `packages/agent-core/src/adapters/BrowserEngine.ts` (also patched in same commit), and that file is the Single Source of Truth for the type signature; this impact.md narrative tracks the high-level minimal-surface contract. No risk level / breaking flag changes; the Phase 1 BrowserEngine forward contract is still additive (new shared contract introduced; no prior consumers existed). Frontmatter sync with parallel spec.md (v0.3.2) / plan.md (v0.3.2) / tasks.md (v0.6).
   impacted:
     - spec.md + plan.md + tasks.md (v0.2 → v0.3) — frontmatter sync
     - spec.md (v0.3 → v0.3.1) + plan.md (v0.3 → v0.3.1) + tasks.md (v0.4 → v0.5) — parallel sync for v0.3.1 master orchestrator REVISE
@@ -119,7 +120,7 @@ export interface BrowserEngine {
 }
 ```
 
-`BrowserPage` and `BrowserContext` are intentionally Phase-1-minimal: only the methods the perception layer uses (navigate, accessibility.snapshot, screenshot, evaluate, addInitScript). Phase 2 + Phase 4 will extend this interface as MCP tools and verification engine require — those extensions need their own impact.md if they cross other layer boundaries.
+`BrowserPage` and `BrowserContext` are intentionally Phase-1-minimal: only the methods the perception layer uses (navigate, ariaSnapshot, screenshot, evaluate, addInitScript). Phase 2 + Phase 4 will extend this interface as MCP tools and verification engine require — those extensions need their own impact.md if they cross other layer boundaries. (R11.4 v0.3.2 patch — Playwright 1.57+ replaced the legacy `accessibility.snapshot()` with `ariaSnapshot()` returning a YAML string; T008 `AccessibilityExtractor` owns the YAML→`AccessibilityNodeSchema` parse-back so downstream consumers continue to see the legacy AX-tree object shape.)
 
 ### `PageStateModel` (NEW)
 

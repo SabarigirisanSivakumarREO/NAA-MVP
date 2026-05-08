@@ -2,7 +2,7 @@
 title: Tasks — Phase 1 Browser Perception
 artifact_type: tasks
 status: approved
-version: 0.5
+version: 0.6
 created: 2026-04-27
 updated: 2026-05-08
 owner: engineering lead
@@ -48,9 +48,11 @@ delta:
       (a) absorbs PD-04 RESOLVED — "Shopify demo" → "Peregrine PDP" across goal §, T013 Acceptance, T015 Outcome + Constraints + per-task kill criteria (master orchestrator finding M2-B1 closed);
       (b) C1 BINDING from Session 7 R17.4 review transcribed into T015 brief — adds explicit `Constraints` line citing plan.md §"T015 integration test timeout budget", new `Verify` step asserting `waitUntil: 'domcontentloaded'` is used (not `'load'`), new per-task kill criterion for budget-table compliance (master orchestrator finding M1-C1 closed);
       (c) T-PHASE1-TESTS expanded from single bullet to full Brief format (Outcome / Context / Constraints / Non-goals / Acceptance / Integration / Verify) parity with T006-T015 (master orchestrator finding L1-C2 closed).
+    - v0.5 → v0.6 (2026-05-08 Stage 2 Wave 2 R11.4 — surfaced by T006 dispatch) — two body lines updated to cite `page.ariaSnapshot()` (Playwright 1.57+; YAML output) instead of removed `page.accessibility.snapshot()`: T006 Context (BrowserSession.page minimal-surface enumeration), T008 Outcome + Context (now documents YAML→`AccessibilityNodeSchema` parse-back step T008 owns). Smoke test phrasing ("Extract AX-tree from amazon.in returns > 50 nodes") preserved — semantic outcome unchanged. No AC-NN / T-NNN scope changes.
   impacted:
     - spec.md + plan.md + impact.md (v0.2 → v0.3) — frontmatter sync
     - spec.md (v0.3 → v0.3.1) + plan.md (v0.3 → v0.3.1) + impact.md (v0.3 → v0.3.1) parallel sync for v0.5 patches
+    - spec.md (v0.3.2) + plan.md (v0.3.2) + impact.md (v0.3.2) + BrowserEngine.ts parallel sync for v0.6 R11.4 ariaSnapshot patch
   unchanged:
     - T006, T007, T009-T012, T014 + T-PHASE1-{DOC,LOGGER,ADAPTERS-README,ROLLUP} polish tasks — bodies, dependency graph, default + per-task kill criteria all preserved verbatim from v0.4
     - All AC-NN and T-NNN IDs (R18 append-only preserved); v0.5 changes are bodies only on T015 + T-PHASE1-TESTS plus mechanical Peregrine swap
@@ -174,7 +176,7 @@ Two foundations must precede the rest:
 - [x] **T006 [US-1] BrowserManager** (AC-01, REQ-BROWSE-NODE-003) — **DONE 2026-05-08** (master orchestrator Stage 2 Wave 2; BrowserEngine.ts + BrowserManager.ts modified; AC-01 conformance 2/2 PASS; walking-skeleton 12/12 GREEN preserved; R9 boundary verified — `from 'playwright'` only in BrowserManager.ts; smoke test: zombie process delta = 0)
   - **Brief:**
     - **Outcome:** `packages/agent-core/src/adapters/BrowserEngine.ts` exports `BrowserEngine` interface + `SessionOptsSchema` + `BrowserSession` types. `packages/agent-core/src/browser-runtime/BrowserManager.ts` exports `BrowserManager` class implementing `BrowserEngine` via Playwright Chromium. `BrowserManager.newSession(opts?)` launches headless Chromium, applies opts, returns BrowserSession with Pino child logger (correlation field `session_id` = uuid).
-    - **Context:** plan.md "Phase 1 Design" — adapter interface design. impact.md captures the contract. R9 enforced: BrowserManager + BrowserEngine.ts are the ONLY files importing `playwright`. BrowserSession.page is the Phase-1-minimal wrapper exposing only goto/accessibility.snapshot/screenshot/addInitScript/evaluate/waitForLoadState.
+    - **Context:** plan.md "Phase 1 Design" — adapter interface design. impact.md captures the contract. R9 enforced: BrowserManager + BrowserEngine.ts are the ONLY files importing `playwright`. BrowserSession.page is the Phase-1-minimal wrapper exposing only goto/ariaSnapshot/screenshot/addInitScript/evaluate/waitForLoadState (R11.4 v0.6 — Playwright 1.57+ replaced `accessibility.snapshot` with `ariaSnapshot()` returning YAML string).
     - **Constraints:** Files < 300 lines (BrowserManager likely ~150-200; BrowserEngine.ts ~50-80). Functions < 50 lines. Named exports. No `console.log`. No `any` without TODO+issue.
     - **Non-goals:** No StealthConfig integration (T007). No extractors (T008-T013). No MCP tool integration (Phase 2).
     - **Acceptance:** `tests/conformance/browser-manager.test.ts` AC-01 block PASSES. Smoke test: `new BrowserManager().newSession()` → `session.close()` → no zombie Chromium process.
@@ -201,8 +203,8 @@ Two foundations must precede the rest:
 
 - [ ] **T008 [P] [US-1] AccessibilityExtractor** (AC-03, REQ-BROWSE-PERCEPT-001)
   - **Brief:**
-    - **Outcome:** `perception/AccessibilityExtractor.ts` exports `accessibilityExtractor.extract(page: BrowserPage): Promise<AccessibilityTree>`. Uses `page.accessibility.snapshot({ interestingOnly: false })` to capture full tree; recursively walks to count nodes; logs warning at < 50 nodes. Returns `AccessibilityTreeSchema`-validated object.
-    - **Context:** plan.md "Phase 0 Research" item 1 — AX-tree fetch decision. T014 PageStateModel sub-schemas already in place (T014 prereq).
+    - **Outcome:** `perception/AccessibilityExtractor.ts` exports `accessibilityExtractor.extract(page: BrowserPage): Promise<AccessibilityTree>`. Uses `page.ariaSnapshot()` (Playwright 1.57+; returns YAML string — the legacy `accessibility.snapshot()` was removed in 1.57); parses the YAML into the recursive `AccessibilityNodeSchema` shape (role + name + state per entry; nesting via YAML indent depth); recursively walks to count nodes; logs warning at < 50 nodes. Returns `AccessibilityTreeSchema`-validated object. The YAML→object parse step lives ONLY here so downstream HardFilter / SoftFilter / ContextAssembler continue to consume the legacy AX-tree object shape.
+    - **Context:** plan.md "Phase 0 Research" item 1 — AX-tree fetch decision (R11.4 v0.3.2 — `ariaSnapshot` not `accessibility.snapshot`). T014 PageStateModel sub-schemas already in place (T014 prereq); `AccessibilityNodeSchema` (`perception/types.ts`) is the parse target. Use `checkAxTreeDepth` (T014) BEFORE `z.parse` to guard against malformed / cyclic YAML.
     - **Constraints:** Pure function (no side effects beyond Pino logging). File < 200 lines. No `any` outside Playwright AccessibilityNode boundary (re-typed via Zod parse).
     - **Non-goals:** No filtering (HardFilter T009). No relevance scoring (SoftFilter T010).
     - **Acceptance:** AC-03 — > 50 nodes for amazon.in homepage; tree includes a searchbox role.

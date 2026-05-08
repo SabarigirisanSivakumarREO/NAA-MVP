@@ -2,7 +2,7 @@
 title: Implementation Plan — Phase 1 Browser Perception
 artifact_type: plan
 status: approved
-version: 0.3.1
+version: 0.3.2
 created: 2026-04-27
 updated: 2026-05-08
 owner: engineering lead
@@ -50,10 +50,12 @@ delta:
       (a) absorbs PD-04 RESOLVED — "Shopify demo storefront (URL TBD)" → "Peregrine PDP" (https://www.peregrineclothing.co.uk/...) in §Phase 1 Design Test strategy fixture list (master orchestrator finding M2-B1 closed);
       (b) NEW §"T015 integration test timeout budget (C1 BINDING)" added between §Per-extractor design and §Test strategy — pins per-step Playwright timeouts ≤ 20 s/site (≤ 60 s/3-sites) with `waitUntil: 'domcontentloaded'` per Session 7 R17.4 review C1 BINDING (master orchestrator finding M1-C1 closed; addresses doom-finding D5 from review-notes.md preventively);
       (c) NEW §"Effort estimate" added after §Phase 1 Design (C3 OPTIONAL from Session 7 review consumed) — per-task hour table totaling ~24-30 h engineering for week-sequencing calibration parity with Phase 0b's plan.md.
+    - v0.3.1 → v0.3.2 (2026-05-08 Stage 2 Wave 2 R11.4 — surfaced by T006 dispatch) — four body lines updated to cite `page.ariaSnapshot()` (Playwright 1.57+; YAML output) instead of removed `page.accessibility.snapshot()`: §Phase 0 Research item 1, §Phase 1 Design > Adapter interface (T006 dep), §Per-extractor design item 1 (AccessibilityExtractor / T008), §Effort estimate row T008. Plan now documents the YAML→AccessibilityNodeSchema parse step T008 owns. No scope changes.
   impacted:
     - spec.md (v0.3 → v0.3.1) — Peregrine swap parallel sync
     - tasks.md (v0.4 → v0.5) — Peregrine swap + C1 BINDING transcribed in T015 brief + T-PHASE1-TESTS Brief format polish
     - impact.md (v0.3 → v0.3.1) — Phase 1b + 1c rows added to Forward Contract (C2 OPTIONAL consumed)
+    - spec.md + tasks.md + impact.md + BrowserEngine.ts (v0.3.2 / v0.6 sync) — R11.4 ariaSnapshot patch
   unchanged:
     - Tech stack table, Project Structure narrative, Approval Gates, Phase 0 Research items 1-5, Per-extractor design items 1-7, Constitution Check, Complexity Tracking
     - All AC-NN / R-NN / SC-NNN IDs (R18 append-only preserved)
@@ -237,7 +239,7 @@ packages/agent-core/src/
 
 **No research needed.** Zero NEEDS CLARIFICATION markers. Open design choices resolved:
 
-1. **Playwright AX-tree fetch method:** `page.accessibility.snapshot({ interestingOnly: false })` — captures hidden + ignored nodes too, then HardFilter prunes. Alternative (`interestingOnly: true`) drops too many nodes for filter logic to verify > 50% reduction.
+1. **Playwright AX-tree fetch method:** `page.ariaSnapshot()` (Playwright 1.57+; the legacy `page.accessibility.snapshot()` was removed in 1.57). `ariaSnapshot()` returns a YAML string representation of the page's accessibility tree (one entry per role + name + state). T008 (AccessibilityExtractor) parses this YAML into the recursive `AccessibilityNodeSchema` shape (defined in `perception/types.ts` v0.4 — same shape downstream HardFilter / SoftFilter consume) so the contract from R-05 onward is unchanged. The parse-back step lives inside T008, NOT in the BrowserManager wrapper, so the R9 boundary file stays minimal. Cyclic / oversized YAML is guarded by `checkAxTreeDepth` (T014) before `z.parse`.
 2. **Tokenizer for size budget:** `tiktoken` `cl100k_base` (Claude/GPT-4 family). Pinned dep version chosen at T014 implementation time.
 3. **Sharp compression strategy for screenshots:** native Playwright JPEG with quality 80 first; if > 150 KB, Sharp re-encodes with `mozjpeg` + reduces dimensions iteratively (one retry max — kill criterion).
 4. **MutationMonitor settle algorithm:** poll for 500 ms with no mutations; once observed, mark stable. Maximum 10 s timeout, then return `stable: false` with `diagnostics.unstable: true`. NOT a busy loop — uses `MutationObserver` events.
@@ -249,7 +251,7 @@ packages/agent-core/src/
 
 ### Adapter interface (T006 dep)
 
-`BrowserEngine` exposes `newSession(opts?)` returning `BrowserSession`. `BrowserSession.page` is a Phase-1-minimal wrapper of Playwright `Page` exposing only methods Phase 1 uses (`goto`, `accessibility.snapshot`, `screenshot`, `addInitScript`, `evaluate`, `waitForLoadState`). This re-typing prevents Playwright type leakage into perception modules.
+`BrowserEngine` exposes `newSession(opts?)` returning `BrowserSession`. `BrowserSession.page` is a Phase-1-minimal wrapper of Playwright `Page` exposing only methods Phase 1 uses (`goto`, `ariaSnapshot`, `screenshot`, `addInitScript`, `evaluate`, `waitForLoadState`). This re-typing prevents Playwright type leakage into perception modules. `ariaSnapshot()` returns `Promise<string>` (YAML); T008 owns the YAML→`AccessibilityNodeSchema` parse-back so the perception layer continues to consume the legacy AX-tree shape (R11.4 v0.3.2 patch).
 
 ### PageStateModel Zod schemas (T014 dep — must land before extractors that emit sub-types)
 
@@ -266,7 +268,7 @@ All schemas `.strict()` (no extra props).
 
 ### Per-extractor design
 
-1. **AccessibilityExtractor** (T008): calls `page.accessibility.snapshot({ interestingOnly: false })`; recursively counts nodes; warns at < 50 nodes; returns root + count.
+1. **AccessibilityExtractor** (T008): calls `page.ariaSnapshot()` (Playwright 1.57+; YAML string output); parses YAML lines into the recursive `AccessibilityNodeSchema` shape (role + name + state per entry; nesting via YAML indent depth); recursively counts nodes; warns at < 50 nodes; returns root + count via `AccessibilityTreeSchema`. Parse step is the ONLY place that touches YAML; downstream consumers (HardFilter / SoftFilter / ContextAssembler) see the legacy AX-tree object shape.
 2. **HardFilter** (T009): pure function on AccessibilityTree; drops nodes by hidden/disabled/aria-hidden/zero-dim; recursive; returns `{ tree: AccessibilityTree; reductionPct: number; reductionFloorWaived: boolean }` — per spec v0.2 AC-04, when input has < 20 pre-filter nodes the > 50% reduction floor is waived and `reductionFloorWaived: true` so downstream diagnostics can distinguish degenerate-page filtering from typical-page filtering.
 3. **SoftFilter** (T010): pure function on filtered tree; scoring formula `score = baseRoleWeight × textWeight × positionWeight × visibilityWeight` (multiplicative per R4.4); top 30 by descending score; returns FilteredDOM.
 4. **MutationMonitor** (T011): `addInitScript` injects MutationObserver harness into page; polls window.__neuralMutationLog; computes settle; returns Diagnostics fragment.
@@ -311,7 +313,7 @@ Per Session 7 review C3 OPTIONAL (`review-notes.md` recommendation: "Add per-tas
 | T-PHASE1-TESTS | 2-3 h | Mechanical scaffolding — 9 conformance test stubs + 1 integration test stub; all must FAIL initially per R3.1 TDD |
 | T006 BrowserManager | 3-4 h | First R9 concrete adapter; precedent-setting; BrowserEngine interface + BrowserSession re-typed wrapper |
 | T007 StealthConfig (reduced) | 1-2 h | Per-session UA + viewport + WebGL rotation; no playwright-extra; pool size 5-10 |
-| T008 AccessibilityExtractor | 1-2 h | Wrapper around `page.accessibility.snapshot({ interestingOnly: false })` + recursive node count |
+| T008 AccessibilityExtractor | 2-3 h | Wrapper around `page.ariaSnapshot()` (Playwright 1.57+; YAML output) + YAML→`AccessibilityNodeSchema` parse-back + recursive node count (R11.4 v0.3.2 — bumped from 1-2 h to 2-3 h to absorb the parse step) |
 | T009 HardFilter | 2 h | Pure function; 4 exclusion criteria; degenerate-page floor (`reductionFloorWaived`) |
 | T010 SoftFilter | 2 h | Multiplicative weight composition (R4.4); top-30 ranking |
 | T011 MutationMonitor | 2-3 h | `addInitScript` injection + `window.__neuralMutationLog` poll; 500 ms settle window |

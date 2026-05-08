@@ -115,23 +115,15 @@ export class BrowserManager implements BrowserEngine {
     // adapter boundary); they encode the deliberate type-narrowing from
     // Playwright's broad signatures to our minimal subset.
     //
-    // NEW ISSUE — Playwright 1.57+ removed `page.accessibility.snapshot`
-    // (replaced by `page.ariaSnapshot()` returning YAML string). Phase 1
-    // spec.md R-05 + impact.md still cite the old API. T008
-    // (AccessibilityExtractor) must reconcile: either (a) update spec.md +
-    // impact.md to ariaSnapshot, or (b) parse the YAML string to the
-    // legacy AX-tree shape inside this wrapper. T006 keeps the legacy
-    // surface so T007/T008 dispatches can decide; the wrapper currently
-    // delegates to ariaSnapshot returning the string boxed in an object
-    // matching the legacy `interestingOnly` opt convention. Returning
-    // `unknown` per the interface keeps consumers honest until T008 lands.
+    // R11.4 v0.3.2 — Phase 1 spec/plan/impact/tasks updated to cite
+    // `page.ariaSnapshot()` directly (Playwright 1.57+; legacy
+    // `accessibility.snapshot()` was removed in 1.57). T008
+    // AccessibilityExtractor owns the YAML→AccessibilityNodeSchema parse-back.
     const page: BrowserPage = {
       goto: async (url, gotoOpts) => {
         await playwrightPage.goto(url, gotoOpts);
       },
-      accessibility: {
-        snapshot: async (_snapOpts) => playwrightPage.ariaSnapshot(),
-      },
+      ariaSnapshot: (snapOpts) => playwrightPage.ariaSnapshot(snapOpts),
       screenshot: (shotOpts) => playwrightPage.screenshot(shotOpts) as Promise<Buffer>,
       addInitScript: async (scriptOrFn) => {
         // Playwright 1.59 returns Promise<Disposable>; we discard.

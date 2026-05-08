@@ -2,7 +2,7 @@
 title: Phase 1 — Browser Perception Foundation
 artifact_type: spec
 status: approved
-version: 0.3.1
+version: 0.3.2
 created: 2026-04-27
 updated: 2026-05-08
 owner: engineering lead
@@ -52,6 +52,7 @@ delta:
     - v0.1 → v0.2 4 polish fixes from /speckit.analyze report (A1, A4, C3, X2) without changing AC-NN IDs (R18 append-only preserved)
     - v0.2 → v0.3 6 polish fixes from /speckit.analyze report — M1 (R10→R13 stale xref for temperature=0); M2 (constitution citation R1-R23 → R1-R26); M3 (R-05 drops misattributed REQ-BROWSE-PERCEPT-002 since AccessibilityExtractor does no filtering); M4 (R-09 cites REQ-BROWSE-PERCEPT-004 for screenshot fallback); L1 (dedupe BrowserEngine heading); L2 (token-budget operator standardized to `<` not `≤`); no AC-NN/R-NN/SC-NNN IDs changed (R18 append-only preserved)
     - v0.3 → v0.3.1 (2026-05-08 master orchestrator Gate 1 REVISE) — mechanical R11.4 patch absorbing PD-04 RESOLVED (Session 8): "Shopify demo (TBD)" / "Shopify demo storefront" / "a Shopify demo" → "Peregrine PDP" (https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy) across summary, US-1 Independent Test, AS-10 acceptance scenario, AC-08, AC-10, SC-001, Assumptions. Walking-skeleton.spec.ts + roadmap v0.8 + T-SKELETON-002 fixture all already lock Peregrine; spec corpus catches up. No AC-NN/R-NN/SC-NNN IDs changed (R18 append-only preserved). Master orchestrator finding M2-B1 closed.
+    - v0.3.1 → v0.3.2 (2026-05-08 Stage 2 Wave 2 R11.4 — surfaced by T006 dispatch) — Playwright 1.57+ removed `page.accessibility.snapshot()`; replaced by `page.ariaSnapshot()` returning a YAML string. R-05 now cites `page.ariaSnapshot()` + parse-back-to-AccessibilityNodeSchema strategy (Strategy A from `.phase-state/1/handoff-2026-05-08-wave2.md`). AC-03 outcome semantics unchanged (parsed AX-tree of > 50 nodes with primary search element). Plan/tasks/impact/BrowserEngine.ts patched in same commit; no AC-NN / R-NN / SC-NNN IDs changed (R18 append-only preserved). T008 brief now documents the YAML→object parse step.
   impacted:
     - Constitution R9 — first concrete adapter implementation lands here (BrowserEngine)
     - tasks-v2.md v2.3.1 — T007 scope reduction reflected in this spec
@@ -174,7 +175,7 @@ AC-NN IDs are append-only on subsequent edits per Constitution R18.
 | R-02 | System MUST implement `BrowserManager` in `packages/agent-core/src/browser-runtime/BrowserManager.ts` that wraps Playwright Chromium and returns `BrowserSession` (Zod-validated) implementing `BrowserEngine` | F-003 | REQ-BROWSE-NODE-003 |
 | R-03 | System MUST provide `StealthConfig` in `browser-runtime/StealthConfig.ts` with reduced scope: per-session UA + viewport + WebGL fingerprint rotation via Playwright native API; NO `playwright-extra` dependency in MVP | F-003 (reduced) | REQ-BROWSE-HUMAN-005, REQ-BROWSE-HUMAN-006 (MVP-reduced); tasks-v2 v2.3.1 |
 | R-04 | System MUST define `PageStateModel` Zod schema (with sub-schemas: `Metadata`, `AccessibilityTree`, `FilteredDOM`, `InteractiveGraph`, `Visual`, `Diagnostics`) in `packages/agent-core/src/perception/types.ts` | F-004 | REQ-BROWSE-PERCEPT-001 |
-| R-05 | System MUST implement `AccessibilityExtractor` in `perception/AccessibilityExtractor.ts` that fetches Playwright AX-tree (via `page.accessibility.snapshot`) returning > 50 nodes for typical e-commerce pages | F-004 | REQ-BROWSE-PERCEPT-001 |
+| R-05 | System MUST implement `AccessibilityExtractor` in `perception/AccessibilityExtractor.ts` that fetches Playwright AX-tree via `page.ariaSnapshot()` (Playwright 1.57+; returns YAML string) and parses the result into the `AccessibilityNodeSchema` recursive shape (per `perception/types.ts` v0.4 — same shape downstream HardFilter/SoftFilter consume), returning > 50 nodes for typical e-commerce pages | F-004 | REQ-BROWSE-PERCEPT-001 |
 | R-06 | System MUST implement `HardFilter` in `perception/HardFilter.ts` removing invisible / disabled / aria-hidden / zero-dim nodes; > 50% reduction on typical pages | F-004 | REQ-BROWSE-PERCEPT-002 |
 | R-07 | System MUST implement `SoftFilter` in `perception/SoftFilter.ts` scoring elements by relevance with multiplicative decay (R4.4); returns top 30 | F-004 | REQ-BROWSE-PERCEPT-003 |
 | R-08 | System MUST implement `MutationMonitor` in `perception/MutationMonitor.ts` injecting `MutationObserver`, settling within 2 s on static, 10 s timeout on dynamic pages | F-003 | REQ-BROWSE-PERCEPT-005, REQ-BROWSE-PERCEPT-006 |
