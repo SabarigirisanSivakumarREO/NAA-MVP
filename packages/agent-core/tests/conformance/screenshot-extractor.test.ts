@@ -12,9 +12,7 @@
  * Playwright's native output exceeds the cap.
  */
 import { describe, expect, test } from 'vitest';
-// @ts-expect-error — module deliberately not yet implemented (T012)
 import { screenshotExtractor } from '../../src/perception/ScreenshotExtractor.js';
-// @ts-expect-error — module deliberately not yet implemented (T006)
 import { BrowserManager } from '../../src/browser-runtime/BrowserManager.js';
 
 const SCREENSHOT_MAX_BYTES = 150 * 1024; // 153_600

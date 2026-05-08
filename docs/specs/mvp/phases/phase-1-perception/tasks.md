@@ -257,7 +257,7 @@ Two foundations must precede the rest:
   - **Smoke test:** Inject + observe + settle within 2 s on example.com
   - **Kill criteria:** default block
 
-- [ ] **T012 [P] [US-1] ScreenshotExtractor** (AC-07)
+- [x] **T012 [P] [US-1] ScreenshotExtractor** (AC-07) — **DONE 2026-05-08** (master orchestrator Stage 2 Wave 3; conformance 2/2 PASS; sharp ^0.33.5 added; single-retry recompression ladder 1280px@q70 → 1024px@q60)
   - **Brief:**
     - **Outcome:** `perception/ScreenshotExtractor.ts` exports `screenshotExtractor.capture(page: BrowserPage): Promise<Visual>`. Uses `page.screenshot({ type: 'jpeg', quality: 80, fullPage: false })`; if Buffer.length > 150 KB, Sharp re-encodes via `sharp(buf).resize({ width: 1280 }).jpeg({ mozjpeg: true, quality: 70 }).toBuffer()`. Single retry max.
     - **Context:** plan.md "Phase 0 Research" item 3 — Sharp compression strategy.
