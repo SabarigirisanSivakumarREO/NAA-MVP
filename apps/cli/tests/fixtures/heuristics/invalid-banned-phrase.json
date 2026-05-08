@@ -1,0 +1,25 @@
+{
+  "id": "TEST-FIXTURE-005",
+  "body": "TEST FIXTURE — NEURAL_TEST_FIXTURE_BODY sentinel. This fixture intentionally contains a banned conversion-rate prediction phrase to exercise check (5) GR-007 enforcement: Adding this widget will increase conversions by 15% per our internal data — clearly a R5.3 violation that lint must reject.",
+  "category": "test_fixture",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.5,
+  "effort_category": "quick_win",
+  "preferred_states": ["default"],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "TEST FIXTURE benchmark"
+  },
+  "provenance": {
+    "source_url": "https://example.com/test-fixture",
+    "citation_text": "TEST FIXTURE citation",
+    "draft_model": "human",
+    "verified_by": "test-fixture",
+    "verified_date": "2026-05-06T00:00:00Z"
+  },
+  "archetype": ["other"],
+  "page_type": ["other"],
+  "device": ["balanced"]
+}

@@ -2,9 +2,9 @@
 title: Neural MVP — Phases Index
 artifact_type: index
 status: approved
-version: 1.6
+version: 1.9
 created: 2026-04-22
-updated: 2026-05-01
+updated: 2026-05-06
 owner: engineering lead
 governing_rules:
   - Constitution R17-R21
@@ -24,9 +24,9 @@ generated_by: pnpm spec:index    # Auto-regenerated when phase folders or sub-ph
 
 | Phase | Name | Status | Tasks | Folder | Depends on | Blocks |
 |---|---|---|---|---|---|---|
-| 0 | Setup | ⚪ not started | M0.1-M0.5 | `phase-0-setup/` | — | 1 |
-| **0b** | **Heuristic Authoring (LLM-assisted, engineering-owned)** | ⚪ not started — spec shipped v0.1 | T0B-001..T0B-005 + T103/T104/T105 | `phase-0b-heuristics/` | 0 | 6 |
-| 1 | Browser Perception Foundation | ⚪ not started | M1.1-M1.10 (T006-T015) | `phase-1-perception/` | 0 | 1b, 2, 5 |
+| 0 | Setup | 🟢 **implemented** (5/5 ACs green; rollup landed 2026-05-05) | M0.1-M0.5 + T-PHASE0-{TEST,DOC,ROLLUP} | `phase-0-setup/` | — | 1 |
+| **0b** | **Heuristic Authoring (LLM-assisted, engineering-owned)** | 🟡 **in progress — infra COMPLETE 2026-05-06 (T0B-001..T0B-005 ✅); content week 4 (T103/T104/T105)** | T0B-001..T0B-005 + T103/T104/T105 | `phase-0b-heuristics/` | 0 | 6 |
+| 1 | Browser Perception Foundation | 🟢 **implemented** (10 ACs green; 142/142 tests PASS; rollup landed 2026-05-09; NF-Phase1-01 v0.4 = 20K tokens) | M1.1-M1.10 (T006-T015) + T-PHASE1-{TESTS,DOC,LOGGER,ADAPTERS-README,ROLLUP} | `phase-1-perception/` | 0 | 1b, 2, 5 |
 | **1b** | **Perception Extensions v2.4** | ⚪ not started | T1B-001..T1B-012 | `phase-1b-perception-extensions/` | 1 | 1c, 6, 7 |
 | **1c** | **PerceptionBundle Envelope v2.5** | ⚪ not started | T1C-001..T1C-012 | `phase-1c-perception-bundle/` | 1b | 7 (EvaluateNode token budget); 13 (state graph master) |
 | 2 | MCP Tools (subset) | ⚪ not started | M2.1-M2.20 (T016-T050) | `phase-2-tools/` | 1 | 5 |
@@ -73,6 +73,8 @@ No drift found in Phase 9 sections — task IDs T156-T175 + T239-T244 + T245-T24
 - **(NEW Session 7 / Phase 1 analyze L4)** `phase-1-perception/{spec,plan,tasks}.md` cite `tasks-v2 v2.3.1` (the version when T007 reduction landed) but canonical version is now v2.3.3 per Session 4 patch. Bump citation to `v2.3.3` (or `v2.3.1 — T007 reduction; current corpus v2.3.3`) when v2.3.4 lands.
 - **(NEW Session 7 / Phase 6 analyze L1)** Phase 6 polish task IDs (`T-PHASE6-TESTS`, `T-PHASE6-LOGGER`, `T-PHASE6-FIXTURES`, `T-PHASE6-DOC`, `T-PHASE6-ROLLUP`) defined in `phase-6-heuristics/tasks.md` but absent from canonical `tasks-v2.md` Phase 6 section. Same retroactive treatment as Phase 1 carry-over (above) — bundle when v2.3.4 lands.
 - **(NEW Session 7 / Phase 6 analyze L3)** `phase-6-heuristics/tasks.md` derived_from cites "T4B-013 v0.2 extension" / "T4B-013 — v0.2 extension" terminology that was correct at v0.2 but is now mid-version (artifact at v0.4). Cosmetic: rephrase to "T4B-013 — extension landed v0.2; carried in v0.4+" when v2.3.4 lands.
+- **(NEW Session 9 / Phase 0b T0B-001 R11.4 patch — 2026-05-06)** `docs/specs/final-architecture/09-heuristic-kb.md` v2.3 → v2.4 — collapse §9.1 RICH structured `HeuristicSchema` (`name`, `source`, `severity_if_violated`, `reliability_tier`, `detection.{lookFor, positiveSignals, negativeSignals, dataPoints, evidenceType, pageTypes, businessTypes}`, `recommendation.{summary, details, researchBacking}`, `viewport_applicability`) into T101's body-string design (`packages/agent-core/src/analysis/heuristics/types.ts` — landed 2026-05-05 commit `3d2119c`). Modern LLM-first analysis prefers prose `body` over JSON-fragmented prompt instructions. T101 is the implementation source-of-truth that supersedes §9.1's structured shape. Capture the design rationale + migration mapping (§9.1 fields → T101 equivalents: `archetype`/`page_type`/`device` arrays REPLACE `detection.pageTypes`/`detection.businessTypes`; `business_impact_weight` REPLACES `severity_if_violated`+`reliability_tier`-based prioritization; `category` + Phase 6 T109 TierValidator REPLACE `reliability_tier` field; `body` prose REPLACES six structured prose fields) in the v2.4 delta block. Touch when Phase 6 implementation pre-flight runs in week 4 per CLAUDE.md §8c.
+- **(NEW Session 9 / Phase 0b T0B-001 R11.4 patch — 2026-05-06)** `docs/specs/mvp/phases/phase-6-heuristics/spec.md` v0.4 → v0.5 — refresh AC-01 / AC-02 / R-01 field references from §9.1's rich structured shape to T101's body-string shape. AC-01 conformance test path `tests/conformance/heuristic-schema-base.test.ts` continues unchanged (T101 `HeuristicSchemaBase` already has `id` + `body` + `category` — the test just exercises actual fields). AC-02 conformance test extends to cover ProvenanceSchema (5 strict fields) + BenchmarkSchema discriminatedUnion + 3 optional manifest selectors per T101's actual surface. Touch when Phase 6 implementation pre-flight runs in week 4 per CLAUDE.md §8c. Coordinated with the §9.1 v2.4 punch-list item above — both supersede the legacy structured design in lockstep.
 
 ---
 
@@ -81,6 +83,262 @@ No drift found in Phase 9 sections — task IDs T156-T175 + T239-T244 + T245-T24
 **Phase 1 v0.3 polish:** 8 analyze findings (M1-M4 + L1-L2 + L5-L6) applied across `phase-1-perception/{spec,plan,tasks,impact}.md`. Mechanical fixes only — no AC-NN / R-NN / SC-NNN ID changes (R18 append-only preserved). 2 carry-over items (L3, L4) added to v2.3.4 punch-list above. R17.4 review APPROVED with conditions C1 BINDING + C2/C3 OPTIONAL per [`phase-1-perception/review-notes.md`](phase-1-perception/review-notes.md) v1.0; status bumped to `approved`.
 
 **Phase 6 v0.4 catch-up polish:** 4 analyze findings (H1 + H2 + H3 + M1) applied as a single v0.4 sync across `phase-6-heuristics/{spec,plan,tasks,impact}.md`. Catch-up consolidates two pending updates that never reached plan/impact: (a) v0.2 Pino redaction-pattern → BenchmarkSchema mapping; (b) v0.3 contract surface for T4B-013 + AC-11 + R-09 + REQ-CONTEXT-DOWNSTREAM-001 + manifest selectors (`archetype` / `page_type` / `device`). H1 closes the R6 enforcement gap in T-PHASE6-LOGGER (3 wrong-syntax paths → 6 correct paths matching spec.md:101 authoritative list). Versions: spec.md v0.3→v0.4; plan.md v0.2→v0.4 (skip v0.3 for catch-up); tasks.md v0.3→v0.4; impact.md v0.1→v0.4 (skip v0.2/v0.3 for catch-up). 2 carry-over items (L1, L3) added to v2.3.4 punch-list above. R17.4 review pending.
+
+---
+
+## v1.9 changes (2026-05-06 — ★ WALKING-SKELETON 10/10 COMPLETE; Wednesday demo gate PASSED ★)
+
+Session 10 close-out 2026-05-06. Week 1 walking-skeleton FULLY DELIVERED across Day 2-3 of Session 10 — T-SKELETON-001 through T-SKELETON-010 ALL DONE; Wednesday demo gate via `pnpm test:integration` PASSED 12/12; demo prep #1+#2 done; demo prep #3 (screenshots) DEFERRED per engineering-lead direction; Wednesday demo executed (post-demo feedback log pending; may land in Session 11).
+
+### Phase row state-flips (no row flips this version)
+
+All 4 approved phases (0, 0b, 1, 6) retain their existing status; Phase 1 + Phase 6 stay 🟡 partial because only T014 + T101 forward-pulled tasks landed (rest of Phase 1 lands week 2; rest of Phase 6 lands week 4). Phase 0 stays 🟢 implemented; Phase 0b stays 🟡 in-progress (infra COMPLETE; content week 4).
+
+### Walking-skeleton commit chain (since Session 9 close `dbf17ce`)
+
+| SHA | Task / Patch | Files | Highlight |
+|---|---|---|---|
+| `20d5f95` | T-SKELETON-001 (orchestrator + CLI + 8 placeholders) | 16 | PD-07 c raw process.argv; foundation contract |
+| `f178b5e` | T-SKELETON-002 (Peregrine PDP fixture + BrowserManager) | 7 | T014 schema; page_title log (roadmap v0.4) |
+| `630838f` | T-SKELETON-003 (3 heuristic fixtures + HeuristicLoader) | 9 | NEURAL_TEST_FIXTURE_BODY sentinel; R6 spot-check (roadmap v0.5) |
+| `7eae758` | T-SKELETON-004 (EvaluateNode 2 hardcoded findings) | 5 | **R5.3 + GR-007 first runtime activation** |
+| `e067b64` | T-SKELETON-005 (SelfCritique passthrough) | 5 | R5.6 forward path; verdicts_summary log |
+| `9e7ef83` | T-SKELETON-006 (EvidenceGrounder passthrough) | 5 | Phase 7 9-GR-rules forward path; rejection_summary |
+| `c108266` | T-SKELETON-007 (AnnotateNode no-op) | 5 | Phase 7 T131 Sharp overlay forward path; annotation_count |
+| `84ed140` | T-SKELETON-008 (StoreNode JSON-write) | 6 | **3-stage promotion path** (wk 3/9/11); R7.4 forward (roadmap v0.6) |
+| `c1ed7a4` | T-SKELETON-009 (Report TXT) | 6 | Phase 9 T245-T249 + R6 channels 3+4 forward path (roadmap v0.7) |
+| `a66970b` | **★ T-SKELETON-010 ★** (acceptance test) | 4 | **Wednesday demo gate PASSED** (roadmap v0.8) |
+| `c7a3770` | wk-01.md demo script authored (267 LOC; 8 sections) | 3 | R5.3 in-flight false-positive fix (Q&A meta-text) |
+| `3aae44a` | demo-prep #3 deferred + Wednesday demo ACTIVE | 2 | tracking-only commit |
+| (this) | Session 10 close-out (handover v1.5 + INDEX v1.9 + Session 11 kickoff) | (multi) | branch push to origin |
+
+12 task/patch commits in Session 10 alone (10 walking-skeleton tasks + 1 demo script + 1 demo-prep tracking flip). Plus this close-out commit = 13 Session 10 commits. **28 cumulative branch commits since branch-cut**, all pushed to origin at session close.
+
+### 5 lightweight Option G roadmap patches (single-commit pattern; status:draft + mechanical/non-AC-changing)
+
+| Patch | Task triggering | Drift | Resolution |
+|---|---|---|---|
+| v0.3 → v0.4 | T-SKELETON-002 | `example-com.json` fixture name vs Peregrine demo lock | rename fixture path in §6 line + §7 demo log line |
+| v0.4 → v0.5 | T-SKELETON-003 | "TEST FIXTURE" body marker vs T0B-004 D1 BINDING NEURAL_TEST_FIXTURE_BODY sentinel | additive — both strings now embedded in fixtures for cross-package R6 grep |
+| v0.5 → v0.6 | T-SKELETON-008 | `Promise<void>` signature vs T-SKELETON-001 placeholder which orchestrator USES for log path correlation | align spec to `Promise<string>` (more useful return type) |
+| v0.6 → v0.7 | T-SKELETON-009 | vague `audit` argument name vs T-SKELETON-001 placeholder using structured `ReportInput` interface | align spec to `Report.render({url, auditRunId, findings, rejectedCount, durationMs})` |
+| v0.7 → v0.8 | T-SKELETON-010 | `https://example.com` URL + `example-com-audit.txt` filename + "at least 1 fake finding line" vs Peregrine PDP demo lock + T-SKELETON-004's exactly-2-finding precision | align spec to Peregrine URL + correct filename + exact-2 finding-line count |
+
+### Test surface end-state
+
+| Suite | Tests | Pass |
+|---|---|---|
+| @neural/agent-core unit | 108 (15 perception + 40 heuristics + 8 BrowserManager + 8 HeuristicLoader + 8 EvaluateNode + 6 SelfCritiqueNode + 6 EvidenceGrounder + 5 AnnotateNode + 6 StoreNode + 6 Report) | ✅ |
+| @neural/cli conformance | 18 (heuristic-lint R6 IP boundary) | ✅ |
+| Playwright integration | 12 (5 Phase 0 acceptance + 7 walking-skeleton acceptance) | ✅ |
+| **Total** | **138** | **✅ all green** |
+
+Walking-skeleton acceptance gate at `tests/acceptance/walking-skeleton.spec.ts` validates entire `pnpm cro:audit --url=<peregrine PDP>` pipeline end-to-end in 901ms (~33× safety margin under 30s cap). R5.3 + R6 regression guards active via AC-W6 + AC-W7.
+
+### Demo prep state
+
+- ✅ #1 Pin Peregrine URL across artifacts (locked across roadmap v0.4-v0.8 + INDEX week-1 progress + wk-01.md frontmatter + walking-skeleton.spec.ts)
+- ✅ #2 Author docs/specs/mvp/demo-scripts/wk-01.md (267 LOC; 8 sections)
+- ⏭️ #3 Capture pre-demo happy-path screenshots — DEFERRED per engineering-lead direction
+- 🟡 Wednesday demo execution (2026-05-06) — gate PASSED via pnpm test:integration; live screen-share executed
+- ☐ Post-demo: log feedback to docs/specs/mvp/demo-feedback.md — pending Session 11
+
+### What Session 11 should do next
+
+Per `docs/specs/mvp/sessions/kickoff-session-11.md` (NEW — authored in this close-out commit):
+
+1. Read handover v1.5 + INDEX v1.9 + roadmap v0.8 + active phase folder `phase-1-perception/`
+2. Run `/speckit.analyze` on Phase 1 (re-verify since Session 7 R17.4 approval; T101 forward-pull may have downstream impacts)
+3. Resolve any CRITICAL/HIGH analyze findings via R11.4 patches
+4. Apply C1 BINDING from Session 7 review notes at T015 implementation time (per-step Playwright timeout budgets ≤20s/site / ≤60s/3-sites; waitUntil:'domcontentloaded' not 'load')
+5. Implement Phase 1 (10 tasks): T-PHASE1-TESTS → T006-T013 → T015 → 4 polish tasks → R17 lifecycle bump approved → implemented → R19 phase-1-current.md rollup → INDEX row 1 flip 🟡 → 🟢
+6. R20 impact.md required at T-SKELETON-002 → real-BrowserManager supersession (PageStateModel contract surface activates per roadmap §8 promotion table)
+
+### Pending decisions for Session 11
+
+- ~~**PD-01**~~ **RESOLVED 2026-05-08 (Session 12 master orchestrator Gate 1 REVISE) — SLIP to weeks 3-4**. Phase 1 alone is substantial (first network/Playwright phase + C1 BINDING + R20 impact + 3-site fixture set); impact.md v0.3.1 explicitly documents 1b/1c as separate phases with their own forward contracts.
+- **PD-05 STILL OPEN**: .claude/settings.local.json cosmetic git-hygiene fix
+- PD-04 + PD-07 RESOLVED Session 10; inherited
+
+### Implementation-roadmap.md week 1 final state
+
+- [x] T-PHASE0-TEST + T001-T005 (Phase 0 setup) — done Day 1 (Session 8)
+- [x] T014 forward-pulled from Phase 1 — done Day 1 (Session 8)
+- [x] T101 forward-pulled from Phase 6 — done Day 1 (Session 8)
+- [x] T0B-001..T0B-005 (Phase 0b infra) — done Day 2 (Session 9)
+- [x] **★ T-SKELETON-001..010 ★** — **done Day 2-3 (Session 10) ★ WALKING-SKELETON 10/10 COMPLETE ★**
+- [x] **★ Wednesday demo gate ★** — **PASSED via pnpm test:integration 12/12 (Session 10)**
+- [x] Author wk-01.md demo script — done Session 10
+- ⏭️ Capture pre-demo screenshots — DEFERRED per engineering-lead direction
+- 🟡 Wednesday demo execution (2026-05-06) — live screen-share completed
+- ☐ Post-demo feedback log — pending Session 11
+
+---
+
+## v1.8 changes (2026-05-06 — Phase 0b infrastructure layer complete)
+
+Second phase to advance under the per-phase corpus + walking-skeleton model. **Phase 0b infrastructure landed in a single 1-day session (Session 9, 2026-05-06) on `feat/week-1-walking-skeleton` branch.** Branch advanced from `6c56d70` → `a141a49` (6 additional commits = 16 cumulative on branch).
+
+### Phase 0b row flipped: ⚪ not started → 🟡 in progress
+
+5 of 8 tasks marked `✅ DONE 2026-05-06` in `phase-0b-heuristics/tasks.md` v0.5 (T0B-001 + T0B-002 + T0B-003 + T0B-004 + T0B-005). Content tasks T103/T104/T105 remain ⚪ pending in week 4 — flips to 🟢 + R17 implemented + R19 rollup when those land + Phase 6 T112 cross-phase acceptance passes.
+
+### R11.4 spec defects surfaced + patched in flight (Session 9)
+
+Two waves, both PATH A continuations of the §9.1 → T101 supersession pattern:
+
+| Wave | When surfaced | Patch | Commit |
+|---|---|---|---|
+| 1 | T0B-001 brief load (start of Day 2) | spec.md/plan.md/tasks.md v0.3 → v0.4 — §Mandatory References supersession callout (§9.1 LEGACY; T101 source-of-truth at `packages/agent-core/src/analysis/heuristics/types.ts`); plan.md §2 prompt structure rewritten from §9.1 rich-structured (~25 fields) to T101 body-string design (11 fields); R-01 + AC-01 wording cite T101 file path | T0B-001 commit `f54c040` |
+| 2 | T0B-004 brief load (mid-Day-2) | spec.md/plan.md/tasks.md v0.4 → v0.5 — 4 stale references missed in v0.4 sweep (AC-04 + AC-15 + R-04 + plan.md §5 — banned-phrase regex target was `recommendation.summary + recommendation.details`, both nonexistent in T101); patched to target `body` field. Two commits per Day 1 protocol "fix spec before implementing" cadence. | spec patch commit `62d5e03`; impl commit `b861f04` |
+
+v2.3.4 punch-list extended in `f54c040` with §9.1 v2.4 architecture-spec rewrite + Phase 6 spec.md v0.5 polish queue items per CLAUDE.md §8c per-phase JIT analyze pre-flight pattern.
+
+### R23 BINDING conditions resolved
+
+| ID | Source | Condition | Resolution |
+|---|---|---|---|
+| **D1** (BINDING) | Phase 0b R17.4 review (Session 6 review-notes.md) | T0B-004 lint CLI MUST redact Zod-error `received: <value>` content; conformance test asserts via `NEURAL_TEST_FIXTURE_BODY` sentinel | **SATISFIED** in T0B-004 commit `b861f04`. `lintFile()` extracts ONLY `issue.path` + `issue.code` (NOT `issue.message`); 18 conformance tests assert sentinel never appears in stderr/stdout for any of 5 invalid + 1 valid fixture. |
+| **D2** (BINDING) | same | T0B-005 README MUST explicitly forbid Slack/email/screenshot/support-ticket sharing of drafting LLM responses | **SATISFIED** in T0B-005 commit `a141a49`. README §3 "R6 / R15.3.3 IP boundary" 8-row forbidden-channel table covers all 4 BINDING channels + 4 defense-in-depth additional rows with constitutional-rule citations per row. |
+| **D3** (OPTIONAL) | same | Pre-commit hook rejecting `^.heuristic-drafts/` commits | **DEFERRED to v1.0.1** with 4 documented reasons in tasks.md v0.5 T0B-005 entry: (a) `.husky/pre-commit` infrastructure scope expansion outside Phase 0b; (b) `.gitignore` already excludes `.heuristic-drafts/` (T0B-004 commit `b861f04`); (c) D2 BINDING text + T0B-002 + T0B-003 already enforces at human-protocol layer; (d) v1.0.1 is the right scope for git-infrastructure additions. |
+
+### Pre-authorized scope expansion — Vitest wiring at apps/cli
+
+Phase 0 T003 deferred apps/cli test scaffolding to "Phase 5+ alongside subcommands". T0B-004 AC-04 explicitly required `apps/cli/tests/conformance/heuristic-lint.test.ts` to be a real Vitest test → deferral revoked NOW. Wired with minimal `vitest.config.ts` mirroring `packages/agent-core/vitest.config.ts` pattern. `apps/cli/package.json` test script flipped from placeholder echo to `vitest run --passWithNoTests`. Adds `@neural/agent-core: workspace:*` + `glob: ^11.0.0` + `vitest: ^2.1.0` + `tsx: ^4.19.0` deps. Documented as agent reasoning per CLAUDE.md §8b in T0B-004 commit message.
+
+### Test surface growth
+
+| Workspace | Before Session 9 | After Session 9 |
+|---|---|---|
+| @neural/agent-core (unit) | 55 tests (15 perception + 40 heuristics from Day 1 forward-pulled schemas) | 55 tests (unchanged) |
+| @neural/cli (conformance) | 0 tests (placeholder echo) | 18 tests (heuristic-lint conformance) |
+| **Total** | **55** | **73** |
+
+All FULL TURBO cache hits after first run; <1s per workspace.
+
+### Commit chain (`feat/week-1-walking-skeleton` Session 9)
+
+| SHA | Task / Patch | Files | LOC |
+|---|---|---|---|
+| `f54c040` | T0B-001 — drafting prompt template + Phase 0b spec/plan/tasks v0.4 R11.4 patch | 5 / +584 / -71 | net +513 |
+| `2c1bad1` | T0B-002 — verification protocol template (8 steps + 3-strike rule + R6 discipline section) | 2 / +359 / -4 | net +355 |
+| `8c8eaba` | T0B-003 — PR Contract Proof block template | 2 / +242 / -4 | net +238 |
+| `62d5e03` | Phase 0b spec/plan/tasks v0.4 → v0.5 R11.4 PATH A continuation (banned-phrase target = body) | 3 / +13 / -10 | net +3 |
+| `b861f04` | T0B-004 — pnpm heuristic:lint CLI + Vitest at apps/cli + 18 conformance tests | 14 / +916 / -5 | net +911 |
+| `a141a49` | T0B-005 — heuristics-repo/README.md + D2 BINDING + D3 deferred | 2 / +279 / -5 | net +274 |
+| (this) | Session 9 close-out — handover v1.3 + INDEX v1.8 + Session 10 kickoff prompt | (multi) | (close-out) |
+
+### What Phase 0b content authoring (T103/T104/T105) should do next
+
+When week 4 begins, the heuristic-content authoring workstream:
+
+1. Read `heuristics-repo/README.md` (T0B-005) end-to-end + skim 4 sibling templates (T0B-001/002/003/004) — see README §6 "First-30-min author onboarding"
+2. Pick first heuristic from tasks-v2.md Phase 6 section (T103 ~15 Baymard, T104 ~10 Nielsen, T105 ~5 Cialdini)
+3. Run 4-step workflow: Draft (T0B-001 prompt) → Verify (T0B-002 protocol) → Lint (`pnpm heuristic:lint <file>`) → Commit (T0B-003 PR Proof block)
+4. Spot-checks at +10 / +20 / +30 marks per F-012 acceptance (≤1 of 5 divergence per round)
+5. Phase 6 T112 cross-phase acceptance test loads all 30 heuristics → if green, Phase 0b → 🟢 implemented (with R17 bumps + R19 rollup + this row flip 🟡 → 🟢)
+
+### Implementation-roadmap.md week 1 progress
+
+Per [implementation-roadmap.md](../implementation-roadmap.md) §7 Week 1:
+
+- [x] T-PHASE0-TEST + T001-T005 (Phase 0 setup) — done Day 1
+- [x] T014 forward-pulled from Phase 1 (PageStateModel schema) — done Day 1
+- [x] T101 forward-pulled from Phase 6 (HeuristicSchemaExtended) — done Day 1
+- [x] T0B-001..T0B-005 (Phase 0b infra) — **done Day 2**
+- [x] T-SKELETON-001 (orchestrator + CLI subcommand + 8 placeholder nodes; PD-07 c) — **done Day 2-3 (Session 10 2026-05-05)**
+- [x] T-SKELETON-002 (Peregrine PDP fixture + BrowserManager.capture() Zod-parses + page_title log enrichment + 8 unit tests; roadmap v0.3 → v0.4 fixture-name patch) — **done Day 2-3 (Session 10 2026-05-05/06)**
+- [x] T-SKELETON-003 (3 synthetic heuristic fixtures with NEURAL_TEST_FIXTURE_BODY sentinel + HeuristicLoader.loadAll() glob-loads + Zod-parses + sorts + heuristic_ids log enrichment + 8 unit tests + R6 spot-check; roadmap v0.4 → v0.5 sentinel-alignment patch) — **done Day 2-3 (Session 10 2026-05-06)**
+- [x] T-SKELETON-004 (EvaluateNode → 2 hardcoded raw findings tagged source='skeleton-stub' referencing Peregrine PDP + SKELETON-CHECKOUT-001 + SKELETON-CONTENT-003 + R5.3+GR-007 banned-phrase static-check + 8 unit tests + R5.3 spot-check on artifacts) — **done Day 2-3 (Session 10 2026-05-06)**
+- [x] T-SKELETON-005 (SelfCritiqueNode passthrough confirmation + R5.6 Phase 7 T121 forward-path docstring + verdicts_summary log enrichment + 6 unit tests covering passthrough length/verdict/field-preservation/empty/order/idempotence) — **done Day 2-3 (Session 10 2026-05-06)**
+- [x] T-SKELETON-006 (EvidenceGrounder passthrough confirmation + Phase 7 T122-T130 forward-path docstring with all 9 GR rules detail ★ second critical risk gate ★ + rejection_summary log enrichment + 6 unit tests covering envelope shape/passthrough/empty rejected/field-preservation/empty defensive/idempotence) — **done Day 2-3 (Session 10 2026-05-06)**
+- [x] T-SKELETON-007 (AnnotateNode no-op passthrough confirmation + Phase 7 T131 week 9 Sharp severity-color overlay forward-path docstring + annotation_count=0 log placeholder + 5 unit tests covering passthrough length/field-preservation/empty defensive/order/idempotence) — **done Day 2-3 (Session 10 2026-05-06)**
+- [x] T-SKELETON-008 (StoreNode JSON-write confirmation with tempdir-isolated tests + 3-stage promotion-path docstring wk 3 / wk 9 / wk 11 + R7.4 append-only forward path + findings_count log enrichment + 6 unit tests with os.tmpdir+mkdtemp+afterEach cleanup; roadmap v0.5 → v0.6 Promise<void> → Promise<string> Option G patch) — **done Day 2-3 (Session 10 2026-05-06)**
+- [x] T-SKELETON-009 (Report plain-text confirmation + Phase 9 T245-T249 week 10 HTML+PDF forward-path docstring + F-018 8-section structure detail + R6 channels 3+4 first runtime note + report_format/bytes_written log enrichment + 6 unit tests covering header/per-finding/order/empty/interpolation/idempotence; roadmap v0.6 → v0.7 audit → ReportInput Option G patch) — **done Day 2-3 (Session 10 2026-05-06)**
+- [x] **★ T-SKELETON-010 ★** (real Playwright Test acceptance suite at tests/acceptance/walking-skeleton.spec.ts — 7 tests: AC-W1 exit-0+<30s + AC-W2 both output files exist + AC-W3 SKELETON-* finding markers + AC-W4 locked observation substrings + AC-W5 findings.json shape (exactly 2 entries) + AC-W6 R5.3 banned-phrase regression guard + AC-W7 R6 sentinel regression guard; pnpm test:integration 12/12 green incl Phase 0 baseline 5/5; wall-clock 15.6s total / AC-W1 at 901ms / AC-W2..W7 1-9ms; roadmap v0.7 → v0.8 example.com → Peregrine PDP + finding-line precision Option G patch) — **done Day 2-3 (Session 10 2026-05-06)** ★ **WALKING-SKELETON 10/10 COMPLETE — Wednesday demo gate PASSED** ★
+
+### Demo prep
+
+- [x] Pin Peregrine URL across artifacts (locked Session 8 PD-04; reflected in roadmap v0.4/v0.5/v0.8 + handover block 6 + demo-scripts/wk-01.md)
+- [x] Author `docs/specs/mvp/demo-scripts/wk-01.md` (8 sections: TL;DR + pre-demo checklist + 6-step demo flow + verbatim expected output + Q&A talking points + transparency table + week-2 preview + cross-references; 267 LOC) — **done Day 3 (Session 10 2026-05-06)**
+- ⏭️ **Capture pre-demo happy-path screenshots** — **deferred per engineering-lead direction 2026-05-06**: wk-01.md verbatim output blocks already serve as ANSI-rendered copy-paste-ready slides + live demo produces fresh authentic output (preferred over pre-captured static screenshots for live screen-share scenarios)
+- 🟡 **Wednesday demo execution** — **ACTIVE 2026-05-06** (gate PASSED via `pnpm test:integration` 12/12; acceptance suite at `tests/acceptance/walking-skeleton.spec.ts` validates entire pipeline; ready for live screen share against locked Peregrine PDP URL)
+- [ ] Post-demo: log feedback to `docs/specs/mvp/demo-feedback.md` (NEW; will create after demo completes)
+- [ ] T-SKELETON-010 (Playwright Test acceptance — `pnpm cro:audit --url=...` exits 0 + writes `./out/<slug>-audit.txt` with ≥1 finding line; <30s) — pending
+- [ ] Wednesday demo (2026-05-06) — run `pnpm cro:audit --url=<peregrine PDP>` end-to-end through stubbed pipeline
+
+---
+
+## v1.7 changes (2026-05-05 — Phase 0 implementation complete)
+
+First phase to ship under the per-phase corpus + walking-skeleton model. **Phase 0 implementation landed in a single 1-day session (Session 8, 2026-05-05) on `feat/week-1-walking-skeleton` branch.**
+
+### Phase 0 row flipped: ⚪ not started → 🟢 implemented
+
+All 8 task lines (T-PHASE0-TEST + T001-T005 + T-PHASE0-DOC + T-PHASE0-ROLLUP) marked `[x]` in `phase-0-setup/tasks.md` v0.6. Acceptance suite `tests/acceptance/phase-0-setup.spec.ts` runs 5/5 green via `pnpm test:integration`.
+
+### R17 status bumps (CLAUDE.md §8c)
+
+| Artifact | Before | After |
+|---|---|---|
+| `phase-0-setup/spec.md` | v0.5 `approved` | **v0.6 `implemented`** (will → `verified` when Phase 1 begins) |
+| `phase-0-setup/plan.md` | v0.3 `approved` | **v0.4 `implemented`** |
+| `phase-0-setup/tasks.md` | v0.5 `approved` | **v0.6 `implemented`** |
+| `phase-0-setup/README.md` | v1.1 `approved` | **v1.2 `implemented`** |
+| `phase-0-setup/phase-0-current.md` | did not exist | **NEW v1.0 `implemented`** (R19 rollup) |
+
+### R19 rollup landed
+
+`phase-0-setup/phase-0-current.md` v1.0 — 8 sections per `templates/phase-rollup.template.md`. Compressed Phase 0 system state for Phase 1 to read first (active modules, data contracts in effect [none], system flows, known limitations carried forward, open risks for Phase 1, conformance gate status, what Phase 1 should read, cost+time summary).
+
+### R11.4 spec defects surfaced + patched during Phase 0 implementation
+
+| # | Defect | Patch |
+|---|---|---|
+| 1 | spec.md AC-04 conflated "binaries preinstalled" with "extension CREATEd in DB" (`pgvector/pgvector:pg16` ships binaries but `/docker-entrypoint-initdb.d/` empty) | spec.md v0.3 → v0.4: AC-04 query switched from `pg_extension` (CREATEd) to `pg_available_extensions` (binaries-only). CREATE EXTENSION belongs to T005's `pnpm db:migrate` per existing §Assumptions design. AC-NN ID preserved (R18 append-only). |
+| 2 | spec.md AC-05 cited `DATABASE_URL` but pre-existing `.env.example` (authored 2026-04-24, before the spec) uses `POSTGRES_URL` consistent with docker-compose POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB convention | spec.md v0.4 → v0.5: AC-05 env var name corrected to `POSTGRES_URL`. CLAUDE_MODEL also dropped (model name `claude-sonnet-4-*` is hardcoded per CLAUDE.md §2; no env var). AC-NN ID preserved. |
+
+### Pre-authorized deviations from spec (CLAUDE.md §8b agent reasoning log)
+
+- **pnpm 9 → pnpm 10.33.3** (matches local + back-compat with pnpm 9 workspaces). Pinned via `packageManager` field in root package.json.
+- **engines.node: "22"** (CI-pinned even though local is Node v24). Matches `.nvmrc`.
+- **T004 + T005 reframed from "author" → "VERIFY"**: `docker-compose.yml` + `.env.example` were pre-existing (authored 2026-04-24 alongside Phase 0 setup planning). User kickoff explicitly authorized verification-only treatment.
+
+### Env install side-effect
+
+Microsoft Visual C++ Redistributable installed via `winget install Microsoft.VCRedist.2015+.x64` to supply UCRT API set forwarders required by `turbo.exe` (and future Playwright Chromium binaries). One-time host fix; documented in root README troubleshooting + `phase-0-current.md` §4 known limitations.
+
+### Commit chain (`feat/week-1-walking-skeleton`)
+
+| SHA | Task | Files | AC |
+|---|---|---|---|
+| `9919449` | T-PHASE0-TEST + T001 (bundled) | 10 files / +395 LOC | AC-01 |
+| `bb63cd0` | T002 — agent-core skeleton + Pino | 10 files / +1316 LOC | AC-02 |
+| `90ab537` | T003 — apps/cli + cro:audit | 9 files / +372 LOC | AC-03 |
+| `1e9ff98` | T004 — verify docker + spec v0.4 | 3 files / +33 LOC | AC-04 |
+| `bd09040` | T005 — db:migrate stub + spec v0.5 | 5 files / +186 LOC | AC-05 |
+| `42a21fb` | T-PHASE0-DOC — root README quickstart | 2 files / +138 LOC | (polish) |
+| (this) | T-PHASE0-ROLLUP — phase-0-current.md + R17 status bumps | (multi) | (phase exit) |
+
+### What Phase 1 should do next
+
+Per `phase-0-current.md` §7 + `phase-1-perception/README.md` reading order:
+
+1. Read `phase-0-current.md` (compressed Phase 0 state) — this rollup
+2. Open `phase-1-perception/{README,spec,tasks}.md`
+3. Apply BINDING condition C1 from Session 7 R17.4 review (T015 Playwright timeout budgets ≤20s/site; ≤60s for 3 sites; `waitUntil: 'domcontentloaded'`)
+4. T014 (PageStateModel Zod schema) is forward-pulled to week 1 per `implementation-roadmap.md` §6 — needed by walking-skeleton T-SKELETON-002 contract test
+
+### Implementation-roadmap.md week 1 progress
+
+Per [implementation-roadmap.md](../implementation-roadmap.md) §7 Week 1:
+
+- [x] T-PHASE0-TEST + T001-T005 (Phase 0 setup) — done
+- [ ] T014 forward-pulled from Phase 1 (PageStateModel schema)
+- [ ] T101 forward-pulled from Phase 6 (HeuristicSchemaExtended)
+- [ ] T0B-001..T0B-005 (Phase 0b infra)
+- [ ] T-SKELETON-001..010 (walking skeleton stubs)
+- [ ] Wednesday demo (2026-05-06) — run `pnpm cro:audit --url=<peregrine PDP>` end-to-end through stubbed pipeline
 
 ---
 

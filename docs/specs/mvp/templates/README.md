@@ -16,7 +16,8 @@ Every artifact in our spec corpus falls into one of these templates. Copy the te
 |---|---|---|
 | `frontmatter-lifecycle.template.md` | YAML frontmatter block required on every artifact | R17.1, R17.5 |
 | `impact.template.md` | Impact analysis for cross-cutting changes | R20 |
-| `phase-rollup.template.md` | Phase-exit system state snapshot | R19 |
+| `phase-rollup.template.md` | Phase-exit system state snapshot (prose; "what was built") | R19 |
+| `phase-validation.template.md` | Phase-exit ASCII proof artifact (5 diagrams + trust spot-check list; "how it fits together"). Sibling to rollup; closes AI-built-code comprehension gap. Authored at Stage 4 exit by master orchestrator. | R19 (sibling artifact) |
 | `system-current.template.md` | Live compressed current-system view | R17 concept, §12 PRD |
 | `spec-to-code-matrix.template.md` | Auto-generated traceability matrix format | R21 |
 

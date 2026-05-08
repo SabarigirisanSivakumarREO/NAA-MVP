@@ -1,0 +1,25 @@
+{
+  "id": "TEST-FIXTURE-006",
+  "body": "TEST FIXTURE — NEURAL_TEST_FIXTURE_BODY sentinel. This file intentionally has trailing comma to fail JSON parse — exercises check (0) JSON syntax handling.",
+  "category": "test_fixture",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.5,
+  "effort_category": "quick_win",
+  "preferred_states": ["default"],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "TEST FIXTURE benchmark"
+  },
+  "provenance": {
+    "source_url": "https://example.com/test-fixture",
+    "citation_text": "TEST FIXTURE citation",
+    "draft_model": "human",
+    "verified_by": "test-fixture",
+    "verified_date": "2026-05-06T00:00:00Z"
+  },
+  "archetype": ["other"],
+  "page_type": ["other"],
+  "device": ["balanced"],
+}

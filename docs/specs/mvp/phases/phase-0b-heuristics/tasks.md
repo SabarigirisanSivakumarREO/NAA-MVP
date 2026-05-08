@@ -2,9 +2,9 @@
 title: Phase 0b — Heuristic Authoring — Tasks
 artifact_type: tasks
 status: approved
-version: 0.3
+version: 0.5
 created: 2026-04-28
-updated: 2026-04-30
+updated: 2026-05-06
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -38,11 +38,14 @@ delta:
   changed:
     - v0.1 → v0.2 applied 1 analyze-driven fix (M2 cascade: T0B-004 acceptance updated to reference expanded AC-13 R6 conformance test scope per spec.md v0.2 — 5-channel coverage)
     - v0.2 → v0.3 — status bumped draft → approved (R17.4 review approved per phase-0b-heuristics/review-notes.md; D1 condition binding for T0B-004 implementer: lint CLI must redact Zod-error `received: <value>` content from stdout/stderr; conformance test must assert with `NEURAL_TEST_FIXTURE_BODY` sentinel string)
+    - v0.3 → v0.4 — T0B-001 IMPLEMENTED 2026-05-06 (Day 1 of Phase 0b). T0B-001 acceptance line refreshed to point at `plan.md v0.4 §2` (the body-string design — supersedes v0.3 §2 which referenced §9.1 rich structured shape). Coordinated with spec.md v0.4 + plan.md v0.4 (R11.4 spec-defect patch — T101 body-string design supersedes §9.1 rich shape per supersession callout). T0B-002..T0B-005 acceptance lines unchanged but they all consume T0B-001's template; v0.4 §2 reorientation propagates implicitly. T0B-NNN headers carry status markers (✅ DONE / ⚪ pending) per first-implementation convention since this tasks.md format uses headers not checkboxes.
+    - v0.4 → v0.5 — R11.4 PATH A continuation 2026-05-06 (mid-Day 2 of Phase 0b, before T0B-004 implementation). Coordinated with spec.md v0.5 + plan.md v0.5. T0B-004 acceptance line refreshed to point at `plan.md v0.5 §5` (banned-phrase regex check now targets `body` field per T101 body-string design — was `recommendation.summary + recommendation.details` per legacy §9.1 references missed in v0.4 sweep). T0B-002 + T0B-003 marker statuses unchanged (already ✅ DONE 2026-05-06).
   impacted:
     - tasks-v2.md v2.3.2 → v2.3.3 (Phase 0b section + reduced counts)
     - phase-6-heuristics/tasks.md already references T103-T105 as Phase 0b workstream (no change)
+    - v0.4 — T0B-001 commit landed; T0B-002..T0B-005 still pending Day 1; T103/T104/T105 still pending week 4
   unchanged:
-    - HeuristicSchemaExtended Zod fields (locked by Phase 6 v0.3)
+    - HeuristicSchemaExtended Zod fields (locked by T101 implementation 2026-05-05; the previous v0.3 entry's "locked by Phase 6 v0.3" wording reflected pre-T101 understanding)
     - PR Contract template baseline (T0B-003 extends it)
 
 governing_rules:
@@ -69,31 +72,32 @@ Per [plan.md](plan.md) §1: Week 1 = T0B-001..T0B-005 (infrastructure) → Week 
 
 ---
 
-## T0B-001 — Drafting prompt template
+## T0B-001 — Drafting prompt template ✅ **DONE 2026-05-06**
 
-- **dep:** T001 (monorepo) only
+- **dep:** T001 (monorepo) only ✅
 - **spec:** REQ-HK-001 + R15.3.1
-- **files:** `docs/specs/mvp/templates/heuristic-drafting-prompt.md`
-- **acceptance:** Markdown template structured per [plan.md §2](plan.md). System block, user block with `{source, source_url, citation_text, archetype, page_types, device}` inputs, output schema reference to HeuristicSchemaExtended, banned-phrasing prohibition. Producing a draft on a known Baymard excerpt yields valid `HeuristicSchemaExtended.parse()`-compatible JSON (manual smoke).
-- **conformance:** manual review (template); validated indirectly via T103-T105 outputs.
+- **files:** `docs/specs/mvp/templates/heuristic-drafting-prompt.md` ✅ (v1.0.0 landed)
+- **acceptance:** Markdown template structured per [plan.md v0.4 §2](plan.md) (body-string design per T101 — supersedes v0.3 §9.1 rich shape). System block, user block with `{source, source_url, citation_text, archetype, page_types, device, draft_model}` inputs, output schema reference to `HeuristicSchemaExtended` from `packages/agent-core/src/analysis/heuristics/types.ts` (T101 source-of-truth), banned-phrasing prohibition (R5.3 / GR-007), worked Baymard checkout example. Producing a draft on a known Baymard excerpt yields valid `HeuristicSchemaExtended.parse()`-compatible JSON (manual smoke; will be machine-validated when T0B-004 lint CLI lands Day 2).
+- **conformance:** manual review (template); validated indirectly via T103-T105 outputs (week 4) + machine-validated via T0B-004 lint CLI on first heuristic JSON (Day 2+).
+- **delta from v0.3:** T0B-001 task acceptance line was originally written against §9.1's rich structured shape (~25 fields); v0.4 reorients to T101's 11-field body-string design per the R11.4 patch documented in spec.md/plan.md/tasks.md v0.4 delta blocks.
 
-## T0B-002 — Verification protocol document
+## T0B-002 — Verification protocol document ✅ **DONE 2026-05-06**
 
-- **dep:** none
+- **dep:** none ✅
 - **spec:** R15.3.2
-- **files:** `docs/specs/mvp/templates/heuristic-verification-protocol.md`
-- **acceptance:** 8-step protocol per [plan.md §3](plan.md): URL liveness, citation locate, ±20% benchmark re-derivation (quantitative) or text-reference (qualitative), banned-phrase check, manifest-selector check, fill `verified_by`/`verified_date`, run `pnpm heuristic:lint`, commit with PR Contract Proof block. Includes 3-strike re-draft rule + escalation criteria.
+- **files:** `docs/specs/mvp/templates/heuristic-verification-protocol.md` ✅ (v1.0.0 landed)
+- **acceptance:** 8-step protocol per [plan.md §3](plan.md): URL liveness, citation locate, ±20% benchmark re-derivation (quantitative) or text-reference (qualitative), banned-phrase check, manifest-selector check, fill `verified_by`/`verified_date`, run `pnpm heuristic:lint`, commit with PR Contract Proof block. Includes 3-strike re-draft rule + escalation criteria. Adds: R6/R15.3.3 discipline section enumerating forbidden sharing channels (Slack/email/screenshot/support-ticket — sets precedent for T0B-005 D2 BINDING); pre-flight checklist; "what this protocol does NOT cover" disambiguation block (defers to T0B-001/004/005 + spot-check protocol); cross-references to all sibling Phase 0b templates.
 - **conformance:** manual review.
 
-## T0B-003 — PR Contract Proof block extension
+## T0B-003 — PR Contract Proof block extension ✅ **DONE 2026-05-06**
 
-- **dep:** T0B-002, PRD §10.9 PR Contract template
+- **dep:** T0B-002 ✅ (commit 2c1bad1), PRD §10.9 PR Contract template ✅
 - **spec:** R15.3.2 + PRD §10.9
-- **files:** `docs/specs/mvp/templates/heuristic-pr-proof.md`
-- **acceptance:** Per-heuristic Proof block template per [plan.md §4](plan.md): heuristic ID, file path, drafted by, verified by, verified date, source URL (with status / archive note), re-derivation note, lint status, banned-phrase check status, manifest selectors. Linked from PRD §10.9 PR Contract section.
+- **files:** `docs/specs/mvp/templates/heuristic-pr-proof.md` ✅ (v1.0.0 landed)
+- **acceptance:** Per-heuristic Proof block template per [plan.md §4](plan.md): heuristic ID, file path, drafted by, verified by, verified date, source URL (with status / archive note), re-derivation note, lint status, banned-phrase check status, manifest selectors. Linked from PRD §10.9 PR Contract section. Adds: explicit "where this template fits in the PR body" 4-block PR Contract context; multi-heuristic PR pattern (5+ heuristics in batch — typical for T103/T104/T105 week 4); R6.1 "what NEVER to include" guard table (8 forbidden vs 9 allowed fields with rationale per row); reviewer-side guidance on detecting + blocking PRs that leak body / citation_text content; worked example that continues from T0B-001 + T0B-002 BAYMARD-CHECKOUT-001 example for cross-template consistency.
 - **conformance:** manual review; first heuristic PR cites this template in its Proof block.
 
-## T0B-004 — `pnpm heuristic:lint` CLI helper
+## T0B-004 — `pnpm heuristic:lint` CLI helper ✅ **DONE 2026-05-06**
 
 - **dep:** T002 (agent-core skeleton), T003 (CLI skeleton), T101 (HeuristicSchemaExtended — Phase 6)
 - **spec:** R15.3, R15.3.1, R15.3.3, R5.3, GR-007
@@ -101,18 +105,19 @@ Per [plan.md](plan.md) §1: Week 1 = T0B-001..T0B-005 (infrastructure) → Week 
   - `apps/cli/src/commands/heuristic-lint.ts` (NEW)
   - `apps/cli/package.json` (add `heuristic:lint` script)
   - `apps/cli/tests/conformance/heuristic-lint.test.ts` (NEW)
-- **acceptance:** CLI per [plan.md §5](plan.md). Five checks: (1) Zod parse against HeuristicSchemaExtended; (2) all 5 `provenance` fields non-empty; (3) `benchmark` discriminated union present + well-formed; (4) manifest selectors `archetype` + `page_type` + `device` present; (5) banned-phrase regex on `recommendation.summary` + `recommendation.details`. Exit non-zero on any failure. Conformance test covers all 5 fail cases + 1 pass case + AC-13 isolation assertions per spec.md v0.2 (5-channel coverage: gitignore contains `.heuristic-drafts/`; drafting subprocess does NOT import `langsmith` / `@langsmith/*`; drafting subprocess does NOT import `packages/agent-core/src/observability/*` Pino module; drafting subprocess script is NOT imported by any `apps/` or `packages/` runtime module; `apps/dashboard/**/*` source does NOT reference drafting subprocess paths).
+- **acceptance:** CLI per [plan.md v0.5 §5](plan.md). Five checks: (1) Zod parse against HeuristicSchemaExtended (T101); (2) all 5 `provenance` fields non-empty (Zod-enforced via T101 `.strict()` + `.min(1)`); (3) `benchmark` discriminated union present + well-formed (Zod-enforced); (4) manifest selectors `archetype` + `page_type` + `device` present (T101 marks `.optional()` but Phase 0b requires presence — lint enforces); (5) banned-phrase regex on **`body`** field (v0.5 patch — T101 body-string design supersedes legacy `recommendation.summary` + `recommendation.details` references). Exit non-zero on any failure. Conformance test covers all 5 fail cases + 1 pass case + D1 BINDING (Zod-error redaction with `NEURAL_TEST_FIXTURE_BODY` sentinel) + AC-13 isolation assertions per spec.md v0.2 (5-channel coverage: gitignore contains `.heuristic-drafts/`; drafting subprocess does NOT import `langsmith` / `@langsmith/*`; drafting subprocess does NOT import `packages/agent-core/src/observability/*` Pino module; drafting subprocess script is NOT imported by any `apps/` or `packages/` runtime module; `apps/dashboard/**/*` source does NOT reference drafting subprocess paths). AC-13 channels (b)/(c)/(d)/(e) are vacuously true if drafting subprocess + apps/dashboard don't yet exist; tests assert and skip with clear TODO when those land.
 - **conformance:** `apps/cli/tests/conformance/heuristic-lint.test.ts` (AC-04, AC-13)
 
-## T0B-005 — `heuristics-repo/README.md` + `.gitignore` for `.heuristic-drafts/`
+## T0B-005 — `heuristics-repo/README.md` + `.gitignore` for `.heuristic-drafts/` ✅ **DONE 2026-05-06**
 
-- **dep:** T0B-001, T0B-002, T0B-003, T0B-004
+- **dep:** T0B-001 ✅ (f54c040), T0B-002 ✅ (2c1bad1), T0B-003 ✅ (8c8eaba), T0B-004 ✅ (b861f04)
 - **spec:** R6, R15.3, R15.3.3
 - **files:**
-  - `heuristics-repo/README.md` (NEW)
-  - `.gitignore` (add `.heuristic-drafts/`)
-- **acceptance:** README covers: authoring workflow (draft → verify → lint → PR), R6 IP discipline (drafting subprocess isolation per [plan.md §6](plan.md)), spot-check protocol (3 rounds at +10/+20/+30; ≤1 of 5 divergence acceptance), link back to PRD F-012 + Phase 0b spec. New author can follow it without engineering-lead clarification.
+  - `heuristics-repo/README.md` (NEW) ✅
+  - `.gitignore` (`.heuristic-drafts/` entry already added in T0B-004 commit b861f04)
+- **acceptance:** README covers: 4-step authoring workflow (draft → verify → lint → PR — each step links to its sibling template) ✅; R6 IP discipline including **D2 BINDING — explicit table of 8 forbidden sharing channels (Slack/email/screenshot/support-ticket/unauthorized-LLM/non-engineering-verifier/pushing .heuristic-drafts/ to git/forwarding committed JSON)** ✅; spot-check protocol (3 rounds at +10/+20/+30; ≤1 of 5 divergence per AC-12; deterministic random sampler suggested) ✅; kill criteria summary table (mirrors plan.md §7) ✅; first-30-min author onboarding checklist ✅; cross-references to PRD F-012, Phase 0b spec/plan v0.5, all 4 sibling templates, T101 schema, downstream Phase 4b + Phase 6 consumers ✅. New author can follow it without engineering-lead clarification (validated when first T103 author ships in week 4).
 - **conformance:** manual review (AC-05); first new author follows it cleanly.
+- **D3 OPTIONAL — pre-commit hook deferred to v1.0.1:** rationale: (a) requires .husky/pre-commit infrastructure scope expansion outside Phase 0b; (b) `.gitignore` already excludes `.heuristic-drafts/` (T0B-004 commit b861f04) so accidental git add will skip the directory; (c) D2 BINDING text in README + T0B-002 + T0B-003 already enforces the discipline at the human-protocol layer; (d) v1.0.1 is the right scope for git-infrastructure additions. Document in v1.0.1 backlog.
 
 ---
 

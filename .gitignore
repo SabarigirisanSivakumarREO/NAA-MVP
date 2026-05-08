@@ -6,6 +6,11 @@
 # Dev storage (local_disk ScreenshotStorage writes here — PRD §7.5)
 .storage/
 
+# Audit run output — `pnpm cro:audit --url=...` writes per-run findings JSON
+# + plain-text report here (T-SKELETON-008 + T-SKELETON-009). Phase 9 T156+
+# will move final artifacts to Cloudflare R2; ./out/ remains for local dev.
+out/
+
 # Node / Turborepo / Next.js build artifacts
 node_modules/
 .turbo/
@@ -13,5 +18,24 @@ dist/
 .next/
 coverage/
 *.log
+*.tsbuildinfo
+
+# Playwright Test artifacts (tests/acceptance/*.spec.ts via @playwright/test)
+playwright-report/
+test-results/
+
+# Heuristic drafting transcripts — IP-bearing per Constitution R15.3.3
+# (drafting subprocess writes prompts + LLM responses here for local debugging;
+# NEVER commit per R6.1; T0B-004 conformance test asserts presence of this entry)
+.heuristic-drafts/
+
+# Master agent + AI Reviewer per-phase state (Day 0 artifact #1)
+# `pnpm spec:matrix --json` writes here; master agent persists state machine
+# + cost tracking + verdict YAMLs per phase. Local-only; never committed.
+.phase-state/
+
+# Claude Code session-internal worktrees (auto-managed; embedded git repos)
+.claude/worktrees/
 
 .claude/settings.local.json
+.claude/commands/

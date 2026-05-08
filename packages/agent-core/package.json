@@ -1,0 +1,56 @@
+{
+  "name": "@neural/agent-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Neural agent-core — shared library (browser-runtime, perception, MCP, analysis, orchestration, adapters, observability).",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./observability": {
+      "types": "./dist/observability/index.d.ts",
+      "import": "./dist/observability/index.js",
+      "default": "./dist/observability/index.js"
+    },
+    "./perception/types": {
+      "types": "./dist/perception/types.d.ts",
+      "import": "./dist/perception/types.js",
+      "default": "./dist/perception/types.js"
+    },
+    "./analysis/heuristics/types": {
+      "types": "./dist/analysis/heuristics/types.d.ts",
+      "import": "./dist/analysis/heuristics/types.js",
+      "default": "./dist/analysis/heuristics/types.js"
+    },
+    "./audit": {
+      "types": "./dist/audit.d.ts",
+      "import": "./dist/audit.js",
+      "default": "./dist/audit.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "echo \"lint configured in Phase 4 (ESLint with T073)\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "pino": "^9.5.0",
+    "playwright": "^1.49.0",
+    "sharp": "^0.33.5",
+    "tiktoken": "^1.0.22",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "pino-pretty": "^11.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -2,14 +2,14 @@
 title: Neural MVP Implementation Roadmap (Walking Skeleton)
 artifact_type: roadmap
 status: draft
-version: 0.3
+version: 0.8
 created: 2026-04-29
-updated: 2026-04-29
+updated: 2026-05-06
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
 
-supersedes: v0.1 (in-place — see delta block); v0.2 in-place delta
+supersedes: v0.1 (in-place — see delta block); v0.2 + v0.3 + v0.4 + v0.5 + v0.6 + v0.7 in-place deltas
 supersededBy: null
 
 derived_from:
@@ -26,6 +26,58 @@ breaking: false
 affected_contracts: []
 
 delta:
+  v0_8:
+    new: []
+    changed:
+      - "§6 T-SKELETON-010 acceptance URL: `https://example.com` → `https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy` (Peregrine PDP — locked Wednesday demo target via Session 8 PD-04 + handover block 6 + Session 10 user-explicit guidance 2026-05-06; matches T-SKELETON-002 fixture v0.4 patch)"
+      - "§6 T-SKELETON-010 acceptance output filename: `./out/example-com-audit.txt` → `./out/www-peregrineclothing-co-uk-audit.txt` (slug derived from Peregrine hostname per T-SKELETON-001 urlToSlug)"
+      - "§6 T-SKELETON-010 finding-line precision: `at least 1 fake finding line` → `exactly 2 stub finding lines per T-SKELETON-004 spec` (T-SKELETON-004 commit 7eae758 locked 2 hardcoded findings — `at least 1` was loose vs current implementation reality)"
+    impacted:
+      - "T-SKELETON-010 implementation (commit alongside this delta, single-commit Option G — same pattern as v0.4 / v0.5 / v0.6 / v0.7)"
+    unchanged:
+      - "T-SKELETON-010 acceptance semantics — Playwright Test asserting exits 0 + writes audit.txt + finding-line content; <30s wall-clock; URL/filename/precision changes are alignment with downstream T-SKELETON-002 + T-SKELETON-004 implementations"
+      - "Test stays real through wk 12 per §8 promotion table; weeks 5+ un-skip behavior tests against real Claude output"
+      - "12-week cadence; promotion table; stub conventions; everything else"
+  v0_7:
+    new: []
+    changed:
+      - "§6 T-SKELETON-009 acceptance signature: `Report.render(audit): Promise<string>` → `Report.render({url, auditRunId, findings, rejectedCount, durationMs}): Promise<string>` (aligns roadmap with already-implemented T-SKELETON-001 placeholder which uses structured `ReportInput` interface — render-specific input cleaner than passing full AuditOutcome; vague `audit` placeholder name in v0.6 didn't specify shape)"
+    impacted:
+      - "T-SKELETON-009 implementation (commit alongside this delta, single-commit Option G — same pattern as v0.4 fixture-name + v0.5 sentinel-naming + v0.6 Promise<string>)"
+    unchanged:
+      - "T-SKELETON-009 acceptance semantics — render plain-text report header + per-finding lines + return string; signature change is structural alignment (not a behavior change); orchestrator already passes these fields"
+      - "Phase 9 T245-T249 supersession week 10 still owns HTML template + Playwright page.pdf() + 8 sections per F-018; R20 impact.md required (R6 channels 3+4 first runtime)"
+      - "12-week cadence; promotion table; stub conventions; everything else"
+  v0_6:
+    new: []
+    changed:
+      - "§6 T-SKELETON-008 acceptance signature: `StoreNode.run(findings): Promise<void>` → `StoreNode.run({findings, outputDir, slug}): Promise<string>` (returns the path written; aligns roadmap with already-implemented T-SKELETON-001 placeholder which the orchestrator audit.ts:99 USES for log correlation `path` field — `Promise<void>` would force orchestrator to re-derive the path, less useful contract)"
+    impacted:
+      - "T-SKELETON-008 implementation (commit alongside this delta, single-commit Option G — same lighter pattern as v0.4 fixture-name + v0.5 sentinel-naming)"
+    unchanged:
+      - "T-SKELETON-008 acceptance semantics — write findings JSON to `<outputDir>/<slug>-findings.json`; signature change is additive (more useful return type) not a behavior change"
+      - "Phase 4 T070-T072 supersession week 3 still owns DB write transition; R20 impact.md required at all 3 promotion stages (wk 3 / wk 9 / wk 11)"
+      - "12-week cadence; promotion table; stub conventions; everything else"
+  v0_5:
+    new: []
+    changed:
+      - "§6 T-SKELETON-003 fixture-body marker: `\"TEST FIXTURE — not a real heuristic\"` (cosmetic disclaimer text — kept) + ADDS the literal sentinel string `NEURAL_TEST_FIXTURE_BODY` per Phase 0b T0B-004 D1 BINDING precedent (`apps/cli/src/commands/heuristic-lint.ts` + `apps/cli/tests/conformance/heuristic-lint.test.ts` already assert this sentinel for R6 conformance). Cross-package consistency: a single grep pattern can cover both surfaces in week 4 (Phase 6 T-PHASE6-LOGGER R6 conformance suite). T-SKELETON-003 fixtures embed BOTH strings."
+    impacted:
+      - "T-SKELETON-003 implementation (commit alongside this delta, single-commit Option G — same lighter pattern as v0.4)"
+    unchanged:
+      - "T-SKELETON-003 acceptance criteria semantics — fixtures still synthetic + clearly marked + parseable by HeuristicSchemaExtended.strict(); the sentinel addition is additive, not a replacement"
+      - "T0B-004 conformance test surface (apps/cli) — already asserts NEURAL_TEST_FIXTURE_BODY; T-SKELETON-003 fixtures join the same conformance pool"
+      - "12-week cadence; promotion table; stub conventions; everything else"
+  v0_4:
+    new: []
+    changed:
+      - "§6 T-SKELETON-002 stub-data fixture path: `packages/agent-core/tests/fixtures/perception/example-com.json` → `packages/agent-core/tests/fixtures/perception/peregrine-pdp.json` (Peregrine PDP locked as Wednesday demo target via Session 8 PD-04 effective resolution + handover block 6 + INDEX.md week-1 progress + Session 10 kickoff prompt; T-SKELETON-002 implementation 2026-05-05 lands Peregrine fixture)"
+      - "§7 Week 1 demo example log line `[skeleton] perception captured (stub data — peregrine-pdp.json fixture)` → `[skeleton] perception captured (stub data — peregrine-pdp.json fixture)` for consistency"
+    impacted:
+      - "T-SKELETON-002 implementation (commit alongside this delta, single-commit Option G — lighter than Phase 0b PATH A multi-commit pattern since artifact is status:draft and patch is mechanical/non-AC-changing)"
+    unchanged:
+      - "T-SKELETON-002 acceptance criteria — fixture name swap is cosmetic; the AC `BrowserManager.capture(url): Promise<PageStateModel>` returns hardcoded PageStateModel JSON validating against `PageStateModelSchema` is unchanged"
+      - "12-week cadence; promotion table; stub conventions; everything else"
   v0_3:
     new:
       - Weeks 7-12 detail (replaces "Weeks 8-12 — Sketch pending v0.3" placeholder)
@@ -224,7 +276,7 @@ These tasks are **sequencing-only** and live ONLY in this roadmap. They do not a
 - **dep:** T001
 - **files:** `packages/agent-core/src/browser-runtime/BrowserManager.ts` (NEW — stubbed)
 - **acceptance:** `BrowserManager.capture(url): Promise<PageStateModel>` returns a hardcoded PageStateModel JSON validating against `PageStateModelSchema` (Phase 1 T014 schema — must land in week 1 alongside this stub for contract conformance)
-- **stub data:** loaded from `packages/agent-core/tests/fixtures/perception/example-com.json`
+- **stub data:** loaded from `packages/agent-core/tests/fixtures/perception/peregrine-pdp.json` (Peregrine PDP — Wednesday demo target locked Session 8 PD-04; v0.3 cited `example-com.json` and was patched in v0.4 alongside T-SKELETON-002 implementation 2026-05-05)
 - **promotion:** replaced by Phase 1 T006+T013 in **week 2** — R20 impact.md required (touches PageStateModel contract surface; v0.1 spec already exists)
 - **kill criteria:** default block + stub returns malformed PageStateModel → STOP
 
@@ -234,7 +286,7 @@ These tasks are **sequencing-only** and live ONLY in this roadmap. They do not a
 
 - **dep:** T-SKELETON-002 (uses fixtures dir)
 - **files:** `packages/agent-core/src/analysis/heuristics/loader.ts` (NEW — stubbed)
-- **acceptance:** `HeuristicLoader.loadAll(): Promise<HeuristicKB>` returns 3 synthetic heuristics from `packages/agent-core/tests/fixtures/heuristics/skeleton-{1,2,3}.json` (NEW fixtures; `body` text marked "TEST FIXTURE — not a real heuristic" per R6)
+- **acceptance:** `HeuristicLoader.loadAll(): Promise<HeuristicKB>` returns 3 synthetic heuristics from `packages/agent-core/tests/fixtures/heuristics/skeleton-{1,2,3}.json` (NEW fixtures; `body` text marked "TEST FIXTURE — not a real heuristic" + embeds the literal sentinel `NEURAL_TEST_FIXTURE_BODY` per Phase 0b T0B-004 D1 BINDING precedent so a single R6 grep pattern covers both apps/cli heuristic-lint conformance fixtures and agent-core skeleton fixtures in week 4)
 - **stub data:** synthetic; conforms to HeuristicSchemaExtended (T101 schema — also lands week 1 for contract feasibility)
 - **promotion:** replaced by Phase 6 T106 in **week 4** — R20 impact.md (HeuristicLoader interface)
 - **kill criteria:** default block + stub heuristic body content appears in any log → STOP (R6 violation even on stub data)
@@ -278,7 +330,7 @@ These tasks are **sequencing-only** and live ONLY in this roadmap. They do not a
 
 - **dep:** T-SKELETON-007
 - **files:** `packages/agent-core/src/analysis/nodes/StoreNode.ts` (NEW — stubbed)
-- **acceptance:** `StoreNode.run(findings): Promise<void>` writes findings to `./out/<slug>-findings.json` (no DB — Phase 4 not yet landed)
+- **acceptance:** `StoreNode.run({findings, outputDir, slug}): Promise<string>` writes findings to `<outputDir>/<slug>-findings.json` (defaults to `./out/`) and returns the absolute path; no DB — Phase 4 not yet landed (v0.6 patched the signature to align with T-SKELETON-001 placeholder which the orchestrator USES for log correlation; v0.5 spec said `Promise<void>` which would have forced orchestrator to re-derive path — less useful contract)
 - **promotion:** replaced by Phase 7 T132 (real PostgresStorage write) in **week 3** when Phase 4 schema lands — R20 impact.md (DB schema + RLS surface)
 - **kill criteria:** default block + stub attempts DB write before Phase 4 lands → STOP
 
@@ -286,7 +338,7 @@ These tasks are **sequencing-only** and live ONLY in this roadmap. They do not a
 
 - **dep:** T-SKELETON-008
 - **files:** `packages/agent-core/src/delivery/Report.ts` (NEW — stubbed)
-- **acceptance:** `Report.render(audit): Promise<string>` returns plain-text report; written to `./out/<slug>-audit.txt` by orchestrator
+- **acceptance:** `Report.render({url, auditRunId, findings, rejectedCount, durationMs}): Promise<string>` returns plain-text report; written to `./out/<slug>-audit.txt` by orchestrator (v0.7 patched the signature to align with T-SKELETON-001 placeholder which uses structured `ReportInput` interface — render-specific input cleaner than passing full AuditOutcome; v0.6 spec said `Report.render(audit)` without specifying shape)
 - **promotion:** replaced by Phase 9 T245-T249 (HTML template + Playwright `page.pdf()`) in **week 10** — R20 impact.md
 - **kill criteria:** default block
 
@@ -294,7 +346,7 @@ These tasks are **sequencing-only** and live ONLY in this roadmap. They do not a
 
 - **dep:** T-SKELETON-001..009
 - **files:** `tests/acceptance/walking-skeleton.spec.ts` (NEW)
-- **acceptance:** Playwright Test asserting `pnpm cro:audit --url=https://example.com` exits 0 + writes `./out/example-com-audit.txt` with at least 1 fake finding line; runs in <30s
+- **acceptance:** Playwright Test asserting `pnpm cro:audit --url=https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt?colour=Navy` exits 0 + writes `./out/www-peregrineclothing-co-uk-audit.txt` with exactly 2 stub finding lines per T-SKELETON-004 spec; runs in <30s (v0.8 patched URL + filename + finding-line precision to align with downstream T-SKELETON-002 + T-SKELETON-004 implementations)
 - **stub characteristics:** the test itself is REAL; it just runs against a stubbed pipeline in week 1
 - **promotion:** stays real through week 12; weeks 5+ assert on real Claude output by un-skipping behavior tests
 - **kill criteria:** default block
@@ -317,7 +369,7 @@ These tasks are **sequencing-only** and live ONLY in this roadmap. They do not a
 ```bash
 $ pnpm cro:audit --url=https://example.com
 [skeleton] orchestrator started audit_run=skl-001
-[skeleton] perception captured (stub data — example-com.json fixture)
+[skeleton] perception captured (stub data — peregrine-pdp.json fixture)
 [skeleton] heuristics loaded (3 synthetic)
 [skeleton] evaluate produced 2 raw findings (stub)
 [skeleton] critique passed 2/2 (stub passthrough)
@@ -647,7 +699,7 @@ Re-stated for clarity (apply per-task, including to stubs):
 - `docs/specs/mvp/phases/INDEX.md` v1.3 (phase order)
 - `docs/specs/mvp/phases/phase-{0,0b,1,1b,1c,2,3,4,4b,5,5b,6,7,8,9}-*/tasks.md` (canonical task definitions — ALL 15 phase folders are the cherry-pick source)
 - `docs/specs/mvp/tasks-v2.md` v2.3.3 (legacy reference catalog; NOT the cherry-pick source)
-- Note: Phase 1b + 1c (perception extensions v2.4 + PerceptionBundle envelope v2.5) are not separately scheduled in this roadmap; they fold into Phase 1 work (week 2) since their task counts (12 each) are scoped extensions of the same browser-runtime/perception layer
+- Note: Phase 1b + 1c (perception extensions v2.4 + PerceptionBundle envelope v2.5) **SLIP to weeks 3-4** per PD-01 RESOLVED 2026-05-08 (Session 12 master orchestrator Gate 1 REVISE). Rationale: Phase 1 alone is substantial (first network/Playwright phase + C1 BINDING + R20 impact + 3-site fixture set); +24 tasks (T1B-001..T1B-012 + T1C-001..T1C-012) is ~3.4× scope expansion. Phase 1b + 1c will be JIT-scheduled when their pre-flight gates fire — not bundled into week 2.
 
 ---
 
@@ -659,4 +711,4 @@ Re-stated for clarity (apply per-task, including to stubs):
 - **If a referenced task ID changes upstream**, update upstream first; this roadmap re-references after.
 - **`/speckit.analyze`** treats this file as an implementation overlay, not a Spec Kit artifact (does not affect spec/plan/tasks consistency).
 - **Stub-to-real promotion** weeks 5 and 7 are HIGH-risk gates — extra reviewer required per PRD §10.9 PR Contract risk-tier guidance.
-- **Phase 1b + 1c folding**: confirm with engineering lead whether v2.4 perception extensions (T1B-001..T1B-012) and v2.5 PerceptionBundle envelope (T1C-001..T1C-012) ride alongside Phase 1 in week 2 OR slip to weeks 3-4. Current draft assumes week 2 ride-along; if too heavy, split into a week-2/3 stretch.
+- ~~**Phase 1b + 1c folding**~~ **RESOLVED 2026-05-08 (Session 12 master orchestrator Gate 1 REVISE) — SLIP to weeks 3-4.** Phase 1b (T1B-001..T1B-012 perception extensions v2.4) and Phase 1c (T1C-001..T1C-012 PerceptionBundle envelope v2.5) are JIT-scheduled in weeks 3-4. Phase 1 ships standalone in week 2.

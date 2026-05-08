@@ -1,0 +1,24 @@
+{
+  "id": "SKELETON-PERFORMANCE-002",
+  "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic placeholder content used by walking-skeleton week-1 to exercise the HeuristicLoader contract for a quantitative-benchmark heuristic with universal manifest selectors (no archetype / page_type / device scoping). Real heuristic content lands via Phase 6 T106 + Phase 0b T103-T105 in week 4.",
+  "category": "performance",
+  "version": "0.0.1",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.6,
+  "effort_category": "strategic",
+  "preferred_states": ["default"],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 2500,
+    "unit": "ms",
+    "metric": "p75_largest_contentful_paint_ms"
+  },
+  "provenance": {
+    "source_url": "https://example.test/skeleton-fixture-2",
+    "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+    "draft_model": "human",
+    "verified_by": "skeleton-test-author",
+    "verified_date": "2026-05-05T00:00:00Z"
+  }
+}

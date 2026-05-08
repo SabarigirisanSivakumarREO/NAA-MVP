@@ -287,7 +287,7 @@ Produces compact action-oriented perception for browser agent decisions.
 
 **Acceptance:**
 - `PageStateModel` captured per page
-- Size < 1500 tokens (AX-tree + top 30 filtered elements)
+- Size < 20,000 tokens (AX-tree + top 30 filtered elements; v0.4 — empirical floor measured against amazon.in homepage 12,485 tokens + Peregrine PDP 4,012 tokens at Phase 1 R11.4 Wave 7 commit; original 1500 was authored pre-measurement and was too tight for real-world e-commerce pages)
 - Includes: metadata, accessibilityTree, filteredDOM, interactiveGraph, visual?, diagnostics
 
 ### F-005 — Analysis Perception (AnalyzePerception — v2.3 enriched)

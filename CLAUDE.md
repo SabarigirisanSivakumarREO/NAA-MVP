@@ -340,7 +340,8 @@ The phase folders in `docs/specs/mvp/phases/` are the canonical source of truth 
 **Per phase** (when the last task in a phase lands):
 - Bump frontmatter `status:` per R17 lifecycle: `approved` → `implemented` (all tasks done; tests green) → `verified` (conformance + acceptance tests green)
 - Bump `status:` on companion artifacts in the same folder (`spec.md`, `plan.md`, `impact.md`, `checklists/requirements.md`)
-- Author `phase-N-current.md` rollup per R19 (active modules, contracts now in effect, system flows operational, known limitations, open risks for next phase) — template at `docs/specs/mvp/templates/phase-rollup.template.md`
+- Author `phase-N-current.md` rollup per R19 (active modules, contracts now in effect, system flows operational, known limitations, open risks for next phase) — template at [`docs/specs/mvp/templates/phase-rollup.template.md`](docs/specs/mvp/templates/phase-rollup.template.md)
+- Author **`phase-N-validation.md` validation doc** as the rollup's sibling — 5 ASCII sections (module dep graph, data flow, function call graph, AC→impl→test traceability, resource cost breakdown) + a §6 trust spot-check list. Closes the AI-built-code comprehension gap (a human reviewer gains confidence in 20 min of eyes-on review without reading every line). Template at [`docs/specs/mvp/templates/phase-validation.template.md`](docs/specs/mvp/templates/phase-validation.template.md). Mandatory at Stage 4 exit per the master orchestrator skill.
 - Update `docs/specs/mvp/phases/INDEX.md` — flip the phase row's status column (⚪ not started → 🟡 in progress → 🟢 complete)
 
 **Why this matters:** if you only update the personal HTML tracker, the canonical corpus drifts; `/speckit.analyze` will flag phantom incomplete tasks; R17 lifecycle stays stuck on `draft`; phase rollups (R19) never land, so each subsequent phase loses the compressed predecessor state it's supposed to read first per CLAUDE.md §1b.
@@ -493,7 +494,33 @@ Requirement / vision
 
 ---
 
-## 14. Non-goals (what this project is NOT)
+## 14. Master Agent operating procedure (AI-driven phase implementation)
+
+For phase implementation under the Master Agent orchestration model:
+
+```
+/master <N> --start          → Stage 1 pre-flight + AI Reviewer verdict
+🚦 1-min stamp at Gate 1      → APPROVE / REVISE / RE-SPEC
+                              → Stage 2 impl (parallel subagents) + Stage 2.5 code review
+                              → Stage 3 verification + AI Reviewer verdict
+🚦 1-min stamp at Gate 2      → APPROVE / RETURN-TO-IMPL
+                              → Stage 4 exit (R17 bumps + R19 rollup + INDEX flip)
+```
+
+| Skill | Role |
+|---|---|
+| `neural-master-orchestrator` | Drives the 4 stages + 2 human gates per phase; never edits code itself |
+| `neural-ai-reviewer` | Gate verdicts (correctness + coverage + completeness with adversarial critic); enumerates categorical-surface universes dynamically |
+
+State persists in `.phase-state/<N>.json` (gitignored; resumable across sessions). Phase state schema, pipeline mode, cost ceiling, and risk-gate adjustments documented in skill reference files.
+
+Use when driving a phase from spec to done with minimum-touch human review (~2 min per phase across both gates). Compatible with existing `/speckit.implement` hooks via `.specify/extensions.yml`.
+
+Master checkpoints sessions at 70% context (~700K tokens) with WARN at 50% (500K); resume in fresh session via `/master <N> --resume`. Per-phase state + handoff docs persist in `.phase-state/<N>.json` (gitignored). See `references/context-budget.md` for thresholds and checkpoint protocol.
+
+---
+
+## 15. Non-goals (what this project is NOT)
 
 Explicit to prevent drift:
 
