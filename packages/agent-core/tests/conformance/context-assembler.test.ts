@@ -13,7 +13,6 @@
  * size < 1500 tokens for example.com, amazon.in, Peregrine PDP.
  */
 import { describe, expect, test } from 'vitest';
-// @ts-expect-error — module deliberately not yet implemented (T013)
 import { contextAssembler } from '../../src/perception/ContextAssembler.js';
 import { PageStateModelSchema } from '../../src/perception/types.js';
 

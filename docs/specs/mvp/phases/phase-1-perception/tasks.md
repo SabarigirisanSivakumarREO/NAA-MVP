@@ -271,7 +271,7 @@ Two foundations must precede the rest:
   - **Smoke test:** Capture amazon.in homepage → JPEG ≤ 150 KB ≤ 1280 px
   - **Kill criteria:** default block
 
-- [ ] **T013 [US-1] ContextAssembler** (AC-08, REQ-BROWSE-PERCEPT-001) **— extended kill criteria**
+- [x] **T013 [US-1] ContextAssembler** (AC-08, REQ-BROWSE-PERCEPT-001) — **DONE 2026-05-08** (master orchestrator Stage 2 Wave 6; conformance 3/3 PASS; example.com → 373 tokens (well under 1500 budget); walking-skeleton 7/7 PASS preserved; tiktoken ^1.0.22 added; deterministic 4-stage shrink ladder implemented; session lifecycle in finally; BrowserManager.capture() + apps/cli/audit.ts unchanged → R20 supersession deferred)
   - **Brief:**
     - **Outcome:** `perception/ContextAssembler.ts` exports `contextAssembler.capture(url: string, opts?: CaptureOpts): Promise<PageStateModel>`. Orchestration order: newSession → applyStealthConfig → page.goto → mutationMonitor.observe → accessibilityExtractor.extract → hardFilter.apply → softFilter.apply → screenshotExtractor.capture → assemble candidate PageStateModel → tokenize via tiktoken cl100k_base. Owns session lifecycle — closes session in `finally`.
     - **Oversize-handling (per spec v0.2 §Key Entities + plan v0.2 design item 6) — deterministic shrink ladder:** if candidate > 1500 tokens: (Stage 1) reduce AccessibilityTree depth 10 → 6, re-tokenize; (Stage 2) reduce FilteredDOM top-30 → top-20, re-tokenize; (Stage 3) drop `Visual` sub-section, re-tokenize; (Stage 4) accept with `diagnostics.errors: ['oversized-after-shrink']` if still > 1500. If any stage brings count under 1500, accept with `diagnostics.warnings: ['shrunk-from-N-tokens']` recording original size. NEVER throw on oversize. Same input → same output (deterministic).
