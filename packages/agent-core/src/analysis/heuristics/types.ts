@@ -184,7 +184,57 @@ export const HeuristicSchemaBase = z
 export type HeuristicBase = z.infer<typeof HeuristicSchemaBase>;
 
 // ----------------------------------------------------------------------
-// HeuristicSchemaExtended (§9.10 + R15.3 + v0.2 manifest selectors)
+// AiReviewSchema (v0.7 — tiered verification methodology, additive)
+// ----------------------------------------------------------------------
+//
+// Phase 0b spec.md v0.7 §Verification Methodology adds a Tier-1 AI review
+// step between drafter and human verifier. The `neural-heuristic-reviewer`
+// skill writes this block; it is OPTIONAL on the schema (additive — old
+// content without ai_review still loads). Phase 6 loader unchanged.
+
+export const AI_REVIEW_DIMENSIONS = [
+  'source',
+  'citation',
+  'fit',
+  'banned_phrase',
+  'benchmark',
+  'actionability',
+] as const;
+
+export const AI_REVIEW_CONFIDENCE = ['HIGH', 'MED', 'LOW'] as const;
+
+export const AI_REVIEW_DISPOSITIONS = [
+  'APPROVE',
+  'FLAG_FOR_HUMAN',
+  'REJECT_REDRAFT',
+] as const;
+
+export const DimensionFindingSchema = z
+  .object({
+    dimension: z.enum(AI_REVIEW_DIMENSIONS),
+    confidence: z.enum(AI_REVIEW_CONFIDENCE),
+    finding: z.string().min(1),
+  })
+  .strict();
+
+export type DimensionFinding = z.infer<typeof DimensionFindingSchema>;
+
+export const AiReviewSchema = z
+  .object({
+    reviewer_persona: z.string().min(1),
+    reviewed_at: z.string().regex(ISO_8601_REGEX),
+    why_generated: z.string().min(1),
+    how_reviewed: z.string().min(1),
+    dimension_findings: z.array(DimensionFindingSchema),
+    disposition: z.enum(AI_REVIEW_DISPOSITIONS),
+    flagged_concerns: z.array(z.string().min(1)).optional(),
+  })
+  .strict();
+
+export type AiReview = z.infer<typeof AiReviewSchema>;
+
+// ----------------------------------------------------------------------
+// HeuristicSchemaExtended (§9.10 + R15.3 + v0.2 manifest selectors + v0.7 ai_review)
 // ----------------------------------------------------------------------
 
 export const HeuristicSchemaExtended = HeuristicSchemaBase.extend({
@@ -208,6 +258,13 @@ export const HeuristicSchemaExtended = HeuristicSchemaBase.extend({
   archetype: z.array(z.enum(PRELIMINARY_BUSINESS_ARCHETYPES)).optional(),
   page_type: z.array(z.enum(PRELIMINARY_PAGE_TYPES)).optional(),
   device: z.array(z.enum(PRELIMINARY_DEVICES)).optional(),
+
+  // v0.7 ai_review block — OPTIONAL; written by neural-heuristic-reviewer skill
+  // at Stage 2b of Phase 0b content authoring (between drafter + human gate).
+  // Phase 6 loader treats ai_review as opaque metadata; only neural-heuristic-
+  // reviewer skill + the human-gate UI consume it. R6 boundary: ai_review.* fields
+  // stay inside .heuristic-drafts/ + heuristics-repo/ private repo; never logged.
+  ai_review: AiReviewSchema.optional(),
 }).strict();
 
 export type HeuristicExtended = z.infer<typeof HeuristicSchemaExtended>;

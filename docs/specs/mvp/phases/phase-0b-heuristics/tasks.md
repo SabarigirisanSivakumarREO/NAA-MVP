@@ -2,7 +2,7 @@
 title: Phase 0b — Heuristic Authoring — Tasks
 artifact_type: tasks
 status: approved
-version: 0.6
+version: 0.7
 created: 2026-04-28
 updated: 2026-05-09
 owner: engineering lead
@@ -42,6 +42,7 @@ delta:
     - v0.3 → v0.4 — T0B-001 IMPLEMENTED 2026-05-06 (Day 1 of Phase 0b). T0B-001 acceptance line refreshed to point at `plan.md v0.4 §2` (the body-string design — supersedes v0.3 §2 which referenced §9.1 rich structured shape). Coordinated with spec.md v0.4 + plan.md v0.4 (R11.4 spec-defect patch — T101 body-string design supersedes §9.1 rich shape per supersession callout). T0B-002..T0B-005 acceptance lines unchanged but they all consume T0B-001's template; v0.4 §2 reorientation propagates implicitly. T0B-NNN headers carry status markers (✅ DONE / ⚪ pending) per first-implementation convention since this tasks.md format uses headers not checkboxes.
     - v0.4 → v0.5 — R11.4 PATH A continuation 2026-05-06 (mid-Day 2 of Phase 0b, before T0B-004 implementation). Coordinated with spec.md v0.5 + plan.md v0.5. T0B-004 acceptance line refreshed to point at `plan.md v0.5 §5` (banned-phrase regex check now targets `body` field per T101 body-string design — was `recommendation.summary + recommendation.details` per legacy §9.1 references missed in v0.4 sweep). T0B-002 + T0B-003 marker statuses unchanged (already ✅ DONE 2026-05-06).
     - v0.5 → v0.6 — Gate 1 REVISE-loop sync (2026-05-09; coordinated with spec.md v0.6 + plan.md v0.6 + impact.md v0.4). **act-005 (cosmetic)**: `req_ids` frontmatter list synced with spec.md by appending `REQ-HK-EXT-019` (preferred_states extended schema field; was missing from tasks.md req_ids since v0.1 — drift caught by 2026-05-09 AI Reviewer Gate 1 finding U2). T0B-NNN task-header markers unchanged (T0B-001..T0B-005 ✅ DONE 2026-05-06; T103/T104/T105 ⚪ pending week 4). T0B-NNN acceptance lines unchanged (no v0.6-driven content changes). T103/T104/T105 acceptance lines unchanged but consume the v0.6 spec.md "Out of Scope" PLP-deferral + 30-count rationale + AC-06 mathematical clarity at content-authoring time. No new tasks introduced; no AC-NN / R-NN ID changes (R18 append-only preserved).
+    - v0.6 → v0.7 — Tiered Verification Methodology sync (2026-05-09; coordinated with spec.md v0.7 + plan.md v0.7 + impact.md v0.5). T103/T104/T105 acceptance lines now reference the Tier 1 AI-mediated review pipeline (drafter → `neural-heuristic-reviewer` skill → human gate) per spec.md v0.7 §Verification Methodology + new `references/content-phase-state-machine.md` in master orchestrator. Tier 2 strict R15.3.2 manual re-derivation continues unchanged at AC-12 spot-checks (3 rounds × 5 random per +10/+20/+30). T0B-001..T0B-005 task-header markers unchanged (✅ DONE). No new tasks introduced; no AC-NN / R-NN ID changes (R18 append-only preserved).
   impacted:
     - tasks-v2.md v2.3.2 → v2.3.3 (Phase 0b section + reduced counts)
     - phase-6-heuristics/tasks.md already references T103-T105 as Phase 0b workstream (no change)
@@ -127,9 +128,10 @@ Per [plan.md](plan.md) §1: Week 1 = T0B-001..T0B-005 (infrastructure) → Week 
 
 The 3 content-authoring tasks below are **canonically defined in `tasks-v2.md` Phase 6 section** (T103-T105 entries) — Phase 0b is the OWNER workstream per F-012 v1.2 amendment. Counts reduced from v2.0's 50/35/15 to v2.3.3's 15/10/5 per F-012 v1.2.
 
-### T103 — Author ~15 Baymard heuristics
+### T103 — Author ~15 Baymard heuristics (v0.7 — tiered verification pipeline)
 
-- **dep:** T0B-001..T0B-005 + T101 (HeuristicSchemaExtended) + T4B-013 contract surface (manifest selectors)
+- **dep:** T0B-001..T0B-005 + T101 (HeuristicSchemaExtended) + T4B-013 contract surface (manifest selectors) + `neural-heuristic-reviewer` skill (v0.7 — `.claude/skills/neural-heuristic-reviewer/SKILL.md`)
+- **pipeline (v0.7 per content-phase-state-machine.md):** Stage 2a drafter → Stage 2b `neural-heuristic-reviewer` skill emits `ai_review` block → Stage 2c per-heuristic human gate (~3 min stamp) → Stage 2d commit → Stage 2e AC-12 spot-check at +10 mark (5 random × ~25 min Tier 2 strict R15.3.2 manual re-derivation)
 - **spec:** F-012 v1.2 + REQ-HK-001 + REQ-HK-EXT-001..019 + REQ-HK-BENCHMARK-001..003 + REQ-CONTEXT-DOWNSTREAM-001
 - **files:** `heuristics-repo/baymard/*.json` (~15 files, one per heuristic)
 - **distribution:** ≈4 homepage, ≈4 PDP, ≈5 checkout, ≈2 cart, ≥1 mobile-specific
@@ -141,9 +143,10 @@ The 3 content-authoring tasks below are **canonically defined in `tasks-v2.md` P
 - **smoke test:** `pnpm heuristic:lint heuristics-repo/baymard/*.json` exit code 0
 - **kill criteria:** if 3+ Baymard heuristics fail verification on first attempt → STOP, review drafting prompt for systematic drift
 
-### T104 — Author ~10 Nielsen heuristics
+### T104 — Author ~10 Nielsen heuristics (v0.7 — tiered verification pipeline)
 
-- **dep:** T103 (workflow exercised + smoothed)
+- **dep:** T103 (workflow exercised + smoothed) + `neural-heuristic-reviewer` skill
+- **pipeline (v0.7):** same as T103 — Stage 2a drafter → Stage 2b AI-reviewer → Stage 2c human gate → Stage 2d commit → Stage 2e AC-12 spot-check at +20 mark
 - **spec:** F-012 v1.2 + REQ-HK-001 + REQ-HK-EXT-001..019 + REQ-HK-BENCHMARK-001..003
 - **files:** `heuristics-repo/nielsen/*.json` (~10 files)
 - **distribution:** ≈4 visibility/feedback, ≈3 error prevention/recovery, ≈3 consistency/standards
@@ -153,9 +156,10 @@ The 3 content-authoring tasks below are **canonically defined in `tasks-v2.md` P
   - Spot-check at +20 mark (5 random across full set so far): ≤1 divergence (AC-12 round 2)
 - **smoke test:** `pnpm heuristic:lint heuristics-repo/nielsen/*.json` exit code 0
 
-### T105 — Author ~5 Cialdini heuristics
+### T105 — Author ~5 Cialdini heuristics (v0.7 — tiered verification pipeline)
 
-- **dep:** T104
+- **dep:** T104 + `neural-heuristic-reviewer` skill
+- **pipeline (v0.7):** same as T103/T104 — Stage 2a drafter → Stage 2b AI-reviewer → Stage 2c human gate → Stage 2d commit → Stage 2e AC-12 spot-check at +30 mark (final)
 - **spec:** F-012 v1.2 + REQ-HK-001 + REQ-HK-EXT-001..019 + REQ-HK-BENCHMARK-001..003
 - **files:** `heuristics-repo/cialdini/*.json` (~5 files)
 - **distribution:** 1 social proof, 1 scarcity, 1 authority, 1 reciprocity, 1 liking

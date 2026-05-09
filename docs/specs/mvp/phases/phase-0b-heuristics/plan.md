@@ -2,7 +2,7 @@
 title: Phase 0b — Heuristic Authoring — Implementation Plan
 artifact_type: plan
 status: approved
-version: 0.6
+version: 0.7
 created: 2026-04-28
 updated: 2026-05-09
 owner: engineering lead
@@ -41,6 +41,7 @@ delta:
     - v0.3 → v0.4 — R11.4 spec-defect patch (2026-05-06) coordinated with spec.md v0.4. §2 (Drafting Prompt Structure) REQUIRED OUTPUT FIELDS list rewritten from §9.1 rich structured shape (~25 fields) to T101 body-string design (11 top-level fields). T101 (`packages/agent-core/src/analysis/heuristics/types.ts`, landed Day 1 of week 1) is the implementation source-of-truth that supersedes §9.1's structured `detection.*` + `recommendation.*` + `name` + `severity_if_violated` + `reliability_tier` fields. The single `body` string field absorbs §9.1's six prose fields (`detection.lookFor`, `detection.positiveSignals`, `detection.negativeSignals`, `recommendation.summary`, `recommendation.details`, `recommendation.researchBacking`) into one well-structured natural-language container — modern LLMs prefer prose over JSON-fragmented prompt instructions. INPUTS contract clarified: `archetype` accepts an array (T101 enum: D2C/SaaS/B2B/lead_gen/marketplace/media/other), `page_types` accepts an array (T101 enum: homepage/pdp/plp/cart/checkout/pricing/comparison/landing/other), `device` accepts an array (T101 enum: mobile/desktop/tablet/balanced — NOT `mobile`/`desktop`/`both` as v0.3 wrongly stated). Drafting model temperature stays 0.3 per §Assumptions META exemption.
     - v0.4 → v0.5 — R11.4 PATH A continuation (2026-05-06) coordinated with spec.md v0.5. §5 pseudo-spec banned-phrase regex check target field changed from `parsed.data.recommendation.summary + parsed.data.recommendation.details` (legacy §9.1 references missed in v0.4 sweep) to `parsed.data.body` (T101 body-string design). Derivative of v0.4 supersession — no new design intent. Coordinated with spec.md v0.5 patches to AC-04 + AC-15 + R-04.
     - v0.5 → v0.6 — Gate 1 REVISE-loop patch (2026-05-09) coordinated with spec.md v0.6 (act-003 component of 5-act sweep). Two stale `recommendation.summary` + `recommendation.details` references replaced with `body` (T101 body-string design — completes the v0.5 R11.4 sweep): §3 step 4 verification protocol bullet ("Banned-phrase check: Read body...") + §5 conformance test fail-case bullet ("Fail case: banned phrase in body..."). All other plan content unchanged — no §1 sequencing changes, no §2 prompt structure changes, no §6 R6/R15.3.3 isolation changes, no §7 kill criteria changes, no §9 effort-estimate changes. Derivative R11.4 PATH A continuation — not new design intent.
+    - v0.6 → v0.7 — Tiered Verification Methodology sync (2026-05-09; coordinated with spec.md v0.7 §Verification Methodology + new `neural-heuristic-reviewer` skill + master orchestrator content-phase state-machine extension). §3 Verification Protocol (Tier 2 strict re-derivation per R15.3.2) reframed as Tier 2 of a two-tier methodology — Tier 1 AI-mediated review (~3 min/heuristic) prepends per-heuristic before commit gate; Tier 2 (existing 8-step protocol) preserved as-is for AC-12 spot-check sample (5×3=15 of 30). §9 effort estimate redistribution: total verifier humanwork stays at ~7-7.5 hr but split as ~1.5 hr Tier 1 (30 × ~3 min lightweight stamps) + ~6.25 hr Tier 2 (15 × ~25 min strict re-derivation at +10/+20/+30 spot-checks). No §1 sequencing changes; no §2/§4/§5 changes; §6 R6/R15.3.3 isolation extended to also cover `neural-heuristic-reviewer` output (`ai_review` block stays in `.heuristic-drafts/<id>.review.json` gitignored + commits to `heuristics-repo/` as the optional `ai_review` schema field per T101 v0.7 amendment); §7 kill criteria extended: REJECT_REDRAFT 3-strike + FLAG_FOR_HUMAN >20% per pack triggers per content-phase-state-machine.md.
   impacted:
     - T0B-001 drafting prompt template (this commit) — produces T101-shaped JSON
     - T0B-004 lint CLI (Day 2 future) — Zod parse against T101's `HeuristicSchemaExtended` exported from `packages/agent-core/src/analysis/heuristics/types.ts`
@@ -293,6 +294,8 @@ Notes:
 
 ## 3. Verification Protocol (T0B-002)
 
+> **★ v0.7 — Tiered Methodology:** Per spec.md v0.7 §Verification Methodology, this protocol is **Tier 2** (strict R15.3.2 manual re-derivation) and applies at the AC-12 spot-check sample (5 random × 3 rounds = 15-of-30; ~25 min/heuristic). **Tier 1** (AI-mediated review via `neural-heuristic-reviewer` skill — ~3 min/heuristic for all 30) runs as Stage 2b of the master orchestrator content-phase pipeline before this protocol fires at spot-check time. The 8 steps below are unchanged; only the *who* changes: in v0.7 every heuristic gets Tier 1 (30 of 30 lightweight); 50% (15 of 30) additionally get Tier 2 (this protocol — strict).
+
 Per R15.3.2, every LLM-drafted heuristic requires a human verifier before commit. Protocol (`docs/specs/mvp/templates/heuristic-verification-protocol.md`):
 
 1. **Open `source_url`** in a fresh browser tab. Confirm the URL resolves (200 OK). If 404, find a stable archive (Wayback Machine, Baymard archive); update `source_url` and `provenance` accordingly.
@@ -456,7 +459,7 @@ After all 7 conditions, Phase 0b status: `draft → validated → approved → i
 | T104 ~10 Nielsen heuristics (~36 min × 10) | ~6 | ~2 |
 | T105 ~5 Cialdini heuristics (~36 min × 5) | ~3 | ~1 |
 | Buffer / re-drafts / spot-check follow-up | ~1 | ~1 |
-| **Total** | **~26h** | **~7h** |
+| **Total** | **~26h** | **~7h** (v0.7 redistribution: ~1.5 hr Tier 1 lightweight stamps × 30 heuristics + ~6.25 hr Tier 2 strict R15.3.2 spot-checks × 15-of-30 sample — total preserved within ±10%) |
 
 Calendar duration: ~4 weeks alongside Phase 1-3 implementation (NOT critical-path during MVP weeks 1-4).
 
