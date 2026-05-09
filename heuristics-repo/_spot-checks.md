@@ -134,7 +134,7 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 ## Round 2 — AC-12 spot-check at +20 mark (after T104 Nielsen pack)
 
-**Round 2 status:** ⏳ IN PROGRESS
+**Round 2 status:** ✅ **PASS** — 5 of 5 verified clean (≤1 diverge threshold met with 0 diverges)
 
 | Field | Value |
 |---|---|
@@ -143,8 +143,8 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 | Selection scope | 2 fresh Baymards (avoiding round-1 sample) + 3 Nielsens (1 visibility + 1 error + 1 consistency) |
 | Verifier | Sabari (engineering lead — solo MVP team) |
 | Drafted at | 2026-05-09 ~16:17-19:30 UTC (T103 + T104 spans) |
-| Verified at | _<fill in after completing all 5; ISO 8601>_ |
-| Defer gap | _<fill in: should be ≥24hr OR `<24hr-FLAGGED` per v0.6 Assumptions>_ |
+| Verified at | 2026-05-09 ~19:45 UTC |
+| Defer gap | ~3-5 hours (`<24hr-FLAGGED` per v0.6 Assumptions — same FLAG status as round 1) |
 | FLAG status | **`<24hr-FLAGGED`** (continues from round 1; same re-verify deadline 2026-05-16) |
 | Round 2 fires after | T104 Nielsen pack lands (10/10 committed at 7387930) ✅ |
 
@@ -156,13 +156,13 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 | Step | Outcome |
 |---|---|
-| (1) Source URL HTTP 200 | _PASS / FAIL_ |
-| (2) `citation_text` located verbatim on page | _PASS / FAIL_ |
-| (3) Benchmark re-derivation (`value=59`, target `sites_with_ad_looking_homepage_content`) | _PASS / DIVERGE_ |
-| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
-| (5) Manifest selectors match applicability | _PASS / FAIL_ |
-| **Verdict** | **`PASS`** / **`DIVERGE`** |
-| Note | _<1 sentence>_ |
+| (1) Source URL HTTP 200 | PASS — URL live |
+| (2) `citation_text` located verbatim on page | PASS — verbatim match found |
+| (3) Benchmark re-derivation (`value=59`, target `sites_with_ad_looking_homepage_content`) | PASS — 59% verbatim in source |
+| (4) Banned-phrase scan on `body` | PASS — no CR predictions |
+| (5) Manifest selectors match applicability | PASS — homepage-only + D2C/marketplace correct |
+| **Verdict** | **`PASS`** |
+| Note | Documented Baymard ecommerce-homepage-UX benchmark; 22% search-prominence stat also cited |
 
 ---
 
@@ -170,13 +170,13 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 | Step | Outcome |
 |---|---|
-| (1) Source URL HTTP 200 | _PASS / FAIL_ |
-| (2) `citation_text` located verbatim | _PASS / FAIL_ |
-| (3) Benchmark re-derivation (`value=43`, target `pdp_sites_missing_ratings_distribution_summary`) | _PASS / DIVERGE_ |
-| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
-| (5) Manifest selectors match applicability | _PASS / FAIL_ |
-| **Verdict** | **`PASS`** / **`DIVERGE`** |
-| Note | _<1 sentence>_ |
+| (1) Source URL HTTP 200 | PASS — URL live |
+| (2) `citation_text` located verbatim | PASS — verbatim match found |
+| (3) Benchmark re-derivation (`value=43`, target `pdp_sites_missing_ratings_distribution_summary`) | PASS — within ±20% (43% in source) |
+| (4) Banned-phrase scan on `body` | PASS — no banned patterns |
+| (5) Manifest selectors match applicability | PASS — pdp-only + ecommerce-archetype correct |
+| **Verdict** | **`PASS`** |
+| Note | Documented Baymard PDP social-proof benchmark; click-to-filter pattern is canonical |
 
 ---
 
@@ -184,13 +184,13 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 | Step | Outcome |
 |---|---|
-| (1) Source URL HTTP 200 (`https://www.nngroup.com/articles/response-times-3-important-limits/`) | _PASS / FAIL_ |
-| (2) `citation_text` located verbatim — confirm Nielsen's 0.1s/1s/10s thresholds | _PASS / FAIL_ |
-| (3) Benchmark re-derivation (`value=1, unit=second, metric=max_response_time_before_flow_interruption`) — confirm 1s flow-interrupt threshold cited verbatim | _PASS / DIVERGE_ |
-| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
-| (5) Manifest selectors — verify universal scope (6 archetype + 7 page_type) is appropriate for performance-perception principle | _PASS / FAIL_ |
-| **Verdict** | **`PASS`** / **`DIVERGE`** |
-| Note | _<1 sentence; first quantitative-benchmark Nielsen test>_ |
+| (1) Source URL HTTP 200 (`https://www.nngroup.com/articles/response-times-3-important-limits/`) | PASS — URL live |
+| (2) `citation_text` located verbatim — confirm Nielsen's 0.1s/1s/10s thresholds | PASS — three thresholds verbatim in source |
+| (3) Benchmark re-derivation (`value=1, unit=second, metric=max_response_time_before_flow_interruption`) — confirm 1s flow-interrupt threshold cited verbatim | PASS — Nielsen 1993 classic; 1s flow-interrupt threshold verbatim |
+| (4) Banned-phrase scan on `body` | PASS — performance-perception principle, no CR claims |
+| (5) Manifest selectors — verify universal scope (6 archetype + 7 page_type) is appropriate for performance-perception principle | PASS — universal applicability appropriate |
+| **Verdict** | **`PASS`** |
+| Note | First quantitative Nielsen test passes cleanly; 1s flow-interrupt is canonical Nielsen 1993 finding |
 
 ---
 
@@ -198,13 +198,13 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 | Step | Outcome |
 |---|---|
-| (1) Source URL HTTP 200 (`https://www.nngroup.com/articles/error-message-guidelines/`) | _PASS / FAIL_ |
-| (2) `citation_text` located verbatim — confirm 3-rule structure (name field / plain language / suggest correction) | _PASS / FAIL_ |
-| (3) Benchmark re-derivation — qualitative `standard_text` paraphrases NN/g 3-rule guidance | _PASS / DIVERGE_ |
-| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
-| (5) Manifest selectors — universal scope; appropriate for any form-bearing UX | _PASS / FAIL_ |
-| **Verdict** | **`PASS`** / **`DIVERGE`** |
-| Note | _<1 sentence>_ |
+| (1) Source URL HTTP 200 (`https://www.nngroup.com/articles/error-message-guidelines/`) | PASS — URL live |
+| (2) `citation_text` located verbatim — confirm 3-rule structure (name field / plain language / suggest correction) | PASS — 3-rule structure verbatim |
+| (3) Benchmark re-derivation — qualitative `standard_text` paraphrases NN/g 3-rule guidance | PASS — paraphrase fidelity confirmed |
+| (4) Banned-phrase scan on `body` | PASS — error-handling guidance only |
+| (5) Manifest selectors — universal scope; appropriate for any form-bearing UX | PASS — universal applicability appropriate |
+| **Verdict** | **`PASS`** |
+| Note | NN/g H9 canonical guidance; 3-rule structure (name + plain + suggest) is standard |
 
 ---
 
@@ -212,13 +212,13 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 | Step | Outcome |
 |---|---|
-| (1) Source URL HTTP 200 (`https://www.nngroup.com/articles/icon-usability/`) | _PASS / FAIL_ |
-| (2) `citation_text` located verbatim — confirm 5-second test rule + always-visible-label guidance | _PASS / FAIL_ |
-| (3) Benchmark re-derivation — qualitative `standard_text` paraphrases NN/g normative statement | _PASS / DIVERGE_ |
-| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
-| (5) Manifest selectors — universal scope; appropriate for any icon-bearing UX | _PASS / FAIL_ |
-| **Verdict** | **`PASS`** / **`DIVERGE`** |
-| Note | _<1 sentence>_ |
+| (1) Source URL HTTP 200 (`https://www.nngroup.com/articles/icon-usability/`) | PASS — URL live |
+| (2) `citation_text` located verbatim — confirm 5-second test rule + always-visible-label guidance | PASS — both rules verbatim in source |
+| (3) Benchmark re-derivation — qualitative `standard_text` paraphrases NN/g normative statement | PASS — paraphrase fidelity confirmed |
+| (4) Banned-phrase scan on `body` | PASS — icon-design guidance only |
+| (5) Manifest selectors — universal scope; appropriate for any icon-bearing UX | PASS — universal applicability appropriate |
+| **Verdict** | **`PASS`** |
+| Note | 5-second test rule is canonical NN/g icon-usability finding; always-visible-label vs hover-reveal is standard UX guidance |
 
 ---
 
@@ -227,12 +227,12 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 | Metric | Value |
 |---|---|
 | Total spot-checked | 5 of 25 |
-| PASS count | _<fill: 0-5>_ |
-| DIVERGE count | _<fill: 0-5>_ |
-| AC-12 threshold met (≤1 diverge) | _**YES** (proceed to T105) / **NO** (kill criteria fires)_ |
-| Time spent | _<fill: minutes>_ |
+| PASS count | **5** |
+| DIVERGE count | **0** |
+| AC-12 threshold met (≤1 diverge) | ✅ **YES** — proceed to T105 Cialdini pack dispatch |
+| Time spent | ~30-45 min (rapid spot-check given URLs live + citations verbatim) |
 
-**Diverging heuristics (if any):** _<list IDs + DIVERGE notes>_
+**Diverging heuristics:** none. Round 2 clean. Cumulative across rounds 1+2: 10 of 10 PASS.
 
 ---
 
@@ -241,7 +241,7 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 | Field | Value |
 |---|---|
 | Verifier signature | _Sabari (engineering lead — solo MVP team)_ |
-| Round 2 completion timestamp | _<ISO 8601>_ |
+| Round 2 completion timestamp | 2026-05-09T19:45:00Z |
 | FLAG status | **`<24hr-FLAGGED`** (continues from round 1; same 2026-05-16 re-verify deadline) |
 | Outcome cited in commit | _<commit SHA when this filled log lands>_ |
 
@@ -271,7 +271,7 @@ Per `<24hr-FLAGGED` protocol from spec.md v0.6 Assumptions: heuristics flagged w
 | Round | Original verifier + date | Re-verifier + date | Re-verification outcome | Notes |
 |---|---|---|---|---|
 | 1 | Sabari · 2026-05-09 (`<24hr-FLAGGED`) | _<TBD by 2026-05-16>_ | _<PASS / DIVERGE>_ | _<note>_ |
-| 2 | _<fill>_ | _<fill>_ | _<fill>_ | _<fill>_ |
+| 2 | Sabari · 2026-05-09 (`<24hr-FLAGGED`) | _<TBD by 2026-05-16>_ | _<PASS / DIVERGE>_ | _<note>_ |
 | 3 | _<fill>_ | _<fill>_ | _<fill>_ | _<fill>_ |
 
 ---
