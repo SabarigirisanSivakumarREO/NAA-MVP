@@ -134,17 +134,116 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 ## Round 2 — AC-12 spot-check at +20 mark (after T104 Nielsen pack)
 
-**Round 2 status:** ⚪ NOT STARTED
+**Round 2 status:** ⏳ IN PROGRESS
 
 | Field | Value |
 |---|---|
 | Round | 2 of 3 |
 | Sample size | 5 of 25 (after T104; +20 mark) |
-| Selection scope | random across all 25 (15 Baymard + 10 Nielsen) |
-| Verifier | _<fill at round 2 time>_ |
-| Round 2 fires after | T104 Nielsen pack lands (10/10 committed) |
+| Selection scope | 2 fresh Baymards (avoiding round-1 sample) + 3 Nielsens (1 visibility + 1 error + 1 consistency) |
+| Verifier | Sabari (engineering lead — solo MVP team) |
+| Drafted at | 2026-05-09 ~16:17-19:30 UTC (T103 + T104 spans) |
+| Verified at | _<fill in after completing all 5; ISO 8601>_ |
+| Defer gap | _<fill in: should be ≥24hr OR `<24hr-FLAGGED` per v0.6 Assumptions>_ |
+| FLAG status | **`<24hr-FLAGGED`** (continues from round 1; same re-verify deadline 2026-05-16) |
+| Round 2 fires after | T104 Nielsen pack lands (10/10 committed at 7387930) ✅ |
 
-_(Per-heuristic stubs to be filled at round 2 time)_
+### Per-heuristic spot-check (5 of 25 — round 2)
+
+---
+
+#### 1. `BAYMARD-HOMEPAGE-003` — Banner/search drown-out (59% sites with ad-looking content; 22% non-prominent search)
+
+| Step | Outcome |
+|---|---|
+| (1) Source URL HTTP 200 | _PASS / FAIL_ |
+| (2) `citation_text` located verbatim on page | _PASS / FAIL_ |
+| (3) Benchmark re-derivation (`value=59`, target `sites_with_ad_looking_homepage_content`) | _PASS / DIVERGE_ |
+| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
+| (5) Manifest selectors match applicability | _PASS / FAIL_ |
+| **Verdict** | **`PASS`** / **`DIVERGE`** |
+| Note | _<1 sentence>_ |
+
+---
+
+#### 2. `BAYMARD-PDP-002` — Ratings-distribution summary (43% sites missing)
+
+| Step | Outcome |
+|---|---|
+| (1) Source URL HTTP 200 | _PASS / FAIL_ |
+| (2) `citation_text` located verbatim | _PASS / FAIL_ |
+| (3) Benchmark re-derivation (`value=43`, target `pdp_sites_missing_ratings_distribution_summary`) | _PASS / DIVERGE_ |
+| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
+| (5) Manifest selectors match applicability | _PASS / FAIL_ |
+| **Verdict** | **`PASS`** / **`DIVERGE`** |
+| Note | _<1 sentence>_ |
+
+---
+
+#### 3. `NIELSEN-VISIBILITY-003` — Response-time thresholds (1-second flow-interrupt)
+
+| Step | Outcome |
+|---|---|
+| (1) Source URL HTTP 200 (`https://www.nngroup.com/articles/response-times-3-important-limits/`) | _PASS / FAIL_ |
+| (2) `citation_text` located verbatim — confirm Nielsen's 0.1s/1s/10s thresholds | _PASS / FAIL_ |
+| (3) Benchmark re-derivation (`value=1, unit=second, metric=max_response_time_before_flow_interruption`) — confirm 1s flow-interrupt threshold cited verbatim | _PASS / DIVERGE_ |
+| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
+| (5) Manifest selectors — verify universal scope (6 archetype + 7 page_type) is appropriate for performance-perception principle | _PASS / FAIL_ |
+| **Verdict** | **`PASS`** / **`DIVERGE`** |
+| Note | _<1 sentence; first quantitative-benchmark Nielsen test>_ |
+
+---
+
+#### 4. `NIELSEN-ERROR-001` — Error message guidelines (Heuristic #9)
+
+| Step | Outcome |
+|---|---|
+| (1) Source URL HTTP 200 (`https://www.nngroup.com/articles/error-message-guidelines/`) | _PASS / FAIL_ |
+| (2) `citation_text` located verbatim — confirm 3-rule structure (name field / plain language / suggest correction) | _PASS / FAIL_ |
+| (3) Benchmark re-derivation — qualitative `standard_text` paraphrases NN/g 3-rule guidance | _PASS / DIVERGE_ |
+| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
+| (5) Manifest selectors — universal scope; appropriate for any form-bearing UX | _PASS / FAIL_ |
+| **Verdict** | **`PASS`** / **`DIVERGE`** |
+| Note | _<1 sentence>_ |
+
+---
+
+#### 5. `NIELSEN-CONSISTENCY-002` — Icon usability + always-visible labels
+
+| Step | Outcome |
+|---|---|
+| (1) Source URL HTTP 200 (`https://www.nngroup.com/articles/icon-usability/`) | _PASS / FAIL_ |
+| (2) `citation_text` located verbatim — confirm 5-second test rule + always-visible-label guidance | _PASS / FAIL_ |
+| (3) Benchmark re-derivation — qualitative `standard_text` paraphrases NN/g normative statement | _PASS / DIVERGE_ |
+| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
+| (5) Manifest selectors — universal scope; appropriate for any icon-bearing UX | _PASS / FAIL_ |
+| **Verdict** | **`PASS`** / **`DIVERGE`** |
+| Note | _<1 sentence>_ |
+
+---
+
+### Round 2 outcome
+
+| Metric | Value |
+|---|---|
+| Total spot-checked | 5 of 25 |
+| PASS count | _<fill: 0-5>_ |
+| DIVERGE count | _<fill: 0-5>_ |
+| AC-12 threshold met (≤1 diverge) | _**YES** (proceed to T105) / **NO** (kill criteria fires)_ |
+| Time spent | _<fill: minutes>_ |
+
+**Diverging heuristics (if any):** _<list IDs + DIVERGE notes>_
+
+---
+
+### Round 2 sign-off
+
+| Field | Value |
+|---|---|
+| Verifier signature | _Sabari (engineering lead — solo MVP team)_ |
+| Round 2 completion timestamp | _<ISO 8601>_ |
+| FLAG status | **`<24hr-FLAGGED`** (continues from round 1; same 2026-05-16 re-verify deadline) |
+| Outcome cited in commit | _<commit SHA when this filled log lands>_ |
 
 ---
 
