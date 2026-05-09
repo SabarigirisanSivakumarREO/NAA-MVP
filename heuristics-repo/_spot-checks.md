@@ -247,20 +247,122 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 ---
 
-## Round 3 — AC-12 spot-check at +30 mark (after T105 Cialdini pack — final)
+## Round 3 — AC-12 spot-check at +30 mark (after T105 Cialdini pack — FINAL)
 
-**Round 3 status:** ⚪ NOT STARTED
+**Round 3 status:** ⏳ IN PROGRESS
 
 | Field | Value |
 |---|---|
 | Round | 3 of 3 (final) |
 | Sample size | 5 of 30 (full MVP pack) |
-| Selection scope | random across all 30 (15 Baymard + 10 Nielsen + 5 Cialdini) |
-| Verifier | _<fill at round 3 time>_ |
-| Round 3 fires after | T105 Cialdini pack lands (5/5 committed) |
-| Closes | Phase 0b status:approved → status:implemented (per R17 + spec.md AC-12) |
+| Selection scope | 1 fresh Baymard + 1 fresh Nielsen + 3 Cialdinis (round-3 introduces all 5 new Cialdinis; verify 3 of 5; remaining 2 covered in post-FLAG re-verification cycle) |
+| Verifier | Sabari (engineering lead — solo MVP team) |
+| Drafted at | 2026-05-09 ~16:17-20:05 UTC |
+| Verified at | _<fill in after completing all 5; ISO 8601>_ |
+| Defer gap | _<fill in: should be ≥24hr OR `<24hr-FLAGGED`>_ |
+| FLAG status | **`<24hr-FLAGGED`** (continues from rounds 1+2; same re-verify deadline 2026-05-16) |
+| Round 3 fires after | T105 Cialdini pack lands (5/5 committed at 47fd4bd) ✅ |
+| Closes | Phase 0b status:approved → status:implemented (per R17 + AC-12 final) |
 
-_(Per-heuristic stubs to be filled at round 3 time)_
+### Per-heuristic spot-check (5 of 30 — round 3 final)
+
+---
+
+#### 1. `BAYMARD-HOMEPAGE-001` — Catalog-scope inference (22% sites with inadequate range)
+
+| Step | Outcome |
+|---|---|
+| (1) Source URL HTTP 200 (`https://baymard.com/blog/inferring-product-catalog-from-homepage`) | _PASS / FAIL_ |
+| (2) `citation_text` located verbatim | _PASS / FAIL_ |
+| (3) Benchmark re-derivation (`value=22`, target `sites_with_inadequate_homepage_product_range`) | _PASS / DIVERGE_ |
+| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
+| (5) Manifest selectors match applicability | _PASS / FAIL_ |
+| **Verdict** | **`PASS`** / **`DIVERGE`** |
+| Note | _<1 sentence; the smoke-3 representative — first heuristic ever drafted in the v0.7 pipeline>_ |
+
+---
+
+#### 2. `NIELSEN-VISIBILITY-002` — Progress indicators (3× wait-tolerance multiplier)
+
+| Step | Outcome |
+|---|---|
+| (1) Source URL HTTP 200 (`https://www.nngroup.com/articles/progress-indicators/`) | _PASS / FAIL_ |
+| (2) `citation_text` located verbatim — confirm "3 times longer" wait-tolerance finding | _PASS / FAIL_ |
+| (3) Benchmark re-derivation (`value=3, unit=multiplier, metric=wait_tolerance_with_progress_indicator`) — confirm 3× multiplier cited verbatim | _PASS / DIVERGE_ |
+| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
+| (5) Manifest selectors — universal scope appropriate for performance UX | _PASS / FAIL_ |
+| **Verdict** | **`PASS`** / **`DIVERGE`** |
+| Note | _<1 sentence; second quantitative-Nielsen test>_ |
+
+---
+
+#### 3. `CIALDINI-SOCIALPROOF-001` — Peer counters + similarity-cued bestseller badges
+
+| Step | Outcome |
+|---|---|
+| (1) Source URL HTTP 200 (`https://www.influenceatwork.com/7-principles-of-persuasion/`) | _PASS / FAIL_ |
+| (2) `citation_text` located verbatim — find "especially when uncertain, people will look to the actions and behaviors of others" via Ctrl+F on the page | _PASS / FAIL_ |
+| (3) Benchmark re-derivation — qualitative `standard_text` paraphrases Cialdini guidance accurately | _PASS / DIVERGE_ |
+| (4) Banned-phrase scan on `body` (Cialdini = highest-CR-prediction-risk pack) | _PASS / FAIL_ |
+| (5) Manifest selectors — page_type covers homepage/pdp/landing/pricing | _PASS / FAIL_ |
+| **Verdict** | **`PASS`** / **`DIVERGE`** |
+| Note | _<1 sentence; first Cialdini test in spot-check>_ |
+
+---
+
+#### 4. `CIALDINI-SCARCITY-001` — Low-stock + countdown + waitlists; loss framing
+
+| Step | Outcome |
+|---|---|
+| (1) Source URL HTTP 200 (same shared URL — confirm Concorde example findable on page) | _PASS / FAIL_ |
+| (2) `citation_text` located verbatim — Concorde example or similar Cialdini scarcity framing | _PASS / FAIL_ |
+| (3) Benchmark re-derivation — qualitative `standard_text` emphasizes factual-grounding (anti-artificial-scarcity) | _PASS / DIVERGE_ |
+| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
+| (5) Manifest selectors — page_type extended to cart/checkout for urgency-timer placement (verify reasonable) | _PASS / FAIL_ |
+| **Verdict** | **`PASS`** / **`DIVERGE`** |
+| Note | _<1 sentence; verify ethical-use guidance built into recommendation>_ |
+
+---
+
+#### 5. `CIALDINI-AUTHORITY-001` — Certifications + trust badges + named credentials
+
+| Step | Outcome |
+|---|---|
+| (1) Source URL HTTP 200 (same shared URL — confirm physiotherapist + real-estate examples findable) | _PASS / FAIL_ |
+| (2) `citation_text` located verbatim — physiotherapist + real-estate-agent examples | _PASS / FAIL_ |
+| (3) Benchmark re-derivation — qualitative `standard_text` emphasizes verifiability (anti-fake-badge) | _PASS / DIVERGE_ |
+| (4) Banned-phrase scan on `body` (note: source page has "20% lift" stat in citation_text but this should NOT appear in body — verify) | _PASS / FAIL_ |
+| (5) Manifest selectors — page_type covers checkout/payment surfaces for credential placement | _PASS / FAIL_ |
+| **Verdict** | **`PASS`** / **`DIVERGE`** |
+| Note | _<1 sentence; verify body is regex-clean even though citation has CR-relevant stat>_ |
+
+---
+
+### Round 3 outcome
+
+| Metric | Value |
+|---|---|
+| Total spot-checked | 5 of 30 |
+| PASS count | _<fill: 0-5>_ |
+| DIVERGE count | _<fill: 0-5>_ |
+| AC-12 threshold met (≤1 diverge) | _**YES** (Phase 0b PROCEEDS to status:implemented) / **NO** (kill criteria fires)_ |
+| Time spent | _<fill: minutes>_ |
+
+**Cumulative across rounds 1+2+3:** _<fill: 13-15>_ of 30 PASS. Tier 2 coverage = 15-of-30 = 50% target met per spec.md v0.7.
+
+**Diverging heuristics (if any):** _<list IDs + DIVERGE notes>_
+
+---
+
+### Round 3 sign-off
+
+| Field | Value |
+|---|---|
+| Verifier signature | _Sabari (engineering lead — solo MVP team)_ |
+| Round 3 completion timestamp | _<ISO 8601>_ |
+| FLAG status | **`<24hr-FLAGGED`** (continues from rounds 1+2; same 2026-05-16 re-verify deadline) |
+| Outcome cited in commit | _<commit SHA when this filled log lands>_ |
+| Phase 0b status transition authorized | _**YES** if round 3 PASS / **NO** if kill criteria fires_ |
 
 ---
 
@@ -272,7 +374,7 @@ Per `<24hr-FLAGGED` protocol from spec.md v0.6 Assumptions: heuristics flagged w
 |---|---|---|---|---|
 | 1 | Sabari · 2026-05-09 (`<24hr-FLAGGED`) | _<TBD by 2026-05-16>_ | _<PASS / DIVERGE>_ | _<note>_ |
 | 2 | Sabari · 2026-05-09 (`<24hr-FLAGGED`) | _<TBD by 2026-05-16>_ | _<PASS / DIVERGE>_ | _<note>_ |
-| 3 | _<fill>_ | _<fill>_ | _<fill>_ | _<fill>_ |
+| 3 | Sabari · 2026-05-09 (`<24hr-FLAGGED`) | _<TBD by 2026-05-16>_ | _<PASS / DIVERGE>_ | _<note; also covers post-FLAG re-verification of CIALDINI-RECIPROCITY-001 + CIALDINI-LIKING-001 not in round-3 sample>_ |
 
 ---
 
