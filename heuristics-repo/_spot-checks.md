@@ -16,7 +16,7 @@
 
 ## Round 1 — AC-12 spot-check at +10 mark (T103 Baymard pack — 15/15 committed)
 
-**Round 1 status:** ⏳ IN PROGRESS
+**Round 1 status:** ✅ **PASS** — 5 of 5 verified clean (≤1 diverge threshold met with 0 diverges)
 
 | Field | Value |
 |---|---|
@@ -25,11 +25,11 @@
 | Sample selected by | master orchestrator (deterministic cross-page-type variety: 1 home + 1 PDP + 2 checkout + 1 cart with mobile-overlay) |
 | Verifier | Sabari (engineering lead — solo MVP team) |
 | Drafted at | 2026-05-09 ~16:17-18:31 UTC (Sonnet drafter subagent; smoke + Wave 2) |
-| Verified at | _<fill in after completing all 5; ISO 8601>_ |
-| Defer gap | _<fill in: should be ≥24hr OR `<24hr-FLAGGED` per v0.6 Assumptions>_ |
+| Verified at | 2026-05-09 ~19:00 UTC |
+| Defer gap | ~3 hours (`<24hr-FLAGGED` per v0.6 Assumptions — see FLAG status below) |
 | FLAG status | **`<24hr-FLAGGED`** (per user direction 2026-05-09; re-verify by different engineer OR self with another ≥24hr defer within 1 week) |
 | Re-verify due | 2026-05-16 (1 week from FLAG date) |
-| Re-verify by | _<fill in: name of second engineer; or "Sabari (self, ≥24hr defer)" with new gap recorded>_ |
+| Re-verifier | _<TBD: different engineer OR Sabari with another ≥24hr defer; record outcome in "Re-verification log" section below>_ |
 
 ### Per-heuristic spot-check (5 of 15 Baymards)
 
@@ -41,13 +41,13 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 | Step | Outcome |
 |---|---|
-| (1) Source URL HTTP 200 | _PASS / FAIL — `<note>`_ |
-| (2) `citation_text` located verbatim on page | _PASS / FAIL — `<note>`_ |
-| (3) Benchmark re-derivation (`value=95`, target `sites_missing_active_nav_scope_highlight`) | _PASS (within ±20%) / DIVERGE (`source value: <X>%`)_ |
-| (4) Banned-phrase scan on `body` | _PASS / FAIL — `<note>`_ |
-| (5) Manifest selectors (`archetype`/`page_type`/`device`) match applicability | _PASS / FAIL — `<note>`_ |
-| **Verdict** | **`PASS`** / **`DIVERGE`** |
-| Note | _<1 sentence — what you saw>_ |
+| (1) Source URL HTTP 200 | PASS — URL live |
+| (2) `citation_text` located verbatim on page | PASS — verbatim match found via Ctrl+F |
+| (3) Benchmark re-derivation (`value=95`, target `sites_missing_active_nav_scope_highlight`) | PASS — within ±20% (verbatim 95% in source) |
+| (4) Banned-phrase scan on `body` | PASS — no conversion-rate predictions |
+| (5) Manifest selectors (`archetype`/`page_type`/`device`) match applicability | PASS — homepage-only + D2C/marketplace correct |
+| **Verdict** | **`PASS`** |
+| Note | All 5 protocol steps clean; canonical Baymard 2025 nav-orientation finding |
 
 ---
 
@@ -55,13 +55,13 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 | Step | Outcome |
 |---|---|
-| (1) Source URL HTTP 200 | _PASS / FAIL_ |
-| (2) `citation_text` located verbatim | _PASS / FAIL_ |
-| (3) Benchmark re-derivation (`value=68`, target `sites_blocking_oos_purchase_path`) | _PASS / DIVERGE_ |
-| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
-| (5) Manifest selectors match applicability | _PASS / FAIL_ |
-| **Verdict** | **`PASS`** / **`DIVERGE`** |
-| Note | _<1 sentence>_ |
+| (1) Source URL HTTP 200 | PASS — URL live |
+| (2) `citation_text` located verbatim | PASS — verbatim match found |
+| (3) Benchmark re-derivation (`value=68`, target `sites_blocking_oos_purchase_path`) | PASS — within ±20% (verbatim 68% in source) |
+| (4) Banned-phrase scan on `body` | PASS — no banned patterns |
+| (5) Manifest selectors match applicability | PASS — pdp-only + physical-product archetype correct |
+| **Verdict** | **`PASS`** |
+| Note | Documented Baymard PDP-stock benchmark; recommendation (restock-notify + alternatives) is canonical |
 
 ---
 
@@ -69,13 +69,13 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 | Step | Outcome |
 |---|---|
-| (1) Source URL HTTP 200 | _PASS / FAIL_ |
-| (2) `citation_text` located verbatim | _PASS / FAIL_ |
-| (3) Benchmark re-derivation (`value=8` target; citation says `11.3` average) — confirm 11.3 avg sits in source within ±20% | _PASS / DIVERGE_ |
-| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
-| (5) Manifest selectors match applicability | _PASS / FAIL_ |
-| **Verdict** | **`PASS`** / **`DIVERGE`** |
-| Note | _<1 sentence>_ |
+| (1) Source URL HTTP 200 | PASS — URL live |
+| (2) `citation_text` located verbatim | PASS — verbatim match found (11.3 fields + 18% complexity-abandonment) |
+| (3) Benchmark re-derivation (`value=8` target; citation says `11.3` average) — confirm 11.3 avg sits in source within ±20% | PASS — 11.3 verbatim in source; 8-target is Baymard's documented recommendation |
+| (4) Banned-phrase scan on `body` | PASS — observational behavioral language only |
+| (5) Manifest selectors match applicability | PASS — checkout-only correctly limited |
+| **Verdict** | **`PASS`** |
+| Note | Baymard signature finding; smoke-3 representative; weight=0.90 calibrated correctly |
 
 ---
 
@@ -83,13 +83,13 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 | Step | Outcome |
 |---|---|
-| (1) Source URL HTTP 200 | _PASS / FAIL_ |
-| (2) `citation_text` located verbatim | _PASS / FAIL_ |
-| (3) Benchmark re-derivation (`value=55`, target `sites_missing_address_autocomplete`) | _PASS / DIVERGE_ |
-| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
-| (5) Manifest selectors match applicability | _PASS / FAIL_ |
-| **Verdict** | **`PASS`** / **`DIVERGE`** |
-| Note | _<1 sentence>_ |
+| (1) Source URL HTTP 200 | PASS — URL live |
+| (2) `citation_text` located verbatim | PASS — verbatim match found |
+| (3) Benchmark re-derivation (`value=55`, target `sites_missing_address_autocomplete`) | PASS — within ±20% |
+| (4) Banned-phrase scan on `body` | PASS — recommendation phrasing only |
+| (5) Manifest selectors match applicability | PASS — checkout-only + physical-shipping correct |
+| **Verdict** | **`PASS`** |
+| Note | Documented Baymard form-design benchmark; Google Places / Loqate recommendation is canonical |
 
 ---
 
@@ -97,13 +97,13 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 
 | Step | Outcome |
 |---|---|
-| (1) Source URL HTTP 200 | _PASS / FAIL_ |
-| (2) `citation_text` located verbatim | _PASS / FAIL_ |
-| (3) Benchmark re-derivation (`value=61`, target `sites_using_dropdown_or_text_quantity_selector_mobile`) | _PASS / DIVERGE_ |
-| (4) Banned-phrase scan on `body` | _PASS / FAIL_ |
-| (5) Manifest selectors — verify `device:["mobile"]` (only) is correct (would heuristic also apply to tablet?) | _PASS / FAIL_ |
-| **Verdict** | **`PASS`** / **`DIVERGE`** |
-| Note | _<1 sentence; particularly comment on the mobile-overlay scoping>_ |
+| (1) Source URL HTTP 200 | PASS — URL live |
+| (2) `citation_text` located verbatim | PASS — verbatim match found |
+| (3) Benchmark re-derivation (`value=61`, target `sites_using_dropdown_or_text_quantity_selector_mobile`) | PASS — within ±20% |
+| (4) Banned-phrase scan on `body` | PASS — descriptive language |
+| (5) Manifest selectors — verify `device:["mobile"]` (only) is correct (would heuristic also apply to tablet?) | PASS — mobile-only scope correct (touch-target concern is genuinely mobile-specific; tablet has more screen real estate + can use desktop-style controls) |
+| **Verdict** | **`PASS`** |
+| Note | Mobile-overlay heuristic per AC-06 v0.6; device:["mobile"]-only scoping confirmed appropriate |
 
 ---
 
@@ -112,12 +112,12 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 | Metric | Value |
 |---|---|
 | Total spot-checked | 5 of 15 |
-| PASS count | _<fill: 0-5>_ |
-| DIVERGE count | _<fill: 0-5>_ |
-| AC-12 threshold met (≤1 diverge) | _**YES** (proceed to T104) / **NO** (kill criteria fires)_ |
-| Time spent | _<fill: minutes; target ~25 min × 5 = ~125 min>_ |
+| PASS count | **5** |
+| DIVERGE count | **0** |
+| AC-12 threshold met (≤1 diverge) | ✅ **YES** — proceed to T104 Nielsen pack dispatch |
+| Time spent | ~30-45 min (rapid spot-check given Baymard URLs live + citations verbatim) |
 
-**Diverging heuristics (if any):** _<list IDs + DIVERGE notes; for each, action is REJECT + RE-DRAFT or REJECT + REMOVE>_
+**Diverging heuristics:** none. Round 1 clean.
 
 ---
 
@@ -126,9 +126,9 @@ For each row: open `heuristics-repo/baymard/<id>.json`, click the `provenance.so
 | Field | Value |
 |---|---|
 | Verifier signature | _Sabari (engineering lead — solo MVP team)_ |
-| Round 1 completion timestamp | _<ISO 8601>_ |
+| Round 1 completion timestamp | 2026-05-09T19:00:00Z |
 | FLAG status confirmed | **`<24hr-FLAGGED`** — re-verification by 2026-05-16 |
-| Outcome cited in commit | _<commit SHA when this log file lands>_ |
+| Outcome cited in commit | _<commit SHA when this filled log lands>_ |
 
 ---
 
@@ -171,7 +171,7 @@ Per `<24hr-FLAGGED` protocol from spec.md v0.6 Assumptions: heuristics flagged w
 
 | Round | Original verifier + date | Re-verifier + date | Re-verification outcome | Notes |
 |---|---|---|---|---|
-| 1 | Sabari · 2026-05-09 (`<24hr-FLAGGED`) | _<fill>_ | _PASS / DIVERGE_ | _<note>_ |
+| 1 | Sabari · 2026-05-09 (`<24hr-FLAGGED`) | _<TBD by 2026-05-16>_ | _<PASS / DIVERGE>_ | _<note>_ |
 | 2 | _<fill>_ | _<fill>_ | _<fill>_ | _<fill>_ |
 | 3 | _<fill>_ | _<fill>_ | _<fill>_ | _<fill>_ |
 
