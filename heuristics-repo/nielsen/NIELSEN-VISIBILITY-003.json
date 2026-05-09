@@ -1,0 +1,89 @@
+{
+  "id": "NIELSEN-VISIBILITY-003",
+  "body": "Inspect whether interactive elements on the page respond within perceptually acceptable time thresholds: actions completing within 0.1 seconds feel instantaneous, those within 1 second preserve the user's flow of thought, and those exceeding 10 seconds require explicit feedback with an estimated wait time. Positive signals include button click responses that appear within 1 second, page transitions that begin within 0.1 seconds of user action, and any operation exceeding 10 seconds that shows a percent-done indicator or an estimated completion time. Negative signals include interactions that feel disconnected or slow (responding in 1–10 seconds without any intermediate feedback), full-page operations lasting over 10 seconds with only a generic spinner and no time estimate, and absence of any mechanism to interrupt or cancel long-running operations. When violations are found, recommend optimizing server response times for operations in the 1–10 second band and adding explicit time-estimate messaging or progress bars for operations that routinely exceed 10 seconds. According to Nielsen Norman Group, the 0.1-second, 1-second, and 10-second response-time thresholds have remained consistent for decades, stemming from human perceptual abilities rather than technological constraints.",
+  "category": "visibility",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.55,
+  "effort_category": "strategic",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 1,
+    "unit": "seconds",
+    "metric": "max_response_time_before_flow_interruption"
+  },
+  "provenance": {
+    "source_url": "https://www.nngroup.com/articles/response-times-3-important-limits/",
+    "citation_text": "Jakob Nielsen identifies three critical thresholds that determine user perception of system responsiveness. 0.1 Second Threshold: Users perceive the system as \"reacting instantaneously\" when responses occur within this limit. \"No special feedback is necessary except to display the result.\" At this speed, users feel they are directly manipulating interface objects rather than issuing commands. 1.0 Second Threshold: Beyond 0.1 seconds but within one second, delays become noticeable, yet the user's thought process remains uninterrupted. \"The user will notice the delay\" but maintains their sense of flow. 10 Second Threshold: This represents the outer boundary for sustained user attention. \"Users will want to perform other tasks while waiting for the computer to finish.\" At this point, systems must provide progress indicators and allow operation interruption. The article emphasizes that these thresholds have remained consistent for decades, stemming from human perceptual abilities rather than technological constraints. For delays exceeding 10 seconds, Nielsen advocates providing explicit feedback like percent-done indicators to reassure users the system hasn't crashed.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T19:30:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace",
+    "SaaS",
+    "B2B",
+    "lead_gen",
+    "media"
+  ],
+  "page_type": [
+    "homepage",
+    "pdp",
+    "cart",
+    "checkout",
+    "pricing",
+    "comparison",
+    "landing"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T19:25:00Z",
+    "why_generated": "Drafter targeted Nielsen's response-time thresholds (0.1s / 1s / 10s — Nielsen 1993 classic) — quantitative human-perception research foundational to performance UX.",
+    "how_reviewed": "URL matches NN/g response-times-3-important-limits article (HTTP 200); 1-second flow-interrupt threshold is verbatim Nielsen finding (Card/Robertson/Mackinlay 1991 + Nielsen 1993); quantitative value=1 cleanly derivable.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL https://www.nngroup.com/articles/response-times-3-important-limits/ matches NN/g; HTTP 200"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "Verbatim Nielsen 1993 thresholds — 0.1s instant / 1s flow / 10s focus"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "universal applicability; performance-perception concern is device-agnostic"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is principle-level/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "quantitative value=1 derivable from citation; primary flow-interrupt threshold per scope"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "aim for <1s response or surface progress indicator above; concrete + measurable"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

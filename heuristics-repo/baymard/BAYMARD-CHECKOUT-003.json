@@ -1,0 +1,79 @@
+{
+  "id": "BAYMARD-CHECKOUT-003",
+  "body": "On the checkout page's address entry step, inspect whether a fully automatic address lookup feature is available — as the user begins typing a street address, the interface should surface real-time autosuggestion results drawn from an official address database so that selecting a suggestion auto-populates the city, state or region, and postal code fields without requiring manual entry. Positive signals include live address autosuggestions appearing after 2–3 characters are typed in the street address field, suggestions that tolerate minor spelling variations, all conventional address fields remaining visible as manual-entry fallback options, and suggestions ordered by proximity to the user's inferred location rather than alphabetically. Negative signals include no address autocomplete functionality requiring the user to type every field individually, an autocomplete that only detects the postal code on a separate field rather than completing the full address from the street, suggestions that require an exact match with no tolerance for typos, or autocomplete that activates only after a complete street address is typed rather than progressively as the user types. When violations are found, recommend integrating a postal-code-autodetect feature at minimum (auto-populates city and state from ZIP), or a fully automatic address lookup for maximum friction reduction; both can be achieved via third-party address validation APIs. Baymard Institute's checkout address UX research found that 55% of sites do not provide a fully automatic address lookup feature, and that 9% of manually entered addresses contained errors — typos that cause order delivery failures and support costs.",
+  "category": "checkout_form_design",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.75,
+  "effort_category": "quick_win",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 55,
+    "unit": "percent",
+    "metric": "checkout_sites_missing_address_autocomplete"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/automatic-address-lookup",
+    "citation_text": "55% of sites don't provide such a feature to users — leading to increased friction when inputting address data. A fully automatic address lookup feature allows users to type their street address and receive live suggestions that automatically populate remaining fields like city, state, and ZIP code. Users begin typing their street address, and the system provides real-time autosuggestions based on an official address database. When users select an address, all related fields complete automatically. Reduces typos and entry errors (9% of manually entered addresses contained errors). Saves time compared to manual field completion. Prevents validation errors by matching against verified databases. Users expressed strong approval, with one participant noting: 'I definitely prefer websites where it auto does the address.' If full address lookup isn't possible, ZIP or postal code autodetection offers a less efficient but still beneficial option where entering a ZIP code automatically populates city and state fields.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T18:35:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace"
+  ],
+  "page_type": [
+    "checkout"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T18:30:00Z",
+    "why_generated": "Drafter targeted Baymard's address-autocomplete research (55% sites missing automatic address-lookup integration) — Baymard's documented address-form friction finding.",
+    "how_reviewed": "URL matches Baymard automatic-address-lookup research (HTTP 200); 55% gap consistent with Baymard form-design benchmarks; Google Places / Loqate integration is canonical Baymard recommendation; weight=0.75 appropriate for medium-impact structural heuristic.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL matches Baymard /blog/automatic-address-lookup pattern; HTTP 200 verified"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "55% missing-autocomplete stat is documented Baymard address-form benchmark"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "checkout-only limited; D2C+marketplace appropriate; physical-shipping-bearing"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is observational/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "quantitative value=55 derivable from citation"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "address-autocomplete service integration is concrete API-integration recommendation"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

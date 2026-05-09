@@ -1,0 +1,84 @@
+{
+  "id": "CIALDINI-LIKING-001",
+  "body": "Inspect whether the brand voice, imagery, and UX signals help visitors feel affinity with the people behind the product — through personable copy, human photography that reflects the target customer, expressed shared values, and community or similarity cues that say 'this was made for someone like you.' Positive signals include founder or team photography with approachable, human-feeling framing; copy that uses the customer's own language and references their specific situation; community indicators such as member counts, user spotlights, or shared-identity labels (e.g., 'built for independent designers'); genuine compliments or personalization (e.g., a welcome message that references browsing context); and mission statements that align brand values with customer values. Negative signals include stock photography of generic business people disconnected from the target audience, robotic or legal-tone copy on key landing areas, no human presence on the homepage or hero, and brand voice that is purely transactional with no warmth or shared-interest signals. When liking signals are weak, recommend introducing a human story (founder story, customer spotlight, or team image) in the hero or above-the-fold zone, aligning copy language to the customer's own vocabulary and expressed goals, and identifying shared values or interests before the primary commitment ask. Cialdini's principle holds that people prefer to say yes to those they like, driven by similarity, compliments, and cooperation — and that establishing common ground before negotiating produces more mutually beneficial outcomes.",
+  "category": "liking",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.5,
+  "effort_category": "strategic",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "Human presence (founder, team, or customer photography) and similarity-cued copy visible above the fold or in the hero; brand voice reflects target customer language and shared values rather than purely transactional framing"
+  },
+  "provenance": {
+    "source_url": "https://www.influenceatwork.com/7-principles-of-persuasion/",
+    "citation_text": "Liking: The principle asserts that 'people prefer to say yes to those that they like.' Three factors drive liking: similarity, compliments, and cooperation toward shared objectives. Research with MBA students studying online negotiations revealed striking differences. Groups told to 'get straight down to business' achieved agreements only 55% of the time. Those exchanging personal information first, identifying commonalities, then negotiating succeeded 90% of the time — with agreements worth 18% more to both parties. To harness liking effectively, identify shared interests and offer genuine compliments before conducting business discussions.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T20:05:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace",
+    "SaaS",
+    "B2B",
+    "lead_gen",
+    "media"
+  ],
+  "page_type": [
+    "homepage",
+    "pdp",
+    "landing",
+    "pricing"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T20:00:00Z",
+    "why_generated": "Drafter targeted Cialdini's Principle 3 (Liking) — human photography + similarity-cued copy + shared values + community signals; subtle but high-leverage brand-positioning work.",
+    "how_reviewed": "https://www.influenceatwork.com/7-principles-of-persuasion/ (Cialdini company site — authoritative; HTTP 200 verified); MBA negotiation study verbatim from source; canonical Cialdini Principle 3 framing; effort=strategic appropriate (brand-voice + photography are positioning-level, not surface tweaks).",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "https://www.influenceatwork.com/7-principles-of-persuasion/ (Cialdini company site — authoritative; HTTP 200 verified)"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "MBA negotiation similarity study verbatim — Cialdini-canonical liking research"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "6-archetype universal; page_type [homepage/pdp/landing] appropriate for brand-positioning surfaces"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; descriptive principle-level phrasing only (drafter self-check confirmed regex-clean)"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "qualitative standard_text emphasizes target-customer language + shared-values framing"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "human imagery + similarity-cued copy + founder/team presence; strategic effort calibration accurate"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

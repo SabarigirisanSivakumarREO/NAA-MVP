@@ -1,0 +1,79 @@
+{
+  "id": "BAYMARD-CHECKOUT-004",
+  "body": "On the checkout page's shipping-selection step, inspect whether estimated delivery dates — not just abstract shipping speeds such as '2–3 business days' — are displayed directly alongside each shipping option so that users can immediately assess when their order will arrive without performing date arithmetic. Positive signals include a specific calendar date or date range (e.g., 'Arrives Thursday, May 15' or 'Estimated delivery: May 15–17') shown for each shipping tier within the shipping-selection interface, dates that dynamically update based on order cutoff times, and accuracy conveyed by labelling as 'estimated' where uncertainty exists. Negative signals include shipping options that display only shipping speed labels ('Standard', '2-Day', 'Overnight') with no accompanying date, requiring users to mentally calculate a delivery date by accounting for processing time, business-day exclusions, and time-zone cutoffs, or displaying a delivery date only on the order confirmation page after payment — too late to inform the shipping-tier decision. When violations are found, recommend replacing or supplementing shipping speed labels with calculated estimated delivery dates pulled from the fulfillment system or carrier API; even a simple 'Get it by [date]' label adjacent to each option eliminates the calculation burden. Baymard Institute's shipping UX research found that 41% of sites in their benchmark did not provide a delivery date during checkout, forcing users to halt and investigate or guess when their order would arrive.",
+  "category": "shipping_transparency",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.78,
+  "effort_category": "strategic",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 41,
+    "unit": "percent",
+    "metric": "checkout_sites_missing_delivery_date_in_shipping_selection"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/shipping-speed-vs-delivery-date",
+    "citation_text": "41% of sites in our benchmark didn't provide the delivery date, forcing participants to come to a halt to investigate or even guess when their order would arrive. This lack of clarity forces users to perform mental calculations about when they'll receive purchases. Rather than displaying shipping speed, the research emphasizes that sites should instead provide specific delivery dates. As one tested user stated: 'I'd like it delivered. Delivers Thursday.' when presented with clear date information at checkout. The research demonstrates that users viewing only shipping speeds like '2-3 business days' struggle with ambiguities around order cutoff times, whether weekends count, and processing delays. Participants opened calendars and performed complex calculations trying to estimate actual arrival dates. Providing an estimated 'Delivery Date' for each delivery option directly within the shipping-selection interface removes this burden from users.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T18:35:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace"
+  ],
+  "page_type": [
+    "checkout"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T18:30:00Z",
+    "why_generated": "Drafter targeted Baymard's delivery-date research (41% sites missing actual delivery-date display in shipping selection — showing speed labels like '2-day' but not specific dates) — Baymard's documented checkout-shipping clarity finding.",
+    "how_reviewed": "URL matches Baymard shipping-speed-vs-delivery-date research (HTTP 200); 41% missing-date stat consistent with Baymard checkout benchmarks; date-vs-speed framing is canonical Baymard distinction.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL matches Baymard /blog/shipping-speed-vs-delivery-date pattern; HTTP 200 verified"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "41% missing-delivery-date stat is documented Baymard checkout-shipping finding"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "checkout-only correctly limited; physical-shipping-bearing archetype appropriate"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is observational/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "quantitative value=41 derivable from citation"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "replace speed labels with specific delivery date (e.g., 'Arrives Tuesday May 12')"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

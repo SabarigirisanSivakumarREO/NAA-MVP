@@ -1,0 +1,86 @@
+{
+  "id": "CIALDINI-SCARCITY-001",
+  "body": "Inspect whether the page communicates genuine scarcity or limited availability to help visitors appreciate the value of acting now — including low-stock indicators ('Only 3 left in stock'), countdown timers for limited-time offers, waitlist signals, and sold-out adjacent variants that imply high demand. Positive signals include specific low-stock counts displayed near the add-to-cart button, time-limited offer countdowns that are concretely scoped (end date + time visible), and waitlist or 'back in stock' notification options that signal real demand. Negative signals include no stock or urgency information on high-demand items, vague non-committal phrases like 'limited quantities' without a count or deadline, countdown timers that reset on page reload (false scarcity), and checkout pages with no indication of whether pricing or availability expires. When scarcity signals are absent, recommend adding accurate low-stock labels on inventory thresholds, surfacing time-bounded offer deadlines prominently near the CTA, and communicating what the visitor risks missing — because scarcity alone drives perceived value even when product attributes are unchanged. Cialdini's principle holds that people want more of those things they can have less of, and that highlighting what prospects risk losing by not acting proves persuasive.",
+  "category": "scarcity",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.6,
+  "effort_category": "incremental",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "Scarcity signal (low-stock count, time-bounded deadline, or waitlist indicator) present near primary CTA; scarcity is factually grounded and communicates what the visitor risks missing"
+  },
+  "provenance": {
+    "source_url": "https://www.influenceatwork.com/7-principles-of-persuasion/",
+    "citation_text": "Scarcity: According to the principle, 'people want more of those things they can have less of.' When resources become limited, their perceived value increases dramatically. When British Airways announced discontinuing the London-New York Concorde flights in 2003, sales surged immediately. Nothing about the aircraft changed — speed, service quality, or pricing remained identical. The scarcity alone drove demand upward. Effective use of scarcity requires communicating both the benefits of your offering and what makes it unique. Importantly, you must highlight what prospects risk losing by not pursuing your proposition. This forward-looking loss consideration proves persuasive.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T20:05:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace",
+    "SaaS",
+    "B2B",
+    "lead_gen",
+    "media"
+  ],
+  "page_type": [
+    "homepage",
+    "pdp",
+    "landing",
+    "pricing",
+    "cart",
+    "checkout"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T20:00:00Z",
+    "why_generated": "Drafter targeted Cialdini's Principle 5 (Scarcity) — loss-framing via low-stock counts, countdown timers, waitlists; the highest-misuse-risk Cialdini principle in e-commerce (artificial-scarcity ethics).",
+    "how_reviewed": "https://www.influenceatwork.com/7-principles-of-persuasion/ (Cialdini company site — authoritative; HTTP 200 verified); Concorde example verbatim from source; page_type extended to [cart/checkout] for urgency-timer placement (correct — checkout is natural scarcity surface).",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "https://www.influenceatwork.com/7-principles-of-persuasion/ (Cialdini company site — authoritative; HTTP 200 verified)"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "Concorde example verbatim; canonical Cialdini Principle 5 framing"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "6-archetype universal; page_type extended to cart/checkout — appropriate for countdown-timer placement"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; descriptive principle-level phrasing only (drafter self-check confirmed regex-clean)"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "qualitative standard_text emphasizes factual-grounding (anti-artificial-scarcity); methodologically defensible"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "low-stock/countdown/waitlist signals near CTA; incremental effort; ethical-use guidance built into recommendation"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

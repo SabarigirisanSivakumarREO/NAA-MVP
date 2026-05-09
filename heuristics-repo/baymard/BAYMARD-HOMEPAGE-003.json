@@ -1,0 +1,79 @@
+{
+  "id": "BAYMARD-HOMEPAGE-003",
+  "body": "On the homepage, inspect whether promotional banners, carousels, and hero sections are designed to inform rather than obstruct — specifically whether large ad-like graphics displace functional navigation cues or make the primary search field difficult to locate. Positive signals include a hero section that combines a clear value proposition with a visually distinct primary CTA, search field placement that is not obscured by banner imagery, promotional content that does not mimic third-party advertising in a way that triggers banner blindness, and carousel auto-advance speed slow enough for users to read slide content before it changes. Negative signals include a homepage dominated by large promotional graphics that make the search field or navigation links hard to find, pop-up overlays or interstitials on initial load that block content before any interaction has occurred, carousel slides that auto-advance faster than users can read them or change just before a click registers, and promotional imagery that is visually indistinguishable from external display ads — patterns that cause users to question whether they have reached the intended site. When violations are found, recommend ensuring the search field remains visually prominent above the banner layer, restraining carousel auto-advance intervals to at least 5 seconds, and adding a pause-on-hover control; replace interstitials with persistent but dismissible banners for newsletter capture. Baymard Institute's ecommerce Homepage UX research found that 59% of sites exhibit issues with ad-looking content on the homepage (up from 37% in 2018), and that 22% of sites fail to present the search field prominently on the homepage (up from 15% in 2018).",
+  "category": "homepage_banner_clarity",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.62,
+  "effort_category": "incremental",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 59,
+    "unit": "percent",
+    "metric": "sites_with_ad_looking_homepage_content"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/ecommerce-homepage-ux",
+    "citation_text": "59% of sites exhibit issues with 'ad-looking' content on the homepage (up from 37% of sites in 2018). The search field often drowns in the sea of eye-catching graphics on the homepage, which can lead to problems for search-driven users. 22% of sites don't present the search field prominently on the homepage (up from 15% in 2018). Pop-up banners and overlay dialogs (typically promoting newsletter signups) on the homepage were met with even greater disdain, with some users going as far as referring to them as 'spam'.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T18:35:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace"
+  ],
+  "page_type": [
+    "homepage"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T18:30:00Z",
+    "why_generated": "Drafter targeted Baymard's homepage banner-blindness + search-drown-out research (59% ad-looking content + 22% non-prominent search; both up significantly from 2018) — classic Baymard homepage-UX gap.",
+    "how_reviewed": "URL matches Baymard ecommerce-homepage-ux research (HTTP 200); 59%/22% statistics are documented Baymard findings; pop-up disdain ('spam' framing) is verbatim Baymard prose; recommendation (5s carousel + dismissible banner + search prominence) is concrete.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL matches Baymard /blog/ecommerce-homepage-ux pattern; HTTP 200 verified"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "59% ad-looking + 22% non-prominent-search are signature Baymard 2024 stats; 'spam' framing is verbatim"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "homepage-only limited; D2C+marketplace appropriate"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is observational/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "quantitative value=59 directly from citation; methodology defensible"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "3 specific interventions named (search prominence + carousel ≥5s + dismissible banner)"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

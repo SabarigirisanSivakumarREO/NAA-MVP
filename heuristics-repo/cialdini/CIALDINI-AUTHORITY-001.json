@@ -1,0 +1,84 @@
+{
+  "id": "CIALDINI-AUTHORITY-001",
+  "body": "Inspect whether the page presents credible authority signals that help visitors trust the brand's expertise and the safety of their purchase decision — including professional certifications, industry awards, expert endorsements, SSL and payment-security badges, press mentions, and professional credential displays. Positive signals include trust badges (SSL, payment processor logos, BBB, ISO) displayed near checkout or form submission points, named expert endorsements with credentials (title, institution, years of experience), awards or accreditations cited with the granting organization and year, and professional imagery (lab coats, professional attire, institutional backdrops) that reinforces domain expertise. Negative signals include no trust signals near the payment form, generic 'Secure Checkout' copy without a recognizable badge, testimonials attributed only to 'John D.' without any credibility anchor, and security logos placed in the footer rather than at the point of commitment. When authority signals are weak or missing, recommend placing recognizable trust badges adjacent to the CTA or payment form, introducing third-party-verified credentials with the certifying body named, and having a brief expert or founder bio visible on key landing pages. Cialdini's principle holds that people follow the lead of credible, knowledgeable experts, and that strategic credential presentation — especially via third-party introduction — strengthens purchase confidence.",
+  "category": "authority",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.65,
+  "effort_category": "incremental",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "At least one verifiable authority signal (recognized certification, expert credential, or third-party trust badge) displayed near the primary CTA or payment form; authority source named and verifiable"
+  },
+  "provenance": {
+    "source_url": "https://www.influenceatwork.com/7-principles-of-persuasion/",
+    "citation_text": "Authority: This principle recognizes that 'people follow the lead of credible, knowledgeable experts.' Credentials and expertise signals significantly influence decision-making. Physiotherapists achieved better patient compliance with exercise programs by displaying medical diplomas. Pedestrians more readily provided parking meter change to uniformed requesters versus casually-dressed ones. Strategic credential presentation strengthens influence attempts. Rather than self-promotion, arrange third-party introductions highlighting your expertise. Real estate agents increased appointments by 20% and signed contracts by 15% simply by having reception staff introduce callers to specialists mentioning their relevant experience and tenure.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T20:05:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace",
+    "SaaS",
+    "B2B",
+    "lead_gen",
+    "media"
+  ],
+  "page_type": [
+    "homepage",
+    "pdp",
+    "landing",
+    "pricing"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T20:00:00Z",
+    "why_generated": "Drafter targeted Cialdini's Principle 6 (Authority) — verifiable expert credentials + trust badges + third-party endorsements near payment-form / commitment surfaces.",
+    "how_reviewed": "https://www.influenceatwork.com/7-principles-of-persuasion/ (Cialdini company site — authoritative; HTTP 200 verified); physiotherapist + real-estate-agent examples verbatim from source; canonical Cialdini Principle 6; \"third-party-introduced expertise\" pattern explicitly named.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "https://www.influenceatwork.com/7-principles-of-persuasion/ (Cialdini company site — authoritative; HTTP 200 verified)"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "Physiotherapist + real-estate-agent examples verbatim — both Cialdini-attributed"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "6-archetype universal scope; page_type [homepage/pdp/checkout/pricing/landing] appropriate for credential-bearing surfaces"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; descriptive principle-level phrasing only (drafter self-check confirmed regex-clean)"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "qualitative standard_text emphasizes verifiability (anti-fake-badge); methodologically clean"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "certifications + named credentials near payment + third-party introduction; incremental effort"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

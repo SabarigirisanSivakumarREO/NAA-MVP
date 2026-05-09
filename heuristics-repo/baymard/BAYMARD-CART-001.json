@@ -1,0 +1,76 @@
+{
+  "id": "BAYMARD-CART-001",
+  "body": "On the mobile cart page, inspect whether the item quantity selector uses tap-friendly increment and decrement buttons rather than a drop-down menu or plain numeric text field — each button should be large enough to tap accurately with a thumb (minimum 44px tap target per mobile usability guidelines) and should trigger an immediate cart total update without requiring a separate 'Update Cart' button tap. Positive signals include visible plus and minus buttons adjacent to the quantity display, immediate recalculation of item subtotal and cart total upon each tap, a tap target size that comfortably accommodates finger input without requiring precision, and a quantity-zero tap triggering a removal confirmation rather than an error. Negative signals include a drop-down selector for quantity on mobile where users must tap to open, scroll, and then select — a three-step interaction prone to misfire on small screens; a plain text field requiring users to tap, clear the existing value, and type a new number using the on-screen keyboard; buttons sized below 32px that are frequently mis-tapped; or an explicit 'Update Cart' button that users overlook, leaving their cart total stale after a quantity change. When violations are found, recommend replacing drop-down or text-field quantity selectors on mobile with +/– buttons styled to a minimum 44px touch target, wired to auto-update the cart total on each tap. Baymard Institute's cart quantity UX research found that 61% of sites implement the quantity selector as a drop-down or text field rather than the recommended button-based approach, and that users assume changes will be auto-registered without requiring an additional update step.",
+  "category": "cart_usability",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.68,
+  "effort_category": "quick_win",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 61,
+    "unit": "percent",
+    "metric": "cart_sites_using_dropdown_or_textfield_quantity_selector"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/auto-update-users-quantity-changes",
+    "citation_text": "61% implement the quantity selector as a drop-down or text field instead of the recommended button-based approach. The research identified multiple friction points with traditional methods. Open text fields caused issues because users often failed to clear existing values before entering new quantities, resulting in errors like typing '21' when intending to change from 1 to 2. Additionally, users in the shopping cart generally assume that once they have made a change it will be automatically registered, yet many sites required an extra Update step that users overlooked. Drop-down menus proved equally problematic, with participants struggling to target their desired quantity especially when selections extended to high numbers. The research recommends buttons or hybrid button-plus-text-field designs, noting that using buttons for adjusting quantities was the most efficient option among the alternatives, allowing participants to adjust the quantity with a single click. Key implementation requirements include immediate cart updates, highlighting existing quantities in text fields, allowing quantity zero for item removal, providing undo options, and ensuring adequate button sizing for mobile users.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T18:35:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace"
+  ],
+  "page_type": [
+    "cart"
+  ],
+  "device": [
+    "mobile"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T18:30:00Z",
+    "why_generated": "Drafter targeted Baymard's mobile-quantity-selector research (61% sites using drop-down or text-field quantity selectors that fail mobile-touch UX) — Baymard's documented mobile-cart finding. Mobile-only overlay heuristic per AC-06 v0.6.",
+    "how_reviewed": "URL matches Baymard auto-update-quantity-changes research (HTTP 200); 61% drop-down/text-field gap is documented Baymard mobile-cart benchmark; touch-friendly +/- buttons are canonical Baymard mobile recommendation; device:[\"mobile\"]-only correctly identifies this as mobile-overlay (desktop has mouse precision; concern is genuinely mobile-specific).",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL matches Baymard /blog/auto-update-users-quantity-changes pattern; HTTP 200 verified"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "61% drop-down/text-field stat is documented Baymard mobile-cart benchmark"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "cart-only + mobile-only correctly limited; mobile-touch-target concern is genuinely device-specific"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is observational/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "quantitative value=61 derivable from citation"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "replace drop-down/text quantity selector with +/- touch buttons (≥44px target)"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

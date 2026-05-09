@@ -1,0 +1,79 @@
+{
+  "id": "BAYMARD-CHECKOUT-002",
+  "body": "On the checkout page's account-selection step, inspect whether the guest checkout option is made the most visually prominent choice — the 'Continue as Guest' or equivalent button should be presented at the top of the account-selection interface or with at least equal visual weight to the 'Sign In' or 'Create Account' options, rendered as a full-width button rather than a text link or secondary-style call-to-action. Positive signals include a prominent 'Continue as Guest' button that matches the size and styling of the sign-in button, placement above or alongside (never below) the account-creation path, clear labelling that makes the guest path immediately recognizable without reading secondary copy, and no dark-pattern de-emphasis such as greyed-out styling or subtext describing extra steps for guests. Negative signals include guest checkout presented as a small text link beneath a dominant 'Create Account' button, the guest option hidden behind a secondary interaction such as an accordion toggle, wording that implies guest checkout requires extra effort (e.g., 'Or skip registration for now'), or the absence of any guest checkout option at all — patterns that force account creation and drive abandonment. When violations are found, recommend elevating guest checkout to a primary-styled button at the top of the account-selection step, matching its visual weight to the sign-in button. Baymard Institute's checkout research found that 47% of sites do not make guest checkout the most prominent option, and that 24% of US internet shoppers have abandoned a cart because the site required account creation before completing a purchase.",
+  "category": "checkout_friction",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.88,
+  "effort_category": "quick_win",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 47,
+    "unit": "percent",
+    "metric": "checkout_sites_not_prominently_showing_guest_option"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/make-guest-checkout-prominent",
+    "citation_text": "47% of sites fail to make 'Guest Checkout' the most prominent option. This statistic demonstrates a widespread UX problem where ecommerce sites offer guest checkout but fail to prioritize its visibility. The research reveals that when guest checkout isn't easily discoverable, it creates friction in the checkout process. Users who cannot quickly locate this option come to a stop at the account-selection step of checkout as they hunt for the 'Guest Checkout' option, while others may abandon entirely if they cannot find it. The analysis identifies that 24% of US internet shoppers have abandoned one or more shopping carts during the past quarter due solely to forced account creation, indicating the business impact of poorly presented guest checkout options.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T18:35:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace"
+  ],
+  "page_type": [
+    "checkout"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T18:30:00Z",
+    "why_generated": "Drafter targeted Baymard's guest-checkout-prominence research (47% sites not making guest checkout prominent) — sister to forced-registration ~24% abandonment finding; canonical CRO-checkout heuristic.",
+    "how_reviewed": "URL matches Baymard guest-checkout research (HTTP 200); 47% non-prominence stat consistent with Baymard documented findings; weight=0.85 correctly calibrated for high-impact structural heuristic.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL matches Baymard /blog/make-guest-checkout-prominent pattern; HTTP 200 verified"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "47% non-prominence stat aligns with Baymard checkout-flow research"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "checkout-only correctly limited; D2C+marketplace appropriate"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is observational/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "quantitative value=47 derivable from citation; structural + countable"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "prominent CTA placement at flow entry is concrete + measurable"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

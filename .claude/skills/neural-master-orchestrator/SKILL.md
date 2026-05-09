@@ -51,7 +51,8 @@ When invoked with `--start` or any after-gate command:
 | 1 — Pre-flight | Run `/speckit.analyze` + `pnpm spec:matrix --phase <N>`; verify R20 impact.md presence | [`references/state-machine.md`](references/state-machine.md) |
 | 1b — AI Review | Invoke `neural-ai-reviewer` skill with `--gate pre-flight`; receive verdict | Same |
 | 🚦 Gate 1 | Pause; render verdict summary; await human stamp | Same |
-| 2 — Implementation | Task classifier → dispatch plan; sequential foundation tasks → parallel subagent fan-out | Same + [`pipeline-mode.md`](references/pipeline-mode.md) |
+| 2 — Implementation (engineering phases) | Task classifier → dispatch plan; sequential foundation tasks → parallel subagent fan-out | Same + [`pipeline-mode.md`](references/pipeline-mode.md) |
+| 2 — Implementation (content phases — Phase 0b) | Sub-states 2a (drafting) → 2b (`neural-heuristic-reviewer`) → 2c (human gate per heuristic) → 2d (commit) → 2e (AC-12 spot-check at +10/+20/+30 marks) | [`references/content-phase-state-machine.md`](references/content-phase-state-machine.md) |
 | 2.5 — Code Review | Invoke `superpowers:code-reviewer` agent on full impl diff | Same |
 | 3 — Verification | `pnpm lint + typecheck + test + test:conformance + test:integration`; classify failures | Same |
 | 3b — AI Review | Invoke `neural-ai-reviewer` skill with `--gate verification`; receive verdict | Same |
@@ -130,8 +131,9 @@ Adjustments under risk-gate mode:
 | Skill | Stage | Purpose |
 |---|---|---|
 | `neural-ai-reviewer` | 1b + 3b | Gate verdicts |
-| `superpowers:dispatching-parallel-agents` | 2 | Parallel subagent fan-out |
-| `superpowers:subagent-driven-development` | 2 | Per-task TDD discipline |
+| `neural-heuristic-reviewer` | 2b (content phases only — Phase 0b) | Per-heuristic AI senior-consultant review (Tier 1 of v0.7 tiered verification methodology) between drafter and human gate |
+| `superpowers:dispatching-parallel-agents` | 2 | Parallel subagent fan-out (engineering phases) |
+| `superpowers:subagent-driven-development` | 2 | Per-task TDD discipline (engineering phases) |
 | `superpowers:code-reviewer` | 2.5 | Semantic code review |
 | `neural-dev-workflow-brief` | 1 | Phase brief (existing hook) |
 | `neural-dev-workflow-pr` | 4 | PR contract + R19 rollup (existing hook) |
@@ -180,7 +182,9 @@ Master does NOT replace these hooks — orchestrates around them. Stage 2 = run 
 ## Cross-references
 
 - [`../neural-ai-reviewer/SKILL.md`](../neural-ai-reviewer/SKILL.md) — Gate verdict skill (invoked Stage 1b + 3b)
+- [`../neural-heuristic-reviewer/SKILL.md`](../neural-heuristic-reviewer/SKILL.md) — Per-heuristic AI senior-consultant review skill (invoked Stage 2b for content phases only; Phase 0b)
 - [`references/state-machine.md`](references/state-machine.md) — full state transitions + persistence + resume
+- [`references/content-phase-state-machine.md`](references/content-phase-state-machine.md) — Stage 2 sub-states for content-authoring phases (Phase 0b extension)
 - [`references/pipeline-mode.md`](references/pipeline-mode.md) — cross-phase overlap decision tree
 - [`references/cost-ceiling.md`](references/cost-ceiling.md) — daily/per-phase budget enforcement
 - [`references/risk-gate-mode.md`](references/risk-gate-mode.md) — Days 6-7 attention adjustments
