@@ -1,0 +1,77 @@
+{
+  "id": "BAYMARD-HOMEPAGE-004",
+  "body": "On the homepage, inspect whether the search field is visually prominent and easy to locate — the field should be positioned in a high-attention area of the header (centered or left-of-center in the header bar), rendered with sufficient contrast against the background, and sized wide enough that its purpose is immediately recognizable without requiring users to scan the entire page. Positive signals include a search field that spans a meaningful width of the header (at least 30% of the header area on desktop), uses a clearly contrasting input background or border, includes a visible search icon or submit button adjacent to the field, and retains an explicit placeholder label such as 'Search products…' or similar. Negative signals include a search icon-only treatment where the input is hidden behind a click-to-expand toggle, a field that blends into the header background due to low contrast, placement in a footer or secondary navigation zone that users do not scan first, or a field so narrow that users mistake it for a newsletter signup. When violations are found, recommend surfacing a persistently visible, full-width search input in the header on both desktop and mobile, ensuring contrast between the input background and page background meets a perceptibly distinct threshold, and including both an icon and placeholder text. Baymard Institute's ecommerce search usability research found that users adopted search as their primary product-finding strategy much more frequently on sites with a very prominent search field, while sites with a muted search field design saw users resort to category navigation even when search would have been faster.",
+  "category": "search_discoverability",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.58,
+  "effort_category": "quick_win",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "Search field persistently visible in header with sufficient contrast and width; not hidden behind icon-only toggle"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/search-field-design",
+    "citation_text": "During our usability testing the subjects adopted search as their primary product finding strategy much more frequently on sites that had a very prominent search field, while the test sites with a muted search field design saw increased category navigation. The most common search field placements are in the top-right corner of the header (typically gets less attention), in the center of the header (tends to get a lot of attention), or integrated into the navigation bar. The search field design is therefore a key aspect in crafting a great search experience. Three main factors designers can adjust are Position, Contrast, and Size.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T18:35:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace"
+  ],
+  "page_type": [
+    "homepage"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T18:30:00Z",
+    "why_generated": "Drafter targeted Baymard's search-field-design 3-factor framework (Position/Contrast/Size) — the canonical Baymard search-discoverability finding.",
+    "how_reviewed": "URL matches Baymard search-field-design research (HTTP 200); 3-factor framework is verbatim from Baymard's published guidance; qualitative benchmark is appropriate for design-pattern heuristic; recommendation (full-width header + icon+placeholder) is consultant-grade.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL matches Baymard /blog/search-field-design pattern; HTTP 200 verified"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "Baymard's 3-factor framework (Position/Contrast/Size) is documented guidance"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "homepage-only limited; principle is design-system-level; archetype appropriate"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is observational/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "qualitative standard_text paraphrases Baymard's actual normative guidance accurately"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "full-width header search + icon+placeholder is concrete + executable"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

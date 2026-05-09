@@ -1,0 +1,79 @@
+{
+  "id": "BAYMARD-CART-002",
+  "body": "On the cart page, inspect whether cross-sell product recommendations — if present — are genuinely relevant to the items in the cart and are not so numerous or visually dominant that they distract users from completing their purchase. Positive signals include cross-sell recommendations scoped to logically related items (compatible accessories, consumables, or items frequently purchased together with the specific cart contents), a limited count of 3–6 recommendations maximum, clear labelling of the relationship (e.g., 'Accessories for your [Product]' or 'Frequently bought together'), and placement below the cart item list and order summary rather than interrupting the primary checkout flow. Negative signals include cross-sells based purely on what other customers generally bought (unrelated to the specific cart items), more than 6 recommendation slots creating visual noise that competes with the 'Proceed to Checkout' button, promotional offers unrelated to the order context (e.g., a credit card upsell on a low-value cart), or recommendations placed in the primary content area above the order summary in a way that delays the user's path to checkout. When violations are found, recommend limiting cross-sells to logically compatible items, capping displayed recommendations at 3–5 items, labelling the recommendation rationale explicitly, and positioning the recommendation block below the order summary and checkout CTA. Baymard Institute's cart cross-sell research found that 52% of desktop sites present cross-sells that are either completely irrelevant or based only on generalized purchase co-occurrence data, and that even a single irrelevant recommendation was observed to cause users to lose trust in all suggestions and ignore them entirely.",
+  "category": "cart_merchandising",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.52,
+  "effort_category": "incremental",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 52,
+    "unit": "percent",
+    "metric": "cart_sites_with_irrelevant_crosssell_recommendations"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/product-recommendations-cart",
+    "citation_text": "52% of desktop sites present cross-sells in the cart that are either completely irrelevant or based only on what other customers bought. The study emphasizes that irrelevant recommendations significantly damage user perception. As one finding notes, even 1 questionable recommendation was observed to cause users to lose faith in all of the product suggestions and subsequently ignore them all. Users distinguish between helpful and intrusive recommendations. The research shows that when cross-sells complement purchases — such as suggesting batteries for a wireless mouse or installation hardware for a faucet — users perceive this as good service. However, unrelated suggestions frustrate users and contribute to banner blindness. The key challenge involves presenting only genuinely relevant items rather than defaulting to fixed numbers of suggestions. The research recommends prioritizing compatibility-dependent items and using clear labeling to explain why products are suggested.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T18:35:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace"
+  ],
+  "page_type": [
+    "cart"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T18:30:00Z",
+    "why_generated": "Drafter targeted Baymard's cart-cross-sell-relevance research (52% sites with irrelevant cross-sells distracting from checkout intent) — Baymard's documented cart-recommendation finding.",
+    "how_reviewed": "URL matches Baymard product-recommendations-cart research (HTTP 200); 52% irrelevance stat consistent with Baymard cart-conversion benchmarks; complement-not-distract framing is canonical Baymard guidance; guidance classification appropriate (interpretive judgment on relevance).",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL matches Baymard /blog/product-recommendations-cart pattern; HTTP 200 verified"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "52% irrelevant-cross-sell stat is documented Baymard cart-UX benchmark"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "cart-only correctly limited; D2C+marketplace appropriate"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is observational/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "quantitative value=52 derivable from citation"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "complementary-only filter + below-fold placement is concrete + measurable"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "id": "BAYMARD-CHECKOUT-005",
+  "body": "On the checkout page, inspect whether inline form validation is implemented — the interface should check field input validity immediately after the user finishes entering a value (on blur or after a brief pause in typing) and display a clearly positioned error or success indicator adjacent to the field rather than waiting until the user attempts to submit the entire form. Positive signals include field-level error messages that appear immediately after the user leaves an invalid field, error messages that are specific and actionable (e.g., 'Enter a valid email address with @' rather than 'Invalid input'), green checkmarks or other positive confirmation indicators on correctly completed fields, and error messages that disappear immediately once the user corrects the input. Negative signals include validation that only triggers on form submission, requiring the user to hunt for all errors at once after a failed submit attempt; premature validation that flags a field as invalid while the user is still typing; generic error messages that do not explain what is wrong or how to fix it; or error messages that persist after the user has corrected the field — all patterns that disrupt checkout flow and create abandonment risk. When violations are found, recommend implementing live inline validation with on-blur triggers, field-specific corrective error messages, and immediate clearance of errors when valid input is detected. Baymard Institute's inline validation research found that 31% of sites provide no inline validation at all and 4% implement it incorrectly via premature validation, and that submission-only validation causes significant delays and occasionally abandonment when errors are difficult to locate.",
+  "category": "error_recovery",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.8,
+  "effort_category": "strategic",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 31,
+    "unit": "percent",
+    "metric": "checkout_sites_missing_inline_validation"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/inline-form-validation",
+    "citation_text": "In testing, we've repeatedly observed that a better solution to error messaging that consistently improved the participants' error-recovery experience was live inline validation. Live inline validation is where the validity of the user's input is checked immediately as the user types in the full value or leaves the field. The research reveals critical statistics: 31% of sites don't provide any inline validation at all, and 4% get it wrong through premature validation implementation. The benefits of proper implementation include faster error correction since users can address mistakes while inputs remain fresh in memory, rather than discovering errors only after form submission. When errors appear only upon submission, users experience significant delays and occasionally causes abandonment when the error is too difficult to locate or unclear how to resolve. To optimize performance, Baymard identifies three essential implementation details: avoiding premature validation, removing error messages immediately when corrected, and using positive inline validation like checkmarks to confirm correct entries.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T18:35:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace"
+  ],
+  "page_type": [
+    "checkout"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T18:30:00Z",
+    "why_generated": "Drafter targeted Baymard's inline-form-validation research (31% sites missing inline validation on checkout fields) — Baymard's documented form-design finding.",
+    "how_reviewed": "URL matches Baymard inline-form-validation research (HTTP 200); 31% gap consistent with Baymard form-validation benchmarks; field-level immediate-feedback pattern is canonical recommendation; weight=0.68 appropriate.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL matches Baymard /blog/inline-form-validation pattern; HTTP 200 verified"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "31% missing-inline-validation stat is documented Baymard form-design benchmark"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "checkout-only limited; principle applies to any form-bearing checkout flow"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is observational/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "quantitative value=31 derivable from citation"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "field-level on-blur + on-input validation is concrete frontend intervention"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

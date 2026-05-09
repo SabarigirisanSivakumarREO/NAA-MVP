@@ -1,0 +1,79 @@
+{
+  "id": "BAYMARD-PDP-002",
+  "body": "On the product detail page, inspect whether a ratings distribution summary — a graphical breakdown of review scores by star level (e.g., a horizontal bar chart showing how many 1-star, 2-star through 5-star ratings exist) — is present and prominently displayed near the aggregate rating. Positive signals include a visible ratings distribution bar chart that is clickable to filter reviews by star level, placement in the reviews section header or alongside the aggregate score, and all bars being visually distinct and proportional to the actual counts. Negative signals include showing only an aggregate star score or review count with no distribution breakdown, a ratings distribution graphic that is present but non-interactive (bars are not clickable to filter), or a ratings distribution that is collapsed behind a secondary interaction and therefore missed by the majority of users during a typical product page scan. When violations are found, recommend adding an interactive ratings distribution bar chart — with each bar acting as a filter — placed immediately adjacent to the aggregate star score at the top of the reviews section; implementation is typically a single frontend component with minimal backend changes. Baymard Institute's research on ratings distribution UX found that 43% of top e-commerce sites lack a ratings distribution summary, despite 95% of users relying on reviews to learn about products, and that 39% of sites with a distribution still omit at least one critical design element such as click-to-filter functionality.",
+  "category": "social_proof",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.72,
+  "effort_category": "quick_win",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 43,
+    "unit": "percent",
+    "metric": "pdp_sites_missing_ratings_distribution_summary"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/user-ratings-distribution-summary",
+    "citation_text": "43% of top e-commerce sites lack a ratings distribution summary, creating significant usability problems. The research found that 95% of users relied on reviews to learn more about products, with ratings distributions being the most utilized feature of the reviews section. Without this visual summary, users struggle significantly. When ratings summaries are absent, testing revealed two critical issues: users viewing predominantly positive reviews may suspect they are fake, while those seeing mostly negative reviews first often misinterpret how a product has been rated. The study found that 39% of sites with ratings distributions neglect at least one crucial design element. Specifically, only 61% implement ratings as clickable filters, despite 90% of test subjects attempting to click bars to filter reviews. When filtering functionality is hidden in collapsed states, usage drops dramatically — only 7% of subjects filtered by rating when this feature was hidden.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T18:35:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace"
+  ],
+  "page_type": [
+    "pdp"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T18:30:00Z",
+    "why_generated": "Drafter targeted Baymard's ratings-distribution-summary research (43% PDP sites missing the interactive bar-chart pattern) — well-documented Baymard social-proof finding.",
+    "how_reviewed": "URL matches Baymard user-ratings-distribution research (HTTP 200); 43% gap + 95% review-reliance + 39% partial-distribution stats consistent with Baymard documented findings; click-to-filter is canonical Baymard recommendation.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL matches Baymard /blog/user-ratings-distribution-summary pattern; HTTP 200 verified"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "43%/95%/39% three-stat structure is signature Baymard ratings-distribution research"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "pdp-only correctly limited; D2C+marketplace appropriate for review-bearing product types"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is observational/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "quantitative value=43 directly derivable from citation_text"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "interactive bar-chart with click-to-filter is concrete frontend intervention"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

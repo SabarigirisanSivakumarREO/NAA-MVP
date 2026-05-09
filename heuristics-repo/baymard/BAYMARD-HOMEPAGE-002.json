@@ -1,0 +1,79 @@
+{
+  "id": "BAYMARD-HOMEPAGE-002",
+  "body": "On the homepage, inspect whether the primary navigation highlights the user's current scope — the active top-level category should be visually distinguished from inactive items using a change in font color, weight, background, or underline so that visitors can instantly orient themselves within the site hierarchy. Positive signals include a clearly styled active state on the current top-level navigation item that differs from both the default and hover states, breadcrumb reinforcement on category and product pages, and consistent highlighting across desktop persistent nav and mobile hamburger menu expanded states. Negative signals include a navigation bar where all top-level items appear visually identical regardless of the user's current location, relying solely on page headings or breadcrumbs to convey current scope without reinforcing orientation in the persistent nav itself, or a hover state that is indistinguishable from the active state — patterns that make it difficult for users to learn and internalize the site's structural organization. When violations are found, recommend implementing a distinct active-state style on the current top-level navigation item; a simple color or weight change is sufficient and requires minimal development effort. Baymard Institute's 2025 Homepage and Category Navigation UX benchmark found that 95% of sites fail to highlight the user's current scope in the main navigation, making it unnecessarily difficult for users to determine where they are in the site hierarchy.",
+  "category": "navigation_clarity",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.65,
+  "effort_category": "quick_win",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 95,
+    "unit": "percent",
+    "metric": "sites_missing_active_nav_scope_highlight"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/ecommerce-navigation-best-practice",
+    "citation_text": "Despite the importance of orientation cues to the ecommerce shopping experience, a staggering 95% of sites don't highlight the user's current scope in the main navigation (even worse than the 91% in 2024). When users' current scope isn't highlighted in the main navigation, it makes it unnecessarily difficult to quickly determine where they are in the site hierarchy. The solution is straightforward: simply highlight their current scope in the main navigation by styling it differently than the other top-level main navigation options in the permanently visible main navigation.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T18:35:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace"
+  ],
+  "page_type": [
+    "homepage"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T18:30:00Z",
+    "why_generated": "Drafter targeted Baymard's signature 2025 navigation-orientation finding (95% sites missing active-scope highlight, even worse than 91% in 2024) — well-documented homepage-UX gap.",
+    "how_reviewed": "URL matches Baymard blog format (HTTP 200); 95%/91% YoY trend matches Baymard 2025 nav benchmark; rule+quick_win classification accurate; recommendation (color/weight active-state styling) is canonical Baymard advice.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL matches Baymard /blog/ pattern; HTTP 200 verified at draft time"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "95%/91% YoY trend is signature Baymard 2025 nav-orientation benchmark statistic"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "homepage-only correctly limited; D2C+marketplace ecommerce-appropriate"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is observational/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "quantitative value=95 directly derivable from citation_text"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "concrete intervention (active-state color/weight styling); minimal dev effort"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}
