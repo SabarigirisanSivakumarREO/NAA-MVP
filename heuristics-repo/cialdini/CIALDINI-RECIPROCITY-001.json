@@ -1,0 +1,84 @@
+{
+  "id": "CIALDINI-RECIPROCITY-001",
+  "body": "Inspect whether the page or acquisition flow offers genuine value to visitors before asking them to commit — including free trials, free shipping thresholds, downloadable guides, sample products, discount codes for first-time visitors, or educational content that helps before it sells. Positive signals include a free trial or freemium tier prominently offered without requiring payment details, a clear 'free resource' or 'free sample' CTA that gives first and asks later, visible free-shipping thresholds that provide immediate value framing, and personalized unexpected offers (e.g., a welcome discount triggered after browsing behavior) that feel tailored rather than generic. Negative signals include a paywall or email gate as the first interaction with no prior value delivered, free trials that require a credit card with no cancellation reminder, and transactional CTAs ('Buy Now') as the only entry point with no lower-commitment give-first offer. When reciprocity is absent, recommend introducing a give-first touchpoint near the top of the funnel (free resource, free shipping threshold, or no-card-required trial), ensuring the gift feels personalized and unexpected rather than mechanical, and positioning it early in the flow before the primary commitment ask. Cialdini's principle holds that people are obliged to give back to others the behavior or gift that they received first, and that the manner of giving — personalized, unexpected — matters as much as what is given.",
+  "category": "reciprocity",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.55,
+  "effort_category": "strategic",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "At least one give-first offer (free trial, free resource, free shipping, or sample) presented before the primary commitment CTA; offer is personalized or contextually unexpected rather than generic"
+  },
+  "provenance": {
+    "source_url": "https://www.influenceatwork.com/7-principles-of-persuasion/",
+    "citation_text": "Reciprocity: The principle states that 'people are obliged to give back to others the form of a behavior, gift, or service that they have received first.' When someone does something for you, social obligation creates a sense of indebtedness. A compelling restaurant study demonstrates this effect. Servers who provided mints with the bill increased tips by approximately 3%. Doubling the mints to two resulted in a 14% increase — quadrupling the effect rather than doubling it. Most striking: when a server gave one mint, walked away, then returned saying 'For you nice people, here's an extra mint,' tips rose 23%. The key to leveraging reciprocity involves being the first giver and ensuring your gift feels personalized and unexpected. The manner of giving matters as much as what you give.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T20:05:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace",
+    "SaaS",
+    "B2B",
+    "lead_gen",
+    "media"
+  ],
+  "page_type": [
+    "homepage",
+    "pdp",
+    "landing",
+    "pricing"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T20:00:00Z",
+    "why_generated": "Drafter targeted Cialdini's Principle 1 (Reciprocity) — give-first positioning before commitment ask; free trials, free shipping, sample products, educational content.",
+    "how_reviewed": "https://www.influenceatwork.com/7-principles-of-persuasion/ (Cialdini company site — authoritative; HTTP 200 verified); mint-on-receipt study verbatim from source; canonical Cialdini Principle 1 application; effort=strategic appropriate (give-first funnel architecture is funnel-redesign work, not copy tweak).",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "https://www.influenceatwork.com/7-principles-of-persuasion/ (Cialdini company site — authoritative; HTTP 200 verified)"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "Mint-on-receipt restaurant study verbatim — Cialdini-canonical reciprocity research"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "6-archetype universal; page_type [homepage/pricing/landing] appropriate for give-first surfaces"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; descriptive principle-level phrasing only (drafter self-check confirmed regex-clean)"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "qualitative standard_text emphasizes personalized-or-unexpected vs generic; defensible"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "free-trial + give-first content patterns; strategic effort calibration accurate (funnel-architecture work)"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}
