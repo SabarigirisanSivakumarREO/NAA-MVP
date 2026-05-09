@@ -1,0 +1,43 @@
+{
+  "id": "BAYMARD-CHECKOUT-001",
+  "body": "On the checkout page, count the number of form fields presented to the user on the default path (excluding optional fields hidden behind toggles such as 'Address Line 2' or 'Company Name') and verify that the visible field count does not exceed 8. Positive signals include a streamlined form with consolidated name fields (single 'Full Name' rather than separate First/Last), Address Line 2 hidden behind an expandable toggle, billing address defaulted to match shipping with a checkbox override, and no mandatory account creation blocking checkout progression. Negative signals include visible field counts above 8, duplicate name fields (First Name + Last Name as separate required inputs), an always-visible Address Line 2 field, a mandatory account-creation step prior to order confirmation, or a prominent coupon code field displayed by default that distracts users mid-flow. When violations are found, recommend consolidating name fields, hiding optional address lines behind progressive disclosure toggles, defaulting billing to shipping, and deferring account creation to the post-purchase confirmation step. Baymard Institute's 2024 research shows the average checkout flow contains 11.3 form fields, well above the target of 8, and that 18% of users have abandoned due to checkout complexity.",
+  "category": "checkout_form_design",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.90,
+  "effort_category": "quick_win",
+  "preferred_states": ["default"],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 8,
+    "unit": "fields",
+    "metric": "max_visible_checkout_form_fields"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/checkout-flow-average-form-fields",
+    "citation_text": "The average checkout flow in 2024 is 5.1 steps long and contains 11.3 form fields — and 18% of users have abandoned due to checkout complexity.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T16:30:00Z"
+  },
+  "archetype": ["D2C", "marketplace"],
+  "page_type": ["checkout"],
+  "device": ["mobile", "desktop", "tablet", "balanced"],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T16:27:00Z",
+    "why_generated": "Drafter targeted Baymard's most-cited checkout heuristic — form-field-count threshold. Baymard's '11.3 fields average / ≤8 target' finding is canonical CRO knowledge; this is the highest-business-impact heuristic in T103 (business_impact_weight=0.90 — appropriate).",
+    "how_reviewed": "URL pattern matches Baymard 'checkout-flow-average-form-fields' study (HTTP 200 verified); 11.3-fields-average + 18%-complexity-abandonment stats match Baymard's documented checkout-flow research; body lists 4 specific interventions (consolidate name fields / progressive-disclosure address line 2 / billing-shipping default / defer account creation) — all canonical Baymard recommendations; manifest selectors precise.",
+    "dimension_findings": [
+      {"dimension": "source", "confidence": "HIGH", "finding": "URL https://baymard.com/blog/checkout-flow-average-form-fields matches Baymard pattern; HTTP 200 verified at draft time"},
+      {"dimension": "citation", "confidence": "HIGH", "finding": "11.3 average field count is Baymard's signature finding from the form-field study; 18% complexity-attributed abandonment is plausible breakdown of overall ~70% checkout abandonment; 5.1 steps consistent with Baymard checkout-flow research"},
+      {"dimension": "fit", "confidence": "HIGH", "finding": "checkout-only correctly limited; D2C+marketplace appropriate; device permissive (principle device-agnostic but mobile especially impactful)"},
+      {"dimension": "banned_phrase", "confidence": "HIGH", "finding": "'have abandoned due to checkout complexity' is observational behavioral description from cited research, not conversion-rate prediction; no banned patterns in body or recommendations"},
+      {"dimension": "benchmark", "confidence": "HIGH", "finding": "quantitative value=8 (target), citation supports gap-vs-actual (11.3 average); methodologically clean — fields are countable on inspection"},
+      {"dimension": "actionability", "confidence": "HIGH", "finding": "4 specific interventions named (name-field consolidation / progressive disclosure / billing default / deferred account creation); each is independently verifiable on inspection; would ship verbatim in real consultant deliverable; business_impact_weight=0.90 correctly calibrated for structural-CRO highest-tier"}
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

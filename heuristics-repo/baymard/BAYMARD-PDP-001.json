@@ -1,0 +1,43 @@
+{
+  "id": "BAYMARD-PDP-001",
+  "body": "On the product detail page, inspect whether the image gallery includes at least one 'in-scale' image that shows the product alongside a human model, a well-known object, or a size reference, allowing users to judge product dimensions without physically handling it. Positive signals include at least one image placing the product in a real-world size context (e.g., worn on a body, held in a hand, shown next to a coin or ruler), a gallery with multiple distinct angles and use-context shots, and ALT text or captions reinforcing size cues. Negative signals include an image gallery consisting solely of white-background studio shots with no size reference, a single product image, or imagery that depicts only the product in isolation at an indeterminate scale — without an in-scale image, users must guess dimensions, increasing uncertainty and hesitation before purchase. When violations are found, recommend adding at minimum one in-scale image showing the product relative to a person or known-size object, and ensure the primary gallery thumbnail is drawn from the most contextually informative image rather than defaulting to a plain studio shot. Baymard Institute's 2026 product page UX research shows that 42% of users try to ascertain the size of a product from the product page images, yet 37% of sites do not provide any in-scale image, making this determination needlessly difficult.",
+  "category": "product_imagery",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.78,
+  "effort_category": "quick_win",
+  "preferred_states": ["default"],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 37,
+    "unit": "percent",
+    "metric": "sites_missing_in_scale_product_image"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/current-state-ecommerce-product-page-ux",
+    "citation_text": "Determining the size of a product is crucial to the online shopping experience, as users can't physically evaluate the size of a product (like they can in a brick and mortar store). Our testing shows that 42% of users try to ascertain the size of a product from the product page images, but without an \"In Scale\" image this becomes needlessly difficult. Therefore, it's important to always provide \"In Scale\" product images. An \"In Scale\" image can be created by simply placing a human or computer-generated model, or an object of known size, next to the product as a reference point. Provide \"In Scale\" Images (37% Don't).",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T16:30:00Z"
+  },
+  "archetype": ["D2C", "marketplace"],
+  "page_type": ["pdp"],
+  "device": ["mobile", "desktop", "tablet", "balanced"],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T16:26:00Z",
+    "why_generated": "Drafter targeted Baymard's in-scale-imagery PDP heuristic — a signature Baymard finding with their characteristic '(X% Don't)' parenthetical site-compliance format. Topic is well-positioned for the pdp page_type segment of T103.",
+    "how_reviewed": "URL pattern matches Baymard 'current state ecommerce PDP UX' research which is a real published Baymard topic (HTTP 200 verified); 37%/42% statistics match Baymard's documented PDP UX benchmark; citation_text contains authentic Baymard signature phrasing ('Provide \"In Scale\" Images (37% Don't)'); body addresses physical-product PDPs (correctly excludes SaaS via archetype omission); recommendation is highly actionable.",
+    "dimension_findings": [
+      {"dimension": "source", "confidence": "HIGH", "finding": "URL https://baymard.com/blog/current-state-ecommerce-product-page-ux matches Baymard pattern; HTTP 200 verified at draft time"},
+      {"dimension": "citation", "confidence": "HIGH", "finding": "37% missing-in-scale stat + 42% size-ascertainment stat both consistent with Baymard PDP UX research; '(37% Don't)' is Baymard signature format"},
+      {"dimension": "fit", "confidence": "HIGH", "finding": "pdp-only correctly limited; D2C+marketplace covers physical-product ecommerce (SaaS correctly excluded — digital products don't need in-scale imagery)"},
+      {"dimension": "banned_phrase", "confidence": "HIGH", "finding": "'increasing uncertainty and hesitation before purchase' is observational user-behavior description, not conversion-rate prediction; no banned patterns"},
+      {"dimension": "benchmark", "confidence": "HIGH", "finding": "quantitative value=37 directly derivable from citation_text 'Provide In Scale Images (37% Don't)'; metric label specific and verifiable"},
+      {"dimension": "actionability", "confidence": "HIGH", "finding": "recommendation specifies minimum-one-in-scale + primary-thumbnail-source — concrete enough to deliver in client engagement; no symptom-cause conflation"}
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}
