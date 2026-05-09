@@ -2,9 +2,9 @@
 title: Neural MVP — Phases Index
 artifact_type: index
 status: approved
-version: 1.9
+version: 2.0
 created: 2026-04-22
-updated: 2026-05-06
+updated: 2026-05-09
 owner: engineering lead
 governing_rules:
   - Constitution R17-R21
@@ -25,7 +25,7 @@ generated_by: pnpm spec:index    # Auto-regenerated when phase folders or sub-ph
 | Phase | Name | Status | Tasks | Folder | Depends on | Blocks |
 |---|---|---|---|---|---|---|
 | 0 | Setup | 🟢 **implemented** (5/5 ACs green; rollup landed 2026-05-05) | M0.1-M0.5 + T-PHASE0-{TEST,DOC,ROLLUP} | `phase-0-setup/` | — | 1 |
-| **0b** | **Heuristic Authoring (LLM-assisted, engineering-owned)** | 🟡 **in progress — infra COMPLETE 2026-05-06 (T0B-001..T0B-005 ✅); content week 4 (T103/T104/T105)** | T0B-001..T0B-005 + T103/T104/T105 | `phase-0b-heuristics/` | 0 | 6 |
+| **0b** | **Heuristic Authoring (LLM-assisted, engineering-owned)** | 🟢 **implemented** (30/30 heuristics committed 2026-05-09; v0.7 tiered-verification pipeline; AC-12 3-round spot-check 15/15 PASS; rollup landed 2026-05-09) | T0B-001..T0B-005 + T103/T104/T105 ✅ | `phase-0b-heuristics/` | 0 | 6 |
 | 1 | Browser Perception Foundation | 🟢 **implemented** (10 ACs green; 142/142 tests PASS; rollup landed 2026-05-09; NF-Phase1-01 v0.4 = 20K tokens) | M1.1-M1.10 (T006-T015) + T-PHASE1-{TESTS,DOC,LOGGER,ADAPTERS-README,ROLLUP} | `phase-1-perception/` | 0 | 1b, 2, 5 |
 | **1b** | **Perception Extensions v2.4** | ⚪ not started | T1B-001..T1B-012 | `phase-1b-perception-extensions/` | 1 | 1c, 6, 7 |
 | **1c** | **PerceptionBundle Envelope v2.5** | ⚪ not started | T1C-001..T1C-012 | `phase-1c-perception-bundle/` | 1b | 7 (EvaluateNode token budget); 13 (state graph master) |

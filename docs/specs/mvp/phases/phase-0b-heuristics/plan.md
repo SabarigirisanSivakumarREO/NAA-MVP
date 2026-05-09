@@ -1,8 +1,8 @@
 ---
 title: Phase 0b — Heuristic Authoring — Implementation Plan
 artifact_type: plan
-status: approved
-version: 0.7
+status: implemented
+version: 0.8
 created: 2026-04-28
 updated: 2026-05-09
 owner: engineering lead

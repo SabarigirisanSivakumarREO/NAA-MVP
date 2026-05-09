@@ -1,8 +1,8 @@
 ---
 title: Phase 0b — Heuristic Authoring — Tasks
 artifact_type: tasks
-status: approved
-version: 0.7
+status: implemented
+version: 0.8
 created: 2026-04-28
 updated: 2026-05-09
 owner: engineering lead
@@ -128,7 +128,7 @@ Per [plan.md](plan.md) §1: Week 1 = T0B-001..T0B-005 (infrastructure) → Week 
 
 The 3 content-authoring tasks below are **canonically defined in `tasks-v2.md` Phase 6 section** (T103-T105 entries) — Phase 0b is the OWNER workstream per F-012 v1.2 amendment. Counts reduced from v2.0's 50/35/15 to v2.3.3's 15/10/5 per F-012 v1.2.
 
-### T103 — Author ~15 Baymard heuristics (v0.7 — tiered verification pipeline)
+### T103 — Author ~15 Baymard heuristics ✅ **DONE 2026-05-09** (v0.7 — tiered verification pipeline)
 
 - **dep:** T0B-001..T0B-005 + T101 (HeuristicSchemaExtended) + T4B-013 contract surface (manifest selectors) + `neural-heuristic-reviewer` skill (v0.7 — `.claude/skills/neural-heuristic-reviewer/SKILL.md`)
 - **pipeline (v0.7 per content-phase-state-machine.md):** Stage 2a drafter → Stage 2b `neural-heuristic-reviewer` skill emits `ai_review` block → Stage 2c per-heuristic human gate (~3 min stamp) → Stage 2d commit → Stage 2e AC-12 spot-check at +10 mark (5 random × ~25 min Tier 2 strict R15.3.2 manual re-derivation)
@@ -143,7 +143,7 @@ The 3 content-authoring tasks below are **canonically defined in `tasks-v2.md` P
 - **smoke test:** `pnpm heuristic:lint heuristics-repo/baymard/*.json` exit code 0
 - **kill criteria:** if 3+ Baymard heuristics fail verification on first attempt → STOP, review drafting prompt for systematic drift
 
-### T104 — Author ~10 Nielsen heuristics (v0.7 — tiered verification pipeline)
+### T104 — Author ~10 Nielsen heuristics ✅ **DONE 2026-05-09** (v0.7 — tiered verification pipeline)
 
 - **dep:** T103 (workflow exercised + smoothed) + `neural-heuristic-reviewer` skill
 - **pipeline (v0.7):** same as T103 — Stage 2a drafter → Stage 2b AI-reviewer → Stage 2c human gate → Stage 2d commit → Stage 2e AC-12 spot-check at +20 mark
@@ -156,7 +156,7 @@ The 3 content-authoring tasks below are **canonically defined in `tasks-v2.md` P
   - Spot-check at +20 mark (5 random across full set so far): ≤1 divergence (AC-12 round 2)
 - **smoke test:** `pnpm heuristic:lint heuristics-repo/nielsen/*.json` exit code 0
 
-### T105 — Author ~5 Cialdini heuristics (v0.7 — tiered verification pipeline)
+### T105 — Author ~5 Cialdini heuristics ✅ **DONE 2026-05-09** (v0.7 — tiered verification pipeline)
 
 - **dep:** T104 + `neural-heuristic-reviewer` skill
 - **pipeline (v0.7):** same as T103/T104 — Stage 2a drafter → Stage 2b AI-reviewer → Stage 2c human gate → Stage 2d commit → Stage 2e AC-12 spot-check at +30 mark (final)

@@ -1,8 +1,8 @@
 ---
 title: Phase 0b — Impact Analysis (LOW risk; content authoring only)
 artifact_type: impact
-status: approved
-version: 0.5
+status: implemented
+version: 0.6
 created: 2026-04-28
 updated: 2026-05-09
 owner: engineering lead
