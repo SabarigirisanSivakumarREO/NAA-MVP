@@ -2,9 +2,9 @@
 title: Phase 0b — Heuristic Authoring — Tasks
 artifact_type: tasks
 status: approved
-version: 0.5
+version: 0.6
 created: 2026-04-28
-updated: 2026-05-06
+updated: 2026-05-09
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -22,6 +22,7 @@ derived_from:
 req_ids:
   - REQ-HK-001
   - REQ-HK-EXT-001
+  - REQ-HK-EXT-019
   - REQ-HK-BENCHMARK-001
   - REQ-CONTEXT-DOWNSTREAM-001
 
@@ -40,6 +41,7 @@ delta:
     - v0.2 → v0.3 — status bumped draft → approved (R17.4 review approved per phase-0b-heuristics/review-notes.md; D1 condition binding for T0B-004 implementer: lint CLI must redact Zod-error `received: <value>` content from stdout/stderr; conformance test must assert with `NEURAL_TEST_FIXTURE_BODY` sentinel string)
     - v0.3 → v0.4 — T0B-001 IMPLEMENTED 2026-05-06 (Day 1 of Phase 0b). T0B-001 acceptance line refreshed to point at `plan.md v0.4 §2` (the body-string design — supersedes v0.3 §2 which referenced §9.1 rich structured shape). Coordinated with spec.md v0.4 + plan.md v0.4 (R11.4 spec-defect patch — T101 body-string design supersedes §9.1 rich shape per supersession callout). T0B-002..T0B-005 acceptance lines unchanged but they all consume T0B-001's template; v0.4 §2 reorientation propagates implicitly. T0B-NNN headers carry status markers (✅ DONE / ⚪ pending) per first-implementation convention since this tasks.md format uses headers not checkboxes.
     - v0.4 → v0.5 — R11.4 PATH A continuation 2026-05-06 (mid-Day 2 of Phase 0b, before T0B-004 implementation). Coordinated with spec.md v0.5 + plan.md v0.5. T0B-004 acceptance line refreshed to point at `plan.md v0.5 §5` (banned-phrase regex check now targets `body` field per T101 body-string design — was `recommendation.summary + recommendation.details` per legacy §9.1 references missed in v0.4 sweep). T0B-002 + T0B-003 marker statuses unchanged (already ✅ DONE 2026-05-06).
+    - v0.5 → v0.6 — Gate 1 REVISE-loop sync (2026-05-09; coordinated with spec.md v0.6 + plan.md v0.6 + impact.md v0.4). **act-005 (cosmetic)**: `req_ids` frontmatter list synced with spec.md by appending `REQ-HK-EXT-019` (preferred_states extended schema field; was missing from tasks.md req_ids since v0.1 — drift caught by 2026-05-09 AI Reviewer Gate 1 finding U2). T0B-NNN task-header markers unchanged (T0B-001..T0B-005 ✅ DONE 2026-05-06; T103/T104/T105 ⚪ pending week 4). T0B-NNN acceptance lines unchanged (no v0.6-driven content changes). T103/T104/T105 acceptance lines unchanged but consume the v0.6 spec.md "Out of Scope" PLP-deferral + 30-count rationale + AC-06 mathematical clarity at content-authoring time. No new tasks introduced; no AC-NN / R-NN ID changes (R18 append-only preserved).
   impacted:
     - tasks-v2.md v2.3.2 → v2.3.3 (Phase 0b section + reduced counts)
     - phase-6-heuristics/tasks.md already references T103-T105 as Phase 0b workstream (no change)

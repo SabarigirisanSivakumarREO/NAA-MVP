@@ -2,9 +2,9 @@
 title: Phase 0b — Heuristic Authoring — Implementation Plan
 artifact_type: plan
 status: approved
-version: 0.5
+version: 0.6
 created: 2026-04-28
-updated: 2026-05-06
+updated: 2026-05-09
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -40,6 +40,7 @@ delta:
     - v0.2 → v0.3 — status bumped draft → approved (R17.4 review approved per phase-0b-heuristics/review-notes.md)
     - v0.3 → v0.4 — R11.4 spec-defect patch (2026-05-06) coordinated with spec.md v0.4. §2 (Drafting Prompt Structure) REQUIRED OUTPUT FIELDS list rewritten from §9.1 rich structured shape (~25 fields) to T101 body-string design (11 top-level fields). T101 (`packages/agent-core/src/analysis/heuristics/types.ts`, landed Day 1 of week 1) is the implementation source-of-truth that supersedes §9.1's structured `detection.*` + `recommendation.*` + `name` + `severity_if_violated` + `reliability_tier` fields. The single `body` string field absorbs §9.1's six prose fields (`detection.lookFor`, `detection.positiveSignals`, `detection.negativeSignals`, `recommendation.summary`, `recommendation.details`, `recommendation.researchBacking`) into one well-structured natural-language container — modern LLMs prefer prose over JSON-fragmented prompt instructions. INPUTS contract clarified: `archetype` accepts an array (T101 enum: D2C/SaaS/B2B/lead_gen/marketplace/media/other), `page_types` accepts an array (T101 enum: homepage/pdp/plp/cart/checkout/pricing/comparison/landing/other), `device` accepts an array (T101 enum: mobile/desktop/tablet/balanced — NOT `mobile`/`desktop`/`both` as v0.3 wrongly stated). Drafting model temperature stays 0.3 per §Assumptions META exemption.
     - v0.4 → v0.5 — R11.4 PATH A continuation (2026-05-06) coordinated with spec.md v0.5. §5 pseudo-spec banned-phrase regex check target field changed from `parsed.data.recommendation.summary + parsed.data.recommendation.details` (legacy §9.1 references missed in v0.4 sweep) to `parsed.data.body` (T101 body-string design). Derivative of v0.4 supersession — no new design intent. Coordinated with spec.md v0.5 patches to AC-04 + AC-15 + R-04.
+    - v0.5 → v0.6 — Gate 1 REVISE-loop patch (2026-05-09) coordinated with spec.md v0.6 (act-003 component of 5-act sweep). Two stale `recommendation.summary` + `recommendation.details` references replaced with `body` (T101 body-string design — completes the v0.5 R11.4 sweep): §3 step 4 verification protocol bullet ("Banned-phrase check: Read body...") + §5 conformance test fail-case bullet ("Fail case: banned phrase in body..."). All other plan content unchanged — no §1 sequencing changes, no §2 prompt structure changes, no §6 R6/R15.3.3 isolation changes, no §7 kill criteria changes, no §9 effort-estimate changes. Derivative R11.4 PATH A continuation — not new design intent.
   impacted:
     - T0B-001 drafting prompt template (this commit) — produces T101-shaped JSON
     - T0B-004 lint CLI (Day 2 future) — Zod parse against T101's `HeuristicSchemaExtended` exported from `packages/agent-core/src/analysis/heuristics/types.ts`
@@ -299,7 +300,7 @@ Per R15.3.2, every LLM-drafted heuristic requires a human verifier before commit
 3. **Re-derive the benchmark from the source:**
    - **Quantitative:** Read the source's stated value (e.g., "44.5% abandon when forced to register"). Confirm the heuristic's `benchmark.value` is within ±20% of the source value. If outside, REJECT — re-draft.
    - **Qualitative:** Confirm the heuristic's `benchmark.standard_text` paraphrases (or quotes) the source's normative statement. If the heuristic's standard contradicts or extrapolates beyond the source, REJECT — re-draft.
-4. **Banned-phrase check:** Read `recommendation.summary` + `recommendation.details`. Confirm NO conversion-rate predictions. If any banned phrase, REJECT — re-draft with stricter prompt rider.
+4. **Banned-phrase check:** Read **`body`** (T101 body-string design — v0.5 R11.4 patch supersedes legacy §9.1 `recommendation.summary` + `recommendation.details` references). Confirm NO conversion-rate predictions. If any banned phrase, REJECT — re-draft with stricter prompt rider.
 5. **Manifest selector check:** Confirm `archetype` + `page_type` + `device` match the heuristic's actual applicability. If LLM selected `device: "both"` but the source explicitly addresses mobile only, fix to `device: "mobile"`.
 6. **Fill `verified_by`** (verifier's name) + **`verified_date`** (today's ISO date).
 7. **Run `pnpm heuristic:lint <file>`** — must pass.
@@ -389,7 +390,7 @@ Conformance test (`apps/cli/tests/conformance/heuristic-lint.test.ts`) covers AC
 - Pass case: a synthetic valid heuristic JSON
 - Fail case: missing `provenance.source_url` → exit non-zero
 - Fail case: benchmark missing → exit non-zero
-- Fail case: banned phrase in `recommendation.summary` → exit non-zero
+- Fail case: banned phrase in `body` (T101 body-string — v0.5 R11.4 patch) → exit non-zero
 - Fail case: missing `archetype` → exit non-zero
 - AC-13 isolation: assert `.gitignore` contains `.heuristic-drafts/`; assert no LangSmith client instantiated by drafting subprocess (via env-var inspection)
 
