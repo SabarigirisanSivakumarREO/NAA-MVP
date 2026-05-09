@@ -1,0 +1,87 @@
+{
+  "id": "NIELSEN-CONSISTENCY-002",
+  "body": "Inspect whether icons used throughout the page are recognizable without labels, or — where iconography is ambiguous — whether visible text labels accompany them at all times without requiring hover or tap to reveal. Positive signals include universally understood icons (magnifying glass for search, home icon, printer icon) used consistently for their conventional meaning, all navigation icons accompanied by persistent visible text labels, and icons that follow platform-standard metaphors without aesthetic modifications that reduce recognizability. Negative signals include icons whose meaning is not immediately deducible from their visual form, icons that rely on tooltip or hover-to-reveal labels (failing entirely on touch devices), navigation bars that use custom icon designs departing from platform conventions, and the same icon used to represent different actions in different parts of the same product. When violations are found, recommend adding persistent text labels to all navigation icons, auditing custom icon designs for recognizability against a 5-second test, and aligning icon meanings to industry-standard conventions. Nielsen Norman Group's icon usability research notes that only a handful of icons — home, print, and the magnifying glass for search — achieve widespread recognition, and that icon labels 'should be visible at all times, without any interaction from the user,' since hover effects fail on touch devices.",
+  "category": "consistency_standards",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.45,
+  "effort_category": "quick_win",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "Icon labels visible at all times without interaction; icons follow industry-standard conventions; same icon maps to the same action consistently across the product"
+  },
+  "provenance": {
+    "source_url": "https://www.nngroup.com/articles/icon-usability/",
+    "citation_text": "According to Nielsen Norman Group's research, icon effectiveness depends heavily on user familiarity and context. The article notes that \"a user's understanding of an icon is based on previous experience,\" and truly universal icons are exceptionally rare. Only a handful of icons achieve widespread recognition — specifically home, print, and the magnifying glass for search. Beyond these exceptions, most icons create confusion because they lack standardized meanings across different interfaces. The hamburger menu icon exemplifies this problem: while commonly representing navigation, some applications use it to denote lists instead. Regarding text labels, the guidance is unambiguous: \"Icon labels should be visible at all times, without any interaction from the user.\" The article emphasizes that relying on hover effects to reveal labels increases interaction costs and fails on touch devices. Text accompaniment clarifies meaning in specific contexts and is \"particularly critical\" for navigation icons. The article critiques designs that hide labels until users hover — a counterproductive approach that renders icons \"completely meaningless.\" Even standard icons benefit from visible labels, especially if designers modify them aesthetically. For icon design, the recommendation includes the \"5-second rule\": if conceptualizing an appropriate icon takes longer than five seconds, an icon probably cannot effectively communicate that meaning.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T19:30:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace",
+    "SaaS",
+    "B2B",
+    "lead_gen",
+    "media"
+  ],
+  "page_type": [
+    "homepage",
+    "pdp",
+    "cart",
+    "checkout",
+    "pricing",
+    "comparison",
+    "landing"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T19:25:00Z",
+    "why_generated": "Drafter targeted Nielsen's icon-usability research — labels visible always (not hover-reveal); icons follow conventions; 5-second test rule.",
+    "how_reviewed": "URL matches NN/g icon-usability article (HTTP 200); 5-second-test rule is verbatim NN/g; always-visible-label vs hover-reveal distinction is canonical NN/g guidance.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL https://www.nngroup.com/articles/icon-usability/ matches NN/g; HTTP 200"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "Verbatim NN/g 5-second-test + always-visible-label guidance"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "universal — applies to any icon-bearing UX"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is principle-level/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "qualitative standard_text paraphrases NN/g normative statement"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "replace icon-only with icon+label; conventions-check; concrete"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

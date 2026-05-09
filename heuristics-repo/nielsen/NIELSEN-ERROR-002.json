@@ -1,0 +1,87 @@
+{
+  "id": "NIELSEN-ERROR-002",
+  "body": "Inspect whether forms on the page provide real-time validation guidance during completion — including visible formatting requirements before submission, inline error feedback close to the field it describes, and multi-modal error cues that do not rely on color alone. Positive signals include input field requirements displayed upfront (e.g., password length rules shown before the user types), inline validation that flags errors immediately after a field loses focus, error indicators that combine at least two visual signals such as a red outline plus an error icon plus descriptive text, and preservation of previously entered data when a form is re-displayed after an error. Negative signals include forms that surface all errors only after final submission, error messages that use color as the sole distinguishing signal, fields that do not retain entered values after a validation failure, and 'secret rules' revealed only through error states rather than proactive guidance. When violations are found, recommend adding upfront format guidance for fields with constraints, positioning error messages immediately adjacent to the invalid field, and using at least two non-color visual signals for error states. Nielsen Norman Group's web form design guidance states that 'Errors should be signaled through a variety of cues, not solely through color: outline the field AND use red text AND use a heavier font, to ensure users don't overlook this critical information.'",
+  "category": "error_prevention",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.6,
+  "effort_category": "incremental",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "Form validation errors use at least two non-color visual signals; erroneous input is preserved; error messages appear adjacent to the failing field, not only at the top of the form"
+  },
+  "provenance": {
+    "source_url": "https://www.nngroup.com/articles/web-form-design/",
+    "citation_text": "According to Nielsen Norman Group's guidance on form design, error messages should appear with \"highly visible and specific error messages.\" Rather than hiding requirements until after failure, the guidance warns against setting \"users up for failure with secret rules.\" This means validation requirements should be explained upfront, not only revealed through error messages. \"Errors should be signaled through a variety of cues, not solely through color: outline the field AND use red text AND use a heavier font, to ensure users don't overlook this critical information.\" This multi-modal approach prevents users from missing critical feedback. Importantly, \"Erroneous input should be preserved so users can correct it, and accompanied by a specific explanation of the problem.\" This prevents users from having to re-enter all information when making corrections. The underlying principle is clear: don't rely on errors alone to communicate requirements. Instead, explain formatting or input specifications upfront, then use prominent, multi-cue error messages when validation fails, while preserving the user's entered data for correction.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T19:30:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace",
+    "SaaS",
+    "B2B",
+    "lead_gen",
+    "media"
+  ],
+  "page_type": [
+    "homepage",
+    "pdp",
+    "cart",
+    "checkout",
+    "pricing",
+    "comparison",
+    "landing"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T19:25:00Z",
+    "why_generated": "Drafter targeted Nielsen's web-form-design research — multi-modal error cues (not color alone) + input preservation + adjacent error placement.",
+    "how_reviewed": "URL is fallback after form-validation-ux + inline-validation-forms returned 404 (drafter found web-form-design as relevant replacement); HTTP 200 verified; multi-cue + preserve-input + adjacent-error are documented NN/g form-design guidance.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL https://www.nngroup.com/articles/web-form-design/ matches NN/g; HTTP 200 (fallback URL)"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "Verbatim NN/g form-design guidance; multi-modal-cues principle"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "universal — applies to any form-bearing UX"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is principle-level/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "qualitative standard_text paraphrases NN/g guidance"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "3 specific interventions (multi-cue / preserve-input / adjacent-placement) — concrete"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

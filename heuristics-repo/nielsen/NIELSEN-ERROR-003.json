@@ -1,0 +1,87 @@
+{
+  "id": "NIELSEN-ERROR-003",
+  "body": "Inspect whether the page includes design strategies to prevent user errors before they occur — including real-time validation, clear affordances on interactive controls, preview mechanisms for significant actions, and contextual memory aids throughout multi-step flows. Positive signals include buttons that appear visually distinct and pressable, form fields that look fillable, preview or review steps before committing to major actions (such as an order summary before payment), and contextual display of previously selected options throughout a multi-step process so users do not need to remember prior choices. Negative signals include interactive controls with ambiguous affordances (e.g., links that look like static text, buttons that look like decorative shapes), multi-step flows that do not surface prior selections on subsequent steps, and absence of a review step before irreversible operations. When violations are found, recommend auditing control affordances against platform conventions, adding a summary or preview step before destructive or high-stakes submissions, and displaying persistent context (such as cart contents or selected plan) throughout checkout or sign-up flows. Nielsen Norman Group distinguishes two error types — slips (autopilot actions toward a reasonable goal) and mistakes (incorrect mental models) — noting that design strategies including mental model alignment, clear affordances, and preview features work together to substantially lower error rates.",
+  "category": "error_prevention",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.55,
+  "effort_category": "incremental",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "High-stakes or irreversible actions are preceded by a preview or review step; interactive affordances match platform conventions; multi-step flows surface prior selections for context"
+  },
+  "provenance": {
+    "source_url": "https://www.nngroup.com/articles/user-mistakes/",
+    "citation_text": "According to Nielsen Norman Group, user errors fall into two categories. \"Slips occur when a user is on autopilot, and takes the wrong actions in service of a reasonable goal,\" while mistakes happen when users develop incorrect mental models of an interface. To reduce mistakes, designers should implement several evidence-based strategies. Mental Model Alignment: gather user research to understand expectations and ensure your design matches users' thinking. Design Conventions: following standard patterns helps users understand available actions. \"Users spend most of their time on other websites,\" so consistency with established conventions reduces confusion. Clear Affordances: visual cues should communicate how controls function — buttons should appear pressable while form fields appear fillable. Preview Features: allow users to evaluate results before committing to significant actions, helping bridge what Norman calls the \"Gulf of Evaluation.\" Memory Support: display contextual information throughout multistep processes so users don't need to retain details mentally. Destructive Action Confirmation: use confirmation dialogs selectively for deletion operations, but avoid overuse since excessive confirmations paradoxically increase errors. Real-Time Validation: warn users actively while they make errors rather than after submission, enabling quick correction. Undo Capability: provide safety nets acknowledging that errors happen, reducing user anxiety about experimentation. These complementary strategies work together to substantially lower error rates and improve overall usability.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T19:30:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace",
+    "SaaS",
+    "B2B",
+    "lead_gen",
+    "media"
+  ],
+  "page_type": [
+    "homepage",
+    "pdp",
+    "cart",
+    "checkout",
+    "pricing",
+    "comparison",
+    "landing"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T19:25:00Z",
+    "why_generated": "Drafter targeted Nielsen's user-mistakes research — error prevention via affordances + previews + memory-support; addresses high-stakes actions before they happen.",
+    "how_reviewed": "URL is fallback after preventing-user-errors-... returned 404 (drafter found user-mistakes as relevant replacement); HTTP 200 verified; affordances + previews + mental-model alignment are documented NN/g error-prevention principles.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL https://www.nngroup.com/articles/user-mistakes/ matches NN/g; HTTP 200 (fallback URL)"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "Verbatim NN/g error-prevention principles"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "universal — applies to any high-stakes-action UX"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is principle-level/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "qualitative standard_text paraphrases NN/g guidance accurately"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "preview-before-commit + affordance-conventions are concrete + executable"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

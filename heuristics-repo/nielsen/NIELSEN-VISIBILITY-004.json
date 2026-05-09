@@ -1,0 +1,87 @@
+{
+  "id": "NIELSEN-VISIBILITY-004",
+  "body": "Inspect whether destructive or irreversible actions — such as deleting items, cancelling an order, clearing a cart, or permanently closing an account — are preceded by a confirmation dialog that clearly explains what will happen and presents specific, action-labeled buttons rather than generic Yes/No options. Positive signals include confirmation dialogs that name the specific item or action being affected, buttons labeled with the action outcome (e.g., 'Delete file' and 'Keep file' rather than 'OK' and 'Cancel'), and an option to dismiss without proceeding. Negative signals include absent confirmation dialogs for destructive operations, generic dialogs asking only 'Are you sure?' without explaining consequences, dialogs with only Yes/No buttons that obscure which outcome each choice produces, and overuse of confirmation dialogs for non-destructive routine actions (which trains users to dismiss them habitually). When violations are found, recommend auditing the page for all destructive user paths and adding specific, context-rich confirmation dialogs that interrupt automated clicking behavior with meaningful, action-labeled choices. Nielsen Norman Group states that effective confirmation dialogs must 'explain what this is, in user-centric terms that are easy to understand' and 'provide response options that summarize what will happen for each possible response.'",
+  "category": "visibility",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.55,
+  "effort_category": "incremental",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "Destructive actions are preceded by a confirmation dialog with action-labeled buttons (not generic Yes/No) that describe the outcome of each choice"
+  },
+  "provenance": {
+    "source_url": "https://www.nngroup.com/articles/confirmation-dialog/",
+    "citation_text": "A confirmation dialog \"asks users whether they are sure that they want to proceed with a command that they have just issued to a system.\" Use confirmation dialogs before actions with serious consequences, particularly those that cannot be undone, such as \"destroying users' work or costing large amounts of money.\" However, the design must avoid overuse, as \"if you cry wolf too many times, people will stop paying attention.\" Effective confirmation dialogs must be specific and informative. Rather than generic questions like 'Are you sure?', they should \"explain what this is, in user-centric terms that are easy to understand\" so users can recognize if they've made a mistake. The buttons themselves matter — instead of basic Yes/No options, designers should \"provide response options that summarize what will happen for each possible response,\" such as labeled buttons reading 'Delete file' and 'Keep file.' For particularly dangerous operations, the article recommends requiring non-standard actions, such as typing a confirmation word. This prevents the automated clicking behavior that renders standard dialogs ineffective.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T19:30:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace",
+    "SaaS",
+    "B2B",
+    "lead_gen",
+    "media"
+  ],
+  "page_type": [
+    "homepage",
+    "pdp",
+    "cart",
+    "checkout",
+    "pricing",
+    "comparison",
+    "landing"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T19:25:00Z",
+    "why_generated": "Drafter targeted Nielsen's confirmation-dialog research — destructive actions need explicit confirmation with action-labeled buttons (not Yes/No).",
+    "how_reviewed": "URL matches NN/g confirmation-dialog article (HTTP 200); action-labeled-button rule is documented NN/g guidance; bridges visibility + error-prevention themes.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL https://www.nngroup.com/articles/confirmation-dialog/ matches NN/g; HTTP 200"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "Verbatim NN/g action-button guidance (e.g., \"Delete Account\" not \"Yes\")"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "universal — applies to any destructive-action UX"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is principle-level/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "qualitative standard_text paraphrases NN/g normative guidance"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "replace Yes/No with action-labeled buttons; minimal copy change"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

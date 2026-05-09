@@ -1,0 +1,87 @@
+{
+  "id": "NIELSEN-CONSISTENCY-001",
+  "body": "Inspect whether navigation menus appear in standardized, predictable positions across all pages — with primary navigation in the header or left sidebar, utility navigation above the primary navigation, and footer navigation at the bottom — and whether these placements remain consistent as users move between pages. Positive signals include a persistent header navigation that does not shift position or change its item order between pages, a clearly demarcated primary navigation separate from utility links (e.g., account, cart, search), and mobile navigation that uses a recognizable pattern such as a hamburger menu revealing the full primary nav. Negative signals include navigation that appears in different positions on different page types (e.g., top on homepage but side on product pages), primary navigation items that appear or disappear depending on which page the user is on, and utility controls (cart, account) that relocate between pages. When violations are found, recommend auditing all page templates for navigation placement consistency and establishing a fixed navigation component specification enforced across the design system. Nielsen Norman Group states that users expect to find navigation in specific areas: 'Primary navigation menu appears in website headers or on the left side of applications. Utility (or secondary) navigation should be positioned above the primary navigation toward the top.'",
+  "category": "consistency_standards",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.55,
+  "effort_category": "strategic",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "Primary navigation in header or left sidebar; utility navigation above primary; footer navigation at bottom — all consistent across all page types"
+  },
+  "provenance": {
+    "source_url": "https://www.nngroup.com/articles/menu-design/",
+    "citation_text": "The Nielsen Norman Group article establishes clear standards for consistent menu placement across digital interfaces. Regarding navigation consistency, the guidance states: \"Users expect to find specific menus in specific areas of the screen. Make these expectations work in your favor.\" The article provides a structured framework for menu positioning: \"Primary navigation menu appears in website headers or on the left side of applications. Utility (or secondary) navigation should be positioned above the primary navigation toward the top. Local navigation typically resides along the left-hand side on desktop websites. Footer menu belongs at the bottom of the screen.\" This standardized approach serves multiple purposes. Navigation menus help users understand the scope of available resources and provide crucial orientation cues — particularly important since visitors often arrive at internal pages rather than the homepage. The article emphasizes: \"One of the top jobs that navigation menus have is to orient users.\" For consistency across screen sizes, the guidance notes that while hamburger menus are necessary on mobile devices due to space constraints, larger screens should display navigation openly. This principle maintains consistent user expectations and prevents navigation from becoming an unexpected obstacle to content discovery.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T19:30:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace",
+    "SaaS",
+    "B2B",
+    "lead_gen",
+    "media"
+  ],
+  "page_type": [
+    "homepage",
+    "pdp",
+    "cart",
+    "checkout",
+    "pricing",
+    "comparison",
+    "landing"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T19:25:00Z",
+    "why_generated": "Drafter targeted Nielsen's H4 (Consistency and Standards) applied to navigation placement — header/left/utility-above-primary conventions.",
+    "how_reviewed": "URL is fallback after navigation-consistency returned 404 (drafter found menu-design as relevant replacement); HTTP 200 verified; placement conventions are documented NN/g IA guidance.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL https://www.nngroup.com/articles/menu-design/ matches NN/g; HTTP 200 (fallback URL)"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "Verbatim NN/g navigation-placement guidance"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "universal — applies to any site-with-navigation UX"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is principle-level/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "qualitative standard_text paraphrases NN/g guidance"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "header / left-sidebar / utility-above-primary are concrete placement rules"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "id": "NIELSEN-VISIBILITY-002",
+  "body": "Inspect whether the page provides appropriate progress indicators during any operation lasting more than approximately 2 seconds — including page loads, search queries, form submissions, file uploads, and checkout processing steps. Positive signals include looped spinner animations for operations expected to take 2–10 seconds, percent-done progress bars for longer operations (above 10 seconds), and dynamic animations that visibly advance to signal the system is still working. Negative signals include static 'Loading...' text without any animation, a completely blank or frozen viewport during data fetching, absence of any indicator during checkout payment processing, and lack of immediate feedback at the moment the user initiates an action. When violations are found, recommend adding animated progress indicators timed to the expected operation duration — spinners for medium waits, progress bars for longer ones — ensuring the indicator appears immediately at the moment of action initiation, not after a delay. Nielsen Norman Group's research on progress indicators found that participants shown moving progress bars experienced higher satisfaction and were willing to wait on average 3 times longer than those who did not see any progress indicators.",
+  "category": "visibility",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.6,
+  "effort_category": "incremental",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 3,
+    "unit": "times",
+    "metric": "wait_tolerance_multiplier_with_progress_indicator"
+  },
+  "provenance": {
+    "source_url": "https://www.nngroup.com/articles/progress-indicators/",
+    "citation_text": "Progress indicators serve a critical function in user experience by providing system feedback during delays. For faster processes (2-10 seconds): Use looped animations like spinning icons. \"This indicator should be reserved for actions that take between 2-10 seconds.\" For longer processes (10+ seconds): Implement percent-done indicators showing completion percentage. \"A visual indicator that progresses towards completion puts the user at ease and increases their willingness to wait.\" Immediate feedback is essential: \"A user's wait time begins the moment when she initiates an action\" and the system must respond immediately to confirm receipt, preventing users from clicking multiple times. Avoid static messages: rather than displaying 'Loading...' without animation, designers should use dynamic feedback because static indicators fail to signal whether the system remains functional or has stalled. The research demonstrates meaningful impact: participants shown moving progress bars \"experienced higher satisfaction and were willing to wait on average 3 times longer than those who did not see any progress indicators.\" Transparent communication about expected wait duration reduces user uncertainty and increases tolerance for delays.",
+    "draft_model": "claude-sonnet-4-6",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-09T19:30:00Z"
+  },
+  "archetype": [
+    "D2C",
+    "marketplace",
+    "SaaS",
+    "B2B",
+    "lead_gen",
+    "media"
+  ],
+  "page_type": [
+    "homepage",
+    "pdp",
+    "cart",
+    "checkout",
+    "pricing",
+    "comparison",
+    "landing"
+  ],
+  "device": [
+    "mobile",
+    "desktop",
+    "tablet",
+    "balanced"
+  ],
+  "ai_review": {
+    "reviewer_persona": "neural-heuristic-reviewer v1.0 (top-1% senior CRO consultant; 20yr; multi-vertical D2C/SaaS/marketplace/B2B/lead-gen/fintech/media)",
+    "reviewed_at": "2026-05-09T19:25:00Z",
+    "why_generated": "Drafter targeted Nielsen's progress-indicator research (3× wait-tolerance multiplier with progress visible vs no indicator) — quantifiable extension of H1.",
+    "how_reviewed": "URL matches NN/g progress-indicators article (HTTP 200); 3×-multiplier value is verbatim quotable from Nielsen findings ('3 times longer'); quantitative benchmark cleanly derivable.",
+    "dimension_findings": [
+      {
+        "dimension": "source",
+        "confidence": "HIGH",
+        "finding": "URL https://www.nngroup.com/articles/progress-indicators/ matches NN/g pattern; HTTP 200"
+      },
+      {
+        "dimension": "citation",
+        "confidence": "HIGH",
+        "finding": "Verbatim \"3 times longer\" wait-tolerance multiplier from NN/g research"
+      },
+      {
+        "dimension": "fit",
+        "confidence": "HIGH",
+        "finding": "universal applicability; archetype/page-type breadth appropriate"
+      },
+      {
+        "dimension": "banned_phrase",
+        "confidence": "HIGH",
+        "finding": "no conversion-rate predictions; phrasing is principle-level/recommendation-form"
+      },
+      {
+        "dimension": "benchmark",
+        "confidence": "HIGH",
+        "finding": "quantitative value=3 directly from citation; metric label specific"
+      },
+      {
+        "dimension": "actionability",
+        "confidence": "HIGH",
+        "finding": "spinner ≤2s / percent-done ≥10s thresholds are concrete intervention"
+      }
+    ],
+    "disposition": "APPROVE",
+    "flagged_concerns": []
+  }
+}
