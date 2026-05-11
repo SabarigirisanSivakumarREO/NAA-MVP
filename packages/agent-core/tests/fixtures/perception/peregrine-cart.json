@@ -1,0 +1,334 @@
+{
+  "metadata": {
+    "url": "https://www.peregrineclothing.co.uk/cart",
+    "title": "Cart – Peregrine Clothing",
+    "statusCode": 200,
+    "navigationStartedAt": "2026-05-11T00:00:00.000Z",
+    "navigationEndedAt": "2026-05-11T00:00:00.420Z",
+    "schemaOrg": [],
+    "ogTags": {
+      "og:type": "website",
+      "og:title": "Cart – Peregrine Clothing",
+      "og:url": "https://www.peregrineclothing.co.uk/cart"
+    },
+    "currencySwitcher": {
+      "present": true,
+      "currentCurrency": "GBP",
+      "availableCurrencies": ["GBP", "EUR", "USD"],
+      "isAccessibleAt": "footer"
+    }
+  },
+  "accessibilityTree": {
+    "root": {
+      "role": "WebArea",
+      "name": "Cart – Peregrine Clothing",
+      "children": [
+        {
+          "role": "banner",
+          "children": [
+            {
+              "role": "navigation",
+              "name": "Primary",
+              "children": [
+                { "role": "link", "name": "Home" },
+                { "role": "link", "name": "T-Shirts" }
+              ]
+            }
+          ]
+        },
+        {
+          "role": "main",
+          "children": [
+            { "role": "heading", "level": 1, "name": "Your Cart" },
+            {
+              "role": "region",
+              "name": "Line item: Heavyweight T-Shirt, Navy",
+              "children": [
+                { "role": "img", "name": "Heavyweight T-Shirt in Navy" },
+                { "role": "text", "name": "Heavyweight T-Shirt — Navy / M" },
+                { "role": "text", "name": "£75.00" },
+                { "role": "button", "name": "Decrease quantity" },
+                { "role": "textbox", "name": "Quantity", "value": "1" },
+                { "role": "button", "name": "Increase quantity" },
+                { "role": "button", "name": "Remove" }
+              ]
+            },
+            {
+              "role": "region",
+              "name": "Order summary",
+              "children": [
+                { "role": "text", "name": "Subtotal" },
+                { "role": "text", "name": "£75.00" },
+                { "role": "text", "name": "Shipping calculated at checkout" }
+              ]
+            },
+            {
+              "role": "region",
+              "name": "Discount code",
+              "children": [
+                { "role": "textbox", "name": "Discount code" },
+                { "role": "button", "name": "Apply" }
+              ]
+            },
+            { "role": "button", "name": "Checkout" },
+            { "role": "link", "name": "Continue Shopping" }
+          ]
+        },
+        {
+          "role": "contentinfo",
+          "children": [
+            { "role": "link", "name": "Returns & Exchanges" }
+          ]
+        }
+      ]
+    },
+    "totalNodes": 22
+  },
+  "filteredDOM": {
+    "top30": [
+      {
+        "ref": "main button.checkout",
+        "role": "button",
+        "text": "Checkout",
+        "score": 1,
+        "boundingBox": { "x": 880, "y": 620, "width": 280, "height": 52 }
+      },
+      {
+        "ref": "main h1",
+        "role": "heading",
+        "text": "Your Cart",
+        "score": 0.9,
+        "boundingBox": { "x": 80, "y": 140, "width": 280, "height": 36 }
+      },
+      {
+        "ref": "main .line-item-price",
+        "role": "text",
+        "text": "£75.00",
+        "score": 0.78,
+        "boundingBox": { "x": 700, "y": 300, "width": 96, "height": 24 }
+      },
+      {
+        "ref": "main input[name='qty']",
+        "role": "textbox",
+        "text": "1",
+        "score": 0.62,
+        "boundingBox": { "x": 480, "y": 300, "width": 48, "height": 32 }
+      },
+      {
+        "ref": "main input[name='discount']",
+        "role": "textbox",
+        "text": "Discount code",
+        "score": 0.55,
+        "boundingBox": { "x": 80, "y": 540, "width": 320, "height": 40 }
+      },
+      {
+        "ref": "main a.continue",
+        "role": "link",
+        "text": "Continue Shopping",
+        "score": 0.5,
+        "boundingBox": { "x": 80, "y": 700, "width": 200, "height": 20 }
+      }
+    ]
+  },
+  "interactiveGraph": {
+    "clickable": [
+      "main button.checkout",
+      "main button.qty-down",
+      "main button.qty-up",
+      "main button.remove",
+      "main button.apply-discount",
+      "main a.continue",
+      "footer button.currency-switcher"
+    ],
+    "typeable": [
+      "main input[name='qty']",
+      "main input[name='discount']"
+    ],
+    "submittable": ["main form#discount-form"]
+  },
+  "diagnostics": {
+    "axNodeCount": 22,
+    "mutationsObserved": 1,
+    "stable": true,
+    "lowAxNodeCount": false,
+    "unstable": false,
+    "errors": [],
+    "warnings": ["NEURAL_TEST_FIXTURE: synthetic Peregrine cart — Phase 1b T1B-012"]
+  },
+  "ctas": [
+    {
+      "index": 0,
+      "text": "Checkout",
+      "selector": "button.checkout",
+      "sizePx": { "width": 280, "height": 52 },
+      "role": "button"
+    },
+    {
+      "index": 1,
+      "text": "Decrease quantity",
+      "selector": "button.qty-down",
+      "sizePx": { "width": 32, "height": 32 },
+      "role": "button"
+    },
+    {
+      "index": 2,
+      "text": "Increase quantity",
+      "selector": "button.qty-up",
+      "sizePx": { "width": 32, "height": 32 },
+      "role": "button"
+    },
+    {
+      "index": 3,
+      "text": "Remove",
+      "selector": "button.remove",
+      "sizePx": { "width": 96, "height": 32 },
+      "role": "button"
+    },
+    {
+      "index": 4,
+      "text": "Apply",
+      "selector": "button.apply-discount",
+      "sizePx": { "width": 96, "height": 40 },
+      "role": "button"
+    }
+  ],
+  "formFields": [
+    {
+      "selector": "input[name='qty']",
+      "type": "text",
+      "required": false
+    },
+    {
+      "selector": "input[name='discount']",
+      "type": "text",
+      "required": false
+    }
+  ],
+  "headings": [
+    { "level": 1, "text": "Your Cart", "selector": "h1" }
+  ],
+  "primaryActions": {
+    "selector": "button.checkout",
+    "text": "Checkout"
+  },
+  "pricing": {
+    "displayFormat": "simple",
+    "amount": "£75.00",
+    "amountNumeric": 75,
+    "currency": "GBP",
+    "taxInclusion": "inclusive",
+    "anchorPrice": null,
+    "discountPercent": null,
+    "comparisonShown": false,
+    "boundingBox": { "x": 700, "y": 300, "width": 96, "height": 24 }
+  },
+  "clickTargets": [
+    {
+      "index": 0,
+      "selector": "button.checkout",
+      "text": "Checkout",
+      "sizePx": { "width": 280, "height": 52 },
+      "isMobileTapFriendly": true,
+      "elementType": "cta",
+      "isAboveFold": false
+    },
+    {
+      "index": 1,
+      "selector": "button.qty-down",
+      "text": "Decrease quantity",
+      "sizePx": { "width": 32, "height": 32 },
+      "isMobileTapFriendly": false,
+      "elementType": "icon_button",
+      "isAboveFold": true
+    },
+    {
+      "index": 2,
+      "selector": "button.qty-up",
+      "text": "Increase quantity",
+      "sizePx": { "width": 32, "height": 32 },
+      "isMobileTapFriendly": false,
+      "elementType": "icon_button",
+      "isAboveFold": true
+    },
+    {
+      "index": 3,
+      "selector": "button.remove",
+      "text": "Remove",
+      "sizePx": { "width": 96, "height": 32 },
+      "isMobileTapFriendly": false,
+      "elementType": "cta",
+      "isAboveFold": true
+    },
+    {
+      "index": 4,
+      "selector": "button.apply-discount",
+      "text": "Apply",
+      "sizePx": { "width": 96, "height": 40 },
+      "isMobileTapFriendly": false,
+      "elementType": "cta",
+      "isAboveFold": false
+    }
+  ],
+  "stickyElements": [],
+  "popups": [
+    {
+      "type": "cookie_banner",
+      "selector": "div.cookie-consent",
+      "isInitiallyOpen": true,
+      "hasCloseButton": true,
+      "closeButtonAccessibleName": "Accept cookies",
+      "viewportCoveragePercent": 6,
+      "blocksPrimaryContent": false,
+      "isEscapeDismissible": null,
+      "isClickOutsideDismissible": null
+    }
+  ],
+  "frictionScore": {
+    "totalFormFields": 2,
+    "requiredFormFields": 0,
+    "popupCount": 1,
+    "forcedActionCount": 0,
+    "raw": 3,
+    "normalized": 0.13
+  },
+  "socialProofDepth": {
+    "reviewCount": 0,
+    "starDistribution": null,
+    "recencyDays": null,
+    "hasAggregateRating": false,
+    "hasIndividualReviews": false,
+    "thirdPartyVerified": false
+  },
+  "microcopy": {
+    "nearCtaTags": [
+      {
+        "ctaIndex": 0,
+        "text": "Shipping calculated at checkout",
+        "selector": "main .shipping-msg",
+        "tags": ["value_prop"]
+      }
+    ]
+  },
+  "attention": {
+    "dominantElement": {
+      "type": "cta",
+      "selector": "button.checkout",
+      "score": 0.78
+    },
+    "contrastHotspots": [
+      {
+        "boundingBox": { "x": 880, "y": 620, "width": 280, "height": 52 },
+        "contrastScore": 0.86
+      }
+    ]
+  },
+  "commerce": {
+    "isCommerce": true,
+    "stockStatus": "in_stock",
+    "stockMessage": null,
+    "shippingSignals": [],
+    "returnPolicyPresent": false,
+    "returnPolicyText": null,
+    "guaranteeText": null
+  }
+}

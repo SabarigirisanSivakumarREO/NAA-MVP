@@ -35,6 +35,11 @@ import { softFilter } from './SoftFilter.js';
 import { mutationMonitor } from './MutationMonitor.js';
 import { screenshotExtractor } from './ScreenshotExtractor.js';
 import {
+  SUBSTRATE_EXTRACTION_SCRIPT,
+  emptySubstrate,
+  type SubstrateResult,
+} from './extensions/SubstrateExtension.script.js';
+import {
   MIN_AX_TREE_DEPTH,
   PAGE_STATE_MODEL_TOKEN_BUDGET,
   PageStateModelSchema,
@@ -110,15 +115,31 @@ interface CandidateInputs {
   dom: FilteredDOM;
   visual: Visual | undefined;
   diagnostics: Diagnostics;
+  substrate: SubstrateResult;
 }
 
+/**
+ * Assemble candidate PageStateModel from extractor inputs. Phase 1b T1B-000
+ * merges substrate fields into `metadata` (schemaOrg, ogTags) and top-level
+ * (ctas, formFields, headings, primaryActions). R20 namespace contract:
+ * NEVER under `_extensions.*`.
+ */
 function assemble(inputs: CandidateInputs): PageStateModel {
+  const metadataWithSubstrate: Metadata = {
+    ...inputs.metadata,
+    schemaOrg: inputs.substrate.schemaOrg,
+    ogTags: inputs.substrate.ogTags,
+  };
   const model: PageStateModel = {
-    metadata: inputs.metadata,
+    metadata: metadataWithSubstrate,
     accessibilityTree: inputs.ax,
     filteredDOM: inputs.dom,
     interactiveGraph: { clickable: [], typeable: [], submittable: [] },
     diagnostics: inputs.diagnostics,
+    ctas: inputs.substrate.ctas,
+    formFields: inputs.substrate.formFields,
+    headings: inputs.substrate.headings,
+    primaryActions: inputs.substrate.primaryActions,
   };
   if (inputs.visual !== undefined) model.visual = inputs.visual;
   return model;
@@ -175,6 +196,32 @@ async function tryCaptureVisual(
       'screenshot capture failed; visual section omitted',
     );
     return undefined;
+  }
+}
+
+/**
+ * Run T1B-000 substrate extraction inside the page. Failure-tolerant — on
+ * any evaluate() error returns an empty substrate so the rest of the
+ * pipeline still produces a valid PageStateModel (R20 backward compat).
+ */
+/** Default viewport when caller didn't supply one (matches Phase 1's stealth default). */
+const DEFAULT_VIEWPORT: { width: number; height: number } = { width: 1280, height: 720 };
+
+async function tryExtractSubstrate(
+  session: BrowserSession,
+  sessionLog: Logger,
+  viewport: { width: number; height: number },
+): Promise<SubstrateResult> {
+  try {
+    // Build a wrapped script that immediately invokes the IIFE with viewport.
+    const script = `${SUBSTRATE_EXTRACTION_SCRIPT}(${JSON.stringify(viewport)})`;
+    return await session.page.evaluate<SubstrateResult>(script);
+  } catch (err) {
+    sessionLog.warn(
+      { event: 'context_assembler.substrate_failed', err: (err as Error).message },
+      'substrate extraction failed; using empty defaults',
+    );
+    return emptySubstrate();
   }
 }
 
@@ -247,6 +294,10 @@ class ContextAssembler {
       const filtered = hardFilter.apply(ax);
       const dom = softFilter.apply(filtered.tree);
       const visual = await tryCaptureVisual(session, url);
+      // T1B-000 substrate extraction (Phase 1b) — runs inside the same
+      // page.evaluate sandbox; failure-tolerant via emptySubstrate fallback.
+      const viewport = opts?.session?.viewport ?? DEFAULT_VIEWPORT;
+      const substrate = await tryExtractSubstrate(session, sessionLog, viewport);
 
       // Stage 2.5 fix N3 — populate metadata.title + statusCode from real
       // page data instead of hardcoded empty / 200. Title sourced via
@@ -274,7 +325,7 @@ class ContextAssembler {
         warnings: [],
       };
 
-      const candidate = assemble({ metadata, ax: filtered.tree, dom, visual, diagnostics });
+      const candidate = assemble({ metadata, ax: filtered.tree, dom, visual, diagnostics, substrate });
       const fitted = fitToTokenBudget(candidate);
       const validated = PageStateModelSchema.parse(fitted);
 

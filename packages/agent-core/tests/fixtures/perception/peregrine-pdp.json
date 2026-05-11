@@ -4,7 +4,25 @@
     "title": "Heavyweight T-Shirt – Navy | Peregrine Clothing",
     "statusCode": 200,
     "navigationStartedAt": "2026-05-05T00:00:00.000Z",
-    "navigationEndedAt": "2026-05-05T00:00:00.512Z"
+    "navigationEndedAt": "2026-05-05T00:00:00.512Z",
+    "schemaOrg": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "Heavyweight T-Shirt",
+        "offers": {
+          "@type": "Offer",
+          "price": "75.00",
+          "priceCurrency": "GBP",
+          "availability": "https://schema.org/InStock"
+        }
+      }
+    ],
+    "ogTags": {
+      "og:type": "product",
+      "og:title": "Heavyweight T-Shirt – Navy | Peregrine Clothing",
+      "og:url": "https://www.peregrineclothing.co.uk/collections/t-shirts/products/heavyweight-t-shirt"
+    }
   },
   "accessibilityTree": {
     "root": {
@@ -173,5 +191,32 @@
     "unstable": false,
     "errors": [],
     "warnings": ["NEURAL_TEST_FIXTURE: synthetic Peregrine PDP — not from live capture"]
+  },
+  "ctas": [
+    {
+      "index": 0,
+      "text": "Add to bag",
+      "selector": "button[name=\"add\"]",
+      "sizePx": { "width": 280, "height": 48 },
+      "role": "button"
+    }
+  ],
+  "formFields": [
+    {
+      "selector": "select[name=\"size\"]",
+      "type": "select",
+      "required": true
+    }
+  ],
+  "headings": [
+    {
+      "level": 1,
+      "text": "Heavyweight T-Shirt",
+      "selector": "h1"
+    }
+  ],
+  "primaryActions": {
+    "selector": "button[name=\"add\"]",
+    "text": "Add to bag"
   }
 }
