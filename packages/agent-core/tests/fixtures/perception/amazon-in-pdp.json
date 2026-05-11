@@ -1,0 +1,258 @@
+{
+  "metadata": {
+    "url": "https://www.amazon.in/dp/B0EXAMPLE",
+    "title": "Example Product - Amazon.in",
+    "statusCode": 200,
+    "navigationStartedAt": "2026-05-11T00:00:00.000Z",
+    "navigationEndedAt": "2026-05-11T00:00:00.620Z",
+    "schemaOrg": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "Example Product",
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.3",
+          "reviewCount": 1284
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "1499.00",
+          "priceCurrency": "INR",
+          "availability": "https://schema.org/InStock"
+        }
+      }
+    ],
+    "ogTags": {
+      "og:type": "product",
+      "og:title": "Example Product - Amazon.in",
+      "og:url": "https://www.amazon.in/dp/B0EXAMPLE"
+    },
+    "currencySwitcher": null
+  },
+  "accessibilityTree": {
+    "root": {
+      "role": "WebArea",
+      "name": "Example Product - Amazon.in",
+      "children": [
+        {
+          "role": "banner",
+          "children": [
+            { "role": "link", "name": "Amazon.in" },
+            {
+              "role": "search",
+              "children": [
+                { "role": "textbox", "name": "Search Amazon.in" },
+                { "role": "button", "name": "Go" }
+              ]
+            }
+          ]
+        },
+        {
+          "role": "main",
+          "children": [
+            { "role": "heading", "level": 1, "name": "Example Product" },
+            { "role": "text", "name": "4.3 out of 5 stars" },
+            { "role": "text", "name": "1,284 ratings" },
+            { "role": "text", "name": "₹1,499" },
+            { "role": "text", "name": "M.R.P.: ₹1,999" },
+            { "role": "text", "name": "You Save: 25%" },
+            { "role": "text", "name": "Inclusive of all taxes" },
+            { "role": "text", "name": "In stock" },
+            { "role": "text", "name": "FREE Delivery by Tomorrow" },
+            { "role": "button", "name": "Add to Cart" },
+            { "role": "button", "name": "Buy Now" },
+            { "role": "text", "name": "Return policy: Returnable within 10 days" }
+          ]
+        }
+      ]
+    },
+    "totalNodes": 18
+  },
+  "filteredDOM": {
+    "top30": [
+      {
+        "ref": "main h1#productTitle",
+        "role": "heading",
+        "text": "Example Product",
+        "score": 1,
+        "boundingBox": { "x": 380, "y": 180, "width": 540, "height": 32 }
+      },
+      {
+        "ref": "main span.a-price-whole",
+        "role": "text",
+        "text": "₹1,499",
+        "score": 0.95,
+        "boundingBox": { "x": 380, "y": 260, "width": 120, "height": 36 }
+      },
+      {
+        "ref": "main #buy-now-button",
+        "role": "button",
+        "text": "Buy Now",
+        "score": 0.88,
+        "boundingBox": { "x": 980, "y": 420, "width": 240, "height": 44 }
+      },
+      {
+        "ref": "main #add-to-cart-button",
+        "role": "button",
+        "text": "Add to Cart",
+        "score": 0.86,
+        "boundingBox": { "x": 980, "y": 360, "width": 240, "height": 44 }
+      },
+      {
+        "ref": "header #twotabsearchtextbox",
+        "role": "textbox",
+        "text": "Search Amazon.in",
+        "score": 0.6,
+        "boundingBox": { "x": 200, "y": 24, "width": 720, "height": 32 }
+      }
+    ]
+  },
+  "interactiveGraph": {
+    "clickable": [
+      "main #add-to-cart-button",
+      "main #buy-now-button"
+    ],
+    "typeable": ["header #twotabsearchtextbox"],
+    "submittable": ["header form#nav-search-bar-form"]
+  },
+  "diagnostics": {
+    "axNodeCount": 18,
+    "mutationsObserved": 3,
+    "stable": true,
+    "lowAxNodeCount": false,
+    "unstable": false,
+    "errors": [],
+    "warnings": ["NEURAL_TEST_FIXTURE: synthetic amazon.in PDP — Phase 1b T1B-012"]
+  },
+  "ctas": [
+    {
+      "index": 0,
+      "text": "Add to Cart",
+      "selector": "#add-to-cart-button",
+      "sizePx": { "width": 240, "height": 44 },
+      "role": "button"
+    },
+    {
+      "index": 1,
+      "text": "Buy Now",
+      "selector": "#buy-now-button",
+      "sizePx": { "width": 240, "height": 44 },
+      "role": "button"
+    }
+  ],
+  "formFields": [
+    {
+      "selector": "#twotabsearchtextbox",
+      "type": "text",
+      "required": false
+    }
+  ],
+  "headings": [
+    { "level": 1, "text": "Example Product", "selector": "h1#productTitle" }
+  ],
+  "primaryActions": {
+    "selector": "#add-to-cart-button",
+    "text": "Add to Cart"
+  },
+  "pricing": {
+    "displayFormat": "simple",
+    "amount": "₹1,499",
+    "amountNumeric": 1499,
+    "currency": "INR",
+    "taxInclusion": "inclusive",
+    "anchorPrice": "₹1,999",
+    "discountPercent": 25,
+    "comparisonShown": true,
+    "boundingBox": { "x": 380, "y": 260, "width": 120, "height": 36 }
+  },
+  "clickTargets": [
+    {
+      "index": 0,
+      "selector": "#add-to-cart-button",
+      "text": "Add to Cart",
+      "sizePx": { "width": 240, "height": 44 },
+      "isMobileTapFriendly": false,
+      "elementType": "cta",
+      "isAboveFold": false
+    },
+    {
+      "index": 1,
+      "selector": "#buy-now-button",
+      "text": "Buy Now",
+      "sizePx": { "width": 240, "height": 44 },
+      "isMobileTapFriendly": false,
+      "elementType": "cta",
+      "isAboveFold": false
+    }
+  ],
+  "stickyElements": [
+    {
+      "type": "header_nav",
+      "positionStrategy": "fixed",
+      "selector": "header#navbar",
+      "viewportCoveragePercent": 8,
+      "isAboveFold": true,
+      "containsPrimaryCta": false
+    }
+  ],
+  "popups": [],
+  "frictionScore": {
+    "totalFormFields": 1,
+    "requiredFormFields": 0,
+    "popupCount": 0,
+    "forcedActionCount": 0,
+    "raw": 1,
+    "normalized": 0.04
+  },
+  "socialProofDepth": {
+    "reviewCount": 1284,
+    "starDistribution": null,
+    "recencyDays": null,
+    "hasAggregateRating": true,
+    "hasIndividualReviews": false,
+    "thirdPartyVerified": false
+  },
+  "microcopy": {
+    "nearCtaTags": [
+      {
+        "ctaIndex": 0,
+        "text": "FREE Delivery by Tomorrow",
+        "selector": "main span.delivery-msg",
+        "tags": ["value_prop", "urgency"]
+      }
+    ]
+  },
+  "attention": {
+    "dominantElement": {
+      "type": "cta",
+      "selector": "#buy-now-button",
+      "score": 0.82
+    },
+    "contrastHotspots": [
+      {
+        "boundingBox": { "x": 980, "y": 420, "width": 240, "height": 44 },
+        "contrastScore": 0.88
+      },
+      {
+        "boundingBox": { "x": 980, "y": 360, "width": 240, "height": 44 },
+        "contrastScore": 0.81
+      },
+      {
+        "boundingBox": { "x": 380, "y": 260, "width": 120, "height": 36 },
+        "contrastScore": 0.74
+      }
+    ]
+  },
+  "commerce": {
+    "isCommerce": true,
+    "stockStatus": "in_stock",
+    "stockMessage": "In stock",
+    "shippingSignals": [
+      { "type": "free_shipping", "text": "FREE Delivery by Tomorrow" }
+    ],
+    "returnPolicyPresent": true,
+    "returnPolicyText": "Returnable within 10 days",
+    "guaranteeText": null
+  }
+}

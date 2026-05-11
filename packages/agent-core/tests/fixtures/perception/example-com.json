@@ -1,0 +1,118 @@
+{
+  "metadata": {
+    "url": "https://example.com/",
+    "title": "Example Domain",
+    "statusCode": 200,
+    "navigationStartedAt": "2026-05-11T00:00:00.000Z",
+    "navigationEndedAt": "2026-05-11T00:00:00.180Z",
+    "schemaOrg": [],
+    "ogTags": {},
+    "currencySwitcher": null
+  },
+  "accessibilityTree": {
+    "root": {
+      "role": "WebArea",
+      "name": "Example Domain",
+      "children": [
+        {
+          "role": "main",
+          "children": [
+            { "role": "heading", "level": 1, "name": "Example Domain" },
+            { "role": "text", "name": "This domain is for use in illustrative examples in documents." },
+            { "role": "link", "name": "More information..." }
+          ]
+        }
+      ]
+    },
+    "totalNodes": 4
+  },
+  "filteredDOM": {
+    "top30": [
+      {
+        "ref": "main h1",
+        "role": "heading",
+        "text": "Example Domain",
+        "score": 1,
+        "boundingBox": { "x": 80, "y": 120, "width": 360, "height": 36 }
+      },
+      {
+        "ref": "main p a",
+        "role": "link",
+        "text": "More information...",
+        "score": 0.62,
+        "boundingBox": { "x": 80, "y": 240, "width": 160, "height": 20 }
+      }
+    ]
+  },
+  "interactiveGraph": {
+    "clickable": ["main p a"],
+    "typeable": [],
+    "submittable": []
+  },
+  "diagnostics": {
+    "axNodeCount": 4,
+    "mutationsObserved": 0,
+    "stable": true,
+    "lowAxNodeCount": false,
+    "unstable": false,
+    "errors": [],
+    "warnings": ["NEURAL_TEST_FIXTURE: synthetic example.com homepage — Phase 1b T1B-012"]
+  },
+  "ctas": [],
+  "formFields": [],
+  "headings": [
+    { "level": 1, "text": "Example Domain", "selector": "h1" }
+  ],
+  "primaryActions": null,
+  "pricing": null,
+  "clickTargets": [
+    {
+      "selector": "main p a",
+      "sizePx": { "width": 160, "height": 20 },
+      "isMobileTapFriendly": false,
+      "elementType": "link",
+      "isAboveFold": true
+    }
+  ],
+  "stickyElements": [],
+  "popups": [],
+  "frictionScore": {
+    "totalFormFields": 0,
+    "requiredFormFields": 0,
+    "popupCount": 0,
+    "forcedActionCount": 0,
+    "raw": 0,
+    "normalized": 0
+  },
+  "socialProofDepth": {
+    "reviewCount": 0,
+    "starDistribution": null,
+    "recencyDays": null,
+    "hasAggregateRating": false,
+    "hasIndividualReviews": false,
+    "thirdPartyVerified": false
+  },
+  "microcopy": { "nearCtaTags": [] },
+  "attention": {
+    "dominantElement": {
+      "type": "heading",
+      "selector": "main h1",
+      "score": 0.84
+    },
+    "contrastHotspots": [
+      {
+        "boundingBox": { "x": 80, "y": 120, "width": 360, "height": 36 },
+        "contrastScore": 0.92
+      }
+    ]
+  },
+  "commerce": {
+    "isCommerce": false,
+    "stockStatus": null,
+    "stockMessage": null,
+    "shippingSignals": [],
+    "returnPolicyPresent": false,
+    "returnPolicyText": null,
+    "guaranteeText": null
+  }
+}

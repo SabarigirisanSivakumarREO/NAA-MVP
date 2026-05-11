@@ -24,9 +24,10 @@
  */
 import { describe, expect, test } from 'vitest';
 
-// These imports WILL FAIL with "module not found" until T1B-000..T1B-011
-// ship. That's the R3.1 RED state.
-// @ts-expect-error — pipeline module does not exist yet (Wave 6 RED)
+// T1B-012 Wave 6 — pipeline module now exists; AC-12 transitions RED → GREEN.
+// Phase 1b extension synthesis is performed by runPerceptionExtensionsPipeline
+// so Phase 1 era fixtures (substrate-only) and T1B-012 authored fixtures
+// (substrate + extensions) both produce a consistent extended PageStateModel.
 import { runPerceptionExtensionsPipeline } from '../../src/perception/extensions/pipeline.js';
 import { PageStateModelSchema } from '../../src/perception/types.js';
 
@@ -64,7 +65,7 @@ const FIXTURES: FixtureRef[] = [
   },
 ];
 
-describe('Phase 1b integration — AC-12 conformance (RED)', () => {
+describe('Phase 1b integration — AC-12 conformance', () => {
   /**
    * @AC-12 — pipeline module exists and exports the runner.
    */
@@ -154,6 +155,69 @@ describe('Phase 1b integration — AC-12 conformance (RED)', () => {
       expect(extended).toHaveProperty('attention');
       expect(extended).toHaveProperty('commerce');
       expect(extended.metadata).toHaveProperty('currencySwitcher');
+    },
+  );
+
+  /**
+   * @AC-12 / SC-003 — Phase 1 backward compat: Phase 1's 6 sub-schemas
+   * (metadata / accessibilityTree / filteredDOM / interactiveGraph /
+   * diagnostics + optional visual) survive the pipeline unchanged on
+   * every fixture (User Story 3 in spec.md). _extensions namespace
+   * remains untouched (R20 Phase 7 reservation).
+   */
+  test.each(FIXTURES)(
+    'AC-12: $name preserves Phase 1 sub-schemas (backward compat)',
+    async (fixture) => {
+      const { readFile } = await import('node:fs/promises');
+      const { resolve } = await import('node:path');
+      const raw = await readFile(
+        resolve(__dirname, '..', '..', fixture.path),
+        'utf8',
+      );
+      const parsed = JSON.parse(raw);
+      const extended = await runPerceptionExtensionsPipeline(parsed);
+      // Phase 1 sub-schema identity: same values, not just same shape.
+      expect(extended.metadata.url).toBe(parsed.metadata.url);
+      expect(extended.metadata.title).toBe(parsed.metadata.title);
+      expect(extended.metadata.statusCode).toBe(parsed.metadata.statusCode);
+      expect(extended.accessibilityTree.totalNodes).toBe(
+        parsed.accessibilityTree.totalNodes,
+      );
+      expect(extended.filteredDOM.top30.length).toBe(
+        parsed.filteredDOM.top30.length,
+      );
+      // _extensions namespace stays unset by Phase 1b (R20 — Phase 7 only).
+      expect(
+        (extended as { _extensions?: unknown })._extensions,
+      ).toBeUndefined();
+    },
+  );
+
+  /**
+   * @AC-12 — T1B-000 substrate fields populate identically on all 5
+   * fixtures (ctas[], formFields[], headings[], primaryActions present
+   * — values may differ per fixture, but the shape is consistent).
+   */
+  test.each(FIXTURES)(
+    'AC-12: $name carries T1B-000 substrate fields',
+    async (fixture) => {
+      const { readFile } = await import('node:fs/promises');
+      const { resolve } = await import('node:path');
+      const raw = await readFile(
+        resolve(__dirname, '..', '..', fixture.path),
+        'utf8',
+      );
+      const parsed = JSON.parse(raw);
+      const extended = await runPerceptionExtensionsPipeline(parsed);
+      // Substrate arrays exist (may be empty for non-interactive pages).
+      expect(Array.isArray(extended.ctas)).toBe(true);
+      expect(Array.isArray(extended.formFields)).toBe(true);
+      expect(Array.isArray(extended.headings)).toBe(true);
+      // primaryActions is nullable; presence (key exists) is the contract.
+      expect('primaryActions' in extended).toBe(true);
+      // metadata.schemaOrg + ogTags exist (may be empty).
+      expect(Array.isArray(extended.metadata.schemaOrg)).toBe(true);
+      expect(typeof extended.metadata.ogTags).toBe('object');
     },
   );
 });

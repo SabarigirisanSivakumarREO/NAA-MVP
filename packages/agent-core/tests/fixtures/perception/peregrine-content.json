@@ -1,0 +1,219 @@
+{
+  "metadata": {
+    "url": "https://www.peregrineclothing.co.uk/pages/about",
+    "title": "About | Peregrine Clothing",
+    "statusCode": 200,
+    "navigationStartedAt": "2026-05-11T00:00:00.000Z",
+    "navigationEndedAt": "2026-05-11T00:00:00.380Z",
+    "schemaOrg": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Peregrine Clothing",
+        "url": "https://www.peregrineclothing.co.uk"
+      }
+    ],
+    "ogTags": {
+      "og:type": "article",
+      "og:title": "About | Peregrine Clothing",
+      "og:url": "https://www.peregrineclothing.co.uk/pages/about"
+    },
+    "currencySwitcher": null
+  },
+  "accessibilityTree": {
+    "root": {
+      "role": "WebArea",
+      "name": "About | Peregrine Clothing",
+      "children": [
+        {
+          "role": "banner",
+          "children": [
+            {
+              "role": "navigation",
+              "name": "Primary",
+              "children": [
+                { "role": "link", "name": "Home" },
+                { "role": "link", "name": "T-Shirts" },
+                { "role": "link", "name": "About" }
+              ]
+            }
+          ]
+        },
+        {
+          "role": "main",
+          "children": [
+            { "role": "heading", "level": 1, "name": "About Peregrine" },
+            { "role": "text", "name": "Peregrine has woven knitwear in the north of England since 1796." },
+            { "role": "heading", "level": 2, "name": "Press" },
+            { "role": "text", "name": "Featured in The Telegraph, Esquire, and GQ." },
+            { "role": "heading", "level": 2, "name": "Newsletter" },
+            { "role": "text", "name": "Be the first to hear about new drops." },
+            {
+              "role": "form",
+              "name": "Newsletter signup",
+              "children": [
+                { "role": "textbox", "name": "Email address", "required": true },
+                { "role": "button", "name": "Subscribe" }
+              ]
+            }
+          ]
+        },
+        {
+          "role": "contentinfo",
+          "children": [
+            { "role": "link", "name": "Returns & Exchanges" },
+            { "role": "link", "name": "Contact" }
+          ]
+        }
+      ]
+    },
+    "totalNodes": 17
+  },
+  "filteredDOM": {
+    "top30": [
+      {
+        "ref": "main h1",
+        "role": "heading",
+        "text": "About Peregrine",
+        "score": 1,
+        "boundingBox": { "x": 80, "y": 140, "width": 360, "height": 40 }
+      },
+      {
+        "ref": "main p.intro",
+        "role": "text",
+        "text": "Peregrine has woven knitwear in the north of England since 1796.",
+        "score": 0.7,
+        "boundingBox": { "x": 80, "y": 200, "width": 720, "height": 48 }
+      },
+      {
+        "ref": "main form.newsletter input[type='email']",
+        "role": "textbox",
+        "text": "Email address",
+        "score": 0.62,
+        "boundingBox": { "x": 80, "y": 540, "width": 320, "height": 40 }
+      },
+      {
+        "ref": "main form.newsletter button",
+        "role": "button",
+        "text": "Subscribe",
+        "score": 0.58,
+        "boundingBox": { "x": 410, "y": 540, "width": 120, "height": 40 }
+      },
+      {
+        "ref": "main p.press",
+        "role": "text",
+        "text": "Featured in The Telegraph, Esquire, and GQ.",
+        "score": 0.5,
+        "boundingBox": { "x": 80, "y": 380, "width": 600, "height": 24 }
+      }
+    ]
+  },
+  "interactiveGraph": {
+    "clickable": [
+      "header nav a[href='/']",
+      "header nav a[href='/t-shirts']",
+      "header nav a[href='/about']",
+      "main form.newsletter button",
+      "footer a[href='/returns']",
+      "footer a[href='/contact']"
+    ],
+    "typeable": ["main form.newsletter input[type='email']"],
+    "submittable": ["main form.newsletter"]
+  },
+  "diagnostics": {
+    "axNodeCount": 17,
+    "mutationsObserved": 0,
+    "stable": true,
+    "lowAxNodeCount": false,
+    "unstable": false,
+    "errors": [],
+    "warnings": ["NEURAL_TEST_FIXTURE: synthetic Peregrine About page — Phase 1b T1B-012"]
+  },
+  "ctas": [
+    {
+      "index": 0,
+      "text": "Subscribe",
+      "selector": "form.newsletter button",
+      "sizePx": { "width": 120, "height": 40 },
+      "role": "button"
+    }
+  ],
+  "formFields": [
+    {
+      "selector": "form.newsletter input[type='email']",
+      "type": "email",
+      "required": true
+    }
+  ],
+  "headings": [
+    { "level": 1, "text": "About Peregrine", "selector": "h1" },
+    { "level": 2, "text": "Press", "selector": "main h2:nth-of-type(1)" },
+    { "level": 2, "text": "Newsletter", "selector": "main h2:nth-of-type(2)" }
+  ],
+  "primaryActions": {
+    "selector": "form.newsletter button",
+    "text": "Subscribe"
+  },
+  "pricing": null,
+  "clickTargets": [
+    {
+      "index": 0,
+      "selector": "form.newsletter button",
+      "text": "Subscribe",
+      "sizePx": { "width": 120, "height": 40 },
+      "isMobileTapFriendly": false,
+      "elementType": "cta",
+      "isAboveFold": false
+    }
+  ],
+  "stickyElements": [],
+  "popups": [],
+  "frictionScore": {
+    "totalFormFields": 1,
+    "requiredFormFields": 1,
+    "popupCount": 0,
+    "forcedActionCount": 0,
+    "raw": 2.5,
+    "normalized": 0.1
+  },
+  "socialProofDepth": {
+    "reviewCount": 0,
+    "starDistribution": null,
+    "recencyDays": null,
+    "hasAggregateRating": false,
+    "hasIndividualReviews": false,
+    "thirdPartyVerified": true
+  },
+  "microcopy": {
+    "nearCtaTags": [
+      {
+        "ctaIndex": 0,
+        "text": "Be the first to hear about new drops.",
+        "selector": "main p.newsletter-blurb",
+        "tags": ["value_prop", "urgency"]
+      }
+    ]
+  },
+  "attention": {
+    "dominantElement": {
+      "type": "heading",
+      "selector": "main h1",
+      "score": 0.72
+    },
+    "contrastHotspots": [
+      {
+        "boundingBox": { "x": 80, "y": 140, "width": 360, "height": 40 },
+        "contrastScore": 0.84
+      }
+    ]
+  },
+  "commerce": {
+    "isCommerce": false,
+    "stockStatus": null,
+    "stockMessage": null,
+    "shippingSignals": [],
+    "returnPolicyPresent": false,
+    "returnPolicyText": null,
+    "guaranteeText": null
+  }
+}

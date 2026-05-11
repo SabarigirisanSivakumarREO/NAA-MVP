@@ -107,7 +107,7 @@ Per [plan.md](plan.md) §1:
 - **acceptance:** Detect popup PRESENCE at page load. `popups[]` populated with `type` ∈ {`modal`, `lightbox`, `drawer`, `toast`, `cookie_banner`, `consent_form`, `slide_in_panel`, `exit_intent_overlay`, `chat_widget`, `paywall`, `other`} *(v0.2 — 11-type enum per popup option a; `other` is the fallback)*, `isInitiallyOpen`, `hasCloseButton`, `closeButtonAccessibleName`, `viewportCoveragePercent`, `blocksPrimaryContent`. Behavior fields (`isEscapeDismissible`, `isClickOutsideDismissible`) **null** until Phase 5b populates them.
 - **conformance test:** `packages/agent-core/tests/conformance/popup-presence-detector.test.ts` (AC-04)
 
-## T1B-005 — FrictionScorer
+## T1B-005 — FrictionScorer — ✅ DONE 2026-05-09 (commit 2fedbc5)
 - **dep:** T1B-004, T013, **T1B-000** (substrate formFields[])
 - **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (frictionScore)
 - **files:** `packages/agent-core/src/perception/extensions/FrictionScorer.ts`
@@ -151,7 +151,7 @@ Per [plan.md](plan.md) §1:
 - **acceptance:** Detect switcher in nav fixtures (interactive button/select; not passive lists). `metadata.currencySwitcher.{present, currentCurrency, availableCurrencies, isAccessibleAt}` populated with `isAccessibleAt` ∈ {`header`, `footer`, `none`}; `null` when no switcher present. account_menu / settings_modal / sidebar locations deferred per spec §Out of Scope v0.2.
 - **conformance test:** `packages/agent-core/tests/conformance/currency-switcher-detector.test.ts` (AC-10)
 
-## T1B-011 — PageStateModel extended schema (Zod)
+## T1B-011 — PageStateModel extended schema (Zod) — ✅ DONE 2026-05-09 (commit 2fedbc5)
 - **dep:** T1B-000, T1B-001 through T1B-010, T014
 - **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (full schema)
 - **files:** `packages/agent-core/src/perception/types.ts` (extends Phase 1's existing PageStateModelSchema; same file as T014 + T1B-000)
