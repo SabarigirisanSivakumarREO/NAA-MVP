@@ -1,7 +1,7 @@
 ---
 title: Phase 1b — Perception Extensions (PageStateModel extension) — Implementation Plan
 artifact_type: plan
-status: approved
+status: implemented
 version: 0.2
 created: 2026-04-28
 updated: 2026-05-09

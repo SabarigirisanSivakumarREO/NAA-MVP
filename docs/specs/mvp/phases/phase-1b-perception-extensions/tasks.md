@@ -1,7 +1,7 @@
 ---
 title: Phase 1b — Perception Extensions (PageStateModel extension) — Tasks
 artifact_type: tasks
-status: approved
+status: implemented
 version: 0.2
 created: 2026-04-28
 updated: 2026-05-09
@@ -158,7 +158,7 @@ Per [plan.md](plan.md) §1:
 - **acceptance:** Zod schema validates all 10 new Phase 1b field groups + T1B-000 substrate. Backward-compat maintained — Phase 1's 6 sub-schemas validate identically; Phase 1 consumers (walking-skeleton; ContextAssembler.capture() callers) continue to work without modification. Total payload ≤20K tokens (Phase 1's NF-Phase1-01 v0.4 cap unchanged).
 - **conformance test:** `packages/agent-core/tests/conformance/page-state-model-extended.test.ts` (AC-11; same file as AC-00 conformance test)
 
-## T1B-012 — Phase 1b integration test
+## T1B-012 — Phase 1b integration test — ✅ DONE 2026-05-09 (commit 90c44ab; AC-12 GREEN; phase exit gate; Phase 0 AC-02 SELF-RESOLVED)
 - **dep:** T1B-000 through T1B-011
 - **spec:** Phase 1b exit gate
 - **files:** `packages/agent-core/tests/integration/perception-extensions.test.ts`

@@ -27,7 +27,7 @@ generated_by: pnpm spec:index    # Auto-regenerated when phase folders or sub-ph
 | 0 | Setup | 🟢 **implemented** (5/5 ACs green; rollup landed 2026-05-05) | M0.1-M0.5 + T-PHASE0-{TEST,DOC,ROLLUP} | `phase-0-setup/` | — | 1 |
 | **0b** | **Heuristic Authoring (LLM-assisted, engineering-owned)** | 🟢 **implemented** (30/30 heuristics committed 2026-05-09; v0.7 tiered-verification pipeline; AC-12 3-round spot-check 15/15 PASS; rollup landed 2026-05-09) | T0B-001..T0B-005 + T103/T104/T105 ✅ | `phase-0b-heuristics/` | 0 | 6 |
 | 1 | Browser Perception Foundation | 🟢 **implemented** (10 ACs green; 142/142 tests PASS; rollup landed 2026-05-09; NF-Phase1-01 v0.4 = 20K tokens) | M1.1-M1.10 (T006-T015) + T-PHASE1-{TESTS,DOC,LOGGER,ADAPTERS-README,ROLLUP} | `phase-1-perception/` | 0 | 1b, 2, 5 |
-| **1b** | **Perception Extensions v2.4** | ⚪ not started | T1B-001..T1B-012 | `phase-1b-perception-extensions/` | 1 | 1c, 6, 7 |
+| **1b** | **Perception Extensions (PageStateModel extension)** | 🟢 **implemented** (13 of 13 ACs green; 240/240 tests + 12/12 acceptance PASS; Path B substrate-first + 11-type popup enum + Cialdini-collapse rationale; rollup + validation doc landed 2026-05-09; Gate 2 stamped) | T1B-000..T1B-012 (14 tasks incl. Path B substrate) | `phase-1b-perception-extensions/` | 1 | 1c, 6, 7 |
 | **1c** | **PerceptionBundle Envelope v2.5** | ⚪ not started | T1C-001..T1C-012 | `phase-1c-perception-bundle/` | 1b | 7 (EvaluateNode token budget); 13 (state graph master) |
 | 2 | MCP Tools (subset) | ⚪ not started | M2.1-M2.20 (T016-T050) | `phase-2-tools/` | 1 | 5 |
 | 3 | Verification (thin) | ⚪ not started | M3.1-M3.8 (T053-T055 MVP; T056-T061 v1.1) | `phase-3-verification/` | 2 | 5 |

@@ -255,6 +255,36 @@ When a new Claude session starts:
 
   **For Session 11:** Boot via `docs/specs/mvp/sessions/kickoff-session-11.md` (NEW — authored in this close-out commit). 10 tasks remaining for week 2: T-PHASE1-TESTS (TDD R3.1 first) + T006-T013 (real Playwright + AX-tree + screenshot capture + ContextAssembler) + T015 (3-site integration test with C1 BINDING per-step Playwright timeout budgets) + 4 Phase 1 polish tasks (T-PHASE1-LOGGER + T-PHASE1-ADAPTERS-README + T-PHASE1-DOC + T-PHASE1-ROLLUP). Pre-implementation gates: re-run /speckit.analyze on Phase 1 (since Session 7 R17.4 approval 5 days ago) + apply C1 BINDING at T015. Estimated ~2 days focused work for full Phase 1 implementation if continuing one-by-one cadence.
 
+- **Session 14 (2026-05-09) — Phase 1b (Perception Extensions, PageStateModel extension) COMPLETE via master orchestrator full cycle.** Drove Phase 1b from spec to implemented across all 4 master stages + 2 gates in a single session on `feat/phase-1b-perception-extensions` branch. Strategy locked at Gate 1 REVISE: **Path B** (T1B-000 substrate task first) + **popup option (a)** (11-type enum with `other` fallback) + **bundled v0.2 polish** (CRITICAL + HIGH + MEDIUM + LOW + 2 completeness SPEC_GAP closures).
+
+  **Stage 1 (pre-flight)** — Pass 1 surfaced 5 CRITICAL (contract name AnalyzePerception→PageStateModel; substrate gap; stale file paths; token budget rebase 5K→6.5K→20K; producer page_analyze MCP→contextAssembler) + 4 HIGH (namespace contract carry-forward from Phase 1 §5; ExtractCtx undeclared; fixture-set divergence; backward-compat moot) + 9 MEDIUM/LOW + 2 completeness SPEC_GAPs (popup type universe + Cialdini-collapse rationale). Pass 1 verdict: **REVISE**. Engineering lead stamped REVISE with Path B + popup-a + bundled strategy. v0.1 → v0.2 patch wave landed in commit `7b65886` (6 files, +629/-259) + tooling-fix commit `df30aca` (AC-00 spec:matrix regex compatibility). Pass 2 verdict: **APPROVE** (all 9 blocking findings resolved; 2 new LOW non-blocking from v0.2 patch content). Engineering lead stamped APPROVE → R17 status:validated → approved on 5 artifacts (spec/plan/tasks/impact/README) in commit `ddfa6af`. Branch pushed to origin.
+
+  **Stage 2 (implementation)** — 14 tasks across 6 waves dispatched via 11 subagents (1 sequential Wave 1 + 1 sequential Wave 2 + 6 parallel Wave 3 + 3 parallel Wave 4 + 2 sequential Wave 5 + 1 sequential Wave 6). 8 commits total since branch cut:
+  - `01bb246` Wave 1: T-PHASE1B-TESTS — 12 RED conformance scaffolds (1,580 LOC; R3.1 TDD red-first)
+  - `7bbfe77` Wave 2: T1B-000 substrate — extends PageStateModel with ctas/formFields/schemaOrg/ogTags/headings/primaryActions; 2-file split (.ts pure + .script.ts IIFE); NN-LL1 heuristic resolved (4-rule primaryActions cascade); peregrine-pdp fixture patched
+  - `1415000` Wave 3: T1B-001/002/003/006/009/010 — 6 parallel extractors (Pricing, ClickTargetSizer, StickyElementDetector, SocialProofDepth, CommerceBlock, CurrencySwitcher); vitest.config.ts environmentMatchGlobs added (jsdom for 9 conformance tests); jsdom + @types/jsdom devDependencies
+  - `98b15a9` Wave 4: T1B-004/007/008 — 3 parallel (PopupPresenceDetector 11-type + NN-LL2 fall-through; MicrocopyTagger 7-tag Cialdini-collapsed; AttentionScorer single-pass Sharp)
+  - `2fedbc5` Wave 5: T1B-005 FrictionScorer + T1B-011 schema closure (types.ts 418→659 LOC; 10 placeholder z.unknown() tightened to strict per-extractor schemas; 8 closed enums; 16 inferred-type exports; 2 spec contradictions surfaced — pricing.displayFormat + clickTargets[].index/.text — queued v0.2.1)
+  - `90c44ab` Wave 6: T1B-012 exit gate — 4 new fixtures (example-com, amazon-in-pdp, peregrine-cart, peregrine-content) + pipeline.ts hybrid validator+synthesizer + integration test 27/27 tests GREEN
+
+  **Stage 2.5 (code review)** — superpowers:code-reviewer verdict **APPROVE-FOR-GATE-2**. 0 CRITICAL / 0 HIGH / 0 MEDIUM; 6 LOW non-blocking (F-001 displayFormat drift, F-002 clickTarget index/text contract, F-003 stale @ts-expect-error, F-004 R10 SHOULD overages, F-005 Sharp adapter, F-006 substrate-parity test) — all queued v0.2.1 polish bundle (~3 hours post-Gate-2, may be absorbed into Phase 1c rebase). Zero subagent drift. R20 namespace contract preserved (zero writes to `_extensions.*`).
+
+  **Stage 3 (verification)** — ALL gates GREEN: lint clean; typecheck CLEAN (3/3 turbo); 240 tests across 35 files; Phase 1 conformance 29/29 unchanged; T015 5/5 unchanged; walking-skeleton 7/7 unchanged; Phase 0 acceptance 5/5 (**AC-02 self-resolved as predicted** — R3.1 TDD red-first cycle complete; `pnpm -F @neural/agent-core test` exits 0 again). One transient amazon.in network flake during Stage 3 recovered on re-run; documented as known flake mirroring Phase 1 `.phase-state/1.json` precedent.
+
+  **Stage 3b (AI Reviewer Gate 2)** — verdict **APPROVE**. All 3 sub-audits PASS (correctness 0 blocking + 6 LOW queued; coverage 13/13 ACs GREEN + 240/240 tests; completeness 6 categorical surfaces incl. NEW StockStatus 5-value enum discovered via schema closure — all PASS in two-pass auditor+critic). Engineering lead stamped APPROVE.
+
+  **Stage 4 (exit)** — R17 status bumps approved → implemented on 5 artifacts; R19 rollup `phase-1b-current.md` v1.0 landed (10 sections, 300 lines); R19 sibling validation doc `phase-1b-validation.md` v1.0 landed (8 sections, 400 lines incl. 5 ASCII proof artifacts + 5-site trust spot-check list); INDEX.md row 1b flipped ⚪ → 🟢; this session-handover entry. R20 cross-phase propagation: Phase 1c (envelope must respect namespace contract), Phase 4b T4B-013 (ContextProfile depends on commerce.isCommerce + metadata.schemaOrg), Phase 5b (popup behavior layer populates literal-null fields), Phase 6 (heuristics opt into Phase 1b fields), Phase 7 (DeepPerceive token budget headroom concern at multi-page audits).
+
+  **Cumulative branch state:** 11 commits on `feat/phase-1b-perception-extensions` since branch-cut (3 Stage-1 patch + 6 Stage-2 impl + 1 Stage-4 status-bump + 1 Stage-4 close-out). All pushed to origin.
+
+  **Cost discipline:** ~$9-10 of $10 per-phase ceiling used (95%). Risk-gate standard mode held throughout (no auto-trigger fired). Master orchestration overhead ~$1.50 of total.
+
+  **Pending decisions resolved:** PD-01 (Phase 1b + 1c folding) RESOLVED — Phase 1b shipped; Phase 1c is the natural next phase. PD-05 (.claude/settings.local.json) STILL OPEN — cosmetic; defer to git-hygiene window.
+
+  Commits: `7b65886` (R11.4 patch wave) + `df30aca` (matrix-compat fix) + `ddfa6af` (R17 status bump approved + Pass 2 audit trail) + `01bb246` (Wave 1 RED scaffolds) + `7bbfe77` (Wave 2 substrate) + `1415000` (Wave 3 6 extractors) + `98b15a9` (Wave 4 3 extractors) + `2fedbc5` (Wave 5 friction + schema closure) + `90c44ab` (Wave 6 exit gate) + [this Stage-4 close-out commit pending].
+
+  **For next session:** Recommended next phase is **Phase 1c (PerceptionBundle Envelope v2.5)** per dependency order (1b → 1c → 7). Boot via `/master 1c --start`. v0.2.1 polish bundle (F-001..F-006 from Stage 2.5) may be absorbed into Phase 1c rebase OR scheduled as separate `feat/phase-1b-v0.2.1-polish` branch — engineering lead decision pending.
+
 ---
 
 ## 6. Demo target URL (week 1 + ongoing)
