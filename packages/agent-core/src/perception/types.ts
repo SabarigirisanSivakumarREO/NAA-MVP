@@ -262,10 +262,107 @@ export const MetadataSchema = z
     navigationStartedAt: z.string().datetime(),
     /** ISO-8601 navigation end timestamp. */
     navigationEndedAt: z.string().datetime(),
+    // ----- Phase 1b T1B-000 substrate additions (additive; optional for Phase 1 backward compat) -----
+    /**
+     * Parsed JSON-LD fragments from <script type="application/ld+json">.
+     * Each fragment is an arbitrary JSON-LD object — malformed scripts are
+     * silently skipped at extraction time. T1B-000 substrate.
+     */
+    schemaOrg: z.array(z.record(z.unknown())).optional(),
+    /** <meta property="og:*"> tag map. T1B-000 substrate. */
+    ogTags: z.record(z.string()).optional(),
+    /**
+     * Phase 1b T1B-010 currency-switcher block. T1B-011 will tighten the
+     * schema; for now `z.unknown()` keeps backward compat permissive.
+     */
+    currencySwitcher: z.unknown().optional(),
   })
   .strict();
 
 export type Metadata = z.infer<typeof MetadataSchema>;
+
+// ----------------------------------------------------------------------
+// Phase 1b T1B-000 substrate sub-schemas
+// ----------------------------------------------------------------------
+
+/** Bounding-rect size of a CTA / form element in CSS pixels. */
+export const SizePxSchema = z
+  .object({
+    width: z.number().min(0),
+    height: z.number().min(0),
+  })
+  .strict();
+
+export type SizePx = z.infer<typeof SizePxSchema>;
+
+/**
+ * Single CTA entry — enumerated by T1B-000 SubstrateExtension. Downstream
+ * extractors (T1B-002/003/007/009) reference CTAs by `index`.
+ */
+export const CtaSchema = z
+  .object({
+    index: z.number().int().min(0),
+    text: z.string(),
+    selector: z.string(),
+    sizePx: SizePxSchema,
+    role: z.string().optional(),
+  })
+  .strict();
+
+export type Cta = z.infer<typeof CtaSchema>;
+
+/** Form-field type taxonomy (T1B-000 substrate; consumed by T1B-005). */
+export const FormFieldTypeSchema = z.enum([
+  'text',
+  'email',
+  'password',
+  'tel',
+  'select',
+  'textarea',
+  'checkbox',
+  'radio',
+  'other',
+]);
+
+export type FormFieldType = z.infer<typeof FormFieldTypeSchema>;
+
+export const FormFieldSchema = z
+  .object({
+    selector: z.string(),
+    type: FormFieldTypeSchema,
+    required: z.boolean(),
+  })
+  .strict();
+
+export type FormField = z.infer<typeof FormFieldSchema>;
+
+/** Heading entry (h1..h6) — T1B-000 substrate. */
+export const HeadingSchema = z
+  .object({
+    level: z.union([
+      z.literal(1),
+      z.literal(2),
+      z.literal(3),
+      z.literal(4),
+      z.literal(5),
+      z.literal(6),
+    ]),
+    text: z.string(),
+    selector: z.string(),
+  })
+  .strict();
+
+export type Heading = z.infer<typeof HeadingSchema>;
+
+/** Dominant CTA per page (T1B-000 substrate); null when none meets the heuristic. */
+export const PrimaryActionSchema = z
+  .object({
+    selector: z.string(),
+    text: z.string(),
+  })
+  .strict();
+
+export type PrimaryAction = z.infer<typeof PrimaryActionSchema>;
 
 // ----------------------------------------------------------------------
 // PageStateModel (top-level)
@@ -285,6 +382,30 @@ export const PageStateModelSchema = z
     /** Optional — dropped during ContextAssembler shrink ladder Stage 3. */
     visual: VisualSchema.optional(),
     diagnostics: DiagnosticsSchema,
+    // ----- Phase 1b T1B-000 substrate (top-level; additive; optional for Phase 1 backward compat) -----
+    /** Enumerated CTAs (T1B-000). Consumed by T1B-002/003/007/009. */
+    ctas: z.array(CtaSchema).optional(),
+    /** Enumerated <input>/<select>/<textarea> entries (T1B-000). Consumed by T1B-005. */
+    formFields: z.array(FormFieldSchema).optional(),
+    /** Heading enumeration (T1B-000). */
+    headings: z.array(HeadingSchema).optional(),
+    /**
+     * Dominant CTA on the page (T1B-000). `null` when no element meets the
+     * heuristic (see SubstrateExtension.ts). Optional for Phase 1 fixtures.
+     */
+    primaryActions: PrimaryActionSchema.nullable().optional(),
+    // ----- Phase 1b T1B-001..T1B-009 extension placeholders -----
+    // Permissive z.unknown() / z.array(z.unknown()) seams; T1B-011 closes
+    // the schema by replacing these with strict per-group sub-schemas.
+    pricing: z.unknown().optional(),
+    clickTargets: z.array(z.unknown()).optional(),
+    stickyElements: z.array(z.unknown()).optional(),
+    popups: z.array(z.unknown()).optional(),
+    frictionScore: z.unknown().optional(),
+    socialProofDepth: z.unknown().optional(),
+    microcopy: z.unknown().optional(),
+    attention: z.unknown().optional(),
+    commerce: z.unknown().optional(),
     /**
      * RESERVED for Phase 7+ deep_perceive composition. Phase 1 MUST NOT
      * populate this field. Phase 7 will namespace under
