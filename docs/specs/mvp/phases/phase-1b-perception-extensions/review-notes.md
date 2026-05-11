@@ -1,16 +1,16 @@
 ---
-title: Phase 1b — R17.4 Phase Review (Pass 1)
+title: Phase 1b — R17.4 Phase Review (Pass 1 + Pass 2)
 artifact_type: phase-review
 status: complete
-version: 1.0
+version: 1.1
 phase_number: 1b
-phase_name: Perception Extensions v2.4
-review_pass: 1
+phase_name: Perception Extensions (PageStateModel extension)
+review_pass: 2
 created: 2026-05-09
 updated: 2026-05-09
-owner: engineering lead (review pending)
-authors: [Claude (AI Reviewer per neural-ai-reviewer skill, Gate 1 pre-flight)]
-reviewers: [(Sabari — pending Gate 1 stamp)]
+owner: engineering lead (Pass 2 stamp pending)
+authors: [Claude (AI Reviewer per neural-ai-reviewer skill, Gate 1 pre-flight Pass 1 + Pass 2)]
+reviewers: [(Sabari — Pass 1 stamped REVISE 2026-05-09; Pass 2 stamp pending)]
 
 derived_from:
   - .phase-state/1b/preflight-correctness.json (/speckit.analyze output)
@@ -183,6 +183,64 @@ None pre-impl. All findings are spec-stage; resolve before Stage 2 dispatch. (Th
 
 ---
 
-**Pending:** engineering lead Gate 1 stamp via `/master 1b --gate-1 {APPROVE|REVISE|RE-SPEC}`.
+**Pass 1 outcome:** stamped **REVISE** by engineering lead 2026-05-09 via `/master 1b --gate-1 REVISE`. Path B + popup option a + bundled polish strategy selected per `.phase-state/1b.json` `gate_1.pending_decisions_before_patch_draft` resolution.
 
-**Recommended stamp:** **REVISE** (with C1+C2 strategy decision attached).
+---
+
+# Phase 1b — R17.4 Phase Review (Pass 2)
+
+> **Pass 2 verdict:** **APPROVE** — all Pass 1 CRITICAL/HIGH/MEDIUM/most-LOW findings RESOLVED; 2 new LOW findings non-blocking; categorical-surface completeness closed.
+
+## 9. Pass 2 outcome summary
+
+| Sub-audit | Pass 1 | Pass 2 | Δ |
+|---|---|---|---|
+| Correctness | REVISE (5 CRITICAL + 4 HIGH + 5 MED + 4 LOW) | **PASS** (0 blocking; 1 LOW deferred OPTIONAL; 2 new LOW non-blocking) | 9 blocking findings resolved |
+| Coverage | PASS (12/12 declared) | **PASS** (13/13 declared; AC-00 added; matrix script regex fix in df30aca) | +1 AC; tooling-compatible |
+| Completeness (R5.6 two-pass) | REVISE (2 SPEC_GAP + 2 PASS_WITH_NOTE + 1 PASS) | **PASS** (2 SPEC_GAP closed; 2 PASS_WITH_NOTE addressed; 1 PASS unchanged) | Universe coverage now MVP-sufficient |
+| **Overall** | **REVISE** | **APPROVE** | Strictest = APPROVE |
+
+## 10. Pass 1 → Pass 2 resolution evidence
+
+See `.phase-state/1b/preflight-verdict.yaml` `pass1_to_pass2_findings` block for per-finding evidence with verification citations. Summary:
+
+- **C1 (naming)** — Renamed across all 5 artifacts (commit `7b65886`); 11 residual references verified as legitimate (delta blocks, supersession notes, citations)
+- **C2 (Path B prerequisites)** — T1B-000 substrate task added (`tasks.md` line 70); ExtractCtx interface declared (`plan.md` §2.2); T1B-001..T1B-010 deps updated (26 T1B-000 references)
+- **C3 (file paths)** — `schema.ts → types.ts`; `analyzePerception.ts → ContextAssembler.ts` throughout
+- **C4 (token math)** — 20K rebased; SC-002 + AC-11 + AC-12 + NF-01 + plan kill-criteria + impact §1+§5 internally consistent
+- **C5 (producer)** — `contextAssembler.capture()` referenced 13× across spec/plan/impact; `page_analyze` MCP scoped to Phase 2 deferral
+- **H1 (namespace)** — impact.md §11 authored (~50 lines; 4-point rationale)
+- **H2 (ExtractCtx)** — TypeScript interface declared with full field types
+- **H3 (fixtures)** — 3 reuse + 2 new (Peregrine cart, content) aligned across all artifacts
+- **H4 (backward compat)** — Re-anchored on PageStateModel sub-schemas
+- **M1-M5 + L1** — Bundled in v0.2 catch-up commit
+- **Completeness SPEC_GAPs** — Popup 11-type enum + Cialdini-collapse rationale documented
+
+Full per-finding resolution table in verdict YAML.
+
+## 11. New Pass 2 findings (non-blocking)
+
+| ID | Severity | Issue | Action |
+|---|---|---|---|
+| NN-LL1 | LOW | `primaryActions` detection criteria slightly hand-wavy ("typically the first non-link button in viewport") | Tighten at T1B-000 implementation time per kill criteria last row |
+| NN-LL2 | LOW | Popup `other` fallback classification fall-through order underspecified | T1B-004 implementer decides at impl time |
+
+Both LOW; neither blocks Stage 2 dispatch. Acceptable at spec abstraction level — implementer judgment at code time.
+
+## 12. Conditions to apply at Stage 2 dispatch
+
+| ID | Severity | Condition | Implementing task |
+|---|---|---|---|
+| C-PASS2-01 | OPTIONAL | NN-LL1 + NN-LL2 surface via kill criteria during impl | T1B-000 + T1B-004 |
+
+No BINDING conditions from this Pass 2 review. (Phase 1b is a lower-risk phase than Phase 0b/1/6 which had BINDING conditions — the spec is now complete enough that impl-time judgment is acceptable.)
+
+## 13. Pass 2 recommendation
+
+**APPROVE.** Bump `status: validated → approved` on 5 artifacts (spec.md, plan.md, tasks.md, impact.md, README.md) in single follow-up commit. Master orchestrator then proceeds to Stage 2 dispatch on `/master 1b --gate-1 APPROVE`.
+
+---
+
+**Pass 2 stamp pending:** engineering lead Gate 1 re-stamp via `/master 1b --gate-1 APPROVE` (or `REVISE` if Pass 2 surfaced concerns; `RE-SPEC` not advised given clean Pass 2).
+
+**Recommended stamp:** **APPROVE**.
