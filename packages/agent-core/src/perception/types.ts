@@ -1,32 +1,24 @@
 /**
  * PageStateModel — canonical perception output Zod schemas.
  *
- * Source: docs/specs/mvp/phases/phase-1-perception/{spec,plan,tasks,impact}.md
- *         (T014 + AC-09 + R-04 + REQ-BROWSE-PERCEPT-001).
+ * Sources:
+ *   Phase 1  — docs/specs/mvp/phases/phase-1-perception/{spec,plan,tasks,impact}.md
+ *              (T014 + AC-09 + R-04 + REQ-BROWSE-PERCEPT-001).
+ *   Phase 1b — docs/specs/mvp/phases/phase-1b-perception-extensions/{spec.md AC-00/AC-11,
+ *              plan.md §2.3} (T1B-000 substrate + T1B-001..T1B-010 + T1B-011 schema closure).
  *
- * Why this lands week 1 (forward-pulled from Phase 1): walking-skeleton
- * T-SKELETON-002 needs a Zod-validated PageStateModel contract before any
- * stubbed browser capture can be tested. See implementation-roadmap.md §6
- * "Cross-week ordering note: T014 MUST land in week 1 alongside
- * T-SKELETON-002 for contract test feasibility."
+ * Consumed by: ContextAssembler (T013), Phase 1b extractors (T1B-001..T1B-010),
+ *   browser_get_state MCP tool (Phase 2), Browse MVP (Phase 5),
+ *   deep_perceive (Phase 7 — uses `_extensions.deepPerceive` namespace).
  *
- * R20 contract surface — consumed by:
- *   - Phase 1 T013 ContextAssembler (real producer)
- *   - Phase 2 browser_get_state MCP tool (returns PageStateModel)
- *   - Phase 5 Browse MVP (composes across pages)
- *   - Phase 7 deep_perceive (merges with AnalyzePerception via _extensions seam)
- *
- * R10 compliance:
- *   - File ≤ 300 lines (R10.1) — currently ~270
- *   - Zero z.any() — every field typed explicitly (SC-005)
- *   - Named exports only (R10.3)
- *
- * Phase 1 invariant per spec.md Key Entities + tasks.md T014 brief:
- *   - All sub-schemas .strict()
- *   - PageStateModelSchema also .strict() but explicitly carries _extensions
- *     as the Phase 7+ namespaced-extension seam (forward-compatibility seam)
- *   - Phase 1 code MUST NOT populate _extensions; Phase 7 namespaces under
- *     _extensions.deepPerceive. Test file enforces.
+ * Invariants:
+ *   - All sub-schemas .strict(); PageStateModelSchema .strict() with reserved
+ *     `_extensions` namespace (Phase 7+; Phase 1/1b MUST NOT populate).
+ *   - Phase 1b additions are optional/nullable — Peregrine fixture parses
+ *     identically before/after T1B-011 closure (AC-11 backward compat).
+ *   - Popup behavior fields (isEscapeDismissible, isClickOutsideDismissible)
+ *     are literal `z.null()` per spec R-04 — Phase 5b owns runtime probing.
+ *   - Zero z.any() (SC-005); named exports only (R10.3).
  */
 import { z } from 'zod';
 
@@ -250,6 +242,28 @@ export const DiagnosticsSchema = z
 export type Diagnostics = z.infer<typeof DiagnosticsSchema>;
 
 // ----------------------------------------------------------------------
+// Phase 1b T1B-010 CurrencySwitcher (nested inside Metadata)
+// ----------------------------------------------------------------------
+
+/** AC-10 / R-10 location — closed enum. */
+export const CurrencySwitcherLocationSchema = z.enum(['header', 'footer', 'none']);
+export type CurrencySwitcherLocation = z.infer<typeof CurrencySwitcherLocationSchema>;
+
+/**
+ * AC-10 / T1B-010 — `null` at parent level signals absence (R-10);
+ * this schema models the populated case (present is literal true).
+ */
+export const CurrencySwitcherSchema = z
+  .object({
+    present: z.literal(true),
+    currentCurrency: z.string(),
+    availableCurrencies: z.array(z.string()),
+    isAccessibleAt: CurrencySwitcherLocationSchema,
+  })
+  .strict();
+export type CurrencySwitcher = z.infer<typeof CurrencySwitcherSchema>;
+
+// ----------------------------------------------------------------------
 // Metadata
 // ----------------------------------------------------------------------
 
@@ -272,10 +286,11 @@ export const MetadataSchema = z
     /** <meta property="og:*"> tag map. T1B-000 substrate. */
     ogTags: z.record(z.string()).optional(),
     /**
-     * Phase 1b T1B-010 currency-switcher block. T1B-011 will tighten the
-     * schema; for now `z.unknown()` keeps backward compat permissive.
+     * Phase 1b T1B-010 currency-switcher block. `null` when no interactive
+     * switcher detected (R-10 Edge Case); populated CurrencySwitcher shape
+     * otherwise. Closed by T1B-011.
      */
-    currencySwitcher: z.unknown().optional(),
+    currencySwitcher: CurrencySwitcherSchema.nullable().optional(),
   })
   .strict();
 
@@ -365,6 +380,222 @@ export const PrimaryActionSchema = z
 export type PrimaryAction = z.infer<typeof PrimaryActionSchema>;
 
 // ----------------------------------------------------------------------
+// Phase 1b T1B-001..T1B-010 extension sub-schemas (T1B-011 closure)
+// ----------------------------------------------------------------------
+// Per-extractor strict shapes. `displayFormat`/`taxInclusion`/sticky `type`
+// kept as open strings per spec (R-03 explicit; AC-01 silent on enums).
+// All groups optional/nullable at the parent — Phase 1 backward compat.
+
+/** AC-01 / T1B-001 — null at parent when no pricing detected. */
+export const PricingSchema = z
+  .object({
+    displayFormat: z.string(),
+    amount: z.string(),
+    amountNumeric: z.number(),
+    currency: z.string(),
+    taxInclusion: z.string(),
+    anchorPrice: z.string().nullable(),
+    discountPercent: z.number().nullable(),
+    comparisonShown: z.boolean(),
+    boundingBox: BoundingBoxSchema.nullable(),
+  })
+  .strict();
+export type Pricing = z.infer<typeof PricingSchema>;
+
+/** AC-02 / R-02 click-target element-type taxonomy (closed enum). */
+export const ClickTargetElementTypeSchema = z.enum([
+  'cta', 'link', 'form_control', 'icon_button',
+]);
+export type ClickTargetElementType = z.infer<typeof ClickTargetElementTypeSchema>;
+
+/**
+ * AC-02 / T1B-002. `index` + `text` are extractor-enriched (lifted from
+ * substrate Cta); optional to accept both AC-00 fixture (omits) and real
+ * extractor output (populates).
+ */
+export const ClickTargetSchema = z
+  .object({
+    index: z.number().int().min(0).optional(),
+    selector: z.string(),
+    text: z.string().optional(),
+    sizePx: SizePxSchema,
+    isMobileTapFriendly: z.boolean(),
+    elementType: ClickTargetElementTypeSchema,
+    isAboveFold: z.boolean(),
+  })
+  .strict();
+export type ClickTarget = z.infer<typeof ClickTargetSchema>;
+
+/** AC-03 / R-03 — `type` is open string per spec R-03 (no enum lock). */
+export const StickyElementSchema = z
+  .object({
+    type: z.string(),
+    positionStrategy: z.enum(['sticky', 'fixed']),
+    selector: z.string(),
+    viewportCoveragePercent: z.number(),
+    isAboveFold: z.boolean(),
+    containsPrimaryCta: z.boolean(),
+  })
+  .strict();
+export type StickyElement = z.infer<typeof StickyElementSchema>;
+
+/** AC-04 / R-04 popup type — 11 values (Gate 1 REVISE popup option a). */
+export const PopupTypeSchema = z.enum([
+  'modal', 'lightbox', 'drawer', 'toast',
+  'cookie_banner', 'consent_form', 'slide_in_panel',
+  'exit_intent_overlay', 'chat_widget', 'paywall', 'other',
+]);
+export type PopupType = z.infer<typeof PopupTypeSchema>;
+
+/**
+ * AC-04 / T1B-004 — behavior fields are LITERAL NULL per spec R-04;
+ * Phase 5b owns runtime-probed dismissibility (R24).
+ */
+export const PopupSchema = z
+  .object({
+    type: PopupTypeSchema,
+    selector: z.string(),
+    isInitiallyOpen: z.boolean(),
+    hasCloseButton: z.boolean(),
+    closeButtonAccessibleName: z.string().nullable(),
+    viewportCoveragePercent: z.number(),
+    blocksPrimaryContent: z.boolean(),
+    /** Phase 5b reserved — Phase 1b emits literal null (R-04). */
+    isEscapeDismissible: z.null(),
+    /** Phase 5b reserved — Phase 1b emits literal null (R-04). */
+    isClickOutsideDismissible: z.null(),
+  })
+  .strict();
+export type Popup = z.infer<typeof PopupSchema>;
+
+/** AC-05 / R-05 — 6 fields; formula in plan.md §2.4. */
+export const FrictionScoreSchema = z
+  .object({
+    totalFormFields: z.number().int().min(0),
+    requiredFormFields: z.number().int().min(0),
+    popupCount: z.number().int().min(0),
+    forcedActionCount: z.number().int().min(0),
+    raw: z.number().min(0),
+    normalized: z.number().min(0).max(1),
+  })
+  .strict();
+export type FrictionScore = z.infer<typeof FrictionScoreSchema>;
+
+/** AC-06 1..5 star histogram; null at parent signals no star data. */
+export const StarDistributionSchema = z
+  .object({
+    1: z.number().int().min(0),
+    2: z.number().int().min(0),
+    3: z.number().int().min(0),
+    4: z.number().int().min(0),
+    5: z.number().int().min(0),
+  })
+  .strict();
+export type StarDistribution = z.infer<typeof StarDistributionSchema>;
+
+/** AC-06 / T1B-006 — 6 fields per spec contract. */
+export const SocialProofDepthSchema = z
+  .object({
+    reviewCount: z.number().int().min(0),
+    starDistribution: StarDistributionSchema.nullable(),
+    recencyDays: z.number().nullable(),
+    hasAggregateRating: z.boolean(),
+    hasIndividualReviews: z.boolean(),
+    thirdPartyVerified: z.boolean(),
+  })
+  .strict();
+export type SocialProofDepth = z.infer<typeof SocialProofDepthSchema>;
+
+/** AC-07 microcopy tag — 7 values (R-07 v0.2 Cialdini collapse). */
+export const MicrocopyTagSchema = z.enum([
+  'risk_reducer', 'urgency', 'security', 'guarantee',
+  'social_proof', 'value_prop', 'other',
+]);
+export type MicrocopyTag = z.infer<typeof MicrocopyTagSchema>;
+
+/** Single near-CTA microcopy tag (T1B-007 output element). */
+export const NearCtaTagSchema = z
+  .object({
+    ctaIndex: z.number().int().min(0),
+    text: z.string(),
+    selector: z.string(),
+    tags: z.array(MicrocopyTagSchema),
+  })
+  .strict();
+export type NearCtaTag = z.infer<typeof NearCtaTagSchema>;
+
+/** AC-07 / T1B-007 — empty `nearCtaTags[]` is the zero shape. */
+export const MicrocopySchema = z
+  .object({ nearCtaTags: z.array(NearCtaTagSchema) })
+  .strict();
+export type Microcopy = z.infer<typeof MicrocopySchema>;
+
+/** AC-08 dominant-element type — coarse 5-value taxonomy. */
+export const AttentionElementTypeSchema = z.enum([
+  'cta', 'image', 'heading', 'form', 'other',
+]);
+export type AttentionElementType = z.infer<typeof AttentionElementTypeSchema>;
+
+/** AC-08 dominant element (null at parent when score ≤0.3). */
+export const AttentionDominantElementSchema = z
+  .object({
+    type: AttentionElementTypeSchema,
+    selector: z.string(),
+    score: z.number().min(0).max(1),
+  })
+  .strict();
+export type AttentionDominantElement = z.infer<typeof AttentionDominantElementSchema>;
+
+/** AC-08 contrast-hotspot entry — bbox + 0..1 score. */
+export const ContrastHotspotSchema = z
+  .object({
+    boundingBox: BoundingBoxSchema,
+    contrastScore: z.number().min(0).max(1),
+  })
+  .strict();
+export type ContrastHotspot = z.infer<typeof ContrastHotspotSchema>;
+
+/** AC-08 / T1B-008 — always present; nullable dominant. */
+export const AttentionSchema = z
+  .object({
+    dominantElement: AttentionDominantElementSchema.nullable(),
+    contrastHotspots: z.array(ContrastHotspotSchema),
+  })
+  .strict();
+export type Attention = z.infer<typeof AttentionSchema>;
+
+/** AC-09 / R-09 stock-status taxonomy (closed enum). */
+export const StockStatusSchema = z.enum([
+  'in_stock', 'out_of_stock', 'limited', 'preorder', 'unknown',
+]);
+export type StockStatus = z.infer<typeof StockStatusSchema>;
+
+/** AC-09 / R-09 shipping-signal type — 5-value closed enum. */
+export const ShippingSignalTypeSchema = z.enum([
+  'free_shipping', 'flat_rate', 'free_above_threshold', 'expedited', 'other',
+]);
+export type ShippingSignalType = z.infer<typeof ShippingSignalTypeSchema>;
+
+export const ShippingSignalSchema = z
+  .object({ type: ShippingSignalTypeSchema, text: z.string() })
+  .strict();
+export type ShippingSignal = z.infer<typeof ShippingSignalSchema>;
+
+/** AC-09 / T1B-009 — always emitted; `isCommerce:false` zeroes side fields. */
+export const CommerceBlockSchema = z
+  .object({
+    isCommerce: z.boolean(),
+    stockStatus: StockStatusSchema.nullable(),
+    stockMessage: z.string().nullable(),
+    shippingSignals: z.array(ShippingSignalSchema),
+    returnPolicyPresent: z.boolean(),
+    returnPolicyText: z.string().nullable(),
+    guaranteeText: z.string().nullable(),
+  })
+  .strict();
+export type CommerceBlock = z.infer<typeof CommerceBlockSchema>;
+
+// ----------------------------------------------------------------------
 // PageStateModel (top-level)
 // ----------------------------------------------------------------------
 
@@ -394,18 +625,28 @@ export const PageStateModelSchema = z
      * heuristic (see SubstrateExtension.ts). Optional for Phase 1 fixtures.
      */
     primaryActions: PrimaryActionSchema.nullable().optional(),
-    // ----- Phase 1b T1B-001..T1B-009 extension placeholders -----
-    // Permissive z.unknown() / z.array(z.unknown()) seams; T1B-011 closes
-    // the schema by replacing these with strict per-group sub-schemas.
-    pricing: z.unknown().optional(),
-    clickTargets: z.array(z.unknown()).optional(),
-    stickyElements: z.array(z.unknown()).optional(),
-    popups: z.array(z.unknown()).optional(),
-    frictionScore: z.unknown().optional(),
-    socialProofDepth: z.unknown().optional(),
-    microcopy: z.unknown().optional(),
-    attention: z.unknown().optional(),
-    commerce: z.unknown().optional(),
+    // ----- Phase 1b T1B-001..T1B-009 extensions (closed by T1B-011) -----
+    // All optional/nullable for backward compat — Phase 1 fixtures
+    // (Peregrine PDP, walking-skeleton fixtures) parse without populating
+    // any of these. Per-extractor shapes match T1B-001..T1B-009 outputs.
+    /** AC-01 / T1B-001. `null` when no pricing detected on the page. */
+    pricing: PricingSchema.nullable().optional(),
+    /** AC-02 / T1B-002. Empty `[]` when no CTAs in substrate. */
+    clickTargets: z.array(ClickTargetSchema).optional(),
+    /** AC-03 / T1B-003. Empty `[]` when no sticky/fixed elements. */
+    stickyElements: z.array(StickyElementSchema).optional(),
+    /** AC-04 / T1B-004. Empty `[]` when no popups detected. */
+    popups: z.array(PopupSchema).optional(),
+    /** AC-05 / T1B-005. Always emitted when extractors run. */
+    frictionScore: FrictionScoreSchema.optional(),
+    /** AC-06 / T1B-006. Always emitted; zero-shape when no review data. */
+    socialProofDepth: SocialProofDepthSchema.optional(),
+    /** AC-07 / T1B-007. Empty `nearCtaTags` when no microcopy in proximity. */
+    microcopy: MicrocopySchema.optional(),
+    /** AC-08 / T1B-008. Dominant `null` when no candidate scores >0.3. */
+    attention: AttentionSchema.optional(),
+    /** AC-09 / T1B-009. Always emitted; `isCommerce: false` on content pages. */
+    commerce: CommerceBlockSchema.optional(),
     /**
      * RESERVED for Phase 7+ deep_perceive composition. Phase 1 MUST NOT
      * populate this field. Phase 7 will namespace under

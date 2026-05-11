@@ -79,28 +79,28 @@ Per [plan.md](plan.md) §1:
 - **kill criteria:** if substrate ships wrong shape (e.g., schemaOrg parse fails on amazon.in / Peregrine), STOP T1B-001..T1B-010 dispatch; redesign first. See plan.md §3 last row.
 - **conformance test:** `packages/agent-core/tests/conformance/page-state-model-extended.test.ts` (AC-00 + AC-11 shared)
 
-## T1B-001 — PricingExtractor
+## T1B-001 — PricingExtractor — ✅ DONE 2026-05-09 (commit 1415000)
 - **dep:** T013, T014, **T1B-000** (substrate)
 - **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (pricing block)
 - **files:** `packages/agent-core/src/perception/extensions/PricingExtractor.ts`
 - **acceptance:** Extract from PDP fixture. `pricing.{displayFormat, amount, amountNumeric, currency, taxInclusion, anchorPrice, discountPercent, comparisonShown, boundingBox}` populated when present; `null` when absent. Reads `ctx.metadata.schemaOrg` (JSON-LD Offer) + on-page text patterns.
 - **conformance test:** `packages/agent-core/tests/conformance/pricing-extractor.test.ts` (AC-01)
 
-## T1B-002 — ClickTargetSizer
+## T1B-002 — ClickTargetSizer — ✅ DONE 2026-05-09 (commit 1415000)
 - **dep:** T013, **T1B-000** (substrate ctas[])
 - **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (clickTargets[])
 - **files:** `packages/agent-core/src/perception/extensions/ClickTargetSizer.ts`
 - **acceptance:** Compute `clickTargets[]` on 5 fixtures (3 Phase 1 reuse + 2 new). `isMobileTapFriendly` true for ≥48×48 px (per WCAG 2.5.5 / Google mobile-friendly threshold), false for <48×48; `elementType` correctly classified as cta / link / form_control / icon_button (4-type coarse enum; finer-grained types deferred per spec §Out of Scope).
 - **conformance test:** `packages/agent-core/tests/conformance/click-target-sizer.test.ts` (AC-02)
 
-## T1B-003 — StickyElementDetector
+## T1B-003 — StickyElementDetector — ✅ DONE 2026-05-09 (commit 1415000)
 - **dep:** T013, **T1B-000** (substrate ctas[] for containsPrimaryCta)
 - **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (stickyElements[])
 - **files:** `packages/agent-core/src/perception/extensions/StickyElementDetector.ts`
 - **acceptance:** Detect sticky CTA / cart / nav on test fixtures. `stickyElements[]` populated with `type` (open string), `positionStrategy` ("sticky" / "fixed"), `viewportCoveragePercent`, `isAboveFold`, `containsPrimaryCta`.
 - **conformance test:** `packages/agent-core/tests/conformance/sticky-element-detector.test.ts` (AC-03)
 
-## T1B-004 — PopupPresenceDetector (presence-only — behavior in Phase 5b)
+## T1B-004 — PopupPresenceDetector (presence-only — behavior in Phase 5b) — ✅ DONE 2026-05-09 (commit 98b15a9)
 - **dep:** T013, **T1B-000** (substrate)
 - **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (popups[] presence layer)
 - **files:** `packages/agent-core/src/perception/extensions/PopupPresenceDetector.ts`
@@ -115,14 +115,14 @@ Per [plan.md](plan.md) §1:
 - **formula:** see [plan.md §2.4](plan.md)
 - **conformance test:** `packages/agent-core/tests/conformance/friction-scorer.test.ts` (AC-05)
 
-## T1B-006 — SocialProofDepthEnricher
+## T1B-006 — SocialProofDepthEnricher — ✅ DONE 2026-05-09 (commit 1415000)
 - **dep:** T013, **T1B-000** (substrate metadata.schemaOrg)
 - **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (socialProofDepth)
 - **files:** `packages/agent-core/src/perception/extensions/SocialProofDepthEnricher.ts`
 - **acceptance:** Extract from review-block fixture. `socialProofDepth.{reviewCount, starDistribution, recencyDays, hasAggregateRating, hasIndividualReviews, thirdPartyVerified}` populated. Reads `ctx.metadata.schemaOrg` for JSON-LD AggregateRating where available.
 - **conformance test:** `packages/agent-core/tests/conformance/social-proof-depth.test.ts` (AC-06)
 
-## T1B-007 — MicrocopyTagger
+## T1B-007 — MicrocopyTagger — ✅ DONE 2026-05-09 (commit 98b15a9)
 - **dep:** T013, **T1B-000** (substrate ctas[] for index lookup), ground-truth fixture set (ASK FIRST if not authored)
 - **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (microcopy.nearCtaTags[])
 - **files:** `packages/agent-core/src/perception/extensions/MicrocopyTagger.ts`
@@ -130,21 +130,21 @@ Per [plan.md](plan.md) §1:
 - **kill criteria:** if precision <70% after one tuning pass, drop nearCtaTags to `[]` and defer LLM-tagging to Phase 6 (see plan.md §3).
 - **conformance test:** `packages/agent-core/tests/conformance/microcopy-tagger.test.ts` (AC-07)
 
-## T1B-008 — AttentionScorer
+## T1B-008 — AttentionScorer — ✅ DONE 2026-05-09 (commit 98b15a9)
 - **dep:** T013, **T1B-000** (substrate primaryActions for dominantElement candidate)
 - **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (attention)
 - **files:** `packages/agent-core/src/perception/extensions/AttentionScorer.ts`
 - **acceptance:** Compute dominant element + 3 contrast hotspots on test fixtures. `attention.dominantElement` populated with `type` / `selector` / `score` ∈ [0, 1] (or `null` if no element scores >0.3); `contrastHotspots[]` has 3 entries with `boundingBox` + `contrastScore` from Sharp pipeline.
 - **conformance test:** `packages/agent-core/tests/conformance/attention-scorer.test.ts` (AC-08)
 
-## T1B-009 — CommerceBlockExtractor
+## T1B-009 — CommerceBlockExtractor — ✅ DONE 2026-05-09 (commit 1415000)
 - **dep:** T013, **T1B-000** (substrate metadata.schemaOrg + primaryActions), T1B-001 (pricing from R-01 runs first)
 - **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (commerce)
 - **files:** `packages/agent-core/src/perception/extensions/CommerceBlockExtractor.ts`
 - **acceptance:** Extract on PDP / cart / checkout fixtures. `commerce.{isCommerce, stockStatus, stockMessage, shippingSignals[], returnPolicyPresent, returnPolicyText, guaranteeText}` populated when commerce; `isCommerce` false on non-commerce pages. Reads `ctx.metadata.schemaOrg` (Offer/AggregateOffer) + `ctx.primaryActions` (ATC CTA pattern) + `ctx.pricing` (R-01 result — runs first; no circular dep).
 - **conformance test:** `packages/agent-core/tests/conformance/commerce-block-extractor.test.ts` (AC-09)
 
-## T1B-010 — CurrencySwitcherDetector
+## T1B-010 — CurrencySwitcherDetector — ✅ DONE 2026-05-09 (commit 1415000)
 - **dep:** T013, **T1B-000** (substrate)
 - **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (metadata.currencySwitcher)
 - **files:** `packages/agent-core/src/perception/extensions/CurrencySwitcherDetector.ts`
