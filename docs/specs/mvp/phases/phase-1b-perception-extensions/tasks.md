@@ -67,7 +67,7 @@ Per [plan.md](plan.md) §1:
 
 ---
 
-## T1B-000 — PageStateModel substrate extension *(v0.2 NEW — Path B)*
+## T1B-000 — PageStateModel substrate extension *(v0.2 NEW — Path B)* — ✅ DONE 2026-05-09 (commit 7bbfe77)
 - **dep:** T013 (ContextAssembler), T014 (PageStateModel types.ts) — both shipped Phase 1
 - **spec:** REQ-ANALYZE-PERCEPTION-V24-001 (substrate prerequisites per spec R-00)
 - **files:**
