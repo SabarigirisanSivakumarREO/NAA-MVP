@@ -189,4 +189,29 @@ describe('IframePolicyEngine — AC-05 conformance (Wave 0 RED)', () => {
     expect(result.warning?.severity).toBe('warn');
     ifr.remove();
   });
+
+  /**
+   * @AC-05 — SECURITY-SENSITIVE captcha classification positive anchor
+   *   (Stage 2.5 F-002 substitution): verifies a real captcha hostname routes
+   *   to {purpose: 'captcha', action: 'skip', warning.code: 'CAPTCHA_DETECTED'}
+   *   independent of pageOrigin. The "nested captcha inside Stripe checkout"
+   *   scenario from plan.md §2.6 v0.2 manifests in practice as SEPARATE iframes
+   *   per nesting level — each iframe gets its own classification by hostname.
+   *   CAPTCHA_PATTERNS and CHECKOUT_PATTERNS don't share substrings, so classifier
+   *   ORDER is an invariant of the function body (unobservable from outside);
+   *   this test pins the captcha hostname → captcha purpose mapping as the
+   *   security boundary regression anchor.
+   */
+  it('AC-05: reCAPTCHA hostname → captcha purpose + CAPTCHA_DETECTED warn (security boundary)', () => {
+    const ifr = makeIframe('https://my-store.test/embed/recaptcha-shim');
+    const result: IframePolicyDecision = classifyIframe(ifr, {
+      pageOrigin: 'https://my-store.test',
+      hostnameHint: 'www.google.com/recaptcha/api/...',
+    });
+    expect(result.purpose).toBe('captcha');
+    expect(result.action).toBe('skip');
+    expect(result.warning?.code).toBe('CAPTCHA_DETECTED');
+    expect(result.warning?.severity).toBe('warn');
+    ifr.remove();
+  });
 });

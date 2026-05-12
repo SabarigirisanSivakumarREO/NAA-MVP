@@ -186,15 +186,15 @@ Per [plan.md](plan.md) §1: parallelize Day 1-2 (T1C-001/002/003/004/005/006), D
 
 Before declaring Phase 1c complete:
 
-- [ ] AC-01..AC-12 conformance tests all passing
-- [ ] Phase 1 (T015) and Phase 1b (T1B-012) integration tests pass unchanged on v2.5 code via `bundleToAnalyzePerception()` accessor
-- [ ] **Envelope-only token budget ≤2K per state** verified across 5 integration fixtures (per NF-01 v0.2)
-- [ ] **Namespace-contract assertion passes** on all integration fixtures (`_extensions.*` absent or empty per Phase 1b §11 carryforward)
-- [ ] **Settle 5s hard cap honored** — every fixture resolves within 5050ms (NF-05; v0.2 Promise.race wrapper)
-- [ ] `element_id` stability test passes (same URL re-run produces identical IDs)
-- [ ] `llm_call_log` row count diff = 0 (zero new LLM calls — NF-03)
-- [ ] Settle p50 regression ≤+200ms vs Phase 1b T015 baseline (NF-02)
-- [ ] `phase-1c-current.md` rollup drafted and approved
-- [ ] `phase-1c-validation.md` sibling validation doc authored (R19 + master orchestrator Stage 4 requirement)
-- [ ] PR Contract block (per CLAUDE.md §6) attached to merge PR
-- [ ] No stray edits outside `packages/agent-core/src/perception/` and the DeepPerceiveNode skeleton
+- [x] AC-01..AC-12 conformance tests all passing (Stage 2 close; all 12 GREEN at 5375716)
+- [ ] Phase 1 (T015) and Phase 1b (T1B-012) integration tests pass unchanged on v2.5 code via `bundleToAnalyzePerception()` accessor (Stage 3 regression check pending)
+- [x] **Envelope-only token budget ≤2K per state** verified across 5 integration fixtures (per NF-01 v0.2); empirical 120-159 tokens (94% under budget)
+- [x] **Namespace-contract assertion passes** on all integration fixtures (`_extensions.*` absent or empty per Phase 1b §11 carryforward); enforced by `buildPerceptionBundle.assertNamespaceContract`
+- [ ] **Settle 5s hard cap honored** — every fixture resolves within 5050ms (NF-05; v0.2 Promise.race wrapper) — unit-level GREEN (T1C-001); live-Page validation deferred to Phase 5 BrowseNode
+- [x] `element_id` stability test passes (same URL re-run produces identical IDs); T1C-007 conformance pinned
+- [x] `llm_call_log` row count diff = 0 (zero new LLM calls — NF-03)
+- [ ] Settle p50 regression ≤+200ms vs Phase 1b T015 baseline (NF-02) — deferred to Phase 5 live network
+- [ ] `phase-1c-current.md` rollup drafted and approved (Stage 4 after Gate 2)
+- [ ] `phase-1c-validation.md` sibling validation doc authored (Stage 4 after Gate 2)
+- [ ] PR Contract block (per CLAUDE.md §6) attached to merge PR (Stage 4)
+- [x] No stray edits outside `packages/agent-core/src/perception/`, `src/analysis/nodes/DeepPerceiveNode.ts`, tests, and tests/fixtures (verified Stage 2.5)

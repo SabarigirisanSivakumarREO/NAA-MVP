@@ -177,3 +177,80 @@ The human stamper (Sabari) selects one of:
 ```
 
 Recommendation: **REVISE.**
+
+---
+
+# Phase 1c — Pre-flight Review Notes (Gate 1 Pass 2)
+
+## TL;DR
+
+**Verdict: APPROVE.** All 12 Pass-1 findings RESOLVED by v0.2 patch wave (commit 68da6fb; 5 files, +577/-149). 4 new LOW informational findings (N1-N4) surfaced — none block; bundled into Stage 2 implementation refinement.
+
+## Sub-audit verdicts (Pass 2)
+
+| Sub-audit | Pass 1 | Pass 2 | Why |
+|---|---|---|---|
+| Correctness | REVISE | **PASS** | All 12 Pass-1 findings resolved; 4 new LOW polish items (informational) |
+| Coverage | PASS | **PASS** | Unchanged — 100% R-NN coverage; R18 append-only preserved IDs |
+| Completeness | REVISE | **PASS** | 4 SPEC_GAPs closed via v0.2 patches (nondeterminism, iframe, warnings, hidden reasons); critic AGREE on all 4 |
+| **Overall** | **REVISE** | **APPROVE** | All sub-audits PASS |
+
+## Pass-1 findings resolution audit
+
+| Finding | Severity | Resolution |
+|---|---|---|
+| I1 — settle algorithm bug | HIGH | ✅ plan.md §2.2 rewritten with Promise.race wrapper |
+| I2 — token cap infeasible | HIGH | ✅ NF-01 redefined to envelope-only ≤2K; total ≤14.5K explicit |
+| I3 — analytics severity mismatch | MED | ✅ plan.md §2.6 row 4 emits IFRAME_SKIPPED at info severity |
+| I4 — AuditRequest knob undefined | MED | ✅ impact.md §13 NEW; cap hardcoded at 30; configurability dropped |
+| I5 — fixture matrix ambiguous | MED | ✅ T1C-012 lists 5 fixtures; SPA-trait-rich names 3 collapsed traits |
+| I6 — namespace contract missing | MED | ✅ impact.md §11 NEW; AC-10 + AC-12 assertions |
+| I7 — runtime wiring ownership | MED | ✅ impact.md §12 NEW; Phase 5 owns; EXTENSION_OUTPUT_MISSING fallback |
+| I8 — fonts.ready Promise bug | LOW | ✅ plan.md §2.2 uses page.evaluate (awaits Promise) |
+| I9 — state_graph.edges default | LOW | ✅ spec §263 specifies `edges: z.array(...).default([])` |
+| I10 — T1C-009 dep rationale | LOW | ✅ tasks.md T1C-009 documents ELEMENT_GRAPH_TRUNCATED rationale |
+| I11 — nondeterminism probe strategy | LOW | ✅ R-08 + AC-08 specify probe per category |
+| I12 — informational | LOW | ✅ N/A — no action needed |
+
+## Completeness re-audit (Pass 2)
+
+| Surface | Pass 1 | Pass 2 | Closed-enum size |
+|---|---|---|---|
+| nondeterminism_markers | SPEC_GAP | **PASS** | 9 values + OOS doc for server-side |
+| iframe_purpose_classifier | SPEC_GAP | **PASS** | 9 purposes + cross_origin + 3 distinct security warnings |
+| warning_codes | SPEC_GAP | **PASS** | 12-code closed enum |
+| hidden_element_reasons | SPEC_GAP | **PASS** | 7-case enum (clip_path + inert deferred to v0.3) |
+| portal_libraries | PASS | PASS | framework-agnostic detection (unchanged) |
+| pseudo_elements | PASS | PASS | ::before/::after only inject content (unchanged) |
+
+## New Pass-2 findings (all LOW — non-blocking)
+
+| ID | Severity | Surface | Issue | Action |
+|---|---|---|---|---|
+| N1 | LOW | T1C-012 fixture #4 "Stripe-iframe inner-page" | Stripe Elements load cross-origin from `js.stripe.com`; cross-origin override skips them — never exercises checkout-descent. Fixture name slightly misleading. | Rename to "same-origin payment iframe" OR clarify intent at T1C-012 authoring |
+| N2 | LOW | T1C-006 hidden-reason detector | HTML5 `[hidden]` sets `display:none` via UA stylesheet → both `html_hidden_attr` and `display_none` match. Priority unspecified. | Add detector priority order (most-specific first); implementer resolves |
+| N3 | LOW | `opacity_zero` rationale | AX-tree retains opacity:0 elements; "hidden" definition diverges. Rationale undocumented. | Add 1-line rationale: "CRO definition of hidden = invisible to sighted user" |
+| N4 | LOW | T1C-005 effort estimate | Acceptance expanded from 5 → 9 purposes + cross_origin + 3 distinct warnings. 2.0h likely tight. | Optional: bump T1C-005 to 3.0h OR let 16h ±2 envelope absorb |
+
+## Decision
+
+```
+/master 1c --gate-1 APPROVE      # Recommended — bump status: draft → approved; proceed to Stage 2
+/master 1c --gate-1 REVISE       # Not recommended — N1-N4 are implementation-time concerns
+```
+
+**Stamp recommendation:** APPROVE.
+
+## Cost ledger
+
+| Item | Cost |
+|---|---|
+| Pass 1 (Stage 1 analyze + matrix + AI Reviewer) | ~$1.80 |
+| v0.2 patch wave (4 artifacts authoring) | ~$1.50 |
+| Pass 2 (matrix re-run + AI Reviewer Pass 2) | ~$0.20 |
+| **Stage 1 cumulative** | **~$3.50** |
+| Phase ceiling | $10.00 |
+| Remaining for Stage 2-3 | ~$6.50 |
+| Stage 2-3 estimate | ~$3.60-$6.00 (12 tasks × $0.30-0.50) |
+| Net headroom | $0.50-$2.90 — **tight; monitor during impl** |
+

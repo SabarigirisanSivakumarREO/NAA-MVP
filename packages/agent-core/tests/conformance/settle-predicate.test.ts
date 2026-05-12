@@ -24,7 +24,6 @@
  */
 import { describe, expect, it } from 'vitest';
 
-// @ts-expect-error - module not implemented yet (Wave 0 RED for T1C-001)
 import { waitForSettle, SETTLE_HARD_CAP_MS } from '../../src/perception/SettlePredicate.js';
 
 interface SettleResult {
