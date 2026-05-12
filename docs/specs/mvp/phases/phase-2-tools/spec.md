@@ -2,7 +2,7 @@
 title: Phase 2 — MCP Tools + Human Behavior
 artifact_type: spec
 status: approved
-version: 0.3
+version: 0.3.1
 created: 2026-04-27
 updated: 2026-05-12
 owner: engineering lead
@@ -71,6 +71,8 @@ delta:
   changed:
     - v0.1 → v0.2 — analyze-driven fixes (F-D2/F-A1, F-A2, F-C1); no scope changes
     - v0.2 → v0.3 — Gate 1 Pass 1 patch wave (8 actions act-001..act-008); no scope changes; staleness sweep + drift fixes
+    # v0.3.1 — T-PHASE2-TYPES R11.4 correction (commit pending; master orchestrator session 16, 2026-05-12)
+    - v0.3 → v0.3.1 — IframePurpose enum value correction discovered by T-PHASE2-TYPES subagent: actual Phase 1c enum is 9-value (checkout, chat, video, analytics, social_embed, captcha, cmp, payment_3ds, other), NOT 10-value; `video` not `video_embed`; `cross_origin` is a classifyIframe() security-override return value, NOT an enum member. v0.3 Pass 1 patch wave cited Phase 1c enum from memory; T-PHASE2-TYPES verified against IframePolicyEngine.ts:44-58 verbatim and reported drift. Corrected in 4 sites across spec.md + impact.md.
   impacted:
     - Constitution R9 — second adapter category (MCP server) lands
     - PRD §F-003 + §F-004 "12 MCP tools" references are legacy (PRD line numbers no longer cited per F-S8); master plan v2.3 + this spec govern (29 tools)
@@ -125,7 +127,7 @@ Phase 2 sits on top of Phase 1b (extension layer, shipped 2026-05-11) and Phase 
 - **Phase 1b 10 extractors** — PricingExtractor, AttentionScorer, ClickTargetSizer, CommerceBlockExtractor, CurrencySwitcherDetector, FrictionScorer, MicrocopyTagger, PopupPresenceDetector, SocialProofDepth, StickyElementDetector. Outputs reside in `bundle.raw.page_state_model_by_state[stateId]._extensions.<extractor_name>`. Phase 2 `page_analyze` MAY reuse these outputs to avoid re-extraction (recommended); MUST NOT mutate them.
 - **Phase 1c PerceptionBundle envelope** — wraps Phase 1 PSM + Phase 1b extensions + screenshots in `bundle.raw.*_by_state[stateId]`, layered with envelope channels (meta + performance + nondeterminism_flags + warnings + state_graph + element_graph_by_state). Backward-compat accessor: `bundleToAnalyzePerception(bundle, stateId?)` returns the PSM at that state. PSM token budget: `PAGE_STATE_MODEL_TOKEN_BUDGET = 20_000` per `packages/agent-core/src/perception/types.ts` (NF-Phase1-01 v0.4).
 - **Phase 1c 4 closed Zod enums** (consumers MUST use exact values; append-only extension via R18 only):
-  - `IframePurpose` (10 values: cross_origin, captcha, cmp, payment_3ds, checkout, chat, video_embed, analytics, social_embed, other) — page_analyze `iframes[].purposeGuess` MUST constrain to this enum (per F-S13 + impact.md AnalyzePerception §F-S13)
+  - `IframePurpose` (closed 9-value enum: checkout, chat, video, analytics, social_embed, captcha, cmp, payment_3ds, other) — page_analyze `iframes[].purposeGuess` MUST constrain to this enum (per F-S13 + impact.md AnalyzePerception §F-S13). Note: `cross_origin` is a `classifyIframe()` security-override return value, NOT an enum member (per Phase 1c IframePolicyEngine.ts:44-46).
   - `HiddenReason` (7 values), `NondeterminismFlag` (9 values), `WarningCode` (12 values) — Phase 2 references as-needed
 - **Namespace contract carryforward (CRITICAL)** — Phase 2 MUST NOT write to:
   - `bundle.raw.page_state_model_by_state[*]._extensions` (reserved for Phase 7 DeepPerceiveNode per Phase 1c impact.md §11)
@@ -312,7 +314,7 @@ AC-NN IDs are append-only per Constitution R18. (13 AC for 35 tasks because tool
 - **PRD §F-003 + §F-004 + §13 (Tool Manifest)** "12 MCP tools" references are LEGACY (PRD line numbers no longer cited per F-S8); this spec + tasks-v2.md v2.3 are canonical. Actual count: **29 MCP tools** across T020-T048 (22 `browser_*` + 2 `agent_*` + 5 `page_*`). tasks-v2.md "28 tools" is the same off-by-one drift; flagged for end-of-session cross-phase audit. Does not block Phase 2 implementation.
 - **Dispatching parallel subagents for the 23 browse tools (T020-T042) is permitted** but capped at 3-5 parallel per PRD §10.10 comprehension-debt pacing. Each tool is a small file (~50-100 lines) with isolated test, so parallelization is high-leverage. Recommended: 3 parallel batches of ~8 tools each.
 - **Phase 1b/1c upstream substrate** (v0.3 per F-S1) — `page_analyze` MAY reuse Phase 1b extractor outputs from `bundle.raw.page_state_model_by_state[*]._extensions` to avoid re-extracting pricing/social-proof/microcopy/etc. Phase 2 MUST NOT MUTATE those outputs nor write into the `_extensions` namespaces (Phase 7 reservation per Phase 1c impact.md §11). T048 conformance (AC-11) MUST assert `_extensions` field is `undefined` on every produced AnalyzePerception.
-- **`iframes[].purposeGuess` closed-enum constraint** (v0.3 per F-S13) — `page_analyze`'s `iframes[].purposeGuess` field MUST be one of Phase 1c's `IframePurpose` closed enum values (cross_origin, captcha, cmp, payment_3ds, checkout, chat, video_embed, analytics, social_embed, other). New values require append-only Phase 1c enum extension first (R18), never ad-hoc strings in Phase 2.
+- **`iframes[].purposeGuess` closed-enum constraint** (v0.3 per F-S13; values corrected v0.3.1 per T-PHASE2-TYPES R11.4 patch 2026-05-12) — `page_analyze`'s `iframes[].purposeGuess` field MUST be one of Phase 1c's `IframePurpose` closed 9-value enum (checkout, chat, video, analytics, social_embed, captcha, cmp, payment_3ds, other). `cross_origin` is a `classifyIframe()` security-override return value, NOT an `IframePurpose` member. New values require append-only Phase 1c enum extension first (R18), never ad-hoc strings in Phase 2.
 
 ---
 

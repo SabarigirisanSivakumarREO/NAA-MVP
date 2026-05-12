@@ -2,7 +2,7 @@
 title: Impact Analysis — Phase 2 MCP Tools (4 new shared contracts)
 artifact_type: impact
 status: approved
-version: 0.2
+version: 0.2.1
 created: 2026-04-27
 updated: 2026-05-12
 owner: engineering lead
@@ -43,6 +43,8 @@ delta:
     - v0.2 — §"Phase 1b/1c upstream substrate" section added (F-S1 staleness sweep)
     - v0.2 — §AnalyzePerception extended with F-G1 design decision (separate Zod schema, NOT PSM-alias) + F-S4 namespace contract assertion + F-S13 IframePurpose closed-enum constraint
     - v0.2 — §MCPToolRegistry extended with F-S12 safetyClass coverage promise (all 29 tools classified at Phase 2 close)
+    # v0.2.1 — T-PHASE2-TYPES R11.4 correction (commit pending; master orchestrator session 16, 2026-05-12)
+    - v0.2 → v0.2.1 — F-S13 IframePurpose enum values corrected: v0.2 cited 10 values including 'cross_origin' + 'video_embed' from Pass 1 memory; actual Phase 1c enum (IframePolicyEngine.ts:48-58) is 9-value (checkout, chat, video, analytics, social_embed, captcha, cmp, payment_3ds, other). `cross_origin` is a classifyIframe() security-override return value (NOT IframePurpose member). Patched §F-S13 codeblock + Phase 1b/1c upstream substrate enum list. T-PHASE2-TYPES F-CARRY-1 patch (line 178 of §AnalyzePerception) already separate v0.2.1 lineage.
   changed:
     - v0.2 — risk_level remains HIGH (4 contracts unchanged); upstream substrate now explicitly Phase 1c PerceptionBundle (was implicitly Phase 1 PageStateModel)
   impacted:
@@ -68,7 +70,7 @@ This phase sits on top of Phase 1b (extension layer, shipped 2026-05-11) and Pha
 **Phase 1b inheritance** — 10 perception extractors (PricingExtractor, AttentionScorer, ClickTargetSizer, CommerceBlockExtractor, CurrencySwitcherDetector, FrictionScorer, MicrocopyTagger, PopupPresenceDetector, SocialProofDepth, StickyElementDetector) produce enrichments in the `_extensions` namespace under PageStateModel. These are now resident in `bundle.raw.page_state_model_by_state[stateId]._extensions.<extractor_name>`.
 
 **Phase 1c inheritance** — PerceptionBundle envelope wraps PageStateModel + AnalyzePerception alias + screenshots in `bundle.raw.*_by_state[stateId]`, layered with envelope channels (meta + performance + nondeterminism_flags + warnings + state_graph + element_graph_by_state). Backward-compat accessor: `bundleToAnalyzePerception(bundle, stateId?: string)` returns the PSM at that state. 4 closed Zod enums shipped (consumers MUST use exact values; append-only extension via R18 only):
-- `IframePurpose` (9 + cross_origin = 10 values)
+- `IframePurpose` (closed 9-value enum: checkout, chat, video, analytics, social_embed, captcha, cmp, payment_3ds, other) — note `cross_origin` is a `classifyIframe()` security-override return value that supersedes enum classification, NOT a member of `IframePurpose` (per Phase 1c IframePolicyEngine.ts:44-58)
 - `HiddenReason` (7 values)
 - `NondeterminismFlag` (9 values)
 - `WarningCode` (12 values)
@@ -193,24 +195,31 @@ Phase 4 SafetyCheck (T067) may elevate any `safe`/`requires_safety_check` tool t
 
 Runtime enforcement: Phase 1c `assertNamespaceContract` in `PerceptionBundle.ts` (already shipped). Phase 2 conformance test for T048 MUST add an explicit assertion: every `page_analyze` output's `_extensions` field is `undefined` (not `{}`, not populated) — see AC-11 + AC-13 conformance updates in spec.md v0.3.
 
-**F-S13 — `iframes[].purposeGuess` closed-enum constraint (HIGH):** The `iframes[].purposeGuess` enrichment field MUST constrain to Phase 1c's `IframePurpose` Zod enum. Authoritative values shipped in Phase 1c (`packages/agent-core/src/perception/IframePolicyEngine.ts`):
+**F-S13 — `iframes[].purposeGuess` closed-enum constraint (HIGH):** The `iframes[].purposeGuess` enrichment field MUST constrain to Phase 1c's `IframePurpose` Zod enum. Authoritative values shipped in Phase 1c (`packages/agent-core/src/perception/IframePolicyEngine.ts:48-58`):
 
 ```ts
-// Phase 1c IframePurpose closed enum (10 values; consumers must align)
-type IframePurpose =
-  | 'cross_origin'    // security override (always classified first)
-  | 'captcha'
-  | 'cmp'             // consent management platform
-  | 'payment_3ds'
-  | 'checkout'
-  | 'chat'
-  | 'video_embed'
-  | 'analytics'
-  | 'social_embed'
-  | 'other';          // fall-through
+// Phase 1c IframePurpose closed 9-value enum — VERIFIED VERBATIM 2026-05-12
+// per T-PHASE2-TYPES R11.4 patch (subagent discovered the Pass 1 patch wave
+// drift: 'video_embed' → 'video'; 'cross_origin' is NOT an enum member but
+// a classifyIframe() security-override return value)
+export const IFRAME_PURPOSE_ENUM = [
+  'checkout',
+  'chat',
+  'video',
+  'analytics',
+  'social_embed',
+  'captcha',
+  'cmp',
+  'payment_3ds',
+  'other',
+] as const;
+export type IframePurpose = (typeof IFRAME_PURPOSE_ENUM)[number];
+export const IframePurposeSchema = z.enum(IFRAME_PURPOSE_ENUM);
 ```
 
-Phase 2 page_analyze MUST import this type from `@neural/agent-core/perception` and constrain `iframes[].purposeGuess` to it. If page_analyze needs purposes outside the closed set, the path forward is: append to Phase 1c IframePurpose enum first (R18 append-only) + bump Phase 1c impact.md v0.3 + update Phase 1c IframePolicyEngine classifier — NEVER invent ad-hoc purpose strings in Phase 2.
+**`cross_origin` clarification:** `cross_origin` is a distinct decision string returned by `classifyIframe()` as the `purpose` field of `IframePolicyDecision` when the iframe is cross-origin (security override classified FIRST per IframePolicyEngine.ts:257-261), but `cross_origin` is NOT a member of the `IframePurpose` type. It's documented at IframePolicyEngine.ts:44-46: "Closed 9-value enum (R-05 v0.2). `cross_origin` is a distinct decision `purpose` value but is NOT a member of `IframePurpose` (security override is not a content type)."
+
+Phase 2 page_analyze MUST import `IframePurposeSchema` from `../perception/IframePolicyEngine.js` and use it directly to constrain `iframes[].purposeGuess` (matching what T-PHASE2-TYPES did at `AnalyzePerceptionSchema` authoring). If page_analyze needs to express that an iframe is cross-origin and untyped, the field shape decision is one of: (a) leave `purposeGuess` as `null` with a `purposeGuessReason: 'cross_origin'` sibling field (current preferred path), OR (b) extend the enum via R18 append-only. Either way: NEVER invent ad-hoc purpose strings in Phase 2.
 
 ### `RateLimiter` (NEW)
 
