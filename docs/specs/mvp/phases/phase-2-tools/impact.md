@@ -2,9 +2,9 @@
 title: Impact Analysis — Phase 2 MCP Tools (4 new shared contracts)
 artifact_type: impact
 status: draft
-version: 0.1
+version: 0.2
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-12
 owner: engineering lead
 
 supersedes: null
@@ -15,6 +15,10 @@ derived_from:
   - docs/specs/mvp/phases/phase-2-tools/plan.md
   - docs/specs/final-architecture/07-analyze-mode.md §07.9 + §07.9.1
   - docs/specs/final-architecture/08-tool-manifest.md
+  # v0.2 — Phase 1b/1c upstream rollups added per CLAUDE.md §1b rollup-first rule (Gate 1 finding F-S3)
+  - docs/specs/mvp/phases/phase-1-perception/phase-1-current.md
+  - docs/specs/mvp/phases/phase-1b-perception-extensions/phase-1b-current.md
+  - docs/specs/mvp/phases/phase-1c-perception-bundle/phase-1c-current.md
 
 req_ids:
   - REQ-MCP-001
@@ -34,18 +38,49 @@ affected_contracts:
 delta:
   new:
     - First impact.md introducing 4 simultaneous shared contracts (largest impact in MVP)
-  changed: []
-  impacted: []
-  unchanged: []
+    # v0.2 — Gate 1 Pass 1 patch wave (master orchestrator session 16, 2026-05-12) — REVISE → Pass 2
+    - v0.2 — Phase 1b/1c upstream rollups added to derived_from (F-S3); Phase 1c PerceptionBundle envelope acknowledged as upstream substrate
+    - v0.2 — §"Phase 1b/1c upstream substrate" section added (F-S1 staleness sweep)
+    - v0.2 — §AnalyzePerception extended with F-G1 design decision (separate Zod schema, NOT PSM-alias) + F-S4 namespace contract assertion + F-S13 IframePurpose closed-enum constraint
+    - v0.2 — §MCPToolRegistry extended with F-S12 safetyClass coverage promise (all 29 tools classified at Phase 2 close)
+  changed:
+    - v0.2 — risk_level remains HIGH (4 contracts unchanged); upstream substrate now explicitly Phase 1c PerceptionBundle (was implicitly Phase 1 PageStateModel)
+  impacted:
+    - v0.2 — Phase 7 DeepPerceiveNode: receives Phase 2 AnalyzePerception (separate Zod schema) AND Phase 1c bundleToAnalyzePerception(bundle, stateId?) accessor (returns PSM); both contracts coexist
+  unchanged:
+    - All shared-contract ID stable (R18 append-only)
 
 governing_rules:
   - Constitution R9
-  - Constitution R18
+  - Constitution R18 (append-only delta enforced for v0.2 patch wave)
+  - Constitution R19 (rollup-first reading order — predecessor rollups primary inputs)
   - Constitution R20
   - Constitution R22
+  - Phase 1c impact.md §11 (namespace contract carryforward — Phase 2 MUST NOT write to bundle.raw.*._extensions)
 ---
 
 # Impact Analysis: MCPToolRegistry + MCPToolSchema + AnalyzePerception + RateLimiter
+
+## Phase 1b/1c upstream substrate (v0.2 — F-S1 staleness sweep)
+
+This phase sits on top of Phase 1b (extension layer, shipped 2026-05-11) and Phase 1c (PerceptionBundle envelope, shipped 2026-05-12). Both must be acknowledged as upstream substrate before any Phase 2 contract is materialized.
+
+**Phase 1b inheritance** — 10 perception extractors (PricingExtractor, AttentionScorer, ClickTargetSizer, CommerceBlockExtractor, CurrencySwitcherDetector, FrictionScorer, MicrocopyTagger, PopupPresenceDetector, SocialProofDepth, StickyElementDetector) produce enrichments in the `_extensions` namespace under PageStateModel. These are now resident in `bundle.raw.page_state_model_by_state[stateId]._extensions.<extractor_name>`.
+
+**Phase 1c inheritance** — PerceptionBundle envelope wraps PageStateModel + AnalyzePerception alias + screenshots in `bundle.raw.*_by_state[stateId]`, layered with envelope channels (meta + performance + nondeterminism_flags + warnings + state_graph + element_graph_by_state). Backward-compat accessor: `bundleToAnalyzePerception(bundle, stateId?: string)` returns the PSM at that state. 4 closed Zod enums shipped (consumers MUST use exact values; append-only extension via R18 only):
+- `IframePurpose` (9 + cross_origin = 10 values)
+- `HiddenReason` (7 values)
+- `NondeterminismFlag` (9 values)
+- `WarningCode` (12 values)
+
+**Namespace contract carryforward (CRITICAL — F-S4 + Phase 1c impact.md §11):** Anything written under `bundle.raw.page_state_model_by_state[*]._extensions` OR `bundle.raw.analyze_perception_by_state[*]._extensions` is RESERVED for Phase 7 DeepPerceiveNode. **Phase 2 MUST NOT write to either namespace.** Runtime assertion: Phase 1c `assertNamespaceContract` in `PerceptionBundle.ts` enforces; AC-10 + AC-12 conformance tests anchor.
+
+**Substrate compatibility for Phase 2 tools:**
+- `browser_get_state` (T024) — DECISION (v0.2): returns `PageStateModel` (Phase 1 contract, < 20K tokens per NF-Phase1-01 v0.4) for backward compat. Phase 5 BrowseNode may later add a `browser_get_bundle` tool returning the full PerceptionBundle if envelope channels are needed at MCP-tool granularity. Phase 2 keeps the simpler shape.
+- `page_analyze` (T048) — DECISION (v0.2 per F-G1): emits a SEPARATE `AnalyzePerception` Zod schema extending PSM with v2.3 enrichments. Phase 1c `bundleToAnalyzePerception` accessor remains (returns PSM as-is); Phase 7 calls `page_analyze` separately for full v2.3 enriched form. Both contracts coexist.
+- `page_analyze` (T048) — DECISION (v0.2 per F-G2): caller responsibility to invoke `waitForSettle(page)` BEFORE `page_analyze`. The single-call invariant (REQ-TOOL-PA-001) counts ONLY the analyze-mode `page.evaluate()` call within the handler — verifiable via Playwright trace count.
+
+---
 
 ## Why R20 applies — and why risk_level is HIGH
 
@@ -121,14 +156,61 @@ export interface ToolRegistry {
 }
 ```
 
+**Forward stability promise (v0.2 — F-S12):** ALL 29 tools MUST be registered with explicit `safetyClass` at Phase 2 close. Reserved enum value `forbidden` is intentionally unused in Phase 2 (held for Phase 4 SafetyCheck escalation). Per-tool defaults (locked in spec/tasks v0.3):
+
+| Tool category | Safety class | Tools |
+|---|---|---|
+| Navigation (T020-T023) | `safe` | browser_navigate, browser_go_back, browser_go_forward, browser_reload |
+| Perception read (T024-T026) | `safe` | browser_get_state, browser_screenshot, browser_get_metadata |
+| Interaction (T027-T029, T031, T033) | `requires_safety_check` | browser_click, browser_click_coords, browser_type, browser_select, browser_press_key |
+| Motion (T030, T032) | `safe` | browser_scroll, browser_hover |
+| File transfer (T034, T037) | `requires_hitl` | browser_upload, browser_download |
+| Utility (T035, T036, T038, T039, T040) | `safe` | browser_tab_manage, browser_extract, browser_find_by_text, browser_get_network, browser_wait_for |
+| Agent signal (T041) | `safe` | agent_complete |
+| Agent HITL (T042) | `requires_hitl` | agent_request_human |
+| Sandboxed eval (T043) | `requires_safety_check` | browser_evaluate (arbitrary-JS surface even within sandbox; HITL-eligible per Phase 4 SafetyCheck policy) |
+| Page perception (T044-T048) | `safe` | page_get_element_info, page_get_performance, page_screenshot_full, page_annotate_screenshot, page_analyze (read-only) |
+
+Phase 4 SafetyCheck (T067) may elevate any `safe`/`requires_safety_check` tool to `requires_hitl` based on per-domain policy without requiring an impact.md cycle (the safetyClass field is the SLOT; the policy layer is what consults it).
+
 ### `AnalyzePerception` (NEW — most important schema in Neural)
 
-**After:** matches §07.9 baseline (9 sections) + §07.9.1 v2.3 enrichments (14 fields). Concrete schema authored at T048 implementation time; this impact.md captures the shape promise:
+**After:** matches §07.9 baseline (9 sections) + §07.9.1 v2.3 enrichments (14 enrichment categories, ~30 sub-fields total — see enumeration below). Concrete schema authored at T048 implementation time; this impact.md captures the shape promise:
 
 - Top-level `AnalyzePerceptionSchema = z.object({ metadata, structure, headingHierarchy, landmarks, semanticHTML, textContent, ctas, forms, trustSignals, layout, images, navigation, performance, iframes?, accessibility?, inferredPageType }).strict()`
 - Every leaf field is nullable per `null + reason` pattern; failures are observable, not silent.
 - v2.3 enrichments appear as additional sub-fields (NOT a new top-level section): `metadata.canonical/lang/ogTags/schemaOrg`, `structure.titleH1Match/titleH1Similarity`, `textContent.valueProp/urgencyScarcityHits/riskReversalHits`, `ctas[].accessibleName/role/hoverFocusStyles`, `forms[].fields[].accessibleName/role`, `trustSignals[].subtype/source/attribution/freshnessDate/pixelDistanceToNearestCta`, `iframes[].purposeGuess`, `navigation.footerNavItems`, `accessibility.keyboardFocusOrder/skipLinks`, `performance.INP/CLS/TTFB/timeToFirstCtaInteractable`, `inferredPageType.primary/alternatives/signalsUsed`.
 - Forward-compatibility seam: top-level `_extensions: z.record(z.string(), z.unknown()).optional()` — same pattern as Phase 1 PageStateModel.
+
+#### Design decisions (v0.2 — Gate 1 Pass 1 patch wave)
+
+**F-G1 — Schema relationship to Phase 1c PSM-alias (DECIDED):** AnalyzePerceptionSchema is a SEPARATE Zod schema distinct from PageStateModel. Phase 1c's `bundleToAnalyzePerception(bundle, stateId?)` accessor returns the PSM as-is (the alias holds — see Phase 1c phase-1c-current.md §3 footnote). Phase 2's `page_analyze` tool produces the FULL v2.3 enriched AnalyzePerception via a separate code path. Phase 7 EvaluateNode chooses which contract to consume per use case (PSM via bundle accessor for grounding-rule lookups; full AnalyzePerception via direct page_analyze call when v2.3 enrichments are required). Both contracts coexist; neither supersedes the other.
+
+**F-S4 — Namespace contract assertion (CRITICAL precedent for Phase 7):** Phase 2 MUST NOT write into:
+- `bundle.raw.page_state_model_by_state[*]._extensions` (Phase 1c reservation — Phase 7 DeepPerceiveNode owns)
+- `bundle.raw.analyze_perception_by_state[*]._extensions` (Phase 1c reservation — Phase 7 DeepPerceiveNode owns)
+- `AnalyzePerception._extensions` (Phase 2-defined `_extensions` reservation — Phase 7+ deepPerceive namespace)
+
+Runtime enforcement: Phase 1c `assertNamespaceContract` in `PerceptionBundle.ts` (already shipped). Phase 2 conformance test for T048 MUST add an explicit assertion: every `page_analyze` output's `_extensions` field is `undefined` (not `{}`, not populated) — see AC-11 + AC-13 conformance updates in spec.md v0.3.
+
+**F-S13 — `iframes[].purposeGuess` closed-enum constraint (HIGH):** The `iframes[].purposeGuess` enrichment field MUST constrain to Phase 1c's `IframePurpose` Zod enum. Authoritative values shipped in Phase 1c (`packages/agent-core/src/perception/IframePolicyEngine.ts`):
+
+```ts
+// Phase 1c IframePurpose closed enum (10 values; consumers must align)
+type IframePurpose =
+  | 'cross_origin'    // security override (always classified first)
+  | 'captcha'
+  | 'cmp'             // consent management platform
+  | 'payment_3ds'
+  | 'checkout'
+  | 'chat'
+  | 'video_embed'
+  | 'analytics'
+  | 'social_embed'
+  | 'other';          // fall-through
+```
+
+Phase 2 page_analyze MUST import this type from `@neural/agent-core/perception` and constrain `iframes[].purposeGuess` to it. If page_analyze needs purposes outside the closed set, the path forward is: append to Phase 1c IframePurpose enum first (R18 append-only) + bump Phase 1c impact.md v0.3 + update Phase 1c IframePolicyEngine classifier — NEVER invent ad-hoc purpose strings in Phase 2.
 
 ### `RateLimiter` (NEW)
 
@@ -149,7 +231,7 @@ export interface RateLimiter {
 
 ### `MCPToolSchema` (NEW base)
 
-Each of the 28 tools defines its own input/output Zod schema in its own file (`mcp/tools/<name>.ts`). The base helper type `MCPToolSchema<I, O>` lives in `mcp/types.ts` and just re-exports `MCPToolDefinition<I, O>` plus a small assertion helper.
+Each of the 29 tools (22 browser_* + 2 agent_* + 5 page_*) defines its own input/output Zod schema in its own file (`mcp/tools/<name>.ts`). The base helper type `MCPToolSchema<I, O>` lives in `mcp/types.ts` and just re-exports `MCPToolDefinition<I, O>` plus a small assertion helper.
 
 ## Breaking changes
 
@@ -187,7 +269,7 @@ await rateLimiter.acquire(domain);
 const result = await registry.get('browser_get_state').handler(input, ctx);
 ```
 
-**Forward stability promise:** every tool name + schema is the contract. Phase 5 LangGraph nodes will hard-reference tool names; renaming any of the 28 tools after Phase 2 is a HIGH-impact change requiring its own impact.md.
+**Forward stability promise:** every tool name + schema is the contract. Phase 5 LangGraph nodes will hard-reference tool names; renaming any of the 29 tools after Phase 2 is a HIGH-impact change requiring its own impact.md.
 
 ### Phase 7 (T117 DeepPerceiveNode — Analysis Pipeline)
 
@@ -229,7 +311,9 @@ Reports embed AnalyzePerception snapshots in reproducibility_snapshots; consume 
 | Check | Test |
 |---|---|
 | MCPToolRegistry rejects duplicate tool name on register | `tests/conformance/mcp-server.test.ts` (AC-04) |
-| All 28 tools register with EXACT v3.1 names | grep + boot test |
+| All 29 MCP tools register with EXACT v3.1 names | grep + boot test |
+| `page_analyze` output's `_extensions` field is `undefined` (Phase 1c namespace contract) | `tests/conformance/page-analyze-v23.test.ts` (AC-11) + `tests/integration/phase2.test.ts` (AC-13) |
+| `page_analyze` `iframes[].purposeGuess` constrained to Phase 1c IframePurpose closed enum | `tests/conformance/page-analyze-v23.test.ts` (AC-11 — Zod parse asserts) |
 | AnalyzePerception schema matches §07.9 baseline + 14 v2.3 fields | `tests/conformance/page-analyze-v23.test.ts` (AC-11) |
 | RateLimiter pacing math correct (2s min, 60s window) | `tests/conformance/rate-limiter.test.ts` (AC-12) |
 | browser_evaluate sandbox blocks 4 vectors | `tests/conformance/browser-evaluate-sandbox.test.ts` (AC-06) |

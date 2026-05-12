@@ -2,11 +2,11 @@
 title: Implementation Plan — Phase 2 MCP Tools + Human Behavior
 artifact_type: plan
 status: draft
-version: 0.1
+version: 0.2
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-12
 owner: engineering lead
-authors: [Claude (drafter)]
+authors: [Claude (drafter), Claude (master orchestrator session 16 — v0.2 Gate 1 Pass 1 patch wave)]
 reviewers: []
 
 supersedes: null
@@ -16,9 +16,13 @@ derived_from:
   - docs/specs/mvp/phases/phase-2-tools/spec.md
   - docs/specs/mvp/phases/phase-2-tools/impact.md
   - docs/specs/mvp/architecture.md (§6.4, §6.5)
-  - docs/specs/mvp/constitution.md (R1-R23)
+  - docs/specs/mvp/constitution.md (R1-R26)
   - docs/specs/mvp/testing-strategy.md (§9.6)
   - docs/specs/mvp/phases/phase-1-perception/impact.md (BrowserEngine + PageStateModel forward contract)
+  # v0.2 — Phase 1b/1c upstream rollups added per CLAUDE.md §1b rollup-first rule (Gate 1 finding F-S3)
+  - docs/specs/mvp/phases/phase-1-perception/phase-1-current.md
+  - docs/specs/mvp/phases/phase-1b-perception-extensions/phase-1b-current.md
+  - docs/specs/mvp/phases/phase-1c-perception-bundle/phase-1c-current.md
 
 req_ids:
   - REQ-MCP-001
@@ -48,17 +52,26 @@ delta:
   new:
     - First plan introducing 4 simultaneous shared contracts (HIGH-risk impact)
     - Tech stack adds @modelcontextprotocol/sdk + ghost-cursor (active in Phase 2; rest deferred)
-  changed: []
+    # v0.2 — Gate 1 Pass 1 patch wave (master orchestrator session 16, 2026-05-12) — REVISE
+    - v0.2 — Phase 1b/1c upstream rollups added to derived_from (F-S3)
+    - v0.2 — Approval Gates row added: Phase 1c upstream contract acknowledgment (F-T4)
+    - v0.2 — File count fixed in Project Structure source-tree comment: 28 → 29 (F-T3)
+    - v0.2 — T042 file path aligned with tasks.md: agentRequestHuman.ts (F-S6)
+    - v0.2 — Constitution range updated R1-R23 → R1-R26 (F-S10)
+  changed:
+    - v0.1 → v0.2 — Gate 1 Pass 1 patch wave; no scope changes
   impacted: []
-  unchanged: []
+  unchanged:
+    - All file paths + structure decisions stable (R18 append-only)
 
 governing_rules:
   - Constitution R4 (browser rules — exact tool names)
   - Constitution R8 (cost+safety — rate limiting structural)
   - Constitution R9 (adapter pattern — MCP server)
   - Constitution R11
-  - Constitution R17, R20
+  - Constitution R17, R18 (append-only delta enforced for v0.2 patch wave), R19 (rollup-first), R20
   - Constitution R23 (kill criteria)
+  - Phase 1c impact.md §11 (namespace contract carryforward)
 ---
 
 # Implementation Plan: Phase 2 — MCP Tools + Human Behavior
@@ -74,7 +87,7 @@ governing_rules:
 
 ## Summary
 
-Phase 2 implements the action surface. T019 stands up the MCP server adapter wrapping `@modelcontextprotocol/sdk` with a `ToolRegistry`. Tools register one-per-file in `mcp/tools/*.ts` using `MCPToolDefinition<I, O>`. T016-T018 add human behavior modules (ghost-cursor mouse, Gaussian typing with 1-2% typo, momentum scroll). T020-T042 land 23 browse tools (navigate, click, type, get_state, etc.); these are highly parallelizable. T043 implements the sandboxed `browser_evaluate`. T044-T047 add 4 page tools. **T048 is the cornerstone**: a single `page.evaluate()` produces AnalyzePerception with all 14 v2.3 enrichments. T049 RateLimiter enforces 2s min + per-domain caps. T050 integration test exercises all 28 tools.
+Phase 2 implements the action surface. T019 stands up the MCP server adapter wrapping `@modelcontextprotocol/sdk` with a `ToolRegistry`. Tools register one-per-file in `mcp/tools/*.ts` using `MCPToolDefinition<I, O>`. T016-T018 add human behavior modules (ghost-cursor mouse, Gaussian typing with 1-2% typo, momentum scroll). T020-T042 land 23 browse tools (navigate, click, type, get_state, etc.); these are highly parallelizable. T043 implements the sandboxed `browser_evaluate`. T044-T047 add 4 page tools. **T048 is the cornerstone**: a single `page.evaluate()` produces AnalyzePerception with all 14 v2.3 enrichment categories (~30 sub-fields). T049 RateLimiter enforces 2s min + per-domain caps. T050 integration test exercises all 29 MCP tools.
 
 ---
 
@@ -150,7 +163,7 @@ packages/agent-core/src/
 │   ├── ToolRegistry.ts                     # name → MCPToolDefinition
 │   ├── types.ts                            # MCPToolSchema base, SafetyClass enum
 │   ├── index.ts                            # barrel
-│   └── tools/                              # 28 files, one per tool
+│   └── tools/                              # 29 files, one per tool (22 browser_* + 2 agent_* + 5 page_*)
 │       ├── navigate.ts                     # T020
 │       ├── goBack.ts                       # T021
 │       ├── goForward.ts                    # T022
@@ -173,7 +186,7 @@ packages/agent-core/src/
 │       ├── getNetwork.ts                   # T039
 │       ├── waitFor.ts                      # T040
 │       ├── agentComplete.ts                # T041
-│       ├── agentRequestHuman.ts            # T042
+│       ├── agentRequestHuman.ts            # T042 (full prefix retained — matches T041 agentComplete.ts convention)
 │       ├── browserEvaluate.ts              # T043 (sandboxed)
 │       ├── pageGetElementInfo.ts           # T044
 │       ├── pageGetPerformance.ts           # T045
@@ -309,6 +322,7 @@ The new MCP adapter category is the *expected* outcome of R9 generalization; not
 | Tech stack adherence | engineering lead | All §6.4 fields match canonical |
 | Constitution check | engineering lead | All checkboxes ticked above |
 | Impact analysis approved (HIGH-risk) | engineering lead | impact.md `approved`; 4-contract review explicitly signed off |
+| **Phase 1c upstream contract acknowledgment (v0.2 — F-T4)** | engineering lead | impact.md `derived_from` cites phase-1c-current.md AND F-S4 namespace assertion present (impact.md AnalyzePerception §F-S4) AND F-S13 IframePurpose constraint declared (impact.md AnalyzePerception §F-S13) |
 | Plan → Tasks transition | engineering lead | This plan `approved` |
 
 ---
