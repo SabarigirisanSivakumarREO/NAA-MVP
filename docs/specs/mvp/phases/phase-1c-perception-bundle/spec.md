@@ -1,13 +1,13 @@
 ---
 title: Phase 1c — PerceptionBundle Envelope v2.5
 artifact_type: spec
-status: draft
+status: approved
 version: 0.2
 created: 2026-04-28
-updated: 2026-05-11
+updated: 2026-05-12
 owner: engineering lead
 authors: [Claude (drafter v0.1; master orchestrator session 15 v0.2 patch wave)]
-reviewers: [Sabari (Gate 1 Pass 1 stamp 2026-05-11 — REVISE)]
+reviewers: [Sabari (Gate 1 Pass 1 stamp 2026-05-11 — REVISE; Gate 1 Pass 2 stamp 2026-05-12 — APPROVE)]
 
 supersedes: null
 supersededBy: null
