@@ -1,12 +1,12 @@
 ---
 title: Phase 1c — PerceptionBundle Envelope v2.5 — README
 artifact_type: readme
-status: approved
+status: implemented
 version: 0.2
 created: 2026-04-28
 updated: 2026-05-12
 owner: engineering lead
-reviewers: [Sabari (Gate 1 Pass 2 stamp 2026-05-12 — APPROVE)]
+reviewers: [Sabari (Gate 1 Pass 2 stamp 2026-05-12 — APPROVE; Gate 2 stamp 2026-05-12 — APPROVE)]
 ---
 
 # Phase 1c — PerceptionBundle Envelope v2.5
