@@ -123,6 +123,12 @@ export class BrowserManager implements BrowserEngine {
       goto: async (url, gotoOpts) => {
         await playwrightPage.goto(url, gotoOpts);
       },
+      goBack: async (backOpts) => {
+        await playwrightPage.goBack(backOpts);
+      },
+      goForward: async (fwdOpts) => {
+        await playwrightPage.goForward(fwdOpts);
+      },
       ariaSnapshot: (snapOpts) => playwrightPage.ariaSnapshot(snapOpts),
       screenshot: (shotOpts) => playwrightPage.screenshot(shotOpts) as Promise<Buffer>,
       addInitScript: async (scriptOrFn) => {

@@ -2,7 +2,7 @@
 title: Impact Analysis — Phase 2 MCP Tools (4 new shared contracts)
 artifact_type: impact
 status: approved
-version: 0.2.1
+version: 0.2.2
 created: 2026-04-27
 updated: 2026-05-12
 owner: engineering lead
@@ -45,6 +45,8 @@ delta:
     - v0.2 — §MCPToolRegistry extended with F-S12 safetyClass coverage promise (all 29 tools classified at Phase 2 close)
     # v0.2.1 — T-PHASE2-TYPES R11.4 correction (commit pending; master orchestrator session 16, 2026-05-12)
     - v0.2 → v0.2.1 — F-S13 IframePurpose enum values corrected: v0.2 cited 10 values including 'cross_origin' + 'video_embed' from Pass 1 memory; actual Phase 1c enum (IframePolicyEngine.ts:48-58) is 9-value (checkout, chat, video, analytics, social_embed, captcha, cmp, payment_3ds, other). `cross_origin` is a classifyIframe() security-override return value (NOT IframePurpose member). Patched §F-S13 codeblock + Phase 1b/1c upstream substrate enum list. T-PHASE2-TYPES F-CARRY-1 patch (line 178 of §AnalyzePerception) already separate v0.2.1 lineage.
+    # v0.2.2 — Wave 4 navigation prep (R18 append-only Phase-2 extension of Phase 1 BrowserPage surface)
+    - v0.2.1 → v0.2.2 — BrowserPage interface extended with `goBack` + `goForward` (opts: waitUntil + timeout) to unblock Wave 4 T021 (browser_go_back) + T022 (browser_go_forward) parallel-3 fanout. Authorized by BrowserEngine.ts header lines 71-75 ("Phase 2 will EXTEND this interface"). Concrete impl in BrowserManager.ts delegates to Playwright `Page.goBack`/`Page.goForward` (return value discarded — Phase-1-minimal pattern). R18 append-only: zero existing methods touched; zero signatures changed. R9 adapter boundary preserved (no new `playwright` imports outside BrowserManager.ts). No cross-layer ripple (Phase 4 SafetyCheck still consumes only `safetyClass` from MCPToolRegistry; Phase 5 BrowseNode still composes tools by name) — extension is internal to the R9 adapter surface, hence no separate impact.md per BrowserEngine.ts header R20 carve-out.
   changed:
     - v0.2 — risk_level remains HIGH (4 contracts unchanged); upstream substrate now explicitly Phase 1c PerceptionBundle (was implicitly Phase 1 PageStateModel)
   impacted:
