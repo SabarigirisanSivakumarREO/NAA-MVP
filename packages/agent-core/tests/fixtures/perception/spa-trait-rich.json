@@ -1,0 +1,133 @@
+{
+  "metadata": {
+    "url": "https://example.com/spa",
+    "title": "Trait-Rich SPA — Example Co",
+    "statusCode": 200,
+    "navigationStartedAt": "2026-05-11T00:00:00.000Z",
+    "navigationEndedAt": "2026-05-11T00:00:00.620Z",
+    "schemaOrg": [],
+    "ogTags": {
+      "og:type": "website",
+      "og:title": "Trait-Rich SPA — Example Co",
+      "og:url": "https://example.com/spa"
+    },
+    "currencySwitcher": null,
+    "scriptSources": [
+      "https://cdn.optimizely.com/js/12345.js",
+      "https://example.com/static/app.js"
+    ],
+    "shadowDomDepthObserved": 7,
+    "portals": [
+      {
+        "selector": "body > div#react-portal-modal",
+        "is_portal": true,
+        "logical_parent_selector": "main > section.product"
+      }
+    ]
+  },
+  "accessibilityTree": {
+    "root": {
+      "role": "WebArea",
+      "name": "Trait-Rich SPA — Example Co",
+      "children": [
+        {
+          "role": "main",
+          "children": [
+            { "role": "heading", "level": 1, "name": "Trait-Rich SPA" },
+            { "role": "text", "name": "This page exercises Optimizely + deep Shadow DOM + React Portal traits simultaneously." },
+            { "role": "button", "name": "Open Modal" }
+          ]
+        }
+      ]
+    },
+    "totalNodes": 5
+  },
+  "filteredDOM": {
+    "top30": [
+      {
+        "ref": "main h1",
+        "role": "heading",
+        "text": "Trait-Rich SPA",
+        "score": 1,
+        "boundingBox": { "x": 80, "y": 80, "width": 360, "height": 36 }
+      },
+      {
+        "ref": "main #open-modal",
+        "role": "button",
+        "text": "Open Modal",
+        "score": 0.85,
+        "boundingBox": { "x": 80, "y": 200, "width": 180, "height": 44 }
+      }
+    ]
+  },
+  "interactiveGraph": {
+    "clickable": ["main #open-modal"],
+    "typeable": [],
+    "submittable": []
+  },
+  "diagnostics": {
+    "axNodeCount": 5,
+    "mutationsObserved": 2,
+    "stable": true,
+    "lowAxNodeCount": false,
+    "unstable": false,
+    "errors": [],
+    "warnings": ["NEURAL_TEST_FIXTURE: synthetic SPA-trait-rich (Optimizely + Shadow-DOM-deep + React-Portal-deep) — Phase 1c T1C-012"]
+  },
+  "ctas": [
+    {
+      "index": 0,
+      "text": "Open Modal",
+      "selector": "#open-modal",
+      "sizePx": { "width": 180, "height": 44 },
+      "role": "button"
+    }
+  ],
+  "formFields": [],
+  "headings": [
+    { "level": 1, "text": "Trait-Rich SPA", "selector": "h1" }
+  ],
+  "primaryActions": {
+    "selector": "#open-modal",
+    "text": "Open Modal"
+  },
+  "frictionScore": {
+    "totalFormFields": 0,
+    "requiredFormFields": 0,
+    "popupCount": 0,
+    "forcedActionCount": 0,
+    "raw": 0,
+    "normalized": 0
+  },
+  "socialProofDepth": {
+    "reviewCount": 0,
+    "starDistribution": null,
+    "recencyDays": null,
+    "hasAggregateRating": false,
+    "hasIndividualReviews": false,
+    "thirdPartyVerified": false
+  },
+  "microcopy": { "nearCtaTags": [] },
+  "attention": {
+    "dominantElement": {
+      "type": "cta",
+      "selector": "#open-modal",
+      "score": 0.72
+    },
+    "contrastHotspots": [
+      {
+        "boundingBox": { "x": 80, "y": 200, "width": 180, "height": 44 },
+        "contrastScore": 0.81
+      }
+    ]
+  },
+  "commerce": {
+    "isCommerce": false,
+    "stockStatus": null,
+    "stockMessage": null,
+    "shippingSignals": [],
+    "returnPolicyPresent": false,
+    "returnPolicyText": null,
+    "guaranteeText": null
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "metadata": {
+    "url": "https://example.com/checkout",
+    "title": "Checkout — Example Co",
+    "statusCode": 200,
+    "navigationStartedAt": "2026-05-11T00:00:00.000Z",
+    "navigationEndedAt": "2026-05-11T00:00:00.520Z",
+    "schemaOrg": [],
+    "ogTags": {
+      "og:type": "website",
+      "og:title": "Checkout — Example Co",
+      "og:url": "https://example.com/checkout"
+    },
+    "currencySwitcher": null
+  },
+  "accessibilityTree": {
+    "root": {
+      "role": "WebArea",
+      "name": "Checkout — Example Co",
+      "children": [
+        {
+          "role": "main",
+          "children": [
+            { "role": "heading", "level": 1, "name": "Checkout" },
+            { "role": "text", "name": "Order total: $49.99" },
+            { "role": "region", "name": "Payment", "children": [
+              { "role": "text", "name": "Pay securely via embedded payment frame" }
+            ]},
+            { "role": "button", "name": "Place Order" }
+          ]
+        }
+      ]
+    },
+    "totalNodes": 7
+  },
+  "filteredDOM": {
+    "top30": [
+      {
+        "ref": "main h1",
+        "role": "heading",
+        "text": "Checkout",
+        "score": 1,
+        "boundingBox": { "x": 80, "y": 80, "width": 320, "height": 36 }
+      },
+      {
+        "ref": "main #place-order",
+        "role": "button",
+        "text": "Place Order",
+        "score": 0.9,
+        "boundingBox": { "x": 80, "y": 480, "width": 200, "height": 44 }
+      }
+    ]
+  },
+  "interactiveGraph": {
+    "clickable": ["main #place-order"],
+    "typeable": [],
+    "submittable": ["main form#checkout-form"]
+  },
+  "diagnostics": {
+    "axNodeCount": 7,
+    "mutationsObserved": 1,
+    "stable": true,
+    "lowAxNodeCount": false,
+    "unstable": false,
+    "errors": [],
+    "warnings": ["NEURAL_TEST_FIXTURE: synthetic checkout fixture with same-origin payment iframe — Phase 1c T1C-012"]
+  },
+  "ctas": [
+    {
+      "index": 0,
+      "text": "Place Order",
+      "selector": "#place-order",
+      "sizePx": { "width": 200, "height": 44 },
+      "role": "button"
+    }
+  ],
+  "formFields": [],
+  "headings": [
+    { "level": 1, "text": "Checkout", "selector": "h1" }
+  ],
+  "primaryActions": {
+    "selector": "#place-order",
+    "text": "Place Order"
+  },
+  "iframes": [
+    {
+      "src": "https://example.com/embed/payment",
+      "selector": "iframe#payment-frame",
+      "purpose_hint": "checkout",
+      "is_same_origin": true
+    }
+  ],
+  "frictionScore": {
+    "totalFormFields": 0,
+    "requiredFormFields": 0,
+    "popupCount": 0,
+    "forcedActionCount": 0,
+    "raw": 0,
+    "normalized": 0
+  },
+  "socialProofDepth": {
+    "reviewCount": 0,
+    "starDistribution": null,
+    "recencyDays": null,
+    "hasAggregateRating": false,
+    "hasIndividualReviews": false,
+    "thirdPartyVerified": false
+  },
+  "microcopy": { "nearCtaTags": [] },
+  "attention": {
+    "dominantElement": {
+      "type": "cta",
+      "selector": "#place-order",
+      "score": 0.78
+    },
+    "contrastHotspots": [
+      {
+        "boundingBox": { "x": 80, "y": 480, "width": 200, "height": 44 },
+        "contrastScore": 0.86
+      }
+    ]
+  },
+  "commerce": {
+    "isCommerce": true,
+    "stockStatus": "in_stock",
+    "stockMessage": null,
+    "shippingSignals": [],
+    "returnPolicyPresent": false,
+    "returnPolicyText": null,
+    "guaranteeText": null
+  }
+}

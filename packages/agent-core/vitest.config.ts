@@ -19,6 +19,18 @@ export default defineConfig({
       ['tests/conformance/attention-scorer.test.ts', 'jsdom'],
       ['tests/conformance/commerce-block-extractor.test.ts', 'jsdom'],
       ['tests/conformance/currency-switcher-detector.test.ts', 'jsdom'],
+      // Phase 1c T1C-002..T1C-008: DOM-touching conformance tests (Shadow DOM,
+      // portals, pseudo-elements, iframe classification, hidden-element capture,
+      // element-graph DOMParser, nondeterminism document scan) need jsdom.
+      // AC-01 SettlePredicate + AC-09 WarningEmitter + AC-10 PerceptionBundle +
+      // AC-11 DeepPerceiveNode skeleton run in `node` (no DOM ops in tests).
+      ['tests/conformance/shadow-dom-traverser.test.ts', 'jsdom'],
+      ['tests/conformance/portal-scanner.test.ts', 'jsdom'],
+      ['tests/conformance/pseudo-element-capture.test.ts', 'jsdom'],
+      ['tests/conformance/iframe-policy-engine.test.ts', 'jsdom'],
+      ['tests/conformance/hidden-element-capture.test.ts', 'jsdom'],
+      ['tests/conformance/element-graph-builder.test.ts', 'jsdom'],
+      ['tests/conformance/nondeterminism-detector.test.ts', 'jsdom'],
     ],
   },
 });

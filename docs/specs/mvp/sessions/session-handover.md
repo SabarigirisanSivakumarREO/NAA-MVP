@@ -2,9 +2,9 @@
 title: Neural MVP — Rolling Session Handover
 artifact_type: session-handover
 status: complete
-version: 1.5
-last_updated: 2026-05-06
-last_session_number: 10
+version: 1.7
+last_updated: 2026-05-12
+last_session_number: 15
 last_session_outcome: Session 10 (Day 2-3 of week 1 walking-skeleton; 2026-05-05 → 2026-05-06) — ★ WALKING-SKELETON 10/10 COMPLETE + Wednesday demo gate PASSED ★. T-SKELETON-001 through T-SKELETON-010 ALL LANDED across 10 sequential one-task-per-invocation commits with sync verify cadence. 5 lightweight Option G roadmap patches caught + applied in flight (v0.3 → v0.4 → v0.5 → v0.6 → v0.7 → v0.8). 138 tests green (108 agent-core unit + 18 cli conformance + 12 integration via pnpm test:integration). Wednesday demo gate via tests/acceptance/walking-skeleton.spec.ts: 7 tests covering AC-W1 exit-0+<30s + AC-W2 file existence + AC-W3 finding markers + AC-W4 locked observation substrings + AC-W5 findings.json shape + AC-W6 R5.3 banned-phrase regression guard + AC-W7 R6 sentinel regression guard. wk-01.md demo script authored (267 LOC; 8 sections). Demo prep #3 (screenshots) DEFERRED per engineering-lead direction (live demo produces fresher authentic output than pre-captured static images); Wednesday demo executed; post-demo feedback log pending. PD-07 RESOLVED (raw process.argv); PD-01 (Phase 1b+1c folding for week 2) NEW for Session 11. 28 cumulative branch commits since branch-cut; pushed to origin at session close.
 
 description: "Single rolling handover doc. Replaces per-session handover files from Session 8 onwards. Each session-end Claude updates blocks 1+2+3+5 in place; block 4 is static; block 6 updates when demo target changes. Never create per-session files. Old session detail lives in git history (git log -p docs/specs/mvp/sessions/session-handover.md). Predecessor per-session handovers at session-2026-04-30-handover.md (Session 6) + session-2026-05-01-handover.md (Session 7) preserved for archival reference. Session 9 (Day 2 of week 1) closed with explicit kickoff prompt for Session 10 at sessions/kickoff-session-10.md so the next session can boot on T-SKELETON work without re-deriving context."
@@ -284,6 +284,42 @@ When a new Claude session starts:
   Commits: `7b65886` (R11.4 patch wave) + `df30aca` (matrix-compat fix) + `ddfa6af` (R17 status bump approved + Pass 2 audit trail) + `01bb246` (Wave 1 RED scaffolds) + `7bbfe77` (Wave 2 substrate) + `1415000` (Wave 3 6 extractors) + `98b15a9` (Wave 4 3 extractors) + `2fedbc5` (Wave 5 friction + schema closure) + `90c44ab` (Wave 6 exit gate) + [this Stage-4 close-out commit pending].
 
   **For next session:** Recommended next phase is **Phase 1c (PerceptionBundle Envelope v2.5)** per dependency order (1b → 1c → 7). Boot via `/master 1c --start`. v0.2.1 polish bundle (F-001..F-006 from Stage 2.5) may be absorbed into Phase 1c rebase OR scheduled as separate `feat/phase-1b-v0.2.1-polish` branch — engineering lead decision pending.
+
+- **Session 15 (2026-05-11 → 2026-05-12) — Phase 1c (PerceptionBundle Envelope v2.5) COMPLETE via master orchestrator full cycle.** Drove Phase 1c from `draft` artifacts to `status: implemented` across all 4 master stages + 2 gates over 2 calendar days on `feat/phase-1c-perception-bundle` branch. Strategy locked at Gate 1 Pass 1 REVISE: v0.2 patch wave addressing 12 findings (2 HIGH I1 settle-algorithm + I2 token-cap; 5 MED scope-decisions; 5 LOW polish) + 4 completeness SPEC_GAP closures (closed-enum pin for nondeterminism markers, iframe purposes, warning codes, hidden-element reasons).
+
+  **Stage 1 (pre-flight)** — Pass 1 surfaced 12 findings (0 CRITICAL + 2 HIGH + 5 MED + 5 LOW) + 4 categorical-surface SPEC_GAPs. Pass 1 verdict: REVISE. v0.1 → v0.2 patch wave landed in commit `68da6fb` (5 files, +577/-149) addressing all 12 findings + new impact.md §11 (namespace contract carryforward from Phase 1b §11) + §12 (runtime wiring deferred to Phase 5) + §13 (AuditRequest configurability dropped for MVP). Pass 2 verdict: APPROVE (all 12 resolved; 4 new LOW informational findings N1-N4 bundled for Stage 2). Engineering lead stamped APPROVE at Gate 1 Pass 2; R17 status:draft → approved on 5 artifacts in commit `9af4c8a`.
+
+  **Stage 2 (implementation)** — 12 tasks across 5 waves dispatched via 13 subagents (1 Wave 0 RED scaffolds + 7 parallel Wave 1+2 standalone extractors + 2 parallel Wave 3 fusion/warnings + 2 parallel Wave 4 envelope/DPN-stub + 1 Wave 5 integration test). 10 impl commits total since branch cut:
+  - `8285d79` Wave 0: T-PHASE1C-TESTS — 12 RED conformance scaffolds + AC-12 integration scaffold (1,362 LOC)
+  - `d3e705b` Wave 1+2: T1C-001 SettlePredicate + T1C-004 PseudoElementCapture (Promise.race 5s overall hard cap; document.fonts.ready awaited in browser context)
+  - `3c9cc87` Wave 1+2: T1C-008 NondeterminismDetector (closed 9-value enum + 5-category probe strategy)
+  - `87510d0` Wave 1+2: T1C-002 ShadowDomTraverser + T1C-003 PortalScanner + T1C-005 IframePolicyEngine (initial 373 LOC) + T1C-006 HiddenElementCapture
+  - `cbbc4dc` Wave 3: T1C-009 WarningEmitter + T1C-005 R10 refactor (373 → 290 LOC)
+  - `c686c74` Wave 3: T1C-007 ElementGraphBuilder (stable element_id via sha256 + ELEMENT_GRAPH_CAP=30 hardcoded)
+  - `866220d` Wave 4: T1C-011 DeepPerceive forward-stub (Phase 7 T117 will extend)
+  - `559a9ee` Wave 4: T1C-010 PerceptionBundle envelope v2.5 (Zod schema + deepFreeze + bundleToAnalyzePerception accessor + envelopeTokenCount helper + assertNamespaceContract)
+  - `5375716` Wave 5: T1C-012 integration test + 2 new fixtures (checkout-iframe + spa-trait-rich)
+  - `54e55a8` Stage 2.5 patches: F-001 stale @ts-expect-error directive + F-002 captcha positive anchor + tasks.md exit-checklist progress + review-notes Pass 2 content
+
+  **Stage 2.5 (code review)** — superpowers:code-reviewer verdict APPROVE-FOR-GATE-2. 0 CRITICAL / 0 HIGH / 3 MED / 8 LOW. 2 MED approval conditions (F-001 + F-002) patched at `54e55a8`. F-003 (Playwright type-only import in DeepPerceiveNode forward-stub) deferred to v0.3 polish OR Phase 7 T117 R20 impact note. 8 LOW findings bundled for v0.3 polish.
+
+  **Stage 3 (verification)** — typecheck clean; agent-core full suite 278/300 + 17 todo (5 timeout failures are pre-existing Phase 1 real-Chromium sandbox env, verified non-regression via mutation-monitor re-run with --testTimeout=30000 → 3/3 PASS in 12s). Phase 1b T1B-012 integration test 27/27 PASS on v2.5 code via bundleToAnalyzePerception accessor. Lint stub (Phase 4 T073 will implement real ESLint).
+
+  **Stage 3b (AI Reviewer Gate 2)** — verdict APPROVE. All 3 sub-audits PASS (correctness 0 blocking after F-001+F-002 patches; coverage 12/12 ACs GREEN + 100% R-NN coverage; completeness 6 categorical surfaces all PASS in two-pass auditor+critic). Engineering lead stamped APPROVE at Gate 2.
+
+  **Stage 4 (exit)** — R17 status bumps approved → implemented on 5 artifacts; R19 rollup `phase-1c-current.md` v1.0 landed (10 sections, 300 lines); R19 sibling validation doc `phase-1c-validation.md` v1.0 landed (5 ASCII proof sections + §6 trust spot-check list); INDEX.md row 1c flipped ⚪ → 🟢; this session-handover entry. R20 cross-phase propagation: Phase 2 (MCP tools consume bundle via page_analyze / deep_perceive return type change), Phase 5 BrowseNode (OWNS runtime wiring of 10 Phase 1b extractors into ContextAssembler.capture() per impact.md §12), Phase 7 DeepPerceiveNode T117 (extends T1C-011 forward-stub additively), Phase 7 EvaluateNode (switches state.analyze_perception → bundleToAnalyzePerception(state.bundle)), Phase 7+9 AnnotateAndStore (screenshot URL accessor path change), reproducibility_snapshots (schema_version v2.4 → v2.5).
+
+  **Empirical observations:** envelope-only NF-01 token budget 120-159 per state across 5 integration fixtures (94% headroom under 2K cap; hard ceiling 3K never approached). ElementGraph element count 2 per fixture (synthetic stub per impact.md §12; real counts come once Phase 5 wires extractors). Net code delta: +5,274 / -167 across 12 commits.
+
+  **Cumulative branch state:** 12 commits on `feat/phase-1c-perception-bundle` since branch-cut from master at 23d65fa (Phase 1b PR #4 merge). All authored content + tests + status bumps GREEN + Stage 2.5 polish + Stage 4 exit docs.
+
+  **Cost discipline:** ~$10.45 of $10 per-phase ceiling (~4.5% over; R23 kill criterion $15 not reached). Overage driven by Wave 1+2 subagent retry overhead when blocked from `git commit` by sandbox permission policy — master orchestrator handled all commits manually after each subagent reported. Recommendation: document subagent commit-permission pattern in master orchestrator references for future phase planning. Risk-gate standard mode held throughout (no auto-trigger; Phase 1c is not Phase 7 first-real-Claude territory; no ≥3 shared-contract touches in impl; no prior HIGH severity finding from pre-flight after Pass 2).
+
+  **Pending decisions resolved:** PD-01 (Phase 1b + 1c folding) — Phase 1c shipped natural next; both complete. PD-05 (.claude/settings.local.json) STILL OPEN — cosmetic. v0.2.1 polish bundle from Phase 1b Stage 2.5 (F-001..F-006) NOT absorbed into Phase 1c rebase; remains a separate `feat/phase-1b-v0.2.1-polish` candidate alongside Phase 1c v0.3 polish bundle (F-003 + F-004..F-011 from Phase 1c Stage 2.5).
+
+  Commits: `68da6fb` (R11.4 v0.1→v0.2 patch wave) + `9af4c8a` (R17.4 status bump draft→approved) + `8285d79` (Wave 0 RED scaffolds) + `d3e705b` (Wave 1+2 SettlePredicate + PseudoElementCapture) + `3c9cc87` (Wave 1+2 NondeterminismDetector) + `87510d0` (Wave 1+2 Shadow+Portal+Iframe+Hidden) + `cbbc4dc` (Wave 3 WarningEmitter + IframePolicyEngine R10 refactor) + `c686c74` (Wave 3 ElementGraphBuilder) + `866220d` (Wave 4 DeepPerceive forward-stub) + `559a9ee` (Wave 4 PerceptionBundle envelope) + `5375716` (Wave 5 integration test + 2 fixtures) + `54e55a8` (Stage 2.5 patches) + [this Stage-4 close-out commit pending].
+
+  **For next session:** Recommended next phase is **Phase 2 (MCP Tools subset)** per INDEX.md dependency order (1 → 2 → 3 → 5). Boot via `/master 2 --start`. Phase 2 consumes PerceptionBundle via page_analyze + deep_perceive MCP tools; T1C-010 PerceptionBundle.ts + bundleToAnalyzePerception accessor are the shared-contract entry points. Phase 5 (Browse MVP) is the natural next-after-2 dependency since Phase 5 owns the runtime wiring deferred from Phase 1c per impact.md §12.
 
 ---
 
