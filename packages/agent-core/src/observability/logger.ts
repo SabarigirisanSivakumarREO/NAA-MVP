@@ -28,6 +28,15 @@
  *                      reserved here for future explicit child-binding use
  *                      when an extractor needs sub-step correlation.)
  *
+ * Phase 2 (MCP tools) fields (spec.md "Constraints Inherited" + R-05;
+ * REQ-MCP-002 — tool_name + tool_call_id + client_session_id correlation):
+ *   - `tool_name`         — exact v3.1 tool name (e.g. `browser_get_state`);
+ *                           emitted by every Phase 2 MCP tool invocation.
+ *   - `tool_call_id`      — uuid (or short-id) per individual tool invocation;
+ *                           lets a single call be traced across log lines.
+ *   - `client_session_id` — calling MCP client's session id; correlates
+ *                           multiple tool calls back to the originating session.
+ *
  * Future phases will extend `LogBindings` with their own correlation
  * fields (e.g. `heuristic_id`, `trace_id`) per the same convention.
  *
@@ -89,6 +98,16 @@ export interface LogBindings {
   page_url?: string;
   /** Extractor name (e.g. `accessibility`, `mutation`, `screenshot`). */
   extractor?: string;
+
+  // --- Phase 2 (MCP tools) — spec.md "Constraints Inherited" + R-05 ---
+  // REQ-MCP-002: tool_name + tool_call_id + client_session_id correlation
+  // Names are spec-locked; do NOT rename (e.g. tool_call_id != tool_id).
+  /** Exact v3.1 tool name (e.g. `browser_get_state`). */
+  tool_name?: string;
+  /** UUID/short-id per tool invocation; traces one call across log lines. */
+  tool_call_id?: string;
+  /** Calling MCP client session id; correlates multi-call sequences. */
+  client_session_id?: string;
 }
 
 /**
