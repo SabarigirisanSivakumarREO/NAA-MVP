@@ -133,6 +133,14 @@ export class BrowserManager implements BrowserEngine {
         await playwrightPage.reload(reloadOpts);
       },
       url: () => playwrightPage.url(),
+      mouse: {
+        move: async (x, y, mouseOpts) =>
+          playwrightPage.mouse.move(x, y, mouseOpts),
+        down: async () => playwrightPage.mouse.down(),
+        up: async () => playwrightPage.mouse.up(),
+        click: async (x, y, mouseOpts) =>
+          playwrightPage.mouse.click(x, y, mouseOpts),
+      },
       ariaSnapshot: (snapOpts) => playwrightPage.ariaSnapshot(snapOpts),
       screenshot: (shotOpts) => playwrightPage.screenshot(shotOpts) as Promise<Buffer>,
       addInitScript: async (scriptOrFn) => {

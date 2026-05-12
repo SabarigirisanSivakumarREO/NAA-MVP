@@ -86,6 +86,19 @@ export interface BrowserPage {
   reload(opts?: { waitUntil?: 'load' | 'domcontentloaded' | 'networkidle'; timeout?: number }): Promise<void>;
   /** Phase 2 T024 — read current URL (R18 append-only Phase-2 extension; used by ContextAssembler.captureFromSession to derive metadata.url for the active session). */
   url(): string;
+  /**
+   * Phase 2 T027/T028 — pointer-event surface (R18 append-only Phase-2
+   * extension). Shape is structurally compatible with MouseBehavior's
+   * `MousePage.mouse` interface (browser-runtime/MouseBehavior.ts:33-40),
+   * letting T027 browser_click + T028 browser_click_coords pass
+   * `session.page` directly to `mouseBehavior.click()` without re-typing.
+   */
+  mouse: {
+    move(x: number, y: number, opts?: { steps?: number }): Promise<void>;
+    down(): Promise<void>;
+    up(): Promise<void>;
+    click(x: number, y: number, opts?: { delay?: number }): Promise<void>;
+  };
   ariaSnapshot(opts?: { ref?: boolean; timeout?: number }): Promise<string>;
   screenshot(opts?: { type?: 'jpeg' | 'png'; quality?: number; fullPage?: boolean }): Promise<Buffer>;
   addInitScript(scriptOrFn: string | (() => void)): Promise<void>;
