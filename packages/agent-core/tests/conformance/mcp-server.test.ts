@@ -13,21 +13,39 @@
  *   - Boot fails fast on duplicate tool name
  *
  * RED state — Wave 0 SafetyClassSchema is REAL (T-PHASE2-TYPES, commit
- *   1165554), so live SafetyClass parse assertions run NOW. The
- *   MCPServerAdapter + ToolRegistry implementation lands at T019; the
- *   `tools/list` count + safetyClass coverage assertions are `it.todo`
- *   until then per R3.1.
+ *   1165554), so live SafetyClass parse assertions run NOW. T019 has
+ *   landed (MCPServerAdapter + InMemoryToolRegistry); boot timing,
+ *   duplicate-registration, and empty-registry `tools/list` assertions
+ *   move from `it.todo` → live. The full 29-tool count + per-tool
+ *   safetyClass + schema assertions remain `it.todo` until T020-T048
+ *   register concrete tools.
  *
  * Anchor: @AC-04 — 29 MCP tools registered with valid SafetyClass.
  */
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 
-import { SafetyClassSchema } from '../../src/mcp/index.js';
+import {
+  DuplicateToolNameError,
+  InMemoryToolRegistry,
+  MCPServerAdapter,
+  SafetyClassSchema,
+  UnknownToolNameError,
+  type MCPToolDefinition,
+} from '../../src/mcp/index.js';
+import { createLogger } from '../../src/observability/logger.js';
 
-// NOTE (R3.1): T019 imports below deliberately commented out so this file
-// compiles cleanly until T019 lands. Uncomment when Server + ToolRegistry exist:
-// import { MCPServerAdapter } from '../../src/mcp/Server.js';
-// import { ToolRegistry } from '../../src/mcp/ToolRegistry.js';
+/** Minimal fixture tool used for T019-level registry/server boot tests. */
+function fixtureTool(name: string): MCPToolDefinition<{ q: string }, { ok: boolean }> {
+  return {
+    name,
+    description: `fixture tool ${name}`,
+    inputSchema: z.object({ q: z.string() }),
+    outputSchema: z.object({ ok: z.boolean() }),
+    safetyClass: 'safe',
+    handler: async () => ({ ok: true }),
+  };
+}
 
 /**
  * Expected 29-tool surface per impact.md §MCPToolRegistry safetyClass table
@@ -91,17 +109,48 @@ describe('MCPServer — AC-04 conformance (Wave 0 RED)', () => {
 
   /**
    * @AC-04 — MCP server boots in < 500 ms (NF-Phase2-01).
+   *
+   * T019 LIVE: measures the empty-registry boot path. Full 29-tool boot
+   * timing is asserted in T050 integration test.
    */
-  it.todo('AC-04: MCPServerAdapter boots in < 500 ms (NF-Phase2-01)');
+  it('AC-04: MCPServerAdapter boots in < 500 ms (NF-Phase2-01)', async () => {
+    const registry = new InMemoryToolRegistry();
+    const adapter = new MCPServerAdapter(registry, createLogger('mcp-server-test'));
+    const t0 = performance.now();
+    await adapter.start();
+    const elapsed = performance.now() - t0;
+    await adapter.stop();
+    expect(elapsed).toBeLessThan(500);
+  });
 
   /**
-   * @AC-04 — `tools/list` returns exactly 29 tool entries.
+   * @AC-04 — `tools/list` empty-registry baseline. T019 lands the registry +
+   * adapter; the 29-count assertion remains `it.todo` until T020-T048 ship.
+   *
+   * T019 LIVE: empty registry yields zero entries; list() never exposes
+   * inputSchema/outputSchema/handler (3-field projection only).
+   */
+  it('AC-04: empty registry yields zero tools and list() projects 3 fields only', () => {
+    const registry = new InMemoryToolRegistry();
+    expect(registry.list()).toHaveLength(0);
+    registry.register(fixtureTool('browser_get_state'));
+    const entries = registry.list();
+    expect(entries).toHaveLength(1);
+    const entry = entries[0];
+    expect(entry).toBeDefined();
+    expect(Object.keys(entry!).sort()).toEqual(['description', 'name', 'safetyClass']);
+  });
+
+  /**
+   * @AC-04 — `tools/list` returns exactly 29 tool entries. T020-T048 ship
+   * the concrete 29 tools; remains `it.todo` until then.
    */
   it.todo('AC-04: tools/list returns toolList.length === 29');
 
   /**
    * @AC-04 — every registered tool has a SafetyClassSchema-valid `safetyClass`
    * field. Asserts every value in toolList.map(t => t.safetyClass) parses.
+   * Remains `it.todo` until T020-T048 register the concrete 29.
    */
   it.todo(
     'AC-04: every tool.safetyClass parses against SafetyClassSchema (no unclassified tools)',
@@ -109,12 +158,32 @@ describe('MCPServer — AC-04 conformance (Wave 0 RED)', () => {
 
   /**
    * @AC-04 — every registered tool exposes a Zod input + output schema.
+   * Remains `it.todo` until T020-T048 register the concrete 29.
    */
   it.todo('AC-04: every tool exposes inputSchema + outputSchema (Zod ZodType instances)');
 
   /**
    * @AC-04 — duplicate tool name registration → boot failure (typed error,
    * NOT silent overwrite).
+   *
+   * T019 LIVE: duplicate registration throws DuplicateToolNameError;
+   * unknown safetyClass lookup throws UnknownToolNameError so callers
+   * cannot accidentally treat unknown tools as `safe`.
    */
-  it.todo('AC-04: ToolRegistry.register throws on duplicate tool name');
+  it('AC-04: ToolRegistry.register throws DuplicateToolNameError on duplicate tool name', () => {
+    const registry = new InMemoryToolRegistry();
+    registry.register(fixtureTool('browser_navigate'));
+    expect(() => registry.register(fixtureTool('browser_navigate'))).toThrowError(
+      DuplicateToolNameError,
+    );
+    // Sanity: the typed error carries the offending name for tests + obs.
+    try {
+      registry.register(fixtureTool('browser_navigate'));
+      expect.fail('expected DuplicateToolNameError');
+    } catch (err) {
+      expect(err).toBeInstanceOf(DuplicateToolNameError);
+      expect((err as DuplicateToolNameError).toolName).toBe('browser_navigate');
+    }
+    expect(() => registry.getSafetyClass('does_not_exist')).toThrowError(UnknownToolNameError);
+  });
 });
