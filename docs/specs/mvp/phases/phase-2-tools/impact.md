@@ -175,7 +175,7 @@ Phase 4 SafetyCheck (T067) may elevate any `safe`/`requires_safety_check` tool t
 
 ### `AnalyzePerception` (NEW — most important schema in Neural)
 
-**After:** matches §07.9 baseline (9 sections) + §07.9.1 v2.3 enrichments (14 enrichment categories, ~30 sub-fields total — see enumeration below). Concrete schema authored at T048 implementation time; this impact.md captures the shape promise:
+**After:** matches §07.9 baseline (9 sections) + §07.9.1 v2.3 enrichments. **F-CARRY-1 resolution (T-PHASE2-TYPES, 2026-05-12):** §07.9.1 table enumerates **11 enrichment categories** (rows: metadata, structure [new], textContent, ctas[], forms[].fields[], trustSignals[], iframes [new top-level], navigation, accessibility [new top-level], performance, inferredPageType [new top-level]) and **38 enrichment sub-fields**. The previously-stated "14 v2.3 enrichment categories (~30 sub-fields)" was an approximation that drifted from §07.9.1 verbatim; canonical authority is §07.9 + §07.9.1 schema text, NOT the category count. AnalyzePerceptionSchema authored at `analysis/types.ts` per §07.9 verbatim. Concrete schema authored at T-PHASE2-TYPES; this impact.md captures the shape promise:
 
 - Top-level `AnalyzePerceptionSchema = z.object({ metadata, structure, headingHierarchy, landmarks, semanticHTML, textContent, ctas, forms, trustSignals, layout, images, navigation, performance, iframes?, accessibility?, inferredPageType }).strict()`
 - Every leaf field is nullable per `null + reason` pattern; failures are observable, not silent.
