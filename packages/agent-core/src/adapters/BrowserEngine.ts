@@ -82,6 +82,10 @@ export interface BrowserPage {
   goBack(opts?: { waitUntil?: 'load' | 'domcontentloaded' | 'networkidle'; timeout?: number }): Promise<void>;
   /** Phase 2 T021/T022 — navigation history wrapper (R18 append-only Phase-2 extension). */
   goForward(opts?: { waitUntil?: 'load' | 'domcontentloaded' | 'networkidle'; timeout?: number }): Promise<void>;
+  /** Phase 2 T023 — reload current page (R18 append-only Phase-2 extension). */
+  reload(opts?: { waitUntil?: 'load' | 'domcontentloaded' | 'networkidle'; timeout?: number }): Promise<void>;
+  /** Phase 2 T024 — read current URL (R18 append-only Phase-2 extension; used by ContextAssembler.captureFromSession to derive metadata.url for the active session). */
+  url(): string;
   ariaSnapshot(opts?: { ref?: boolean; timeout?: number }): Promise<string>;
   screenshot(opts?: { type?: 'jpeg' | 'png'; quality?: number; fullPage?: boolean }): Promise<Buffer>;
   addInitScript(scriptOrFn: string | (() => void)): Promise<void>;

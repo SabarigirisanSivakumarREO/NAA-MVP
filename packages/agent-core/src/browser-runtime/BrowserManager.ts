@@ -129,6 +129,10 @@ export class BrowserManager implements BrowserEngine {
       goForward: async (fwdOpts) => {
         await playwrightPage.goForward(fwdOpts);
       },
+      reload: async (reloadOpts) => {
+        await playwrightPage.reload(reloadOpts);
+      },
+      url: () => playwrightPage.url(),
       ariaSnapshot: (snapOpts) => playwrightPage.ariaSnapshot(snapOpts),
       screenshot: (shotOpts) => playwrightPage.screenshot(shotOpts) as Promise<Buffer>,
       addInitScript: async (scriptOrFn) => {
