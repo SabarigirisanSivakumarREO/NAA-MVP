@@ -21,7 +21,6 @@
  */
 import { describe, expect, it } from 'vitest';
 
-// @ts-expect-error - module not implemented yet (Wave 0 RED for T1C-006)
 import {
   captureHiddenElements,
   HIDDEN_REASON_ENUM,
