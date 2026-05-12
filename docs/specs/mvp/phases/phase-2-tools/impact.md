@@ -2,7 +2,7 @@
 title: Impact Analysis — Phase 2 MCP Tools (4 new shared contracts)
 artifact_type: impact
 status: approved
-version: 0.2.7
+version: 0.2.8
 created: 2026-04-27
 updated: 2026-05-12
 owner: engineering lead
@@ -60,6 +60,8 @@ delta:
     # v0.2.7 — Wave 9b prep (R18 append-only Phase-2 extension of Phase 1 BrowserSession + BrowserPage surfaces for multi-tab + download tools)
     - v0.2.7 — Phase 1 BrowserSession multi-tab surface extension for Wave 9b T035 browser_tab_manage (full scope: new/list/close/switch). session.page evolves from fixed property to dynamic getter returning the current active page; existing Wave 4-8 tools transparently operate on the active page (they read session.page at handler-invocation time, not factory-registration time). New session methods: pages(), activeIndex(), setActiveIndex(i), newPage(), closePage(i). R18 append-only on interface signature; session.page semantics extended (R20 forward-compat) per user-approved Option 3 of Wave 9b design discussion.
     - v0.2.7 — Phase 1 BrowserPage.waitForEvent + BrowserDownload surface extensions for Wave 9b T037 browser_download (full event-driven flow). BrowserPage.waitForEvent<T extends 'download'>(event, opts?) returns a BrowserDownload mirroring Playwright Download verbatim (suggestedFilename + saveAs). Constrained generic permits future event-type extensions without breaking change. R18 append-only.
+    # v0.2.8 — Wave 10 prep (R18 append-only Phase-2 extension of Phase 1 BrowserPage surface for wait tool)
+    - v0.2.8 — Phase 1 BrowserPage.waitForSelector(selector, opts?) surface extension for Wave 10 T040 browser_wait_for; R18 append-only; element handle deliberately discarded at the adapter boundary (handle lifecycle is Playwright-internal concern; R9 narrow surface).
   changed:
     - v0.2 — risk_level remains HIGH (4 contracts unchanged); upstream substrate now explicitly Phase 1c PerceptionBundle (was implicitly Phase 1 PageStateModel)
   impacted:

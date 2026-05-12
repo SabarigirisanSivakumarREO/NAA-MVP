@@ -94,6 +94,19 @@ export function wrapPlaywrightPage(playwrightPage: PlaywrightPage): BrowserPage 
         saveAs: (path) => download.saveAs(path),
       };
     },
+    waitForSelector: async (selector, wfsOpts) => {
+      // Playwright returns ElementHandle | null; we discard the handle
+      // because the Phase 2 wrapper deliberately doesn't expose handles
+      // (R9 boundary: handle lifecycle is Playwright-internal concern).
+      // Playwright's PageWaitForSelectorOptions overload doesn't accept
+      // `undefined`; pass the opts object only when defined, otherwise
+      // delegate to the zero-arg overload.
+      if (wfsOpts === undefined) {
+        await playwrightPage.waitForSelector(selector);
+      } else {
+        await playwrightPage.waitForSelector(selector, wfsOpts);
+      }
+    },
     ariaSnapshot: (snapOpts) => playwrightPage.ariaSnapshot(snapOpts),
     screenshot: (shotOpts) => playwrightPage.screenshot(shotOpts) as Promise<Buffer>,
     addInitScript: async (scriptOrFn) => {

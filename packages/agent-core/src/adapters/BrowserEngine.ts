@@ -149,6 +149,19 @@ export interface BrowserPage {
     event: T,
     opts?: { timeout?: number },
   ): Promise<BrowserDownload>;
+  /**
+   * Phase 2 T040 — wait for a selector to reach a target state (R18
+   * append-only Phase-2 extension). Returns void; we deliberately don't
+   * expose an element handle to Phase 2 consumers (handle lifecycle would
+   * complicate the adapter contract). Default state='visible'.
+   */
+  waitForSelector(
+    selector: string,
+    opts?: {
+      state?: 'attached' | 'detached' | 'visible' | 'hidden';
+      timeout?: number;
+    },
+  ): Promise<void>;
   ariaSnapshot(opts?: { ref?: boolean; timeout?: number }): Promise<string>;
   screenshot(opts?: { type?: 'jpeg' | 'png'; quality?: number; fullPage?: boolean }): Promise<Buffer>;
   addInitScript(scriptOrFn: string | (() => void)): Promise<void>;
