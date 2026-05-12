@@ -127,6 +127,16 @@ export interface BrowserPage {
     values: string | readonly string[],
     opts?: { timeout?: number },
   ): Promise<readonly string[]>;
+  /**
+   * Phase 2 T034 — wrap Playwright's setInputFiles (R18 append-only Phase-2
+   * extension). Sets the value of a file <input> element to one or more
+   * absolute paths. Phase 4 SafetyCheck gates by safetyClass='requires_hitl'.
+   */
+  setInputFiles(
+    selector: string,
+    files: string | readonly string[],
+    opts?: { timeout?: number },
+  ): Promise<void>;
   ariaSnapshot(opts?: { ref?: boolean; timeout?: number }): Promise<string>;
   screenshot(opts?: { type?: 'jpeg' | 'png'; quality?: number; fullPage?: boolean }): Promise<Buffer>;
   addInitScript(scriptOrFn: string | (() => void)): Promise<void>;

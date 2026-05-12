@@ -157,6 +157,12 @@ export class BrowserManager implements BrowserEngine {
         );
         return result;
       },
+      setInputFiles: async (selector, files, sifOpts) =>
+        playwrightPage.setInputFiles(
+          selector,
+          Array.isArray(files) ? [...files] : files,
+          sifOpts,
+        ),
       ariaSnapshot: (snapOpts) => playwrightPage.ariaSnapshot(snapOpts),
       screenshot: (shotOpts) => playwrightPage.screenshot(shotOpts) as Promise<Buffer>,
       addInitScript: async (scriptOrFn) => {

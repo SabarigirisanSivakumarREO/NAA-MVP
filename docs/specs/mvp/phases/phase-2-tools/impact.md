@@ -2,7 +2,7 @@
 title: Impact Analysis — Phase 2 MCP Tools (4 new shared contracts)
 artifact_type: impact
 status: approved
-version: 0.2.5
+version: 0.2.6
 created: 2026-04-27
 updated: 2026-05-12
 owner: engineering lead
@@ -55,6 +55,8 @@ delta:
     - v0.2.4 — Phase 1 BrowserPage.mouse surface extension for Wave 6 tools (T027 browser_click + T028 browser_click_coords); structurally compatible with MouseBehavior MousePage interface; R18 append-only (browser-runtime/MouseBehavior.ts:22 explicitly anticipates this). BrowserPage interface gains `mouse: { move, down, up, click }` matching MouseBehavior.ts:33-40 exactly so `mouseBehavior.click(session.page, coords)` typechecks without re-typing in the Wave 6 tool factories. Concrete impl in BrowserManager.ts delegates each method to `playwrightPage.mouse.*` (Playwright's Page.mouse has all four methods with compatible signatures; no `as never` escape needed). R18 append-only: zero existing methods touched; zero signatures changed. R9 adapter boundary preserved (no new `playwright` imports outside BrowserManager.ts). T026 browser_get_metadata needs no Phase 1 surface change — it reads metadata inline via `session.page.url()` + `session.page.evaluate('() => document.title')`.
     # v0.2.5 — Wave 7 prep (R18 append-only Phase-2 extension of Phase 1 BrowserPage surface for type/scroll/select tools)
     - v0.2.5 — Phase 1 BrowserPage surface extension for Wave 7 (T029 browser_type: keyboard + focus; T030 browser_scroll: mouse.wheel; T031 browser_select: selectOption); R18 append-only; structurally compatible with TypingBehavior + ScrollBehavior MousePage/TypingPage/ScrollPage interfaces; no Phase 1 consumer breakage.
+    # v0.2.6 — Wave 8 prep (R18 append-only Phase-2 extension of Phase 1 BrowserPage surface for upload tool)
+    - v0.2.6 — Phase 1 BrowserPage.setInputFiles surface extension for Wave 8 T034 browser_upload; R18 append-only; safetyClass='requires_hitl' (Phase 4 SafetyCheck gate).
   changed:
     - v0.2 — risk_level remains HIGH (4 contracts unchanged); upstream substrate now explicitly Phase 1c PerceptionBundle (was implicitly Phase 1 PageStateModel)
   impacted:
