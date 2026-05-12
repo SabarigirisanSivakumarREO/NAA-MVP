@@ -98,7 +98,35 @@ export interface BrowserPage {
     down(): Promise<void>;
     up(): Promise<void>;
     click(x: number, y: number, opts?: { delay?: number }): Promise<void>;
+    /** Phase 2 T030 — emit a wheel event for ScrollBehavior momentum scroll. */
+    wheel(deltaX: number, deltaY: number): Promise<void>;
   };
+  /**
+   * Phase 2 T029 — keyboard surface (R18 append-only Phase-2 extension).
+   * Structurally compatible with TypingBehavior's TypingKeyboard interface
+   * (browser-runtime/TypingBehavior.ts:26-29).
+   */
+  keyboard: {
+    type(text: string, opts?: { delay?: number }): Promise<void>;
+    press(key: string, opts?: { delay?: number }): Promise<void>;
+  };
+  /**
+   * Phase 2 T029 — focus an element by selector (R18 append-only Phase-2
+   * extension). browser_type focuses the target before delegating to
+   * typingBehavior (which expects pre-focused string-target callers per
+   * TypingBehavior.ts:116-118).
+   */
+  focus(selector: string, opts?: { timeout?: number }): Promise<void>;
+  /**
+   * Phase 2 T031 — wrap Playwright's selectOption (R18 append-only Phase-2
+   * extension). Returns the array of values that were actually selected
+   * (Playwright contract). Accepts a single value string or array of values.
+   */
+  selectOption(
+    selector: string,
+    values: string | readonly string[],
+    opts?: { timeout?: number },
+  ): Promise<readonly string[]>;
   ariaSnapshot(opts?: { ref?: boolean; timeout?: number }): Promise<string>;
   screenshot(opts?: { type?: 'jpeg' | 'png'; quality?: number; fullPage?: boolean }): Promise<Buffer>;
   addInitScript(scriptOrFn: string | (() => void)): Promise<void>;

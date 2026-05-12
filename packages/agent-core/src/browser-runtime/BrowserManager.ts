@@ -140,6 +140,22 @@ export class BrowserManager implements BrowserEngine {
         up: async () => playwrightPage.mouse.up(),
         click: async (x, y, mouseOpts) =>
           playwrightPage.mouse.click(x, y, mouseOpts),
+        wheel: async (deltaX, deltaY) => playwrightPage.mouse.wheel(deltaX, deltaY),
+      },
+      keyboard: {
+        type: async (text, kbOpts) => playwrightPage.keyboard.type(text, kbOpts),
+        press: async (key, kbOpts) => playwrightPage.keyboard.press(key, kbOpts),
+      },
+      focus: async (selector, focusOpts) => playwrightPage.focus(selector, focusOpts),
+      selectOption: async (selector, values, selOpts) => {
+        // Playwright's selectOption accepts string | string[] | { value, label, index }[];
+        // we expose the simplest contract (string | string[]) and return its readonly array result.
+        const result = await playwrightPage.selectOption(
+          selector,
+          Array.isArray(values) ? [...values] : values,
+          selOpts,
+        );
+        return result;
       },
       ariaSnapshot: (snapOpts) => playwrightPage.ariaSnapshot(snapOpts),
       screenshot: (shotOpts) => playwrightPage.screenshot(shotOpts) as Promise<Buffer>,
