@@ -27,7 +27,6 @@
  */
 import { describe, expect, it } from 'vitest';
 
-// @ts-expect-error - module not implemented yet (Wave 0 RED for T1C-010)
 import {
   PerceptionBundleSchema,
   bundleToAnalyzePerception,
