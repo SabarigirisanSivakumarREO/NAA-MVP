@@ -23,7 +23,6 @@
  */
 import { describe, expect, it } from 'vitest';
 
-// @ts-expect-error - module not implemented yet (Wave 0 RED for T1C-004)
 import { capturePseudoElements } from '../../src/perception/PseudoElementCapture.js';
 
 interface PseudoContent {
