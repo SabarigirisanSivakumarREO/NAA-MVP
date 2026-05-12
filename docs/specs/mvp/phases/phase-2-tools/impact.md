@@ -1,7 +1,7 @@
 ---
 title: Impact Analysis — Phase 2 MCP Tools (4 new shared contracts)
 artifact_type: impact
-status: draft
+status: approved
 version: 0.2
 created: 2026-04-27
 updated: 2026-05-12
