@@ -1,4 +1,3 @@
-/// <reference lib="dom" />
 /**
  * ShadowDomTraverser — Phase 1c T1C-002 (AC-02, REQ-BROWSE-PERCEPT-007).
  *
@@ -22,11 +21,36 @@
  * R13: no `any`. R24 (Perception MUST NOT): capture-only — no judgment, no
  * LLM, no mutation. Pure DOM walk over jsdom-compatible nodes.
  *
+ * Stage 2.5 fix F-008-1c — replaced `/// <reference lib="dom" />` directive
+ * with local structural types (`ElementLike` / `DocumentLike` / `ShadowRootLike`)
+ * mirroring PortalScanner / IframePolicyEngine. The agent-core tsconfig
+ * declares `lib: ["ES2022"]` (no DOM); per-file DOM lib references break the
+ * local-structural-type invariant the rest of Phase 1c maintains.
+ *
  * NOTE: `WarningCode` will be canonicalized in T1C-009 (WarningEmitter,
  * Wave 3). Until then, this module emits the string literal
  * `'SHADOW_DOM_NOT_TRAVERSED'` directly per the AC-02 test contract;
  * WarningEmitter will adopt it via union-type re-export.
  */
+
+/**
+ * Minimum Element / ShadowRoot / Document surface this traverser needs.
+ * Mirrors PortalScanner.ElementLike + DocumentLike (Phase 1c convention).
+ * Real `Element` / `Document` from jsdom + Playwright satisfy these
+ * structurally — no cast required at call sites.
+ */
+interface ElementLike {
+  readonly children: ArrayLike<ElementLike>;
+  readonly shadowRoot: ShadowRootLike | null;
+}
+
+interface ShadowRootLike {
+  readonly children: ArrayLike<ElementLike>;
+}
+
+interface DocumentLike {
+  readonly documentElement: ElementLike | null;
+}
 
 /**
  * Hard cap on shadow-root recursion depth (R-02 — pinned by AC-02 test).
@@ -57,27 +81,29 @@ export interface ShadowWarning {
  *   T1C-009 if needed).
  */
 export interface ShadowDomResult {
-  elements: Element[];
+  elements: ElementLike[];
   warnings: ShadowWarning[];
 }
 
 /**
- * Type guard — element-with-shadowRoot. `shadowRoot` is `ShadowRoot | null`
- * on `Element`; we read it through a narrowed view to keep strict typing.
+ * Type guard — element-with-shadowRoot. `shadowRoot` is exposed only for
+ * OPEN roots (closed roots are unreachable by browser design).
  */
-function getOpenShadowRoot(el: Element): ShadowRoot | null {
-  // `shadowRoot` exposes ONLY open roots (closed roots are unreachable here
-  // by browser design — we do not attempt any workaround).
+function getOpenShadowRoot(el: ElementLike): ShadowRootLike | null {
   return el.shadowRoot ?? null;
 }
 
 /**
- * Resolve the first Element from a `Document | Element` input.
- * For `Document` we use `documentElement` as the seed host.
+ * Resolve the first Element from a `DocumentLike | ElementLike` input. We
+ * detect "is document?" structurally by sniffing for `documentElement` —
+ * Document exposes it, Element does not. Avoids `instanceof Element` which
+ * would re-introduce a DOM-lib dependency.
  */
-function resolveRoot(input: Element | Document): Element | null {
-  if (input instanceof Element) return input;
-  return input.documentElement ?? null;
+function resolveRoot(input: ElementLike | DocumentLike): ElementLike | null {
+  if ('documentElement' in input) {
+    return input.documentElement;
+  }
+  return input;
 }
 
 /**
@@ -93,14 +119,14 @@ function resolveRoot(input: Element | Document): Element | null {
  *                     at depth `depth`; nested shadow roots are at depth+1.
  */
 function walkShadowRoot(
-  shadowRoot: ShadowRoot,
+  shadowRoot: ShadowRootLike,
   depth: number,
   out: ShadowDomResult,
 ): void {
   // Collect every element under this shadow root (BFS over Element nodes).
-  const queue: Element[] = Array.from(shadowRoot.children);
+  const queue: ElementLike[] = Array.from(shadowRoot.children);
   while (queue.length > 0) {
-    const el = queue.shift() as Element;
+    const el = queue.shift() as ElementLike;
     out.elements.push(el);
 
     // Descend through nested shadow roots if we have depth headroom.
@@ -141,7 +167,7 @@ function walkShadowRoot(
  *                    not part of the production contract).
  */
 export function traverseShadowDom(
-  root: Element | Document,
+  root: ElementLike | DocumentLike,
   maxDepth: number = SHADOW_DOM_MAX_DEPTH,
 ): ShadowDomResult {
   const out: ShadowDomResult = { elements: [], warnings: [] };
@@ -152,11 +178,11 @@ export function traverseShadowDom(
   // walk light-DOM descendants of the host looking for shadow hosts (a
   // single perception-time call MUST find every shadow root reachable from
   // the supplied subtree, not only the immediate host).
-  const seedQueue: Array<{ el: Element; hostDepth: number }> = [
+  const seedQueue: Array<{ el: ElementLike; hostDepth: number }> = [
     { el: host, hostDepth: 0 },
   ];
   while (seedQueue.length > 0) {
-    const { el, hostDepth } = seedQueue.shift() as { el: Element; hostDepth: number };
+    const { el, hostDepth } = seedQueue.shift() as { el: ElementLike; hostDepth: number };
     const shadow = getOpenShadowRoot(el);
     if (shadow) {
       const childDepth = hostDepth + 1;

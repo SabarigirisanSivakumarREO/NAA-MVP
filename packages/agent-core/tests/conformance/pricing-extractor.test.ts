@@ -20,7 +20,6 @@
  */
 import { describe, expect, test } from 'vitest';
 
-// @ts-expect-error — module does not exist yet (T1B-001 RED state)
 import { extractPricing } from '../../src/perception/extensions/PricingExtractor.js';
 
 interface ExtractCtxLite {

@@ -31,9 +31,6 @@
 import { describe, expect, test } from 'vitest';
 import { PageStateModelSchema } from '../../src/perception/types.js';
 
-// This import WILL FAIL with "module not found" until T1B-000 ships.
-// That's the R3.1 RED state we want.
-// @ts-expect-error — module does not exist yet (T1B-000 RED state)
 import { extractSubstrate } from '../../src/perception/extensions/SubstrateExtension.js';
 
 interface ExtendedFixture {
@@ -107,7 +104,10 @@ function makeExtendedFixture(): ExtendedFixture {
     primaryActions: { selector: 'button.atc', text: 'Add to bag' },
     // T1B-001..T1B-009 extension top-level groups:
     pricing: {
-      displayFormat: 'simple',
+      // Stage 2.5 fix F-001 — was 'simple' (not in canonical enum). Since this
+      // fixture has anchorPrice + comparisonShown:true, the PricingExtractor
+      // canonical value is 'crossed-out' (strike-through anchor + sale).
+      displayFormat: 'crossed-out',
       amount: '$49',
       amountNumeric: 49,
       currency: 'USD',
@@ -119,7 +119,10 @@ function makeExtendedFixture(): ExtendedFixture {
     },
     clickTargets: [
       {
+        // Stage 2.5 fix F-002 — index + text now required by ClickTargetSchema.
+        index: 0,
         selector: 'button.atc',
+        text: 'Add to bag',
         sizePx: { width: 200, height: 48 },
         isMobileTapFriendly: true,
         elementType: 'cta',

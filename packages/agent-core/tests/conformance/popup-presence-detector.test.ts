@@ -19,7 +19,6 @@
  */
 import { describe, expect, test } from 'vitest';
 
-// @ts-expect-error — module does not exist yet (T1B-004 RED state)
 import { extractPopups } from '../../src/perception/extensions/PopupPresenceDetector.js';
 
 const ALL_11_TYPES = [

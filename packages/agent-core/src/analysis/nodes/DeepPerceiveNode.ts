@@ -34,16 +34,19 @@
  *
  * Constitutional compliance:
  *   - R3.1  test RED → GREEN (Wave 0 conformance test now compiles + passes)
- *   - R9    no direct runtime Playwright import — `Page` is type-only
+ *   - R9    no direct Playwright import — uses local structural `PageLike` type
+ *           (Stage 2.5 fix I2 — prior `import type { Page } from 'playwright'`
+ *           violated R9.1 outside adapters; mirrors SettlePredicate.SettlePage).
+ *           Phase 7 T117 will pass a real Playwright `Page` — TypeScript
+ *           structural typing accepts it.
  *   - R10   file ≤ 300 LOC (target ≤ 80); functions ≤ 50 LOC
  *   - R13   no `any`
  *   - R20   forward-stub keeps the shared contract surface stable so Phase 7
  *           T117 can grow into it without rewriting the settle wiring
  *   - R24   capture-only; no judgment, no LLM, no scoring
  */
-import type { Page } from 'playwright';
-
 import {
+  type SettlePage,
   type SettleResult,
   waitForSettle,
 } from '../../perception/SettlePredicate.js';
@@ -51,6 +54,18 @@ import {
   type Warning,
   WarningEmitter,
 } from '../../perception/WarningEmitter.js';
+
+/**
+ * Minimum Page surface this stub needs. Currently equivalent to SettlePredicate's
+ * `SettlePage` since the stub only delegates to `waitForSettle`. Phase 7 T117
+ * will extend this with the additional Playwright methods deepPerceive needs
+ * (evaluate / screenshot / etc.) — additive shape only per R20.
+ *
+ * Defined here as a re-export alias so future T117 widening doesn't ripple back
+ * into SettlePredicate (which keeps its narrower surface for non-deepPerceive
+ * callers like waitForSettle's direct conformance tests).
+ */
+export type PageLike = SettlePage;
 
 /**
  * Caller-tunable options for the Phase 1c stub. Phase 7 T117 will extend this
@@ -88,7 +103,7 @@ export interface DeepPerceiveResult {
  * intentionally minimal (settle gate + warning propagation only) per R20.
  */
 export async function deepPerceiveWithSettle(
-  page: Page,
+  page: PageLike,
   emitter: WarningEmitter,
   opts: DeepPerceiveOptions = {},
 ): Promise<DeepPerceiveResult> {
@@ -136,7 +151,7 @@ export class DeepPerceiveNode {
    * either entry point.
    */
   async run(
-    page: Page,
+    page: PageLike,
     emitter: WarningEmitter,
     opts: DeepPerceiveOptions = {},
   ): Promise<DeepPerceiveResult> {

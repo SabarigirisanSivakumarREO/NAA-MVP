@@ -156,7 +156,7 @@
     "text": "Add to Cart"
   },
   "pricing": {
-    "displayFormat": "simple",
+    "displayFormat": "crossed-out",
     "amount": "₹1,499",
     "amountNumeric": 1499,
     "currency": "INR",

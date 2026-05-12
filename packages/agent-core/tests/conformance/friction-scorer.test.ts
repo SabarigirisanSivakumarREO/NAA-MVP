@@ -20,7 +20,6 @@
  */
 import { describe, expect, test } from 'vitest';
 
-// @ts-expect-error — module does not exist yet (T1B-005 RED state)
 import { computeFrictionScore } from '../../src/perception/extensions/FrictionScorer.js';
 
 interface FormFieldShape {

@@ -16,7 +16,6 @@
  */
 import { describe, expect, test } from 'vitest';
 
-// @ts-expect-error — module does not exist yet (T1B-002 RED state)
 import { extractClickTargets } from '../../src/perception/extensions/ClickTargetSizer.js';
 
 interface CtaShape {

@@ -222,13 +222,19 @@ function detectCountdownTimer(doc: DocumentLike): boolean {
  * Signature pinned by AC-08 test: `(window, document) → NondeterminismFlag[]`.
  * Both parameters are accepted as typed structural references for jsdom +
  * node testability (avoids global access; safe under nodejs runtime).
+ *
+ * Stage 2.5 fix F-008-1c — parameters narrowed to structural Like types.
+ * Real browser `Window` / `Document` from jsdom + Playwright satisfy these
+ * structurally; the previous `Window | WindowLike` union relied on a
+ * global DOM lib reference (in ShadowDomTraverser) that polluted build-wide
+ * types — now removed.
  */
 export function detectNondeterminism(
-  windowRef: Window | WindowLike,
-  doc: Document | DocumentLike,
+  windowRef: WindowLike,
+  doc: DocumentLike,
 ): NondeterminismFlag[] {
-  const win = windowRef as WindowLike;
-  const document_ = doc as DocumentLike;
+  const win = windowRef;
+  const document_ = doc;
   const flags: NondeterminismFlag[] = [];
 
   if (detectOptimizely(win, document_)) flags.push('optimizely_active');
