@@ -17,7 +17,6 @@
  */
 import { describe, expect, test } from 'vitest';
 
-// @ts-expect-error — module does not exist yet (T1B-006 RED state)
 import { extractSocialProofDepth } from '../../src/perception/extensions/SocialProofDepthEnricher.js';
 
 function makeCtx(schemaOrg: Array<Record<string, unknown>> = []): {

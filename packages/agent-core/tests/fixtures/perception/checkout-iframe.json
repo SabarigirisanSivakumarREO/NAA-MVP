@@ -1,4 +1,5 @@
 {
+  "_note": "Same-origin payment iframe at custom merchant subdomain (e.g., merchant-hosted Stripe Connect at checkout.example.com). NOT cross-origin js.stripe.com — that path exercised separately. Stage 2.5 fix F-004-1c: naming clarification — AC-12 v0.2 acceptance describes this as 'Stripe-iframe inner-page' but the fixture is intentionally same-origin per AC-05 descent semantics.",
   "metadata": {
     "url": "https://example.com/checkout",
     "title": "Checkout — Example Co",

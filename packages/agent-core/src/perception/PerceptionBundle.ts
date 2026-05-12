@@ -206,6 +206,10 @@ export function buildPerceptionBundle(
   const screenshots: Record<string, string> = {};
   const element_graph_by_state: Record<string, ElementGraph> = {};
   for (const s of input.states) {
+    // Stage 2.5 fix F-006-1c — bundle.raw.analyze_perception_by_state aliases
+    // page_state_model_by_state. In v2.5, "AnalyzePerception" is a backward-
+    // compat name for the wrapped PageStateModel (no separate Zod schema).
+    // Phase 7 may diverge them; for now they reference identical storage.
     ap_by_state[s.state_id] = s.page_state_model;
     psm_by_state[s.state_id] = s.page_state_model;
     element_graph_by_state[s.state_id] = s.element_graph;

@@ -19,7 +19,6 @@
  */
 import { describe, expect, test } from 'vitest';
 
-// @ts-expect-error — module does not exist yet (T1B-009 RED state)
 import { extractCommerce } from '../../src/perception/extensions/CommerceBlockExtractor.js';
 
 function makeCtx(opts: {

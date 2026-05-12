@@ -17,7 +17,6 @@
  */
 import { describe, expect, test } from 'vitest';
 
-// @ts-expect-error — module does not exist yet (T1B-003 RED state)
 import { extractStickyElements } from '../../src/perception/extensions/StickyElementDetector.js';
 
 function makeCtx(): {

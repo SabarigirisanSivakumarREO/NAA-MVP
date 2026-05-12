@@ -17,7 +17,6 @@
  */
 import { describe, expect, test } from 'vitest';
 
-// @ts-expect-error — module does not exist yet (T1B-010 RED state)
 import { extractCurrencySwitcher } from '../../src/perception/extensions/CurrencySwitcherDetector.js';
 
 const ALLOWED_LOCATIONS = ['header', 'footer', 'none'] as const;

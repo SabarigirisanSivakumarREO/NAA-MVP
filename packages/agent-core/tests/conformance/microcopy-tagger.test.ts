@@ -18,7 +18,6 @@
  */
 import { describe, expect, test } from 'vitest';
 
-// @ts-expect-error — module does not exist yet (T1B-007 RED state)
 import { extractMicrocopyTags } from '../../src/perception/extensions/MicrocopyTagger.js';
 
 const ALLOWED_TAGS = [

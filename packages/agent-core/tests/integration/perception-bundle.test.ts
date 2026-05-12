@@ -194,8 +194,12 @@ describe('Phase 1c integration — AC-12 (5-fixture envelope assembly)', () => {
       const count = g.elements instanceof Map ? g.elements.size : Object.keys(g.elements).length;
       return { name: f.name, tokens: envelopeTokenCount(b, b.initial_state_id), elementCount: count };
     }));
-    // eslint-disable-next-line no-console
-    console.log('AC-12 empirical metrics:', JSON.stringify(rows, null, 2));
+    // Stage 2.5 fix F-005-1c — gate diagnostic emission on VITEST_VERBOSE so
+    // routine CI stays silent. Run with `VITEST_VERBOSE=1 pnpm test` to surface.
+    if (process.env.VITEST_VERBOSE === '1') {
+      // eslint-disable-next-line no-console
+      console.log('AC-12 empirical metrics:', JSON.stringify(rows, null, 2));
+    }
     expect(rows).toHaveLength(5);
   });
 
