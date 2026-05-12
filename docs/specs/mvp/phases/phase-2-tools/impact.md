@@ -2,7 +2,7 @@
 title: Impact Analysis — Phase 2 MCP Tools (4 new shared contracts)
 artifact_type: impact
 status: approved
-version: 0.2.6
+version: 0.2.7
 created: 2026-04-27
 updated: 2026-05-12
 owner: engineering lead
@@ -57,6 +57,9 @@ delta:
     - v0.2.5 — Phase 1 BrowserPage surface extension for Wave 7 (T029 browser_type: keyboard + focus; T030 browser_scroll: mouse.wheel; T031 browser_select: selectOption); R18 append-only; structurally compatible with TypingBehavior + ScrollBehavior MousePage/TypingPage/ScrollPage interfaces; no Phase 1 consumer breakage.
     # v0.2.6 — Wave 8 prep (R18 append-only Phase-2 extension of Phase 1 BrowserPage surface for upload tool)
     - v0.2.6 — Phase 1 BrowserPage.setInputFiles surface extension for Wave 8 T034 browser_upload; R18 append-only; safetyClass='requires_hitl' (Phase 4 SafetyCheck gate).
+    # v0.2.7 — Wave 9b prep (R18 append-only Phase-2 extension of Phase 1 BrowserSession + BrowserPage surfaces for multi-tab + download tools)
+    - v0.2.7 — Phase 1 BrowserSession multi-tab surface extension for Wave 9b T035 browser_tab_manage (full scope: new/list/close/switch). session.page evolves from fixed property to dynamic getter returning the current active page; existing Wave 4-8 tools transparently operate on the active page (they read session.page at handler-invocation time, not factory-registration time). New session methods: pages(), activeIndex(), setActiveIndex(i), newPage(), closePage(i). R18 append-only on interface signature; session.page semantics extended (R20 forward-compat) per user-approved Option 3 of Wave 9b design discussion.
+    - v0.2.7 — Phase 1 BrowserPage.waitForEvent + BrowserDownload surface extensions for Wave 9b T037 browser_download (full event-driven flow). BrowserPage.waitForEvent<T extends 'download'>(event, opts?) returns a BrowserDownload mirroring Playwright Download verbatim (suggestedFilename + saveAs). Constrained generic permits future event-type extensions without breaking change. R18 append-only.
   changed:
     - v0.2 — risk_level remains HIGH (4 contracts unchanged); upstream substrate now explicitly Phase 1c PerceptionBundle (was implicitly Phase 1 PageStateModel)
   impacted:

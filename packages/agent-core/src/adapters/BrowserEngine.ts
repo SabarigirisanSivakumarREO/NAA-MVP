@@ -137,6 +137,18 @@ export interface BrowserPage {
     files: string | readonly string[],
     opts?: { timeout?: number },
   ): Promise<void>;
+  /**
+   * Phase 2 T037 — wait for a Playwright event on this page. Currently
+   * typed for `'download'` only; the constrained generic lets future
+   * waves extend to other event types without breaking change. Returns
+   * a BrowserDownload wrapper mirroring Playwright's Download verbatim.
+   * R18 append-only Phase-2 extension. Phase 4 SafetyCheck gates
+   * browser_download invocations via safetyClass='requires_hitl' (R8.4).
+   */
+  waitForEvent<T extends 'download'>(
+    event: T,
+    opts?: { timeout?: number },
+  ): Promise<BrowserDownload>;
   ariaSnapshot(opts?: { ref?: boolean; timeout?: number }): Promise<string>;
   screenshot(opts?: { type?: 'jpeg' | 'png'; quality?: number; fullPage?: boolean }): Promise<Buffer>;
   addInitScript(scriptOrFn: string | (() => void)): Promise<void>;
@@ -150,6 +162,20 @@ export interface BrowserPage {
     html: string,
     opts?: { waitUntil?: 'load' | 'domcontentloaded' | 'networkidle'; timeout?: number },
   ): Promise<void>;
+}
+
+/**
+ * Phase 2 T037 — download event payload. Mirrors Playwright's Download
+ * object verbatim (suggestedFilename + saveAs). Returned by
+ * `BrowserPage.waitForEvent('download', opts?)`. Phase 4 SafetyCheck
+ * gates browser_download invocations via safetyClass='requires_hitl'
+ * (R8.4). R18 append-only Phase-2 extension.
+ */
+export interface BrowserDownload {
+  /** Server-suggested filename from Content-Disposition or URL. */
+  suggestedFilename(): string;
+  /** Save the download to an absolute path. */
+  saveAs(path: string): Promise<void>;
 }
 
 /**
@@ -172,11 +198,60 @@ export interface BrowserContext {
  * BrowserSession — owned by the caller; MUST be `close()`d to release OS
  * handles (NF-Phase1-05). The `id` field is a uuid used as the Pino
  * `session_id` correlation field for the lifetime of the session.
+ *
+ * Phase 2 T035 R20 forward-compat extension: `page` is now a DYNAMIC
+ * GETTER returning the page at `activeIndex()`. Tools that read
+ * `session.page` at handler-invocation time (not factory-registration
+ * time) transparently operate on whichever tab is currently active
+ * (set via `setActiveIndex`). The interface signature is identical to
+ * Phase 1 (R18 append-only on signature; only implementation semantics
+ * extended).
  */
 export interface BrowserSession {
   readonly id: string;
+  /**
+   * Active page. Returns the page at `activeIndex()`. Tools that read
+   * `session.page` at handler-invocation time transparently operate on
+   * whichever tab is currently active (set via `setActiveIndex`).
+   * Phase 2 T035 R20 forward-compat: implementation evolved from fixed
+   * property to dynamic getter; signature unchanged (R18 append-only).
+   */
   readonly page: BrowserPage;
   readonly context: BrowserContext;
+  /**
+   * Phase 2 T035 — list all pages in this session's context with stable
+   * insertion-order indices. The array is a snapshot; mutation doesn't
+   * affect session state (R18 append-only return type). R18 append-only
+   * Phase-2 extension.
+   */
+  pages(): readonly BrowserPage[];
+  /**
+   * Phase 2 T035 — current active-page index, in [0, pages().length).
+   * The `page` getter returns `pages()[activeIndex()]`. R18 append-only
+   * Phase-2 extension.
+   */
+  activeIndex(): number;
+  /**
+   * Phase 2 T035 — switch active tab. Throws RangeError if index is
+   * out of bounds or the page at that index has been closed. Subsequent
+   * `session.page` accesses return the new active page. R18 append-only
+   * Phase-2 extension.
+   */
+  setActiveIndex(index: number): void;
+  /**
+   * Phase 2 T035 — open a new tab in this session's context. Returns
+   * the new tab's index. Does NOT switch active; caller must
+   * setActiveIndex if desired. R18 append-only Phase-2 extension.
+   */
+  newPage(): Promise<number>;
+  /**
+   * Phase 2 T035 — close a tab by index. Throws RangeError if invalid
+   * index or if this would leave the session with zero pages. If the
+   * closed page was the active page, active index shifts to the next
+   * surviving page (or the previous if closing the last). R18
+   * append-only Phase-2 extension.
+   */
+  closePage(index: number): Promise<void>;
   close(): Promise<void>;
 }
 
