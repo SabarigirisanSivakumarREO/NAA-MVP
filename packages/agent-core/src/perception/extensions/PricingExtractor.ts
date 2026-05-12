@@ -34,8 +34,10 @@ export interface ExtractCtx {
   metadata: { schemaOrg?: Array<Record<string, unknown>>; ogTags?: Record<string, string> };
 }
 
-export type PricingDisplayFormat = 'plain' | 'comparison' | 'crossed-out' | 'with-discount';
-export type TaxInclusion = 'inclusive' | 'exclusive' | 'unknown';
+// Stage 2.5 fix F-001 — re-export from types.ts (single source of truth).
+// Local string-literal types removed; PricingSchema in types.ts is canonical.
+export type { PricingDisplayFormat, TaxInclusion } from '../types.js';
+import type { PricingDisplayFormat, TaxInclusion } from '../types.js';
 
 /** AC-01 contract: 9 fields populated when pricing is detected. */
 export interface PricingResult {

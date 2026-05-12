@@ -382,18 +382,35 @@ export type PrimaryAction = z.infer<typeof PrimaryActionSchema>;
 // ----------------------------------------------------------------------
 // Phase 1b T1B-001..T1B-010 extension sub-schemas (T1B-011 closure)
 // ----------------------------------------------------------------------
-// Per-extractor strict shapes. `displayFormat`/`taxInclusion`/sticky `type`
-// kept as open strings per spec (R-03 explicit; AC-01 silent on enums).
+// Per-extractor strict shapes. Stage 2.5 fix F-001 — `displayFormat` and
+// `taxInclusion` are closed enums sourced from PricingExtractor (single
+// source of truth). Sticky `type` remains open per spec R-03.
 // All groups optional/nullable at the parent — Phase 1 backward compat.
+
+/**
+ * Closed enum for pricing display layout (PricingExtractor canonical list).
+ * `plain` = no anchor + no discount annotation
+ * `comparison` = neutral side-by-side comparison
+ * `crossed-out` = anchor (strike-through original) + sale price
+ * `with-discount` = explicit "% off" / "save $N" annotation visible
+ */
+export const PricingDisplayFormatSchema = z.enum([
+  'plain', 'comparison', 'crossed-out', 'with-discount',
+]);
+export type PricingDisplayFormat = z.infer<typeof PricingDisplayFormatSchema>;
+
+/** Closed enum for tax inclusion (PricingExtractor canonical list). */
+export const TaxInclusionSchema = z.enum(['inclusive', 'exclusive', 'unknown']);
+export type TaxInclusion = z.infer<typeof TaxInclusionSchema>;
 
 /** AC-01 / T1B-001 — null at parent when no pricing detected. */
 export const PricingSchema = z
   .object({
-    displayFormat: z.string(),
+    displayFormat: PricingDisplayFormatSchema,
     amount: z.string(),
     amountNumeric: z.number(),
     currency: z.string(),
-    taxInclusion: z.string(),
+    taxInclusion: TaxInclusionSchema,
     anchorPrice: z.string().nullable(),
     discountPercent: z.number().nullable(),
     comparisonShown: z.boolean(),
@@ -410,14 +427,17 @@ export type ClickTargetElementType = z.infer<typeof ClickTargetElementTypeSchema
 
 /**
  * AC-02 / T1B-002. `index` + `text` are extractor-enriched (lifted from
- * substrate Cta); optional to accept both AC-00 fixture (omits) and real
- * extractor output (populates).
+ * substrate Cta) — both REQUIRED to match the ClickTargetSizer extractor
+ * which always populates them. Stage 2.5 fix F-002 — were previously
+ * `.optional()` (three-way drift between extractor / schema / fixture);
+ * schema is now the canonical surface, fixtures + downstream consumers
+ * (ElementGraph cross-references in Phase 1c) can rely on both fields.
  */
 export const ClickTargetSchema = z
   .object({
-    index: z.number().int().min(0).optional(),
+    index: z.number().int().min(0),
     selector: z.string(),
-    text: z.string().optional(),
+    text: z.string(),
     sizePx: SizePxSchema,
     isMobileTapFriendly: z.boolean(),
     elementType: ClickTargetElementTypeSchema,

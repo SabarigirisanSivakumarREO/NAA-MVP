@@ -212,7 +212,7 @@
     "text": "Checkout"
   },
   "pricing": {
-    "displayFormat": "simple",
+    "displayFormat": "plain",
     "amount": "£75.00",
     "amountNumeric": 75,
     "currency": "GBP",

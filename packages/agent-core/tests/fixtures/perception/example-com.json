@@ -67,7 +67,9 @@
   "pricing": null,
   "clickTargets": [
     {
+      "index": 0,
       "selector": "main p a",
+      "text": "More information...",
       "sizePx": { "width": 160, "height": 20 },
       "isMobileTapFriendly": false,
       "elementType": "link",
