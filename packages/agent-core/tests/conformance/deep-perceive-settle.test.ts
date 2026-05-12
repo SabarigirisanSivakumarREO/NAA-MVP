@@ -22,7 +22,6 @@
  */
 import { describe, expect, it } from 'vitest';
 
-// @ts-expect-error - module not implemented yet (Wave 0 RED for T1C-011)
 import { DeepPerceiveNode } from '../../src/analysis/nodes/DeepPerceiveNode.js';
 
 describe('DeepPerceiveNode + settle integration — AC-11 conformance (Wave 0 RED)', () => {
