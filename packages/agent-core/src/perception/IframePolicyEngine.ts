@@ -4,37 +4,28 @@
  * Source: phase-1c spec.md AC-05 + R-05 (v0.2); plan.md §2.6 (v0.2 purpose
  * table); tasks.md T1C-005.
  *
- * Classifies an iframe by purpose into a closed 9-value enum plus the
- * `cross_origin` security override. Returns a decision object the caller
- * (ElementGraphBuilder / WarningEmitter / DeepPerceiveNode) uses to:
- *   • descend into same-origin checkout / chat iframes (perception extends
- *     into them), or
- *   • skip everything else and emit a typed warning so downstream
- *     analysis knows why content was not captured.
+ * Classifies an iframe into a closed 9-value purpose enum plus `cross_origin`
+ * security override. Caller uses the decision to (a) descend into same-origin
+ * {checkout, chat} iframes or (b) skip everything else and emit a typed warning.
  *
  * CLASSIFIER ORDER (SECURITY-CRITICAL — v0.2 plan.md §2.6):
- *   1. cross_origin check FIRST — security override; supersedes hostname
- *      patterns. A cross-origin iframe is always skipped with IFRAME_SKIPPED
- *      (warn) regardless of what its hostname matches.
- *   2. Security-sensitive purposes — captcha → cmp → payment_3ds — BEFORE
- *      checkout / chat. This prevents a nested reCAPTCHA-inside-Stripe-flow
- *      from being misclassified as `checkout` and descended into (user
- *      challenge content is a security boundary; never descend).
- *   3. checkout / chat — only reached after step 2 confirms not security
- *      sensitive. Descend (same-origin only — step 1 has already filtered).
- *   4. video / analytics / social_embed — non-security non-revenue
- *      content; skip with IFRAME_SKIPPED.
- *   5. other — fallthrough; skip with IFRAME_SKIPPED warn.
+ *   1. cross_origin FIRST — security override; supersedes all hostname matches.
+ *   2. Security-sensitive {captcha → cmp → payment_3ds} BEFORE checkout/chat.
+ *      Prevents nested reCAPTCHA-inside-Stripe-flow from being misclassified
+ *      as `checkout` and descended into (user challenge content is a security
+ *      boundary; never descend).
+ *   3. checkout / chat — only after step 2 confirms not security sensitive.
+ *   4. video / analytics / social_embed — non-security non-revenue.
+ *   5. other — fallthrough.
  *
- * Optional `ctx.isCommerce` (from T1B-009 CommerceBlockExtractor) downgrades
- * a checkout match obtained only via the Offer-schema probe (NOT via a
- * direct vendor hostname) to `other` on a non-commerce page — a same-origin
- * iframe on, say, a homepage is unlikely to be checkout even if it
- * accidentally references an Offer.
+ * Optional `ctx.isCommerce` (from T1B-009 CommerceBlockExtractor) downgrades a
+ * checkout match obtained only via Offer-schema probe (NOT a direct vendor
+ * hostname) to `other` on a non-commerce page — suppresses false-positive
+ * descent.
  *
- * R10: ≤300 LOC; functions ≤50 LOC; named exports only; no `any`.
- * R24 PERCEPTION MUST NOT: capture-only — classifier never mutates iframe
- * state, never navigates, never reads cross-origin content.
+ * R10: file ≤300 LOC; functions ≤50 LOC; named exports only; no `any`.
+ * R24 PERCEPTION MUST NOT: capture-only; never mutates iframe state, never
+ * navigates, never reads cross-origin content.
  *
  * Pure + synchronous. jsdom-friendly. Uses local DOM types (agent-core
  * tsconfig excludes DOM lib by design).
@@ -42,7 +33,6 @@
 
 import { z } from 'zod';
 
-// ── minimal DOM types (local) ────────────────────────────────────────────
 interface IframeLike {
   readonly src: string;
   getAttribute(name: string): string | null;
@@ -51,9 +41,9 @@ interface IframeLike {
 // ── public contract ──────────────────────────────────────────────────────
 
 /**
- * Closed 9-value enum of named iframe purposes (R-05 v0.2). The `cross_origin`
- * security override is a distinct `purpose` value on the decision but is NOT
- * a member of `IframePurpose` — it never appears in heuristic-facing rollups.
+ * Closed 9-value enum (R-05 v0.2). `cross_origin` is a distinct decision
+ * `purpose` value but is NOT a member of `IframePurpose` (security override
+ * is not a content type).
  */
 export const IFRAME_PURPOSE_ENUM = [
   'checkout',
@@ -68,10 +58,8 @@ export const IFRAME_PURPOSE_ENUM = [
 ] as const;
 
 export type IframePurpose = (typeof IFRAME_PURPOSE_ENUM)[number];
-
 export const IframePurposeSchema = z.enum(IFRAME_PURPOSE_ENUM);
 
-/** Warning codes emitted by the classifier (subset of R-09 12-code enum). */
 export type IframeWarningCode =
   | 'IFRAME_SKIPPED'
   | 'CAPTCHA_DETECTED'
@@ -93,110 +81,52 @@ export interface IframePolicyDecision {
   readonly warning: IframeWarning | null;
 }
 
-/** Classifier context — caller threads pageOrigin + optional hints. */
+/** Classifier context. */
 export interface IframePolicyCtx {
-  /** Page origin (scheme + host + optional port) for cross-origin comparison. */
+  /** Page origin (scheme + host + optional port) for cross-origin check. */
   readonly pageOrigin: string;
   /**
-   * Optional hostname override (e.g., the real vendor hostname when the
-   * iframe `src` is a same-origin shim that internally redirects to a
-   * third-party). When omitted, classifier uses the iframe `src` hostname.
+   * Optional hostname override (e.g., real vendor hostname when iframe `src`
+   * is a same-origin shim). When omitted, uses parsed `iframe.src` hostname.
    */
   readonly hostnameHint?: string;
   /**
-   * Optional commerce context from T1B-009 CommerceBlockExtractor. If
-   * `false` and a checkout match came only from Offer-schema probe (not
-   * a direct vendor hostname), classifier downgrades to `other` to avoid
-   * false-positive descent on non-commerce pages.
+   * Optional T1B-009 commerce context. If `false` AND checkout match came
+   * only via Offer-schema probe (not direct vendor hostname), downgrades to
+   * `other` — suppresses false-positive descent on non-commerce pages.
    */
   readonly isCommerce?: boolean;
 }
 
-// ── classifier internals ────────────────────────────────────────────────
+// ── hostname pattern tables ──────────────────────────────────────────────
+// Bare hostnames (no leading dot) — substring match works for both apex
+// (`3dsecure.io`) and subdomains (`js.stripe.com`).
+// prettier-ignore
+const CAPTCHA_PATTERNS = ['google.com/recaptcha', 'hcaptcha.com', 'cloudflare.com/turnstile', 'arkoselabs.com'];
+// prettier-ignore
+const CMP_PATTERNS = ['cookielaw.org', 'cookiebot.com', 'trustarc.com', 'usercentrics.eu', 'consensu.org'];
+// prettier-ignore
+const PAYMENT_3DS_PATTERNS = ['3dsecure.io', 'verifiedbyvisa.com', 'maestrocard.com', 'securecode.com'];
+// prettier-ignore
+const CHECKOUT_PATTERNS = ['stripe.com', 'adyen.com', 'paypal.com', 'braintreepayments.com', 'razorpay.com', 'ccavenue.com'];
+// prettier-ignore
+const CHAT_PATTERNS = ['intercom.io', 'crisp.chat', 'drift.com', 'zendesk.com', 'freshchat.com', 'tawk.to', 'olark.com'];
+// prettier-ignore
+const VIDEO_PATTERNS = ['youtube.com/embed', 'youtube-nocookie.com', 'vimeo.com', 'wistia.com', 'brightcove.net'];
+// prettier-ignore
+const ANALYTICS_PATTERNS = ['googletagmanager.com', 'google-analytics.com', 'doubleclick.net', 'bat.bing.com', 'linkedin.com/li/track'];
+// prettier-ignore
+const SOCIAL_EMBED_PATTERNS = ['twitter.com', 'instagram.com', 'tiktok.com', 'facebook.com', 'pinterest.com', 'linkedin.com/embed'];
+
+// ── classifier internals ─────────────────────────────────────────────────
 
 interface HostnameMatch {
   readonly purpose: IframePurpose;
-  /** Whether match is via a direct vendor hostname (vs. Offer probe). */
+  /** Match obtained via direct vendor hostname (vs. Offer-schema probe). */
   readonly viaVendorHostname: boolean;
 }
 
-/**
- * Hostname pattern table — order within each tier reflects plan.md §2.6
- * v0.2. Patterns are tested as substrings against the combined
- * `hostname + pathname` of the classification target.
- */
-// Bare hostnames (no leading dot) so substring match works for both
-// apex domains (e.g. `3dsecure.io`) and subdomains (e.g. `js.stripe.com`).
-const CAPTCHA_PATTERNS = [
-  'google.com/recaptcha',
-  'hcaptcha.com',
-  'cloudflare.com/turnstile',
-  'arkoselabs.com',
-];
-
-const CMP_PATTERNS = [
-  'cookielaw.org',
-  'cookiebot.com',
-  'trustarc.com',
-  'usercentrics.eu',
-  'consensu.org',
-];
-
-const PAYMENT_3DS_PATTERNS = [
-  '3dsecure.io',
-  'verifiedbyvisa.com',
-  'maestrocard.com',
-  'securecode.com',
-];
-
-const CHECKOUT_PATTERNS = [
-  'stripe.com',
-  'adyen.com',
-  'paypal.com',
-  'braintreepayments.com',
-  'razorpay.com',
-  'ccavenue.com',
-];
-
-const CHAT_PATTERNS = [
-  'intercom.io',
-  'crisp.chat',
-  'drift.com',
-  'zendesk.com',
-  'freshchat.com',
-  'tawk.to',
-  'olark.com',
-];
-
-const VIDEO_PATTERNS = [
-  'youtube.com/embed',
-  'youtube-nocookie.com',
-  'vimeo.com',
-  'wistia.com',
-  'brightcove.net',
-];
-
-const ANALYTICS_PATTERNS = [
-  'googletagmanager.com',
-  'google-analytics.com',
-  'doubleclick.net',
-  'bat.bing.com',
-  'linkedin.com/li/track',
-];
-
-const SOCIAL_EMBED_PATTERNS = [
-  'twitter.com',
-  'instagram.com',
-  'tiktok.com',
-  'facebook.com',
-  'pinterest.com',
-  'linkedin.com/embed',
-];
-
-/**
- * Heuristic for 3DS2 challenge iframes hosted under issuer-bank domains
- * (per plan.md §2.6 v0.2 payment_3ds row).
- */
+/** 3DS2 challenge iframe hosted under an issuer-bank domain (plan §2.6). */
 function looksLikeIssuer3DS(target: string): boolean {
   if (!target.includes('3ds')) return false;
   return (
@@ -207,10 +137,6 @@ function looksLikeIssuer3DS(target: string): boolean {
   );
 }
 
-/**
- * Try matching `target` (hostname + pathname, lowercased) against a
- * substring pattern table. Returns the first match in list order.
- */
 function matchPattern(target: string, patterns: readonly string[]): boolean {
   for (const pat of patterns) {
     if (target.includes(pat)) return true;
@@ -219,12 +145,13 @@ function matchPattern(target: string, patterns: readonly string[]): boolean {
 }
 
 /**
- * Resolve the classification target string from the iframe + ctx. When a
- * `hostnameHint` is provided, prefer it (same-origin shim case); otherwise
- * parse the iframe `src` directly. Returns a lower-cased `hostname +
- * pathname` for substring matching.
+ * Resolve classification target: lower-cased `hostname + pathname`. Prefers
+ * `ctx.hostnameHint` (same-origin shim case) over parsed `iframe.src`.
  */
-function resolveClassificationTarget(iframe: IframeLike, ctx: IframePolicyCtx): string {
+function resolveClassificationTarget(
+  iframe: IframeLike,
+  ctx: IframePolicyCtx,
+): string {
   if (ctx.hostnameHint !== undefined && ctx.hostnameHint.length > 0) {
     return ctx.hostnameHint.toLowerCase();
   }
@@ -236,15 +163,8 @@ function resolveClassificationTarget(iframe: IframeLike, ctx: IframePolicyCtx): 
   }
 }
 
-/** Compare iframe src origin to page origin. */
+/** Cross-origin check. about:/data:/javascript:/blob:/empty → same-origin. */
 function isCrossOrigin(src: string, pageOrigin: string): boolean {
-  let pageOriginNorm: string;
-  try {
-    pageOriginNorm = new URL(pageOrigin).origin;
-  } catch {
-    return false;
-  }
-  // about:blank / data: / javascript: / empty → same-origin (inherits parent).
   if (src.length === 0) return false;
   if (
     src.startsWith('about:') ||
@@ -254,20 +174,25 @@ function isCrossOrigin(src: string, pageOrigin: string): boolean {
   ) {
     return false;
   }
+  let pageOriginNorm: string;
+  try {
+    pageOriginNorm = new URL(pageOrigin).origin;
+  } catch {
+    return false;
+  }
   try {
     return new URL(src).origin !== pageOriginNorm;
   } catch {
-    // Relative URL → same origin.
     return false;
   }
 }
 
 /**
- * Run the hostname pattern tiers in classifier order (security-sensitive
- * before revenue tiers). Returns `null` on fallthrough.
+ * Run hostname tiers in classifier order: security-sensitive
+ * {captcha → cmp → payment_3ds} BEFORE {checkout → chat} BEFORE
+ * {video → analytics → social_embed}. Returns `null` on fallthrough.
  */
 function classifyByHostname(target: string): HostnameMatch | null {
-  // Tier 2 — security-sensitive (BEFORE checkout / chat).
   if (matchPattern(target, CAPTCHA_PATTERNS)) {
     return { purpose: 'captcha', viaVendorHostname: true };
   }
@@ -277,14 +202,12 @@ function classifyByHostname(target: string): HostnameMatch | null {
   if (matchPattern(target, PAYMENT_3DS_PATTERNS) || looksLikeIssuer3DS(target)) {
     return { purpose: 'payment_3ds', viaVendorHostname: true };
   }
-  // Tier 3 — revenue (descend, same-origin).
   if (matchPattern(target, CHECKOUT_PATTERNS)) {
     return { purpose: 'checkout', viaVendorHostname: true };
   }
   if (matchPattern(target, CHAT_PATTERNS)) {
     return { purpose: 'chat', viaVendorHostname: true };
   }
-  // Tier 4 — non-security non-revenue.
   if (matchPattern(target, VIDEO_PATTERNS)) {
     return { purpose: 'video', viaVendorHostname: true };
   }
@@ -308,11 +231,7 @@ function decisionForPurpose(purpose: IframePurpose): IframePolicyDecision {
     case 'cmp':
       return { purpose, action: 'skip', warning: { code: 'CMP_DETECTED', severity: 'info' } };
     case 'payment_3ds':
-      return {
-        purpose,
-        action: 'skip',
-        warning: { code: 'PAYMENT_3DS_DETECTED', severity: 'warn' },
-      };
+      return { purpose, action: 'skip', warning: { code: 'PAYMENT_3DS_DETECTED', severity: 'warn' } };
     case 'analytics':
       return { purpose, action: 'skip', warning: { code: 'IFRAME_SKIPPED', severity: 'info' } };
     case 'video':
@@ -329,15 +248,14 @@ function decisionForPurpose(purpose: IframePurpose): IframePolicyDecision {
  *
  * @param iframe - The iframe element (jsdom or real DOM). Only `src` is read.
  * @param ctx - Required `pageOrigin`; optional `hostnameHint` (same-origin
- *   shim case) and `isCommerce` (T1B-009 context for false-positive
- *   suppression on non-commerce pages).
+ *   shim case) and `isCommerce` (T1B-009 false-positive suppression).
  */
 export function classifyIframe(
   iframe: IframeLike,
   ctx: IframePolicyCtx,
 ): IframePolicyDecision {
-  // STEP 1 — cross_origin security override. Returns FIRST, before any
-  // hostname match. A cross-origin iframe is always skipped (R-05 v0.2).
+  // STEP 1 — cross_origin security override (R-05 v0.2). Returns FIRST,
+  // before any hostname match. Always skip with IFRAME_SKIPPED/warn.
   if (isCrossOrigin(iframe.src, ctx.pageOrigin)) {
     return {
       purpose: 'cross_origin',
@@ -346,10 +264,10 @@ export function classifyIframe(
     };
   }
 
-  // STEP 2-4 — hostname pattern table. Security-sensitive tier checked
-  // before checkout/chat (see plan.md §2.6 v0.2 "Captcha-vs-checkout
-  // disambiguation" — prevents nested reCAPTCHA-inside-Stripe-checkout
-  // from being misclassified as `checkout`).
+  // STEPS 2-4 — hostname tiers in security-first order (plan §2.6
+  // "Captcha-vs-checkout disambiguation"): a reCAPTCHA nested in a Stripe
+  // checkout flow MUST classify as `captcha` (skipped) not `checkout`
+  // (descended).
   const target = resolveClassificationTarget(iframe, ctx);
   const match = classifyByHostname(target);
 
@@ -357,10 +275,9 @@ export function classifyIframe(
     return decisionForPurpose('other');
   }
 
-  // T1B-009 commerce-context downgrade: only applies to checkout matches
-  // obtained via NON-vendor hostname (e.g. Offer-schema probe). Direct
-  // vendor matches stay as `checkout` even on non-commerce pages because
-  // the vendor hostname is high-precision.
+  // T1B-009 commerce-context downgrade: only applies when checkout match
+  // came via non-vendor hostname (Offer-schema probe). Direct vendor
+  // matches stay as checkout — vendor hostname is high-precision.
   if (
     match.purpose === 'checkout' &&
     !match.viaVendorHostname &&
