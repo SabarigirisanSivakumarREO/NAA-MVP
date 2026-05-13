@@ -16,12 +16,10 @@
  *   - F-S4 NAMESPACE CONTRACT: page_analyze output _extensions === undefined
  *     (Phase 7 DeepPerceiveNode reservation; Phase 1c impact.md §11)
  *
- * RED state — gate test for the entire Phase 2 surface. Lands GREEN once
- *   T016-T049 + T-PHASE2-LOGGER + T-PHASE2-TYPES + T019 all complete.
- *   All exec assertions are `it.todo` until the surface exists; the
- *   F-S4 namespace contract live assertion runs against the (real)
- *   AnalyzePerceptionSchema NOW so the namespace expectation is pinned at
- *   schema level.
+ * GREEN state — Wave 15 T050. The 8 it.todo placeholders are flipped to live
+ *   assertions exercising every registered tool against a synthetic fixture
+ *   (deterministic; amazon.in is non-deterministic per overlays + A/B + geo).
+ *   The 29-tool registry helper lives in `./phase2.registry.ts` for R10.1.
  *
  * Per tasks.md T050 constraint: "Test suite organized as one describe()
  *   per tool category. Namespace assertion in its own
@@ -29,17 +27,28 @@
  *
  * Anchor: @AC-13 — 29-tool exercise + namespace contract assertion.
  */
-import { describe, expect, it } from 'vitest';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type { ZodTypeAny } from 'zod';
 
-import { AnalyzePerceptionSchema } from '../../src/analysis/index.js';
+import { BrowserManager } from '../../src/browser-runtime/BrowserManager.js';
+import type { BrowserSession } from '../../src/adapters/BrowserEngine.js';
+import { createLogger } from '../../src/observability/logger.js';
+import { MCPServerAdapter, type ToolRegistry } from '../../src/mcp/index.js';
+import type { MCPToolDefinition, ToolContext } from '../../src/mcp/types.js';
 
-// NOTE (R3.1): downstream imports below deliberately commented out so this
-// file compiles + loads cleanly until T019 + T020-T050 land. Uncomment when
-// MCPServerAdapter + ToolRegistry exist:
-// import { MCPServerAdapter } from '../../src/mcp/Server.js';
-// import { ToolRegistry } from '../../src/mcp/ToolRegistry.js';
+import {
+  CHECKOUT_FIXTURE,
+  HOMEPAGE_FIXTURE,
+  PDP_FIXTURE,
+  TOOL_EXERCISE_FIXTURE,
+} from './phase2.fixtures.js';
+import { buildPhase2Registry } from './phase2.registry.js';
 
 const PHASE2_TOTAL_WALL_CLOCK_MS = 5 * 60 * 1000; // NF-Phase2-04
+const PER_TOOL_TIMEOUT_MS = 30_000;
 
 const TOOL_NAMES_BROWSER = [
   'browser_navigate', 'browser_go_back', 'browser_go_forward', 'browser_reload',
@@ -50,29 +59,87 @@ const TOOL_NAMES_BROWSER = [
   'browser_find_by_text', 'browser_get_network', 'browser_wait_for',
   'browser_evaluate',
 ] as const;
-
 const TOOL_NAMES_AGENT = ['agent_complete', 'agent_request_human'] as const;
-
 const TOOL_NAMES_PAGE = [
   'page_get_element_info', 'page_get_performance', 'page_screenshot_full',
   'page_annotate_screenshot', 'page_analyze',
 ] as const;
 
-describe('Phase 2 integration — AC-13 acceptance gate (29 MCP tools on amazon.in)', () => {
+// ── shared fixture state ───────────────────────────────────────────────────
+
+let session: BrowserSession;
+let registry: ToolRegistry;
+let adapter: MCPServerAdapter;
+let suiteTmpDir: string;
+const suiteStart = performance.now();
+
+function makeCtx(toolName: string): ToolContext {
+  return {
+    logger: createLogger(`phase2-int-${toolName}`),
+    toolCallId: `t-${toolName}-${Date.now()}`,
+    clientSessionId: 'phase2-int',
+  };
+}
+
+function getTool(name: string): MCPToolDefinition<unknown, unknown> {
+  const def = registry.get(name);
+  if (def === undefined) throw new Error(`Tool not registered: ${name}`);
+  return def;
+}
+
+/**
+ * Permissive AC-13 assertion: every tool call MUST either
+ *   (a) return a value that round-trips through its declared outputSchema, OR
+ *   (b) throw a typed Error subclass (name matches /^[A-Z][A-Za-z]+Error$/).
+ * Bare `Error` throws fail the AC-13 contract per tasks.md T050
+ * ("documented typed error"). Playwright's TimeoutError + the per-tool
+ * typed errors (DownloadSaveDirNotAbsoluteError, etc.) both match.
+ */
+async function expectZodValidOrTypedError(
+  toolName: string,
+  input: unknown,
+): Promise<{ ok: true } | { ok: false; errName: string }> {
+  const def = getTool(toolName);
+  try {
+    const output = await def.handler(input, makeCtx(toolName));
+    const parsed = (def.outputSchema as ZodTypeAny).safeParse(output);
+    expect(parsed.success, `${toolName} output schema parse failed`).toBe(true);
+    return { ok: true };
+  } catch (err) {
+    expect(err, `${toolName} threw non-Error`).toBeInstanceOf(Error);
+    const name = (err as Error).name;
+    expect(name, `${toolName} threw untyped error: ${name}`).toMatch(
+      /^[A-Z][A-Za-z0-9]+Error$/,
+    );
+    return { ok: false, errName: name };
+  }
+}
+
+beforeAll(async () => {
+  session = await new BrowserManager().newSession({ headless: true });
+  registry = buildPhase2Registry(session);
+  adapter = new MCPServerAdapter(registry, createLogger('phase2-int-adapter'));
+  await adapter.start();
+  suiteTmpDir = mkdtempSync(join(tmpdir(), 'phase2-int-'));
+}, 60_000);
+
+afterAll(async () => {
+  if (adapter) await adapter.stop();
+  if (session) await session.close();
+  if (suiteTmpDir) rmSync(suiteTmpDir, { recursive: true, force: true });
+});
+
+describe('Phase 2 integration — AC-13 acceptance gate (29 MCP tools)', () => {
   describe('tool surface — 29 MCP tools register', () => {
-    /**
-     * @AC-13 — Phase 2 surface arity: 22 browser_* + 2 agent_* + 5 page_* = 29.
-     */
     it('AC-13: tool surface arity sums to 29 (22 + 2 + 5)', () => {
       expect(TOOL_NAMES_BROWSER).toHaveLength(22);
       expect(TOOL_NAMES_AGENT).toHaveLength(2);
       expect(TOOL_NAMES_PAGE).toHaveLength(5);
-      expect(TOOL_NAMES_BROWSER.length + TOOL_NAMES_AGENT.length + TOOL_NAMES_PAGE.length).toBe(29);
+      expect(
+        TOOL_NAMES_BROWSER.length + TOOL_NAMES_AGENT.length + TOOL_NAMES_PAGE.length,
+      ).toBe(29);
     });
 
-    /**
-     * @AC-13 — every tool name follows EXACT v3.1 naming (R4.5).
-     */
     it('AC-13: every tool name matches /^(browser|agent|page)_[a-z_]+$/ (R4.5)', () => {
       const all = [...TOOL_NAMES_BROWSER, ...TOOL_NAMES_AGENT, ...TOOL_NAMES_PAGE];
       for (const name of all) {
@@ -80,39 +147,122 @@ describe('Phase 2 integration — AC-13 acceptance gate (29 MCP tools on amazon.
       }
     });
 
-    /**
-     * @AC-13 — MCP server boots in-process; tools/list returns 29 entries.
-     */
-    it.todo('AC-13: MCPServerAdapter boots; tools/list returns 29 tool entries');
+    it('AC-13: MCPServerAdapter boots; registry.list() returns 29 tool entries', () => {
+      const entries = registry.list();
+      expect(entries).toHaveLength(29);
+      const registered = new Set(entries.map((e) => e.name));
+      for (const name of [...TOOL_NAMES_BROWSER, ...TOOL_NAMES_AGENT, ...TOOL_NAMES_PAGE]) {
+        expect(registered.has(name), `missing tool: ${name}`).toBe(true);
+      }
+    });
   });
 
-  describe('browser_* tools — exercise on amazon.in', () => {
-    /**
-     * @AC-13 — every browser_* tool exercises against amazon.in (or stable
-     * fixture on flake), returns Zod-valid output OR documented typed error.
-     */
-    it.todo(
-      'AC-13: all 22 browser_* tools execute against amazon.in fixture; output Zod-valid or typed error',
+  describe('browser_* tools — exercise against tool-exercise fixture', () => {
+    it(
+      'AC-13: all 22 browser_* tools execute; output Zod-valid or typed error',
+      async () => {
+        await session.page.setContent(TOOL_EXERCISE_FIXTURE);
+        await session.page.waitForLoadState('domcontentloaded');
+
+        await expectZodValidOrTypedError('browser_get_state', {});
+        await expectZodValidOrTypedError('browser_get_metadata', {});
+        await expectZodValidOrTypedError('browser_screenshot', {});
+        await expectZodValidOrTypedError('browser_get_network', { limit: 50 });
+        await expectZodValidOrTypedError('browser_find_by_text', {
+          text: 'unique-needle-token-for-find-by-text',
+        });
+        await expectZodValidOrTypedError('browser_extract', { selector: 'h1', mode: 'first' });
+        await expectZodValidOrTypedError('browser_wait_for', { kind: 'timeout', ms: 50 });
+        await expectZodValidOrTypedError('browser_click', { selector: '#primary-cta' });
+        await expectZodValidOrTypedError('browser_click_coords', { x: 10, y: 10 });
+        await expectZodValidOrTypedError('browser_hover', { selector: '#nav-link' });
+        await expectZodValidOrTypedError('browser_type', {
+          selector: '#email',
+          text: 'a@b.co',
+        });
+        await expectZodValidOrTypedError('browser_select', {
+          selector: '#country',
+          values: 'in',
+        });
+        await expectZodValidOrTypedError('browser_scroll', { direction: 'down', distancePx: 100 });
+        await expectZodValidOrTypedError('browser_press_key', { key: 'Tab' });
+        await expectZodValidOrTypedError('browser_tab_manage', { action: 'list' });
+        await expectZodValidOrTypedError('browser_evaluate', {
+          script: '1 + 1',
+          returnAs: 'number',
+        });
+        await expectZodValidOrTypedError('browser_go_back', {});
+        await expectZodValidOrTypedError('browser_go_forward', {});
+        await expectZodValidOrTypedError('browser_reload', {});
+
+        // Upload — happy path with a real temp file (Playwright surfaces
+        // missing-file errors as bare Error, so feed a real path).
+        const tmpUploadFile = join(suiteTmpDir, 'upload.txt');
+        writeFileSync(tmpUploadFile, 'phase 2 integration upload');
+        await expectZodValidOrTypedError('browser_upload', {
+          selector: '#upload-input',
+          files: tmpUploadFile,
+        });
+
+        // Download — 2s timeout; the fixture's anchor won't trigger a real
+        // download event so the Playwright TimeoutError surfaces (typed).
+        await expectZodValidOrTypedError('browser_download', {
+          triggerSelector: '#dl',
+          saveDir: suiteTmpDir,
+          timeout: 2000,
+        });
+
+        // Navigate last (mutates page state for subsequent describes).
+        await expectZodValidOrTypedError('browser_navigate', { url: 'about:blank' });
+      },
       PHASE2_TOTAL_WALL_CLOCK_MS,
     );
   });
 
   describe('agent_* tools — exercise', () => {
-    /**
-     * @AC-13 — agent_complete + agent_request_human execute (orchestration
-     * signals; not page actions).
-     */
-    it.todo('AC-13: agent_complete returns Zod-valid completion signal');
-    it.todo('AC-13: agent_request_human returns Zod-valid HITL pause signal');
+    it('AC-13: agent_complete returns Zod-valid completion signal', async () => {
+      const result = await expectZodValidOrTypedError('agent_complete', {
+        summary: 'phase 2 integration done',
+      });
+      expect(result.ok).toBe(true);
+    });
+
+    it('AC-13: agent_request_human returns Zod-valid HITL pause signal', async () => {
+      const result = await expectZodValidOrTypedError('agent_request_human', {
+        reason: 'integration test — synthetic HITL pause',
+      });
+      expect(result.ok).toBe(true);
+    });
   });
 
-  describe('page_* tools — exercise on amazon.in', () => {
-    /**
-     * @AC-13 — page_get_element_info, page_get_performance,
-     * page_screenshot_full, page_annotate_screenshot, page_analyze all run.
-     */
-    it.todo(
-      'AC-13: all 5 page_* tools execute against amazon.in; output Zod-valid or typed error',
+  describe('page_* tools — exercise against tool-exercise fixture', () => {
+    it(
+      'AC-13: all 5 page_* tools execute; output Zod-valid or typed error',
+      async () => {
+        await session.page.setContent(TOOL_EXERCISE_FIXTURE);
+        await session.page.waitForLoadState('domcontentloaded');
+
+        await expectZodValidOrTypedError('page_get_element_info', { selector: '#hero' });
+        await expectZodValidOrTypedError('page_get_performance', {});
+
+        // Chain page_screenshot_full → page_annotate_screenshot so the
+        // annotation tool's `inputPath` is a real file produced by the suite.
+        const fullOut = (await getTool('page_screenshot_full').handler(
+          { saveDir: suiteTmpDir, quality: 60 },
+          makeCtx('page_screenshot_full'),
+        )) as { ok: true; path: string };
+        expect(fullOut.path.length).toBeGreaterThan(0);
+
+        await expectZodValidOrTypedError('page_annotate_screenshot', {
+          inputPath: fullOut.path,
+          saveDir: suiteTmpDir,
+          annotations: [
+            { id: 'a1', x: 10, y: 10, width: 100, height: 50, severity: 'high' },
+          ],
+        });
+
+        await expectZodValidOrTypedError('page_analyze', {});
+      },
       PHASE2_TOTAL_WALL_CLOCK_MS,
     );
   });
@@ -121,116 +271,41 @@ describe('Phase 2 integration — AC-13 acceptance gate (29 MCP tools on amazon.
    * GREP-DISCOVERABLE NAMESPACE CONTRACT BLOCK (per tasks.md T050 constraint).
    * Phase 1c impact.md §11 + Phase 2 impact.md §AnalyzePerception §F-S4.
    * Phase 7 DeepPerceiveNode owns AnalyzePerception._extensions; Phase 2
-   * MUST leave it `undefined` at runtime.
+   * MUST leave it `undefined` at runtime (NOT {}, NOT populated).
    */
   describe('namespace contract', () => {
-    /**
-     * @AC-13 F-S4 — Wave 0 schema-level guarantee: AnalyzePerceptionSchema
-     * `_extensions` field is OPTIONAL (so leaving it undefined is valid).
-     * This pins that the schema does not silently REQUIRE the field.
-     */
-    it('AC-13 F-S4: AnalyzePerceptionSchema accepts result with _extensions absent', () => {
-      const result = AnalyzePerceptionSchema.safeParse(makeMinimalAnalyzePerception());
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data._extensions).toBeUndefined();
-      }
-    });
-
-    /**
-     * @AC-13 F-S4 (CRITICAL — runtime invariant) — page_analyze output's
-     * `_extensions` field is `undefined` (NOT {}, NOT populated). Phase 7
-     * DeepPerceiveNode reservation. Will fail until T048 lands AND respects
-     * the namespace contract.
-     */
-    it.todo('AC-13 F-S4: page_analyze output _extensions is undefined (NOT {}, NOT populated)');
-
-    /**
-     * @AC-13 F-S4 — repeats per page type (homepage / PDP / checkout) to
-     * guard against per-fixture drift.
-     */
-    it.todo('AC-13 F-S4: page_analyze on homepage fixture leaves _extensions undefined');
-    it.todo('AC-13 F-S4: page_analyze on PDP fixture leaves _extensions undefined');
-    it.todo('AC-13 F-S4: page_analyze on checkout fixture leaves _extensions undefined');
+    for (const [label, fixture] of [
+      ['homepage', HOMEPAGE_FIXTURE] as const,
+      ['PDP', PDP_FIXTURE] as const,
+      ['checkout', CHECKOUT_FIXTURE] as const,
+    ]) {
+      it(
+        `AC-13 F-S4: page_analyze on ${label} fixture leaves _extensions undefined`,
+        async () => {
+          await session.page.setContent(fixture);
+          await session.page.waitForLoadState('domcontentloaded');
+          const result = (await getTool('page_analyze').handler(
+            {},
+            makeCtx('page_analyze'),
+          )) as Record<string, unknown>;
+          // F-S4 invariant — defense in depth (both checks per the spec).
+          expect(result._extensions).toBeUndefined();
+          expect('_extensions' in result).toBe(false);
+        },
+        PER_TOOL_TIMEOUT_MS,
+      );
+    }
   });
 
   describe('NF-Phase2-04 — total wall-clock', () => {
-    /**
-     * @AC-13 NF-Phase2-04 — total wall-clock for the full 29-tool exercise
-     * < 5 minutes.
-     */
-    it.todo('AC-13 NF-Phase2-04: full 29-tool exercise completes in < 5 minutes');
+    it('AC-13 NF-Phase2-04: full 29-tool exercise completes in < 5 minutes', () => {
+      const elapsed = performance.now() - suiteStart;
+      // eslint-disable-next-line no-console -- intentional perf log for AC-13 audit trail
+      console.log(`[AC-13 NF-Phase2-04] suite wall-clock: ${elapsed.toFixed(1)}ms`);
+      expect(
+        elapsed,
+        `phase 2 suite wall-clock=${elapsed.toFixed(1)}ms vs budget ${PHASE2_TOTAL_WALL_CLOCK_MS}ms`,
+      ).toBeLessThan(PHASE2_TOTAL_WALL_CLOCK_MS);
+    });
   });
 });
-
-/**
- * Minimal AnalyzePerception fixture for SCHEMA-level conformance assertions.
- * Mirrors page-analyze-v23.test.ts; kept here so this file is self-contained
- * (no test-helper sharing across files).
- */
-function makeMinimalAnalyzePerception() {
-  return {
-    metadata: {
-      url: 'https://example.com',
-      requestedUrl: 'https://example.com',
-      title: 'Example',
-      metaDescription: null,
-      canonical: null,
-      lang: 'en',
-      ogTags: {},
-      schemaOrg: [],
-      timestamp: 1_700_000_000_000,
-      viewport: { width: 1280, height: 800 },
-    },
-    headingHierarchy: [],
-    landmarks: [],
-    semanticHTML: {
-      hasMain: false,
-      hasNav: false,
-      hasFooter: false,
-      formCount: 0,
-      tableCount: 0,
-    },
-    structure: { titleH1Match: true, titleH1Similarity: 1 },
-    textContent: {
-      wordCount: 0,
-      readabilityScore: null,
-      primaryLanguage: 'en',
-      paragraphs: [],
-      valueProp: { h1: null, heroSubheading: null, firstParagraph: null },
-      urgencyScarcityHits: [],
-      riskReversalHits: [],
-    },
-    ctas: [],
-    forms: [],
-    trustSignals: [],
-    layout: {
-      viewportHeight: 800,
-      foldPosition: 800,
-      contentAboveFold: [],
-      visualHierarchy: { primaryElement: '', secondaryElements: [] },
-      whitespaceRatio: 0.5,
-    },
-    images: [],
-    iframes: [],
-    navigation: {
-      primaryNavItems: [],
-      breadcrumbs: [],
-      footerNavItems: [],
-      hasSearch: false,
-      hasMobileMenu: false,
-    },
-    accessibility: { keyboardFocusOrder: [], skipLinks: [] },
-    performance: {
-      domContentLoaded: 0,
-      fullyLoaded: 0,
-      resourceCount: 0,
-      totalTransferSize: 0,
-    },
-    inferredPageType: {
-      primary: 'unknown',
-      alternatives: [],
-      signalsUsed: { urlKeywords: [], ctaTexts: [], formSignals: [], schemaOrgTypes: [] },
-    },
-  };
-}
