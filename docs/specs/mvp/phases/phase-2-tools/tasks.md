@@ -318,7 +318,7 @@ Each task **dep**: T-PHASE2-TYPES, T019, T-PHASE2-TESTS (and T016/T017/T018 for 
 
 ### Phase 2 acceptance gate
 
-- [ ] **T050 [US-1] Phase 2 integration test** (AC-13)
+- [x] **T050 [US-1] Phase 2 integration test** (AC-13)
   - **Brief — Outcome:** `tests/integration/phase2.test.ts` boots an in-process MCP server, registers all 29 MCP tools (22 browser_* + 2 agent_* + 5 page_*), exercises every tool against amazon.in (or a stable fixture if amazon.in flakes), asserts Zod-valid output OR documented typed error, total wall-clock < 5 minutes. **MUST also assert** (v0.2 — F-S4): `page_analyze` output's `_extensions` field is `undefined` (Phase 1c namespace contract carryforward).
   - **Files:** `packages/agent-core/tests/integration/phase2.test.ts`
   - **dep:** T016-T049 (everything)
