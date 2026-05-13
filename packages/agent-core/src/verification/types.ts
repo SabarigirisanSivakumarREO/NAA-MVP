@@ -196,3 +196,63 @@ export interface VerifyStrategy {
   applicable(contract: ActionContract): boolean;
   verify(contract: ActionContract, session: BrowserSession): Promise<VerifyResult>;
 }
+
+/**
+ * FailureClass — typed-class enumeration produced by FailureClassifier (T063).
+ *
+ * CANONICAL AUTHORITY:
+ *   spec.md AC-07 + R-07 (REQ-VERIFY-FAILURE-001).
+ *   impact.md §FailureClassifier (NEW) — verbatim union.
+ *
+ * Five LOCKED classes (impact.md §Forward stability promise — new classes
+ * require their own impact.md cycle):
+ *   - verify_failed       — VerifyEngine ran ≥1 strategy and all failed
+ *   - safety_blocked      — pre-action ActionClassifier veto (Phase 4)
+ *   - rate_limited        — domain rate cap hit (Phase 4)
+ *   - unverifiable        — no applicable strategy (engine returned empty
+ *                            attemptedStrategies)
+ *   - bot_detected_likely — PRE-POSITIONED for v1.1 `no_bot_block` strategy
+ *                            (no MVP path produces it; type-level slot only)
+ *
+ * Exported from types.ts so the failure-classifier conformance test
+ * (tests/conformance/failure-classifier.test.ts) imports it from the
+ * canonical shared-contracts module (mirrors VerifyStrategyName placement).
+ */
+export type FailureClass =
+  | 'verify_failed'
+  | 'safety_blocked'
+  | 'rate_limited'
+  | 'unverifiable'
+  | 'bot_detected_likely';
+
+/**
+ * FailureClassification — return shape of FailureClassifier.classify().
+ *
+ * `subclass` is free-form per class (e.g., `navigation_did_not_complete`
+ * under `verify_failed`, `pre_action_block` under `safety_blocked`); the
+ * orchestrator routes on `class` first, `subclass` for finer-grained
+ * recovery strategies (impact.md §FailureClassifier — Phase 5 BrowseNode
+ * routing block).
+ *
+ * `shouldRetry` is a hint, not a guarantee — the orchestrator combines it
+ * with the running ConfidenceScorer floor before deciding retry / replan /
+ * escalate (impact.md §Forward Contract — Phase 5 sample code).
+ */
+export interface FailureClassification {
+  class: FailureClass;
+  subclass: string;
+  shouldRetry: boolean;
+  context?: unknown;
+}
+
+/**
+ * ClassifyInput — discriminated union accepted by FailureClassifier.classify().
+ *
+ * AggregatedVerifyResult: VerifyEngine output (success or failure).
+ * { kind: 'safety' }: SafetyCheck (Phase 4 T066) pre-action veto.
+ * { kind: 'rate' }:   RateLimiter (Phase 4) domain cap hit.
+ */
+export type ClassifyInput =
+  | AggregatedVerifyResult
+  | { kind: 'safety' }
+  | { kind: 'rate' };

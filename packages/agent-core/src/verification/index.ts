@@ -13,3 +13,4 @@
  */
 export * from './types.js';
 export { VerifyEngine } from './VerifyEngine.js';
+export { FailureClassifier } from './FailureClassifier.js';
