@@ -191,7 +191,7 @@ No new deps in Phase 3.
     - **dep:** T051, T052, T053, T054, T055
     - **Kill criteria:** default block + extra: any check that gates registration on `name in MVP_NAMES_ONLY` → STOP, that's not forward-compat
 
-- [ ] **T063 [P] [US-1] FailureClassifier** (AC-07, REQ-VERIFY-FAILURE-001)
+- [x] **T063 [P] [US-1] FailureClassifier** (AC-07, REQ-VERIFY-FAILURE-001)
   - **Brief:**
     - **Outcome:** `verification/FailureClassifier.ts` exports `FailureClassifier` class with pure `classify(input)` method. Maps `AggregatedVerifyResult | {kind:'safety'|'rate'}` → `FailureClassification` with class + subclass + shouldRetry. Includes `bot_detected_likely` class pre-positioned for v1.1.
     - **Constraints:** File < 200 lines. Pure function. No external state.
