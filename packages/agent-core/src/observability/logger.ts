@@ -37,6 +37,18 @@
  *   - `client_session_id` — calling MCP client's session id; correlates
  *                           multiple tool calls back to the originating session.
  *
+ * Phase 3 (verification & confidence) fields (spec.md AC-01..AC-09; REQ-VERIFY-FAILURE-001):
+ *   - `action_id`        — UUID per browse action; one per ActionContract dispatch
+ *                          through VerifyEngine.
+ *   - `verify_strategy`  — which VerifyStrategy ran (e.g. `url_change`, `element_appears`,
+ *                          `element_text`, or one of the 6 v1.1 reserved names —
+ *                          `network_request`, `no_error_banner`, `snapshot_diff`,
+ *                          `custom_js`, `no_captcha`, `no_bot_block`).
+ *   - `failure_class`    — FailureClassifier output class
+ *                          (`verify_failed` | `safety_blocked` | `rate_limited` |
+ *                          `unverifiable` | `bot_detected_likely`); pre-positioned
+ *                          `bot_detected_likely` covers v1.1 forward-compat.
+ *
  * Future phases will extend `LogBindings` with their own correlation
  * fields (e.g. `heuristic_id`, `trace_id`) per the same convention.
  *
@@ -108,6 +120,15 @@ export interface LogBindings {
   tool_call_id?: string;
   /** Calling MCP client session id; correlates multi-call sequences. */
   client_session_id?: string;
+
+  // --- Phase 3 (verification & confidence) — spec.md AC-01..AC-09 ---
+  // Set by VerifyEngine.verify() + FailureClassifier.classify() consumers.
+  /** UUID per browse action; one per ActionContract dispatch. */
+  action_id?: string;
+  /** VerifyStrategy name (MVP: url_change|element_appears|element_text; v1.1 reserves 6 more). */
+  verify_strategy?: string;
+  /** FailureClassifier class (verify_failed|safety_blocked|rate_limited|unverifiable|bot_detected_likely). */
+  failure_class?: string;
 }
 
 /**
