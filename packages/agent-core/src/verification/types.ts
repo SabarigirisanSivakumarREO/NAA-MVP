@@ -3,27 +3,26 @@
  *
  * CANONICAL AUTHORITY:
  *   docs/specs/mvp/phases/phase-3-verification/spec.md AC-01 + R-01
- *     (REQ-VERIFY-001); spec.md AC-02 + R-02 (REQ-VERIFY-002).
- *   docs/specs/mvp/phases/phase-3-verification/impact.md §ActionContract (NEW)
- *     + §VerifyStrategy (NEW interface) — verbatim Zod + TS shapes.
+ *     (REQ-VERIFY-001); AC-02 + R-02 (REQ-VERIFY-002).
+ *   docs/specs/mvp/phases/phase-3-verification/impact.md §ActionContract
+ *     (NEW) + §VerifyStrategy (NEW interface) — verbatim Zod + TS shapes.
  *   docs/specs/mvp/phases/phase-3-verification/tasks.md T051 + T052 briefs.
  *
- * T051 (this commit) — exports:
+ * Exports (T051 + T052):
  *   - ExpectedSchema discriminated union (urlMatches | elementAppears |
  *     elementText) + per-variant strict schemas
  *   - ActionContractSchema + ActionContract type
  *   - VerifyResultSchema + VerifyResult type (single strategy attempt)
  *   - AggregatedVerifyResultSchema + AggregatedVerifyResult type
  *     (VerifyEngine output discriminated on ok:true|false)
+ *   - VerifyStrategyNames const (9 entries; 3 MVP + 6 v1.1 reserved)
+ *   - VerifyStrategyName type + VerifyStrategy interface
  *
- * T052 (subsequent commit) extends this file with VerifyStrategyNames /
- * VerifyStrategyName / VerifyStrategy interface — keeping the combined file
- * < 200 LOC per tasks.md T052 constraint.
- *
- * R10 compliance: file ≤ 300 LOC; named exports only; no `any`; .strict() at
- * every object boundary that has a closed shape. R2 (Zod-first at boundaries).
- * R9 (verification adapter seam — strategies plug into VerifyEngine via
- * VerifyStrategy interface; no vendor SDK leak here).
+ * R10: file ≤ 300 LOC (target ≤ 200 per T052 brief); named exports only;
+ *   no `any`; .strict() on every closed-shape object.
+ * R2: Zod-first at every external boundary.
+ * R9: VerifyStrategy is the strategy-registry seam — strategies plug into
+ *   VerifyEngine (T062) without engine code change.
  *
  * impact.md v0.2 — `type` is z.string() (NOT z.enum) for forward-compat: it
  * is informational metadata for logging + FailureClassifier subclass routing,
@@ -33,13 +32,20 @@
  */
 import { z } from 'zod';
 
+import type { BrowserSession } from '../adapters/BrowserEngine.js';
+
 /**
  * Expected outcome variants — discriminated on `kind`.
  *
- * String urlMatches uses STRICT EQUALITY (`actualUrl === expected.urlMatches`)
- * at runtime; RegExp urlMatches uses `.test(actualUrl)` (impact.md v0.2 F03
- * closure; spec.md AC-03 + Scenario 1). Strategies dispatch via
- * `typeof` / `instanceof RegExp` discriminator (T053 UrlChangeStrategy).
+ * urlMatches: string = STRICT EQUALITY (`actualUrl === urlMatches`); RegExp =
+ *   `.test(actualUrl)` (impact.md v0.2 F03 closure; spec.md AC-03 + Scenario 1).
+ * elementText: string = SUBSTRING match, case-sensitive; RegExp = `.test()`
+ *   pattern match (spec.md AC-05 + Scenario 3).
+ * elementAppears `timeoutMs`: single shared ceiling for MutationMonitor
+ *   settle (precondition gate) AND 3-criterion visibility check (spec.md
+ *   AC-04 edge case "ElementAppearsStrategy two-timer semantics"); default
+ *   10 000 ms. Runtime dispatch via `typeof` / `instanceof RegExp` lives in
+ *   T053-T055 strategies.
  */
 export const ExpectedUrlMatchesSchema = z
   .object({
@@ -48,12 +54,6 @@ export const ExpectedUrlMatchesSchema = z
   })
   .strict();
 
-/**
- * Element-appears variant. `timeoutMs` is the single shared ceiling for both
- * MutationMonitor settle (precondition gate) AND the 3-criterion visibility
- * check (spec.md AC-04 + edge case "ElementAppearsStrategy two-timer
- * semantics"). Default 10 000 ms per spec.
- */
 export const ExpectedElementAppearsSchema = z
   .object({
     kind: z.literal('elementAppears'),
@@ -62,12 +62,6 @@ export const ExpectedElementAppearsSchema = z
   })
   .strict();
 
-/**
- * Element-text variant. String text uses SUBSTRING match, case-sensitive;
- * RegExp text uses `.test()` pattern match (spec.md AC-05 + Scenario 3 +
- * impact.md v0.2). Runtime dispatch via `typeof` / `instanceof RegExp` lives
- * in T055 ElementTextStrategy.
- */
 export const ExpectedElementTextSchema = z
   .object({
     kind: z.literal('elementText'),
@@ -105,18 +99,11 @@ export const ActionContractSchema = z
 export type ActionContract = z.infer<typeof ActionContractSchema>;
 
 /**
- * Single-strategy attempt outcome.
- *
- * `unstable` / `timedOut` / `failedCriterion` carry ElementAppearsStrategy
- * two-timer semantics (spec.md edge case + T054):
- *   - `unstable: true` when MutationMonitor's internal 2 s timer fires before
- *     DOM settles
- *   - `timedOut: true` when visibility check exceeds remaining timeoutMs
- *   - `failedCriterion: 'a'|'b'|'c'` which of the 3 visibility criteria failed
- *     (a: DOM presence, b: bounding box > 0, c: computed style visible)
- *
- * `evidence` is strategy-specific (e.g., url_change emits `{ actualUrl }`)
- * and opaque to engine + classifier — they pass it through.
+ * Single-strategy attempt outcome. `unstable` / `timedOut` / `failedCriterion`
+ * carry ElementAppearsStrategy two-timer semantics (spec.md edge case + T054):
+ * unstable=MutationMonitor 2 s timer fired before settle; timedOut=visibility
+ * check exceeded timeoutMs; failedCriterion='a' DOM presence | 'b' box > 0 |
+ * 'c' style visible. `evidence` is strategy-specific (e.g., `{ actualUrl }`).
  */
 export const VerifyResultSchema = z
   .object({
@@ -133,15 +120,11 @@ export const VerifyResultSchema = z
 export type VerifyResult = z.infer<typeof VerifyResultSchema>;
 
 /**
- * VerifyEngine output — aggregates one or more single-strategy attempts.
- * Discriminated on `ok`:
- *   - ok: true → first successful strategy wins; prior failed attempts (if
- *     any) listed in `failures` (may be empty)
- *   - ok: false → no strategy succeeded; `attemptedStrategies` records the
- *     names tried in dispatch order; `reason` carries engine-level reasons
- *     such as 'no_applicable_strategy' (spec.md edge case)
- *
- * Consumed by Phase 4 FailureClassifier (T063) and Phase 5 BrowseNode.
+ * VerifyEngine output — aggregates strategy attempts. Discriminated on `ok`:
+ * true=winning strategy + (possibly empty) prior `failures`; false=no
+ * strategy succeeded, `attemptedStrategies` records names tried in order,
+ * `reason` carries engine-level reasons like 'no_applicable_strategy'
+ * (spec.md edge case). Consumed by FailureClassifier (T063) + BrowseNode.
  */
 export const AggregatedVerifyResultSchema = z.union([
   z
@@ -163,3 +146,53 @@ export const AggregatedVerifyResultSchema = z.union([
 ]);
 
 export type AggregatedVerifyResult = z.infer<typeof AggregatedVerifyResultSchema>;
+
+/**
+ * VerifyStrategyNames — 9-entry closed enum: 3 MVP + 6 v1.1 reserved.
+ *
+ * FORWARD-COMPAT SEAM (impact.md §VerifyStrategy): Phase 3 ships 3 MVP
+ * implementations (T053 url_change, T054 element_appears, T055 element_text);
+ * v1.1 plugs in the 6 reserved names (network_request, no_error_banner,
+ * snapshot_diff, custom_js, no_captcha, no_bot_block) without engine code
+ * change. Adding / renaming requires a fresh impact.md cycle (R20).
+ *
+ * `bot_detected_likely` is pre-positioned in FailureClassifier (T063 / AC-07)
+ * to receive evidence from v1.1's `no_bot_block` strategy without enum drift.
+ */
+export const VerifyStrategyNames = [
+  // MVP (Phase 3)
+  'url_change',
+  'element_appears',
+  'element_text',
+  // v1.1 reserved — implementations deferred per tasks-v2 v2.3.2
+  'network_request',
+  'no_error_banner',
+  'snapshot_diff',
+  'custom_js',
+  'no_captcha',
+  'no_bot_block',
+] as const;
+
+export type VerifyStrategyName = (typeof VerifyStrategyNames)[number];
+
+/**
+ * Strategy interface implemented by 3 MVP strategies (T053-T055) and
+ * registered with VerifyEngine (T062). v1.1 strategies (T056-T061) plug into
+ * this same interface without engine code change.
+ *   - `name` MUST be a member of VerifyStrategyNames.
+ *   - `priority`: dispatch hint; VerifyEngine sorts descending (higher first).
+ *     T053 uses priority=100 (most fundamental).
+ *   - `applicable(contract)` typically gates on `contract.expected.kind`.
+ *   - `verify(contract, session)` runs the live check; returns VerifyResult.
+ *
+ * NOT a Zod schema — methods don't serialize. TS interface only.
+ *
+ * `BrowserSession` comes from Phase 1's BrowserEngine adapter (R9 boundary).
+ * Strategies receive the session by injection; they don't import Playwright.
+ */
+export interface VerifyStrategy {
+  readonly name: VerifyStrategyName;
+  readonly priority: number;
+  applicable(contract: ActionContract): boolean;
+  verify(contract: ActionContract, session: BrowserSession): Promise<VerifyResult>;
+}
