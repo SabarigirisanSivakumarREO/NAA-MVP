@@ -286,62 +286,74 @@ class ContextAssembler {
       await mutationMonitor.observe(session.page, { timeoutMs: SETTLE_TIMEOUT_MS });
 
       await session.page.goto(url, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
-      const settle = await mutationMonitor.observe(session.page, {
-        timeoutMs: SETTLE_TIMEOUT_MS,
-      });
-
-      const ax = await accessibilityExtractor.extract(session.page);
-      const filtered = hardFilter.apply(ax);
-      const dom = softFilter.apply(filtered.tree);
-      const visual = await tryCaptureVisual(session, url);
-      // T1B-000 substrate extraction (Phase 1b) — runs inside the same
-      // page.evaluate sandbox; failure-tolerant via emptySubstrate fallback.
-      const viewport = opts?.session?.viewport ?? DEFAULT_VIEWPORT;
-      const substrate = await tryExtractSubstrate(session, sessionLog, viewport);
-
-      // Stage 2.5 fix N3 — populate metadata.title + statusCode from real
-      // page data instead of hardcoded empty / 200. Title sourced via
-      // document.title (works inside CAPTCHA walls + dynamic pages).
-      // StatusCode sourced from PerformanceNavigationTiming.responseStatus
-      // (browser-native; available after `domcontentloaded`). Both inside
-      // existing BrowserPage.evaluate seam — no new R9 surface area.
-      const meta = await readPageMetadata(session, sessionLog);
-      const navigationEndedAt = new Date();
-      const metadata: Metadata = {
-        url,
-        title: meta.title,
-        statusCode: meta.statusCode,
-        navigationStartedAt: navigationStartedAt.toISOString(),
-        navigationEndedAt: navigationEndedAt.toISOString(),
-      };
-
-      const diagnostics: Diagnostics = {
-        axNodeCount: ax.totalNodes,
-        mutationsObserved: settle.mutationsObserved,
-        stable: settle.stable,
-        lowAxNodeCount: ax.totalNodes < 10,
-        unstable: !settle.stable,
-        errors: [],
-        warnings: [],
-      };
-
-      const candidate = assemble({ metadata, ax: filtered.tree, dom, visual, diagnostics, substrate });
-      const fitted = fitToTokenBudget(candidate);
-      const validated = PageStateModelSchema.parse(fitted);
-
-      sessionLog.info(
-        {
-          event: 'capture.completed',
-          ax_nodes: ax.totalNodes,
-          stable: settle.stable,
-          mutations: settle.mutationsObserved,
-        },
-        'context assembler capture completed',
-      );
-      return validated;
+      return await this.captureFromSession(session, { navigationStartedAt });
     } finally {
       await session.close();
     }
+  }
+
+  /**
+   * Capture a PageStateModel from an EXISTING BrowserSession without owning
+   * lifecycle. Phase 2 T024 browser_get_state consumes this — MCP clients
+   * hold a persistent session across many tool calls. Runs the extractor
+   * pipeline (mutation settle + AX + filters + visual + substrate + metadata)
+   * on current page state. Caller owns session.close(). R18 append-only —
+   * capture(url, opts) signature preserved; this is an ADDITIVE Phase 2
+   * surface (R20 forward-compat; R11.4 T024 capture mechanism = session-based).
+   */
+  async captureFromSession(
+    session: BrowserSession,
+    opts?: { navigationStartedAt?: Date },
+  ): Promise<PageStateModel> {
+    const navigationStartedAt = opts?.navigationStartedAt ?? new Date();
+    const url = session.page.url();
+    const sessionLog = log.child({ session_id: session.id, page_url: url });
+
+    const settle = await mutationMonitor.observe(session.page, {
+      timeoutMs: SETTLE_TIMEOUT_MS,
+    });
+
+    const ax = await accessibilityExtractor.extract(session.page);
+    const filtered = hardFilter.apply(ax);
+    const dom = softFilter.apply(filtered.tree);
+    const visual = await tryCaptureVisual(session, url);
+    // T1B-000 substrate uses DEFAULT_VIEWPORT — session viewport already fixed at newSession().
+    const substrate = await tryExtractSubstrate(session, sessionLog, DEFAULT_VIEWPORT);
+
+    const meta = await readPageMetadata(session, sessionLog);
+    const navigationEndedAt = new Date();
+    const metadata: Metadata = {
+      url,
+      title: meta.title,
+      statusCode: meta.statusCode,
+      navigationStartedAt: navigationStartedAt.toISOString(),
+      navigationEndedAt: navigationEndedAt.toISOString(),
+    };
+
+    const diagnostics: Diagnostics = {
+      axNodeCount: ax.totalNodes,
+      mutationsObserved: settle.mutationsObserved,
+      stable: settle.stable,
+      lowAxNodeCount: ax.totalNodes < 10,
+      unstable: !settle.stable,
+      errors: [],
+      warnings: [],
+    };
+
+    const candidate = assemble({ metadata, ax: filtered.tree, dom, visual, diagnostics, substrate });
+    const fitted = fitToTokenBudget(candidate);
+    const validated = PageStateModelSchema.parse(fitted);
+
+    sessionLog.info(
+      {
+        event: 'capture.completed',
+        ax_nodes: ax.totalNodes,
+        stable: settle.stable,
+        mutations: settle.mutationsObserved,
+      },
+      'context assembler capture completed',
+    );
+    return validated;
   }
 }
 

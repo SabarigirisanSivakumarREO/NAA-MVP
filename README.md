@@ -2,7 +2,7 @@
 
 > Conversion-rate optimization audit platform for REO Digital. Walks a real D2C product page; runs Claude through a deep-perceive → evaluate → self-critique → ground → annotate pipeline; emits grounded, consultant-reviewable findings + a branded PDF.
 
-**Status:** Phase 0 (workspace + scaffolding) and Phase 1 (browser perception foundation) implemented; Phase 2+ (MCP tools, analysis, orchestration, delivery) in progress per the [walking-skeleton roadmap](docs/specs/mvp/implementation-roadmap.md).
+**Status:** Phase 0 (workspace + scaffolding), Phase 1 (browser perception foundation), and Phase 2 (29-tool MCP surface) implemented; Phase 3+ (analysis pipeline, orchestration, delivery) in progress per the [walking-skeleton roadmap](docs/specs/mvp/implementation-roadmap.md).
 
 Phase 1 ships the `contextAssembler.capture(url)` API in `@neural/agent-core` — opens a Playwright Chromium session, captures an accessibility tree, filters to a compact `PageStateModel` (under 20,000 tokens — NF-Phase1-01 v0.4), monitors DOM mutations, and produces a JPEG screenshot. Phase 1 acceptance is green for example.com, amazon.in, and a Peregrine PDP fixture (5/5 integration tests pass; full 3-site capture in ~9.5 s wall-clock).
 
@@ -49,9 +49,14 @@ pnpm cro:audit --version
 # 6. Validate Phase 1 perception (3-site integration suite, < 60s wall-clock)
 pnpm -F @neural/agent-core test integration/phase1
 # Expected: 5 passed (example.com, amazon.in, peregrine — all under 20,000 tokens)
+
+# 7. Validate Phase 2 MCP tool surface (29 tools through in-process server, < 5 min wall-clock)
+pnpm -F @neural/agent-core test integration/phase2
+# Expected: 11 passed (29 MCP tools registered; namespace contract green;
+#           page_analyze._extensions === undefined per Phase 1c §11)
 ```
 
-If all six commands succeed, you're at Phase 1 green. The `pnpm cro:audit --url=<URL>` end-to-end CLI wires up in Phase 5+ (Browse MVP) per the [implementation roadmap](docs/specs/mvp/implementation-roadmap.md); today the CLI exposes `--version` only, with the walking-skeleton fixture stubbed behind it.
+If all seven commands succeed, you're at Phase 2 green. The `pnpm cro:audit --url=<URL>` end-to-end CLI wires up in Phase 5+ (Browse MVP) per the [implementation roadmap](docs/specs/mvp/implementation-roadmap.md); today the CLI exposes `--version` only, with the walking-skeleton fixture stubbed behind it.
 
 ### Phase 1 perception API
 
@@ -71,6 +76,36 @@ console.log(model.diagnostics.tokenCount);               // < 20,000 (NF-Phase1-
 
 `contextAssembler` owns the full session lifecycle (open → navigate → extract → close) and never throws on token-budget overruns — the deterministic shrink ladder degrades gracefully and surfaces `diagnostics.errors`. See [`docs/specs/mvp/phases/phase-1-perception/spec.md`](docs/specs/mvp/phases/phase-1-perception/spec.md) for the full contract.
 
+### Phase 2 MCP tools
+
+Phase 2 ships a 29-tool MCP surface (22 `browser_*` + 2 `agent_*` + 5 `page_*`) via the `@modelcontextprotocol/sdk` adapter. Tool factories register at boot through `InMemoryToolRegistry`; `MCPServerAdapter` wires them into the SDK's `tools/list` / `tools/call` flows with Zod-derived JSON schemas + safety classifications. `page_analyze` (T048) is the v2.3 AnalyzePerception producer Phase 7's DeepPerceiveNode will consume; its `_extensions` field stays `undefined` per the Phase 1c §11 namespace contract.
+
+Workspace consumers wire a server like this (mirrors `packages/agent-core/tests/integration/phase2.test.ts`):
+
+```ts
+import { BrowserManager } from '@neural/agent-core/dist/browser-runtime/BrowserManager.js';
+import {
+  InMemoryToolRegistry,
+  MCPServerAdapter,
+} from '@neural/agent-core/dist/mcp/index.js';
+import { createNavigateTool } from '@neural/agent-core/dist/mcp/tools/navigate.js';
+import { createPageAnalyzeTool } from '@neural/agent-core/dist/mcp/tools/pageAnalyze.js';
+// ... 27 more tool factories (browser_* / agent_* / page_*) ...
+
+const session = await new BrowserManager().newSession({ headless: true });
+
+const registry = new InMemoryToolRegistry();
+registry.register(createNavigateTool({ session }));
+registry.register(createPageAnalyzeTool({ session }));
+// ... register the remaining 27 (3 of which take no deps: agent_complete,
+//     agent_request_human, page_annotate_screenshot) ...
+
+const server = new MCPServerAdapter(registry, logger);
+await server.start();
+```
+
+Full tool catalog + per-tool acceptance criteria: [`docs/specs/mvp/phases/phase-2-tools/spec.md`](docs/specs/mvp/phases/phase-2-tools/spec.md) AC-04 through AC-13.
+
 ---
 
 ## Common commands
@@ -89,6 +124,8 @@ pnpm typecheck                     # tsc --noEmit across all packages
 pnpm test                          # Vitest unit tests across packages
 pnpm test:integration              # Playwright Test acceptance suite
                                    # (currently: tests/acceptance/phase-0-setup.spec.ts)
+pnpm -F @neural/agent-core test integration/phase1   # Phase 1: perception (5 tests, ~10s)
+pnpm -F @neural/agent-core test integration/phase2   # Phase 2: 29-tool MCP surface (11 tests, < 5 min)
 
 # CLI
 pnpm cro:audit --version           # prints version
@@ -124,8 +161,14 @@ neural-nba/
 ├── packages/
 │   └── agent-core/           # @neural/agent-core — shared library
 │       └── src/
-│           ├── adapters/     # R9 boundary — all external SDKs wrapped here
-│           └── observability/ # Pino logger factory
+│           ├── adapters/         # R9 boundary — external SDKs wrapped here (BrowserEngine, ...)
+│           ├── analysis/         # Phase 2: AnalyzePerception v2.3 schema + Phase 7 node stubs
+│           │                     # (DeepPerceive / Evaluate / SelfCritique / Annotate / Store)
+│           ├── browser-runtime/  # Phase 1+1b+2: BrowserManager + Mouse/Typing/Scroll + RateLimiter
+│           ├── mcp/              # Phase 2: 29-tool MCP surface (browser_* / agent_* / page_*)
+│           │                     # ToolRegistry + Server + per-tool factories under tools/
+│           ├── observability/    # Pino logger factory
+│           └── perception/       # Phase 1+1c: ContextAssembler + extractors + extensions/ pipeline
 ├── scripts/                  # dev/build tooling (R9-exempt per spec.md §Assumptions)
 │   └── db-migrate-stub.mjs   # Phase 0 CREATE EXTENSION; Phase 4 → Drizzle
 ├── tests/

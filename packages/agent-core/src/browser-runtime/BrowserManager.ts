@@ -33,7 +33,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { chromium } from 'playwright';
+import { chromium, type Page as PlaywrightPage } from 'playwright';
 import { PageStateModelSchema, checkAxTreeDepth, type PageStateModel } from '../perception/types.js';
 import { createLogger } from '../observability/logger.js';
 import {
@@ -44,6 +44,7 @@ import {
   type BrowserSession,
   type SessionOpts,
 } from '../adapters/BrowserEngine.js';
+import { wrapPlaywrightPage } from './BrowserPageWrapper.js';
 
 const FIXTURE_PATH = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -106,42 +107,44 @@ export class BrowserManager implements BrowserEngine {
       contextOpts.userAgent = validated.userAgent;
     }
     const playwrightContext = await browser.newContext(contextOpts);
-    const playwrightPage = await playwrightContext.newPage();
+    const initialPlaywrightPage = await playwrightContext.newPage();
 
     log.info({ event: 'session.opened', headless: validated.headless }, 'browser session opened');
 
     // R9 boundary: re-type wrappers exposing only the Phase-1-minimal
-    // surface. `as never` escapes are localized to THIS file ONLY (the
-    // adapter boundary); they encode the deliberate type-narrowing from
-    // Playwright's broad signatures to our minimal subset.
+    // surface. The per-page wrap helper lives in BrowserPageWrapper.ts
+    // (R10 size cap — Wave 9b multi-tab refactor would push this file
+    // past 300 LOC if inlined).
     //
     // R11.4 v0.3.2 — Phase 1 spec/plan/impact/tasks updated to cite
     // `page.ariaSnapshot()` directly (Playwright 1.57+; legacy
     // `accessibility.snapshot()` was removed in 1.57). T008
     // AccessibilityExtractor owns the YAML→AccessibilityNodeSchema parse-back.
-    const page: BrowserPage = {
-      goto: async (url, gotoOpts) => {
-        await playwrightPage.goto(url, gotoOpts);
-      },
-      ariaSnapshot: (snapOpts) => playwrightPage.ariaSnapshot(snapOpts),
-      screenshot: (shotOpts) => playwrightPage.screenshot(shotOpts) as Promise<Buffer>,
-      addInitScript: async (scriptOrFn) => {
-        // Playwright 1.59 returns Promise<Disposable>; we discard.
-        await playwrightPage.addInitScript(scriptOrFn as never);
-      },
-      evaluate: <T = unknown>(fn: string | ((...args: unknown[]) => T), ...args: unknown[]) =>
-        playwrightPage.evaluate(fn as never, ...args) as Promise<T>,
-      waitForLoadState: (state, waitOpts) => playwrightPage.waitForLoadState(state, waitOpts),
-      setViewportSize: (size) => playwrightPage.setViewportSize(size),
-      setContent: (html, contentOpts) => playwrightPage.setContent(html, contentOpts),
+    //
+    // Phase 2 T035 multi-tab state — parallel arrays of Playwright pages
+    // + their wrapped counterparts, kept in lockstep. activeIdx tracks
+    // which tab `session.page` (dynamic getter) returns.
+    const wrappedPages: BrowserPage[] = [];
+    const playwrightPages: PlaywrightPage[] = [];
+    let activeIdx = 0;
+
+    const trackPage = (pwPage: PlaywrightPage): number => {
+      wrappedPages.push(wrapPlaywrightPage(pwPage));
+      playwrightPages.push(pwPage);
+      return wrappedPages.length - 1;
     };
 
-    // T007 stealth surface: `pages()` exposes the existing-page list so
-    // StealthConfig can patch the about:blank page created above. We hold
-    // a single-page array (Phase 1 only opens one page per session); the
-    // adapter contract is `readonly BrowserPage[]` so callers cannot grow
-    // the list out of band.
-    const wrappedPages: BrowserPage[] = [page];
+    trackPage(initialPlaywrightPage);
+
+    // Auto-track pages opened by the page itself (e.g., target=_blank
+    // links, window.open). Also handles racing pages that arrive between
+    // `playwrightContext.newPage()` resolve and our trackPage() call —
+    // we guard against double-tracking in newPage() below.
+    playwrightContext.on('page', (newPlaywrightPage) => {
+      if (playwrightPages.includes(newPlaywrightPage)) return;
+      const idx = trackPage(newPlaywrightPage);
+      log.info({ event: 'session.page_added', index: idx }, 'new page tracked');
+    });
 
     const context: BrowserContext = {
       addInitScript: async (scriptOrFn) => {
@@ -168,11 +171,72 @@ export class BrowserManager implements BrowserEngine {
       }
     };
 
-    return {
+    const session: BrowserSession = {
       id: sessionId,
-      page,
+      get page(): BrowserPage {
+        // Phase 2 T035 — dynamic getter returns the current active page.
+        // Tools that read `session.page` at handler-invocation time
+        // transparently operate on whichever tab is currently active.
+        const p = wrappedPages[activeIdx];
+        if (p === undefined) {
+          throw new Error(`BrowserSession: no active page at index ${activeIdx}`);
+        }
+        return p;
+      },
       context,
+      pages: () => wrappedPages,
+      activeIndex: () => activeIdx,
+      setActiveIndex(index: number): void {
+        if (!Number.isInteger(index) || index < 0 || index >= wrappedPages.length) {
+          throw new RangeError(
+            `BrowserSession.setActiveIndex: index ${index} out of bounds [0, ${wrappedPages.length})`,
+          );
+        }
+        activeIdx = index;
+        log.info(
+          { event: 'session.active_index_changed', active_index: index },
+          'active tab switched',
+        );
+      },
+      newPage: async (): Promise<number> => {
+        const newPwPage = await playwrightContext.newPage();
+        // The context.on('page') handler may have already tracked it
+        // (Playwright fires the event synchronously in most cases). Find
+        // it by reference; if missing, track now.
+        const existingIdx = playwrightPages.indexOf(newPwPage);
+        if (existingIdx !== -1) return existingIdx;
+        return trackPage(newPwPage);
+      },
+      closePage: async (index: number): Promise<void> => {
+        if (!Number.isInteger(index) || index < 0 || index >= wrappedPages.length) {
+          throw new RangeError(
+            `BrowserSession.closePage: index ${index} out of bounds [0, ${wrappedPages.length})`,
+          );
+        }
+        if (wrappedPages.length === 1) {
+          throw new RangeError(
+            'BrowserSession.closePage: cannot close the last remaining page; close the session instead',
+          );
+        }
+        const pwPage = playwrightPages[index];
+        if (pwPage !== undefined) {
+          await pwPage.close();
+        }
+        wrappedPages.splice(index, 1);
+        playwrightPages.splice(index, 1);
+        if (activeIdx === index) {
+          activeIdx = Math.min(index, wrappedPages.length - 1);
+        } else if (activeIdx > index) {
+          activeIdx -= 1;
+        }
+        log.info(
+          { event: 'session.page_closed', closed_index: index, active_index: activeIdx },
+          'page closed',
+        );
+      },
       close,
     };
+
+    return session;
   }
 }

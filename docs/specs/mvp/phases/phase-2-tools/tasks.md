@@ -1,12 +1,12 @@
 ---
 title: Tasks — Phase 2 MCP Tools + Human Behavior
 artifact_type: tasks
-status: draft
-version: 0.1
+status: verified
+version: 0.2
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-12
 owner: engineering lead
-authors: [Claude (drafter)]
+authors: [Claude (drafter), Claude (master orchestrator session 16 — v0.2 Gate 1 Pass 1 patch wave)]
 
 supersedes: null
 supersededBy: null
@@ -16,8 +16,12 @@ derived_from:
   - docs/specs/mvp/phases/phase-2-tools/plan.md
   - docs/specs/mvp/phases/phase-2-tools/impact.md
   - docs/specs/mvp/tasks-v2.md (T016-T050)
-  - docs/specs/mvp/constitution.md (R3, R4, R9, R23)
+  - docs/specs/mvp/constitution.md (R3, R4, R9, R18, R19, R20, R23)
   - .claude/skills/neural-dev-workflow/
+  # v0.2 — Phase 1b/1c upstream rollups added per CLAUDE.md §1b rollup-first rule (Gate 1 finding F-S3)
+  - docs/specs/mvp/phases/phase-1-perception/phase-1-current.md
+  - docs/specs/mvp/phases/phase-1b-perception-extensions/phase-1b-current.md
+  - docs/specs/mvp/phases/phase-1c-perception-bundle/phase-1c-current.md
 
 req_ids:
   - REQ-MCP-001
@@ -36,18 +40,31 @@ delta:
     - Phase 2 tasks.md — 35 tasks (largest single-phase count in MVP)
     - T020-T042 organized as 23-tool table (parallelizable in 3 batches)
     - Per-task explicit kill criteria for T048 (page_analyze v2.3, AnalyzePerception schema author)
-  changed: []
+    # v0.2 — Gate 1 Pass 1 patch wave (master orchestrator session 16, 2026-05-12) — REVISE
+    - v0.2 — Phase 1b/1c upstream rollups added to derived_from (F-S3)
+    - v0.2 — T019 brief: ToolRegistry interface duplicate removed; references impact.md as canonical (F-T2)
+    - v0.2 — T042 file path aligned: requestHuman.ts → agentRequestHuman.ts (matches T041 agentComplete.ts convention) (F-S6)
+    - v0.2 — T048 brief extended: upstream Phase 1b extractor reuse acknowledged; namespace contract kill criterion added; F-G2 settle precondition; F-S13 IframePurpose closed-enum constraint (F-S4 + F-G2 + F-S13)
+    - v0.2 — Explicit safetyClass added for T043 (requires_safety_check) + T044-T048 (safe) — closes F-S12 6-of-29 unclassified gap
+    - v0.2 — T050 integration test brief: 28 tools → 29 MCP tools; namespace assertion added (F-T1)
+    - v0.2 — Constitution range updated R1-R23 → R1-R26 in governing_rules + R3 default block citations (F-S10)
+  changed:
+    - v0.1 → v0.2 — Gate 1 Pass 1 patch wave; no scope changes; all task IDs T-PHASE2-* + T016-T050 stable
   impacted: []
-  unchanged: []
+  unchanged:
+    - All task IDs (T016-T050 + T-PHASE2-{TESTS,TYPES,LOGGER,DOC,INSPECTOR,ROLLUP}) stable per R18 append-only
 
 governing_rules:
   - Constitution R3 (TDD)
   - Constitution R4 (Browser Agent — exact tool names)
   - Constitution R9 (adapter)
+  - Constitution R18 (append-only — task IDs preserved through v0.2)
+  - Constitution R19 (rollup-first — predecessor rollups in derived_from)
   - Constitution R20 (impact)
   - Constitution R23 (kill criteria)
+  - Phase 1c impact.md §11 (namespace contract carryforward)
 
-description: "Phase 2 task list — 35 tasks; tools registered with EXACT v3.1 names; AnalyzePerception authored at T048."
+description: "Phase 2 task list — 35 tasks; tools registered with EXACT v3.1 names; AnalyzePerception authored at T048; v0.2 Gate 1 Pass 1 patch wave acknowledges Phase 1b/1c upstream substrate + closes safetyClass coverage + IframePurpose enum constraint."
 ---
 
 # Tasks: Phase 2 — MCP Tools + Human Behavior
@@ -137,7 +154,7 @@ Add Phase 2 deps to `packages/agent-core/package.json`:
 
 ## Phase 3 — User Story 1: An LLM-driven agent drives the browser via MCP tools (Priority: P1) 🎯 MVP
 
-**Goal:** MCP server boots, all 28 tools register, Phase 2 integration test runs every tool against amazon.in.
+**Goal:** MCP server boots, all 29 MCP tools register (22 browser_* + 2 agent_* + 5 page_*), Phase 2 integration test runs every tool against amazon.in.
 
 **Independent Test:** `pnpm -F @neural/agent-core test integration/phase2`.
 
@@ -171,11 +188,11 @@ Add Phase 2 deps to `packages/agent-core/package.json`:
 ### Implementation tasks — MCP Server
 
 - [ ] **T019 [US-1] MCPServer skeleton** (AC-04, REQ-MCP-001/002)
-  - **Brief — Outcome:** `mcp/Server.ts` exports `MCPServerAdapter` wrapping `@modelcontextprotocol/sdk` with `start()` + `stop()`. `mcp/ToolRegistry.ts` exports `ToolRegistry.register/list/get/getSafetyClass`. Boot fails fast on duplicate tool name. `tools/list` returns 0 tools at this point.
+  - **Brief — Outcome:** `mcp/Server.ts` exports `MCPServerAdapter` wrapping `@modelcontextprotocol/sdk` with `start()` + `stop()`. `mcp/ToolRegistry.ts` exports `ToolRegistry` interface (canonical shape declared in [impact.md MCPToolRegistry section](impact.md) — DO NOT redefine here). Boot fails fast on duplicate tool name. `tools/list` returns 0 tools at this point.
   - **Files:** `packages/agent-core/src/mcp/Server.ts`, `packages/agent-core/src/mcp/ToolRegistry.ts`, `packages/agent-core/src/mcp/index.ts`
   - **dep:** T-PHASE2-TYPES, T-PHASE2-TESTS
   - **Smoke test:** `new MCPServerAdapter(registry).start()` boots in < 500 ms; duplicate registration throws.
-  - **Constraints:** Server.ts < 200 lines. ToolRegistry.ts < 150 lines.
+  - **Constraints:** Server.ts < 200 lines. ToolRegistry.ts < 150 lines. Interface shape MUST match impact.md MCPToolRegistry verbatim (R11 single source of truth — F-T2).
   - **Kill criteria:** default block
 
 ### Implementation tasks — 23 Browse Tools (T020-T042) [P × 3 batches per PRD §10.10]
@@ -213,7 +230,7 @@ All 23 follow the same per-tool template (see [plan.md "Phase 1 Design"](plan.md
 | T039 | `browser_get_network` | `mcp/tools/getNetwork.ts` | safe | Network event capture |
 | T040 | `browser_wait_for` | `mcp/tools/waitFor.ts` | safe | Wait for selector / timeout |
 | T041 | `agent_complete` | `mcp/tools/agentComplete.ts` | safe | Orchestration signal — not page action |
-| T042 | `agent_request_human` | `mcp/tools/requestHuman.ts` | requires_hitl | HITL pause |
+| T042 | `agent_request_human` | `mcp/tools/agentRequestHuman.ts` | requires_hitl | HITL pause (filename matches T041 agentComplete.ts convention — full prefix retained per F-S6) |
 
 Each task **dep**: T-PHASE2-TYPES, T019, T-PHASE2-TESTS (and T016/T017/T018 for tools that use them).
 
@@ -226,54 +243,68 @@ Each task **dep**: T-PHASE2-TYPES, T019, T-PHASE2-TESTS (and T016/T017/T018 for 
 
 ### Implementation tasks — Sandbox + Page tools
 
-- [ ] **T043 [US-1] browser_evaluate (sandboxed)** (AC-06, REQ-MCP-SANDBOX-001/002/003)
+- [x] **T043 [US-1] browser_evaluate (sandboxed)** (AC-06, REQ-MCP-SANDBOX-001/002/003)
   - **Brief — Outcome:** `mcp/tools/browserEvaluate.ts` exports the `browser_evaluate` tool. Before user script executes, injects a Proxy on `globalThis` blocking property access to: (a) `document.cookie`, (b) `localStorage` / `sessionStorage`, (c) `fetch` / `XMLHttpRequest`, (d) `window.location` setter / `history.pushState`. All 4 vectors verified in conformance test.
+  - **Safety class (v0.2 — F-S12):** `requires_safety_check` — arbitrary JS execution surface even within sandbox; HITL-eligible per Phase 4 SafetyCheck policy
   - **Files:** `packages/agent-core/src/mcp/tools/browserEvaluate.ts`
   - **dep:** T019, T-PHASE2-TYPES
   - **Smoke test:** AC-06 conformance test passes — all 4 sandbox blocks fire.
   - **Constraints:** File < 200 lines. Sandbox script string < 50 lines (kept inline; documented WHY each line is forbidden).
   - **Kill criteria:** default block + extra: any 4-vector test fails → STOP, sandbox is the security guarantee
+  - **v1.1 backlog (informational):** sandbox v2 should extend block list to WebSocket + IndexedDB + Cache API + postMessage (per Gate 1 critic surface 4 — not a Phase 2 blocker)
 
-- [ ] **T044 [P] [US-1] page_get_element_info** (AC-07)
+- [x] **T044 [P] [US-1] page_get_element_info** (AC-07)
   - **Brief — Outcome:** Returns `{ boundingBox, isAboveFold, computedStyles, contrastRatio }` for a target id. Contrast computed via WCAG luminance formula.
+  - **Safety class (v0.2 — F-S12):** `safe` — read-only perception
   - **Files:** `mcp/tools/pageGetElementInfo.ts`
   - **dep:** T019, T-PHASE2-TYPES
   - **Smoke test:** Returns valid contrast (4.5+ for WCAG AA passing fixtures).
   - **Kill criteria:** default block
 
-- [ ] **T045 [P] [US-1] page_get_performance** (AC-08)
-  - **Brief — Outcome:** Returns `{ DOMContentLoaded, fullyLoaded, resourceCount, LCP, INP, CLS, TTFB, timeToFirstCtaInteractable }` (the latter 4 are v2.3 additions per T048 enrichment).
+- [x] **T045 [P] [US-1] page_get_performance** (AC-08)
+  - **Brief — Outcome:** Returns **4 baseline metrics** ({DOMContentLoaded, fullyLoaded, resourceCount, LCP}) + **4 v2.3 enrichments** ({INP, CLS, TTFB, timeToFirstCtaInteractable}) per T048 AnalyzePerception schema.
+  - **Safety class (v0.2 — F-S12):** `safe` — read-only perception
   - **Files:** `mcp/tools/pageGetPerformance.ts`
   - **dep:** T019, T-PHASE2-TYPES
   - **Kill criteria:** default block
 
-- [ ] **T046 [P] [US-1] page_screenshot_full** (AC-09)
+- [x] **T046 [P] [US-1] page_screenshot_full** (AC-09)
   - **Brief — Outcome:** Scroll-stitch full-page screenshot up to 15000 px, JPEG ≤ 2 MB via Sharp.
+  - **Safety class (v0.2 — F-S12):** `safe` — read-only perception
   - **Files:** `mcp/tools/pageScreenshotFull.ts`
   - **dep:** T019, T-PHASE2-TYPES
   - **Kill criteria:** default block
 
-- [ ] **T047 [P] [US-1] page_annotate_screenshot** (AC-10)
+- [x] **T047 [P] [US-1] page_annotate_screenshot** (AC-10)
   - **Brief — Outcome:** Sharp-based overlay of severity-colored boxes + non-overlapping labels + legend.
+  - **Safety class (v0.2 — F-S12):** `safe` — read-only perception (annotation produces new image; doesn't mutate page)
   - **Files:** `mcp/tools/pageAnnotateScreenshot.ts`
   - **dep:** T019, T-PHASE2-TYPES
   - **Kill criteria:** default block
 
 ### Implementation task — page_analyze v2.3 (THE CRITICAL ONE)
 
-- [ ] **T048 [US-1] page_analyze v2.3** (AC-11, REQ-TOOL-PA-001 + REQ-ANALYZE-PERCEPTION-V23-001) **— extended kill criteria**
-  - **Brief — Outcome:** `mcp/tools/pageAnalyze.ts` exports the `page_analyze` tool. **Single `page.evaluate()` call** runs all 9 baseline + 14 v2.3 enrichment extractions inside the page context, returning a JSON object that Zod-parses as `AnalyzePerception`. The 14 v2.3 enrichments per §07.9.1: `metadata.canonical/lang/ogTags/schemaOrg`, `structure.titleH1Match/titleH1Similarity`, `textContent.valueProp/urgencyScarcityHits/riskReversalHits`, `ctas[].accessibleName/role/hoverFocusStyles`, `forms[].fields[].accessibleName/role`, `trustSignals[].subtype/source/attribution/freshnessDate/pixelDistanceToNearestCta`, `iframes[].purposeGuess`, `navigation.footerNavItems`, `accessibility.keyboardFocusOrder/skipLinks`, `performance.INP/CLS/TTFB/timeToFirstCtaInteractable`, `inferredPageType.primary/alternatives/signalsUsed`.
+- [x] **T048 [US-1] page_analyze v2.3** (AC-11, REQ-TOOL-PA-001 + REQ-ANALYZE-PERCEPTION-V23-001) **— extended kill criteria**
+  - **Brief — Outcome:** `mcp/tools/pageAnalyze.ts` exports the `page_analyze` tool. **Single `page.evaluate()` call within the handler** (the upstream `waitForSettle` precondition's internal evaluate does NOT count — see kill criteria) runs all 9 baseline + 14 v2.3 enrichment extractions inside the page context, returning a JSON object that Zod-parses as `AnalyzePerception` (a SEPARATE Zod schema distinct from PSM — see F-G1 design decision below). The 14 v2.3 enrichments per §07.9.1: `metadata.canonical/lang/ogTags/schemaOrg`, `structure.titleH1Match/titleH1Similarity`, `textContent.valueProp/urgencyScarcityHits/riskReversalHits`, `ctas[].accessibleName/role/hoverFocusStyles`, `forms[].fields[].accessibleName/role`, `trustSignals[].subtype/source/attribution/freshnessDate/pixelDistanceToNearestCta`, `iframes[].purposeGuess`, `navigation.footerNavItems`, `accessibility.keyboardFocusOrder/skipLinks`, `performance.INP/CLS/TTFB/timeToFirstCtaInteractable`, `inferredPageType.primary/alternatives/signalsUsed`.
+  - **Safety class (v0.2 — F-S12):** `safe` — read-only perception
   - **Context:** §07.9 + §07.9.1 are the verbatim authority. impact.md frames this as the highest-fanout schema in Neural; Phase 7 grounding rules + evaluate prompts depend on every field shape.
-  - **Constraints:** File < 300 lines (R10.1). The `page.evaluate()` block stays in a single function body (split helpers via string interpolation is OK as long as evaluate fires once). Schema parse is mandatory before return — never emit raw JSON. Phase 1 PageStateModel pattern: `_extensions` field reserved on AnalyzePerception too (Phase 7 will namespace under `_extensions.deepPerceive`).
-  - **Non-goals:** No multiple page.evaluate() calls (REQ-TOOL-PA-001 single-call invariant). No LLM call (Phase 7). No grounding (Phase 7).
-  - **Acceptance:** AC-11 — conformance test passes on 3 fixture pages (homepage, PDP, checkout); every baseline + v2.3 field is either populated or explicitly null with reason.
+  - **Phase 1b/1c upstream substrate (v0.2 — F-S4):**
+    - **Settle precondition (F-G2):** caller invokes `waitForSettle(page)` (Phase 1c SettlePredicate) BEFORE calling `page_analyze`. Settle's internal `page.evaluate` for `fonts.ready` does NOT count toward the single-call invariant. Verifiable via Playwright trace count (expected: 1 evaluate after settle).
+    - **Schema relationship (F-G1):** `AnalyzePerceptionSchema` is a SEPARATE Zod schema authored at T-PHASE2-TYPES (extending PSM with v2.3 enrichments). Phase 1c `bundleToAnalyzePerception(bundle, stateId?)` accessor remains as PSM accessor (returns PageStateModel as alias). Phase 7 chooses contract per use case: PSM via accessor for grounding-rule lookups; full AnalyzePerception via direct `page_analyze` call when v2.3 enrichments are needed. Both contracts coexist.
+    - **Phase 1b extractor reuse (RECOMMENDED):** if invoked on a state where `bundle.raw.page_state_model_by_state[stateId]._extensions.<extractor_name>` is already populated by Phase 1b extractors (PricingExtractor, AttentionScorer, ClickTargetSizer, CommerceBlockExtractor, CurrencySwitcherDetector, FrictionScorer, MicrocopyTagger, PopupPresenceDetector, SocialProofDepth, StickyElementDetector), `page_analyze` MAY READ those outputs via the accessor to compose its own enrichments — avoiding 2× perf cost. MUST NOT mutate them.
+    - **Namespace contract (CRITICAL — F-S4 + Phase 1c impact.md §11):** `page_analyze`'s output `AnalyzePerception._extensions` MUST be `undefined` (not `{}`, not populated). The `_extensions` namespace is reserved for Phase 7 DeepPerceiveNode. AC-11 + AC-13 conformance MUST assert this.
+    - **IframePurpose closed-enum constraint (F-S13):** `iframes[].purposeGuess` MUST be one of Phase 1c's `IframePurpose` enum values. Import via `import { IframePurpose } from '@neural/agent-core/perception';` and constrain via Zod `z.enum([...])`. New purposes require append-only Phase 1c enum extension first (R18) — never invent ad-hoc strings.
+  - **Constraints:** File < 300 lines (R10.1). The `page.evaluate()` block (single call within the handler) stays in a single function body (split helpers via string interpolation is OK as long as evaluate fires once). Schema parse is mandatory before return — never emit raw JSON. Phase 1 PageStateModel pattern: `_extensions` field RESERVED but MUST stay `undefined` in Phase 2 capture (Phase 7 will namespace under `_extensions.deepPerceive`).
+  - **Non-goals:** No multiple page.evaluate() calls in the handler (REQ-TOOL-PA-001 single-call invariant — settle precondition is the caller's responsibility, separate). No LLM call (Phase 7). No grounding (Phase 7).
+  - **Acceptance:** AC-11 — conformance test passes on 3 fixture pages (homepage, PDP, checkout); every baseline + v2.3 field is either populated or explicitly null with reason; `_extensions` field MUST be `undefined`; `iframes[].purposeGuess` MUST validate against Phase 1c IframePurpose enum.
   - **Per-task kill criteria (extends default):**
-    - "Two or more `page.evaluate()` calls in the handler" → R23 trigger; REQ-TOOL-PA-001 single-call invariant.
+    - "Two or more `page.evaluate()` calls in the page_analyze handler" (excluding upstream settle precondition's evaluate) → R23 trigger; REQ-TOOL-PA-001 single-call invariant.
     - "AnalyzePerception schema deviates from §07.9 + §07.9.1 verbatim" → R23 trigger; spec authority violation (R11.1).
-    - "Phase 2 capture populates `_extensions`" → R23 trigger; that's Phase 7+ scope (R20 forward-compat).
+    - "Phase 2 capture populates `_extensions` on PerceptionBundle.raw.* OR AnalyzePerception" → R23 trigger; namespace violation per Phase 1c impact.md §11 (R20 forward-compat) — this is the CRITICAL invariant Phase 7 depends on.
+    - "page_analyze emits `iframes[].purposeGuess` with value outside Phase 1c IframePurpose closed enum" → R23 trigger; closed-contract drift (F-S13). Path forward: append to Phase 1c enum first (R18).
     - "page_analyze wall-clock > 5 s on amazon.in homepage" → R23 trigger; performance regression (NF-Phase2-03).
   - **Files:** `packages/agent-core/src/mcp/tools/pageAnalyze.ts`; modify `packages/agent-core/src/analysis/types.ts` if schema needs adjustment (should already be in place from T-PHASE2-TYPES).
-  - **dep:** T019, T-PHASE2-TYPES (AnalyzePerception schema MUST exist), T-PHASE2-TESTS
+  - **dep:** T019, T-PHASE2-TYPES (AnalyzePerception schema MUST exist + IframePurpose enum import wired), T-PHASE2-TESTS
 
 ### Implementation task — RateLimiter
 
@@ -287,12 +318,12 @@ Each task **dep**: T-PHASE2-TYPES, T019, T-PHASE2-TESTS (and T016/T017/T018 for 
 
 ### Phase 2 acceptance gate
 
-- [ ] **T050 [US-1] Phase 2 integration test** (AC-13)
-  - **Brief — Outcome:** `tests/integration/phase2.test.ts` boots an in-process MCP server, registers all 28 tools, exercises every tool against amazon.in (or a stable fixture if amazon.in flakes), asserts Zod-valid output OR documented typed error, total wall-clock < 5 minutes.
+- [x] **T050 [US-1] Phase 2 integration test** (AC-13)
+  - **Brief — Outcome:** `tests/integration/phase2.test.ts` boots an in-process MCP server, registers all 29 MCP tools (22 browser_* + 2 agent_* + 5 page_*), exercises every tool against amazon.in (or a stable fixture if amazon.in flakes), asserts Zod-valid output OR documented typed error, total wall-clock < 5 minutes. **MUST also assert** (v0.2 — F-S4): `page_analyze` output's `_extensions` field is `undefined` (Phase 1c namespace contract carryforward).
   - **Files:** `packages/agent-core/tests/integration/phase2.test.ts`
   - **dep:** T016-T049 (everything)
-  - **Constraints:** File < 300 lines. Test suite organized as one `describe()` per tool category.
-  - **Kill criteria:** default block + extra: total wall-clock > 5 min → STOP, individual tool perf regression to investigate
+  - **Constraints:** File < 300 lines. Test suite organized as one `describe()` per tool category. Namespace assertion in its own `describe('namespace contract', () => {...})` block for grep-discoverability.
+  - **Kill criteria:** default block + extra: total wall-clock > 5 min → STOP, individual tool perf regression to investigate; namespace contract assertion failure → STOP, would silently break Phase 7 deepPerceive namespace.
 
 **Checkpoint:** After T016-T050 + the 3 SETUP tasks green, all 13 ACs pass. Phase 2 ready for rollup.
 
@@ -300,9 +331,9 @@ Each task **dep**: T-PHASE2-TYPES, T019, T-PHASE2-TESTS (and T016/T017/T018 for 
 
 ## Phase N — Polish & Cross-Cutting Concerns
 
-- [ ] **T-PHASE2-DOC [P]** Update root README quickstart with `pnpm test:integration phase2` validator.
-- [ ] **T-PHASE2-INSPECTOR [P]** (optional) Document local MCP Inspector setup for manual tool debugging.
-- [ ] **T-PHASE2-ROLLUP** Author `phase-2-current.md` per R19. Sections: active modules (mcp/, mcp/tools/, browser-runtime/ Mouse+Typing+Scroll+RateLimiter, analysis/types.ts AnalyzePerception); contracts (MCPToolRegistry, MCPToolSchema, AnalyzePerception, RateLimiter — all NEW); flows operational (28-tool MCP surface); known limitations (no LLM yet, no orchestration yet, sandbox single-vector blocking only); open risks for Phase 5 (LangGraph composition) + Phase 7 (AnalyzePerception schema stability under deep_perceive load).
+- [x] **T-PHASE2-DOC [P]** Update root README quickstart with `pnpm test:integration phase2` validator.
+- [x] **T-PHASE2-INSPECTOR [P]** (optional) Document local MCP Inspector setup for manual tool debugging.
+- [x] **T-PHASE2-ROLLUP** Author `phase-2-current.md` per R19. Sections: active modules (mcp/, mcp/tools/, browser-runtime/ Mouse+Typing+Scroll+RateLimiter, analysis/types.ts AnalyzePerception); contracts (MCPToolRegistry, MCPToolSchema, AnalyzePerception, RateLimiter — all NEW); flows operational (29-tool MCP surface; namespace contract honored); known limitations (no LLM yet, no orchestration yet, sandbox 4-vector MVP scope only — v1.1 backlog); open risks for Phase 5 (LangGraph composition) + Phase 7 (AnalyzePerception schema stability under deep_perceive load + IframePurpose enum extension if new vendors emerge).
 
 ---
 
@@ -377,6 +408,6 @@ Standard: Brief → Kill criteria → Test-first → Implement → Validate (`pn
 - Phase 1 spec, impact (forward contract)
 - `docs/specs/mvp/tasks-v2.md` T016-T050
 - `docs/specs/AI_Browser_Agent_Architecture_v3.1.md` REQ-MCP-* + REQ-BROWSE-HUMAN-* + REQ-BROWSE-RATE-*
-- `docs/specs/final-architecture/08-tool-manifest.md` (canonical 28 tools + safety classes)
+- `docs/specs/final-architecture/08-tool-manifest.md` (canonical 29 MCP tools + safety classes)
 - `docs/specs/final-architecture/07-analyze-mode.md` §07.9 + §07.9.1 (T048 primary reference)
 - `docs/specs/mvp/constitution.md` R4, R8, R9, R20, R23

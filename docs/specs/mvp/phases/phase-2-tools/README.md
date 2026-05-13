@@ -1,7 +1,7 @@
 ---
 title: Phase 2 — MCP Tools + Human Behavior
 artifact_type: phase-readme
-status: approved
+status: verified
 version: 1.0
 phase_number: 2
 phase_name: Tools
@@ -86,7 +86,7 @@ Full descriptions in [tasks.md](tasks.md). Cross-reference: [tasks-v2.md T016-T0
 pnpm spec:rollup --phase 2
 ```
 
-Generates `phase-2-current.md` per R19. Active modules: human behavior + MCP server + 28 tools + RateLimiter. Data contracts in effect: MCP tool I/O schemas + AnalyzePerception v2.3. Forward risks for Phase 5: tool composition into LangGraph nodes; for Phase 7: AnalyzePerception consumed by deep_perceive.
+Generates `phase-2-current.md` per R19. Active modules: human behavior + MCP server + 29 MCP tools + RateLimiter. Data contracts in effect: MCP tool I/O schemas + AnalyzePerception v2.3 (separate Zod schema; coexists with Phase 1c bundleToAnalyzePerception accessor). Forward risks for Phase 5: tool composition into LangGraph nodes; for Phase 7: AnalyzePerception consumed by deep_perceive (namespace contract Phase 2 honors).
 
 ## Reading order for Claude Code
 

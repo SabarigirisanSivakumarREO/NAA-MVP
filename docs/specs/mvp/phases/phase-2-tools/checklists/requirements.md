@@ -15,7 +15,7 @@
 
 - [x] No [NEEDS CLARIFICATION] markers
 - [x] Requirements testable: 13 AC + 15 R-NN with measurable acceptance
-- [x] Success criteria measurable: SC-001 (5 min for 28 tools), SC-002 (3 page-type fixtures), SC-003 (4 sandbox vectors), SC-004 (60-call burst pacing), SC-005 (R9 grep)
+- [x] Success criteria measurable: SC-001 (5 min for 29 MCP tools), SC-002 (3 page-type fixtures), SC-003 (4 sandbox vectors), SC-004 (60-call burst pacing), SC-005 (R9 grep)
 - [x] Technology-agnostic outcomes where possible
 - [x] All acceptance scenarios defined: 8 G/W/T scenarios mapping to AC-01..AC-13
 - [x] Edge cases identified: client disconnect, missing v2.3 fields, sandbox bypass, rate-limit contention, tool registry collision
