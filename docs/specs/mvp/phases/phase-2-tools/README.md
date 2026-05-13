@@ -1,7 +1,7 @@
 ---
 title: Phase 2 — MCP Tools + Human Behavior
 artifact_type: phase-readme
-status: approved
+status: verified
 version: 1.0
 phase_number: 2
 phase_name: Tools

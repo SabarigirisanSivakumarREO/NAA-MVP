@@ -1,7 +1,7 @@
 ---
 title: Phase 2 Rollup — Current System State
 artifact_type: rollup
-status: implemented
+status: verified
 version: 1.0
 phase_number: 2
 phase_name: MCP Tool Surface

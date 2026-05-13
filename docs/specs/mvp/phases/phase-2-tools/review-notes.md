@@ -144,3 +144,64 @@ Reply with one of:
 ## Appendix: Pass 1 history (audit trail)
 
 Pass 1 (2026-05-12) surfaced 17 findings at draft v0.2/v0.1 artifacts (last updated 2026-04-27 — 2 weeks / 2 phases stale vs Phase 1b 2026-05-11 + Phase 1c 2026-05-12). User stamped REVISE. Master applied 8 patch actions (act-001..act-008) + polish bundle (act-009 partial) at commit `92b2ec5`. Pass 2 verifies all findings resolved; APPROVE recommended.
+
+---
+
+# Gate 2 (verification) — Stage 3b verdict
+
+**Reviewer:** `neural-ai-reviewer` skill (master orchestrator Stage 3b dispatch)
+**Reviewed at:** 2026-05-13 18:15 IST
+**Reviewed at HEAD:** `fe78c74` on `feat/phase-2-tools` (49 commits since cut from master at `33bc047`)
+**Verdict:** **APPROVE**
+**Human stamp:** **APPROVE** stamped by Sabari on 2026-05-13 at master session 18 (per `/master 2 --gate-2 APPROVE`)
+
+## Three-sub-audit synthesis
+
+| Sub-audit | Verdict | Notes |
+|---|---|---|
+| Correctness | **PASS** | All Stage 2.5 CRITICAL + 1 MEDIUM resolved at commit `fe78c74`; HIGH/MED/LOW/NIT deferred to v1.1 with rollup-note tracking |
+| Coverage | **PASS** | 13/13 ACs GREEN; full suite 493/616 pass + 2 skipped (live-network) + 123 todo across 81 test files; zero Phase 1 regression |
+| Completeness (R5.6 two-pass) | **PASS** | 5 categorical surfaces audited (tool taxonomy, IframePurpose enum, sandbox vectors, safety class taxonomy, AnalyzePerception fields); adversarial critic AGREE on all 5 |
+
+## Stage 2.5 finding resolution status
+
+| ID | Severity | Disposition | Evidence |
+|---|---|---|---|
+| F-001 | CRITICAL | RESOLVED via Path B | F-006 closes bypass #3 in impl; #1+#2 documented as known limitations with operational compensating control (Phase 4 DomainPolicy); spec.md v0.3.1→v0.3.2 with R18 delta block recording AC-06+US-1+SC-003 honest-scope revisions; AC-06 tests 9→12 vectors pinning all 3 bypass classes |
+| F-005 | MEDIUM | RESOLVED via Path B | Server.ts ERROR_CODES typed-error envelope redaction; full Zod/handler message retained in Pino structured log only; closes prompt-injection ratchet ahead of Phase 5 BrowseNode |
+| F-006 | LOW | RESOLVED via Path B | Strict-mode IIFE patch closes F-001 bypass #3 in impl |
+| F-002 | HIGH | DEFERRED-TO-V1.1 | Single-evaluate test rigor; current test catches happy-path invariant; failure-path + evaluateHandle coverage adds value but not blocking |
+| F-003 | HIGH | DEFERRED-TO-V1.1 | Wall-clock test silent-skip-on-network-failure; amazon.in 336ms vs 5000ms budget = 15x margin; deterministic perf-pin via static-server fixture is v1.1 hardening |
+| F-004 | MEDIUM | DOCUMENTED-AS-KNOWN-LIMITATION | pageAnalyze.script.ts 523 LOC = single-string surface verbatim mirroring §7.9; cannot split without breaking REQ-TOOL-PA-001 single-evaluate invariant; constitution R10.1.1 carve-out for `.script.ts` companion files is v1.1 hygiene |
+| F-007 | LOW | DEFERRED-TO-V1.1 | Sandbox fn LOC brittle (47 of 50 cap); v1.1 SANDBOX_BLOCK_TABLE refactor |
+| F-008 | NIT | DEFERRED-TO-V1.1 | Stale eslint-disable comment in Server.ts:102 |
+
+No active blocking findings.
+
+## Categorical-surface completeness audit (R5.6 two-pass)
+
+1. **Tool Taxonomy (29 tools)** — auditor PASS / critic AGREE — Phase 2 implements the complete v3.1 manifest exactly; out-of-scope candidates (browser_dialog, browser_intercept) not in v3.1 and properly excluded from MVP
+2. **IframePurpose closed enum (9 values + cross_origin override)** — auditor PASS / critic AGREE — `other` fallback covers AdSense/Maps/Typeform/etc.; new explicit slots require Phase 1c R18 append-only extension
+3. **Sandbox attack vectors (5 enumerated)** — auditor PASS / critic AGREE — 5-vector scope reflects architectural reach + operational threat model + v1.1 roadmap headroom; `import()` / WebAssembly / BroadcastChannel are reasonable v1.1 additions, not MVP blockers
+4. **Safety class taxonomy (4 classes × 29 tools)** — auditor PASS / critic AGREE — all 29 tools have explicit non-default class; getSafetyClass() throws UnknownToolNameError on unregistered names (fail-fast)
+5. **AnalyzePerception field universe (§7.9 + §7.9.1)** — auditor PASS / critic AGREE — 16 top-level sections + _extensions namespace seam; v2.4 Phase 1b extensions wiring deferred to Phase 5 per Phase 1c impact.md §12 (documented in rollup §5)
+
+## Stage 3 verification gate results
+
+```
+Lint:      PASS (stubbed to Phase 4 per package.json scripts; 443ms)
+Typecheck: PASS (full-turbo; 7.5s)
+Tests:     PASS (493 passed / 2 skipped / 123 todo across 81 test files; 44s)
+Phase 1 regression: ZERO (browser-manager 2/2, context-assembler 3/3 unchanged)
+AC-13 integration: GREEN (11/11; 37.49s wall-clock vs 5-min budget; F-S4 honored across 3 fixtures)
+amazon.in wall-clock: 336ms vs 5000ms budget (15x margin)
+```
+
+## Recommendation: APPROVE for Gate 2 stamp
+
+**Gate 2 stamped APPROVE by Sabari 2026-05-13.** Master orchestrator proceeding to Stage 4 exit (R17 status bumps `approved → implemented → verified`; INDEX.md flip 🟡 → 🟢; branch push; PR creation per branch-workflow convention).
+
+Override pattern detector: PASS (Gate 1 + Gate 2 both APPROVE on second pass after spec/code patches; no override frequency concerns).
+
+Full structured verdict: `.phase-state/2/verify-verdict.yaml`.
+
