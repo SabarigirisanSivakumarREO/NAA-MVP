@@ -2,7 +2,7 @@
 
 > Conversion-rate optimization audit platform for REO Digital. Walks a real D2C product page; runs Claude through a deep-perceive → evaluate → self-critique → ground → annotate pipeline; emits grounded, consultant-reviewable findings + a branded PDF.
 
-**Status:** Phase 0 (workspace + scaffolding), Phase 1 (browser perception foundation), and Phase 2 (29-tool MCP surface) implemented; Phase 3+ (analysis pipeline, orchestration, delivery) in progress per the [walking-skeleton roadmap](docs/specs/mvp/implementation-roadmap.md).
+**Status:** Phase 0 (workspace + scaffolding), Phase 1 (browser perception foundation), Phase 2 (29-tool MCP surface), and Phase 3 (verification & confidence — thin) implemented; Phase 4+ (safety + infra + cost, browse, analysis pipeline, orchestration, delivery) in progress per the [walking-skeleton roadmap](docs/specs/mvp/implementation-roadmap.md).
 
 Phase 1 ships the `contextAssembler.capture(url)` API in `@neural/agent-core` — opens a Playwright Chromium session, captures an accessibility tree, filters to a compact `PageStateModel` (under 20,000 tokens — NF-Phase1-01 v0.4), monitors DOM mutations, and produces a JPEG screenshot. Phase 1 acceptance is green for example.com, amazon.in, and a Peregrine PDP fixture (5/5 integration tests pass; full 3-site capture in ~9.5 s wall-clock).
 
@@ -54,9 +54,14 @@ pnpm -F @neural/agent-core test integration/phase1
 pnpm -F @neural/agent-core test integration/phase2
 # Expected: 11 passed (29 MCP tools registered; namespace contract green;
 #           page_analyze._extensions === undefined per Phase 1c §11)
+
+# 8. Validate Phase 3 verification layer (10 synthetic ActionContracts end-to-end, < 30s wall-clock)
+pnpm -F @neural/agent-core test integration/phase3
+# Expected: 9 passed (3 success + 3 verify_failed + 2 rate_limited + 2 safety_blocked;
+#           ConfidenceScorer multiplicative decay verified — R4.4)
 ```
 
-If all seven commands succeed, you're at Phase 2 green. The `pnpm cro:audit --url=<URL>` end-to-end CLI wires up in Phase 5+ (Browse MVP) per the [implementation roadmap](docs/specs/mvp/implementation-roadmap.md); today the CLI exposes `--version` only, with the walking-skeleton fixture stubbed behind it.
+If all eight commands succeed, you're at Phase 3 green. The `pnpm cro:audit --url=<URL>` end-to-end CLI wires up in Phase 5+ (Browse MVP) per the [implementation roadmap](docs/specs/mvp/implementation-roadmap.md); today the CLI exposes `--version` only, with the walking-skeleton fixture stubbed behind it.
 
 ### Phase 1 perception API
 
@@ -126,6 +131,7 @@ pnpm test:integration              # Playwright Test acceptance suite
                                    # (currently: tests/acceptance/phase-0-setup.spec.ts)
 pnpm -F @neural/agent-core test integration/phase1   # Phase 1: perception (5 tests, ~10s)
 pnpm -F @neural/agent-core test integration/phase2   # Phase 2: 29-tool MCP surface (11 tests, < 5 min)
+pnpm -F @neural/agent-core test integration/phase3   # Phase 3: verification & confidence (9 tests, < 30s; R4.4 multiplicative decay)
 
 # CLI
 pnpm cro:audit --version           # prints version

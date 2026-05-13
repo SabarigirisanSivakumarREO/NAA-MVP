@@ -1,10 +1,10 @@
 ---
 title: Tasks — Phase 3 Verification (thin)
 artifact_type: tasks
-status: draft
-version: 0.2
+status: verified
+version: 0.3
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-14
 owner: engineering lead
 authors: [Claude (drafter)]
 
@@ -34,11 +34,14 @@ delta:
     - T064 carries explicit additive-math kill criterion
     - v0.2 — T054 acceptance now codifies the 3-criterion visibility check (analyze F04)
     - v0.2 — T064 grep-test details aligned with plan.md v0.2 (source path, comment-stripping, no-multiline) per analyze F02 + F06
+    - v0.3 — Session 19 Gate 1 Pass 1 REVISE fixes (fix-all-spec-defects policy enforcement; 5 LOW briefs tightened)
   changed:
     - v0.1 → v0.2 — analyze-driven fixes (F02, F04, F06)
+    - v0.2 → v0.3 — T053 brief pins urlMatches semantics (string = strict equality; RegExp = pattern); T054 brief pins ElementAppearsStrategy two-timer (MutationMonitor settle = precondition gate, same 10s ceiling); T055 brief pins elementText shape (`expected.text` when `kind='elementText'`; string = substring); T064 brief adds factor-bounds kill criterion + constructor-throw acceptance; T-PHASE3-LOGGER brief tightened to Pino child-logger binding pattern per Phase 2 T-PHASE2-LOGGER precedent; T051 brief narrows `type` field to `z.string()` aligning with impact.md v0.2 (Pass-2 wording cleanup F-P2-01); T064 conformance test enumeration corrected to "three test blocks across two files" (Pass-2 wording cleanup F-P2-02)
   impacted: []
   unchanged:
-    - All other task bodies; default kill criteria block; dependency graph
+    - All AC IDs + REQ IDs; dependency graph; default kill criteria block
+    - T051, T052, T062, T063, T065 task bodies (no Gate 1 findings touched them)
 
 governing_rules:
   - Constitution R3 (TDD)
@@ -116,7 +119,7 @@ No new deps in Phase 3.
 ## Phase 2 — Foundational
 
 - [ ] **T-PHASE3-TESTS [P] [SETUP]** Author 9 conformance tests + Phase 3 integration test FIRST. All AC-01..AC-09 blocks FAIL initially.
-- [ ] **T-PHASE3-LOGGER [SETUP]** Modify `observability/logger.ts` to register `action_id`, `verify_strategy`, `failure_class` correlation fields.
+- [ ] **T-PHASE3-LOGGER [SETUP]** Modify `observability/logger.ts` following Phase 2 T-PHASE2-LOGGER precedent: bind `action_id`, `verify_strategy`, `failure_class` as **Pino child-logger fields** at call sites in `VerifyEngine.verify()` and downstream strategies (e.g., `logger.child({ action_id, verify_strategy }).info('verify.dispatch')`). Update the logger module's correlation-fields documentation comment block to declare the three NEW fields alongside Phase 0/1/2 correlation fields (audit_run_id, page_url, node_name, heuristic_id, trace_id, tool_name, tool_call_id, client_session_id). No new Zod schema entry needed — Pino child logger pattern; just doc + usage convention. (v0.3 F07 closure)
 
 **Checkpoint:** Tests fail; logger has new fields. Then T051-T065 proceed.
 
@@ -134,7 +137,7 @@ No new deps in Phase 3.
 
 - [ ] **T051 [SETUP] [US-1] ActionContract type** (AC-01, REQ-VERIFY-001)
   - **Brief:**
-    - **Outcome:** `verification/types.ts` exports `ActionContractSchema` (Zod) with `id` (uuid), `type` (enum of action types), `target` (optional, action-specific), `expected` (discriminated union: urlMatches / elementAppears / elementText), `candidateStrategies` (priority-ordered name array). `.strict()`. TS type via `z.infer`. ALSO exports `VerifyResultSchema` + `AggregatedVerifyResultSchema`.
+    - **Outcome:** `verification/types.ts` exports `ActionContractSchema` (Zod) with `id` (uuid), `type` (**`z.string()` per impact.md v0.2** — informational metadata for logging + classifier subclass routing; does NOT drive strategy dispatch (`expected.kind` does); Phase 5 BrowseNode owns concrete enum closure against Phase 2's 22 browser_* + 2 agent_* tools), `target` (optional, action-specific), `expected` (discriminated union: urlMatches / elementAppears / elementText), `candidateStrategies` (priority-ordered name array). `.strict()`. TS type via `z.infer`. ALSO exports `VerifyResultSchema` + `AggregatedVerifyResultSchema`.
     - **Constraints:** File ≤ 200 lines. No `z.any()`.
     - **Acceptance:** AC-01 — Zod parses fixture contracts; rejects malformed.
     - **Files:** `packages/agent-core/src/verification/types.ts`
@@ -154,27 +157,27 @@ No new deps in Phase 3.
 
 - [ ] **T053 [P] [US-1] url_change strategy** (AC-03, REQ-VERIFY-003)
   - **Brief:**
-    - **Outcome:** `verification/strategies/UrlChangeStrategy.ts` exports `UrlChangeStrategy implements VerifyStrategy` with `name='url_change'`, `priority=100` (high — navigation is most fundamental), `applicable(c)=c.expected.kind==='urlMatches'`, `verify()` reads `session.page.url()` and matches against `expected.urlMatches` (string OR regex).
+    - **Outcome:** `verification/strategies/UrlChangeStrategy.ts` exports `UrlChangeStrategy implements VerifyStrategy` with `name='url_change'`, `priority=100` (high — navigation is most fundamental), `applicable(c)=c.expected.kind==='urlMatches'`, `verify()` reads `session.page.url()` and matches against `expected.urlMatches`. **(v0.3 F03 closure)** String urlMatches uses **strict equality** (`actualUrl === expected.urlMatches`); RegExp urlMatches uses **`.test(actualUrl)` pattern match**. Code MUST dispatch via `typeof` / `instanceof RegExp` discriminator at runtime (Zod schema accepts both via `z.union`, but the runtime dispatch is explicit).
     - **Constraints:** File < 100 lines.
-    - **Acceptance:** AC-03 — fixture session at `https://example.com` matches `urlMatches: 'https://example.com'`; mismatched URL returns `ok: false`.
+    - **Acceptance:** AC-03 — fixture session at `https://example.com` matches `urlMatches: 'https://example.com'` (strict equality); fixture session at `https://example.com/path` does NOT match `urlMatches: 'https://example.com'` (strict equality returns false for substring); fixture session at `https://example.com/path` DOES match `urlMatches: /^https:\/\/example\.com/` (RegExp pattern match returns true); mismatched URL returns `ok: false`.
     - **Files:** `packages/agent-core/src/verification/strategies/UrlChangeStrategy.ts`
     - **dep:** T051, T052; consumes Phase 1 BrowserSession
     - **Kill criteria:** default block
 
 - [ ] **T054 [P] [US-1] element_appears strategy** (AC-04, REQ-VERIFY-003)
   - **Brief:**
-    - **Outcome:** `verification/strategies/ElementAppearsStrategy.ts` exports `ElementAppearsStrategy`. Waits up to 10 s (configurable per contract) for selector to be **fully visible**. **Three-criterion visibility check (per spec v0.2 AC-04):** ALL THREE must pass — (a) `querySelector(selector) !== null`, (b) `boundingBox.width > 0 AND boundingBox.height > 0`, (c) computed style `visibility !== 'hidden'` AND `display !== 'none'` AND `opacity > 0`. Uses Phase 1 `MutationMonitor` for stability before checking. Returns VerifyResult; on any criterion failing, returns `{ ok: false, evidence: { failedCriterion: 'a' | 'b' | 'c' } }` for diagnostic clarity.
-    - **Constraints:** File < 150 lines. Each criterion is a separate predicate function for testability. NOT bare DOM presence.
-    - **Acceptance:** AC-04 — fixture suite covers all 3 branches: (a) absent element → `ok: false, failedCriterion: 'a'`; (b) zero-dim element → `ok: false, failedCriterion: 'b'`; (c) `visibility:hidden` element → `ok: false, failedCriterion: 'c'`; fully visible → `ok: true`.
+    - **Outcome:** `verification/strategies/ElementAppearsStrategy.ts` exports `ElementAppearsStrategy`. Strategy operates within a **single shared time ceiling** of `contract.expected.timeoutMs` (default 10 000 ms). **Three-criterion visibility check (per spec v0.2 AC-04):** ALL THREE must pass — (a) `querySelector(selector) !== null`, (b) `boundingBox.width > 0 AND boundingBox.height > 0`, (c) computed style `visibility !== 'hidden'` AND `display !== 'none'` AND `opacity > 0`. Uses Phase 1 `MutationMonitor` for stability before checking. **(v0.3 F05 closure) Two-timer semantics:** MutationMonitor is invoked as a **precondition gate**, not a separate timer. Order of operations: (1) `await mutationMonitor.waitForSettle({ timeoutMs: contract.expected.timeoutMs })` — if MutationMonitor returns `unstable: true` (its internal 2s settle predicate fires while DOM keeps mutating, OR shared ceiling expires while DOM still moving), strategy returns `{ ok: false, unstable: true }` immediately WITHOUT proceeding to visibility check; (2) if MutationMonitor settles, the remaining time budget is used for the 3-criterion visibility check — if visibility check exceeds remaining budget, strategy returns `{ ok: false, failedCriterion: 'a'|'b'|'c', timedOut: true }`; (3) on success, returns `{ ok: true, evidence: { boundingBox, computedStyle } }`. Returns VerifyResult; on any criterion failing within budget, returns `{ ok: false, evidence: { failedCriterion: 'a' | 'b' | 'c' } }` for diagnostic clarity.
+    - **Constraints:** File < 150 lines. Each criterion is a separate predicate function for testability. NOT bare DOM presence. Two-timer semantics: single shared ceiling — no separate 10s for visibility check.
+    - **Acceptance:** AC-04 — fixture suite covers all 3 branches + 2 timer-failure modes: (a) absent element → `ok: false, failedCriterion: 'a'`; (b) zero-dim element → `ok: false, failedCriterion: 'b'`; (c) `visibility:hidden` element → `ok: false, failedCriterion: 'c'`; fully visible → `ok: true`; DOM mutating past settle predicate → `ok: false, unstable: true`; visibility check exceeds remaining budget → `ok: false, timedOut: true`.
     - **Files:** `packages/agent-core/src/verification/strategies/ElementAppearsStrategy.ts`
     - **dep:** T051, T052; consumes Phase 1 MutationMonitor
     - **Kill criteria:** default block
 
 - [ ] **T055 [P] [US-1] element_text strategy** (AC-05, REQ-VERIFY-003)
   - **Brief:**
-    - **Outcome:** `verification/strategies/ElementTextStrategy.ts` exports `ElementTextStrategy`. Reads `element.textContent` OR `element.value` (input/textarea); matches against `expected.elementText.text` (string substring OR regex). Returns VerifyResult.
-    - **Constraints:** File < 100 lines.
-    - **Acceptance:** AC-05 — typed text matches; mismatched text returns `ok: false`.
+    - **Outcome:** `verification/strategies/ElementTextStrategy.ts` exports `ElementTextStrategy` with `name='element_text'`, `applicable(c)=c.expected.kind==='elementText'`. Reads `element.textContent` (for non-input elements) OR `element.value` (for `<input>` / `<textarea>` / `<select>`); matches against `c.expected.text` (NOT `c.expected.elementText.text` — shape is flat per the discriminated-union variant per impact.md). **(v0.3 F04 closure) Match semantics:** string text = **substring match** (case-sensitive `actual.includes(expected.text)`); RegExp text = **`.test(actual)` pattern match**. Code dispatches via `typeof` / `instanceof RegExp` discriminator (mirrors T053 url_change pattern). Returns VerifyResult.
+    - **Constraints:** File < 100 lines. Element-type dispatch (textContent vs value) is a separate predicate function.
+    - **Acceptance:** AC-05 — typed substring matches; mismatched text returns `ok: false`; input field value read works for `<input>` / `<textarea>` / `<select>`; non-input element falls back to textContent; RegExp match works for pattern text; case-sensitive substring asserted (`'Amazon'` does NOT match `'amazon'` for string text).
     - **Files:** `packages/agent-core/src/verification/strategies/ElementTextStrategy.ts`
     - **dep:** T051, T052
     - **Kill criteria:** default block
@@ -188,7 +191,7 @@ No new deps in Phase 3.
     - **dep:** T051, T052, T053, T054, T055
     - **Kill criteria:** default block + extra: any check that gates registration on `name in MVP_NAMES_ONLY` → STOP, that's not forward-compat
 
-- [ ] **T063 [P] [US-1] FailureClassifier** (AC-07, REQ-VERIFY-FAILURE-001)
+- [x] **T063 [P] [US-1] FailureClassifier** (AC-07, REQ-VERIFY-FAILURE-001)
   - **Brief:**
     - **Outcome:** `verification/FailureClassifier.ts` exports `FailureClassifier` class with pure `classify(input)` method. Maps `AggregatedVerifyResult | {kind:'safety'|'rate'}` → `FailureClassification` with class + subclass + shouldRetry. Includes `bot_detected_likely` class pre-positioned for v1.1.
     - **Constraints:** File < 200 lines. Pure function. No external state.
@@ -199,17 +202,19 @@ No new deps in Phase 3.
 
 - [ ] **T064 [US-1] ConfidenceScorer (multiplicative — R4.4)** (AC-08, REQ-VERIFY-CONFIDENCE-001) **— extended kill criteria**
   - **Brief:**
-    - **Outcome:** `verification/ConfidenceScorer.ts` exports `ConfidenceScorer` class with `afterFailure(c) = c * 0.97`, `afterSuccess(c) = min(1, c * 1.01)`, `belowFloor(c) = c < 0.10`. Configurable factors via constructor. **NEVER additive math.**
-    - **Conformance — two test files (per plan v0.2 + spec v0.2 AC-08):**
-      - **(a) `confidence-scorer.test.ts`** — runtime math correctness (e.g., `afterFailure(1).toFixed(2) === '0.97'`).
-      - **(b) `confidence-scorer-no-additive.test.ts`** — source-grep enforcement. Reads `packages/agent-core/src/verification/ConfidenceScorer.ts` as text. **Strips comments first** (block + line comments removed before grep) so explanatory prose with `+`/`-` is allowed in comments. Greps line-by-line (no multiline matching) for: `\bc\s*[-+]\s*\d`, `\bc\s*[-+]=`, `\bcurrent\s*[-+]\s*\d`, `\bconfidence\s*[-+]`. FAILS on any match. See plan.md v0.2 Phase 1 Design item 4 for the canonical test code.
-    - **Constraints:** File < 100 lines. Source contains ONLY `*` operator on confidence in live code; comments may use `+`/`-` for explanation. NO AST check (grep-only enforcement per spec v0.2 + plan v0.2; revisit if grep proves insufficient).
+    - **Outcome:** `verification/ConfidenceScorer.ts` exports `ConfidenceScorer` class with `afterFailure(c) = c * 0.97`, `afterSuccess(c) = min(1, c * 1.01)`, `belowFloor(c) = c < 0.10`. Configurable factors via constructor. **NEVER additive math.** **(v0.3 F06 closure) Constructor validates factor bounds:** throws `RangeError` if `failureFactor` is NOT strictly in (0, 1) OR if `successFactor < 1`. Per plan.md v0.3 Phase 1 Design item 4 canonical code.
+    - **Conformance — three test blocks across two test files (per plan v0.3 + spec v0.3 AC-08):**
+      - **(a) `tests/conformance/confidence-scorer.test.ts` — `describe('runtime math')` block** — runtime math correctness (e.g., `afterFailure(1).toFixed(2) === '0.97'`).
+      - **(b) `tests/conformance/confidence-scorer.test.ts` — `describe('constructor bounds')` block (same file as (a))** — asserts `RangeError` thrown on `failureFactor = 0` / `failureFactor = 1` / `failureFactor = -0.5` / `successFactor = 0.5` / `successFactor < 1`. Asserts ACCEPTED on default `{ failureFactor: 0.97, successFactor: 1.01, floor: 0.10 }` and on edge-case `{ failureFactor: 0.5, successFactor: 1.0, floor: 0.05 }` (successFactor === 1 = no rebound, allowed).
+      - **(c) `tests/conformance/confidence-scorer-no-additive.test.ts`** — source-grep enforcement. Reads `packages/agent-core/src/verification/ConfidenceScorer.ts` as text. **Strips comments first** (block + line comments removed before grep) so explanatory prose with `+`/`-` is allowed in comments. Greps line-by-line (no multiline matching) for: `\bc\s*[-+]\s*\d`, `\bc\s*[-+]=`, `\bcurrent\s*[-+]\s*\d`, `\bconfidence\s*[-+]`. FAILS on any match. See plan.md v0.3 Phase 1 Design item 4 for the canonical test code.
+    - **Constraints:** File < 100 lines. Source contains ONLY `*` operator on confidence in live code; comments may use `+`/`-` for explanation. NO AST check (grep-only enforcement per spec v0.3 + plan v0.3; revisit if grep proves insufficient).
     - **Non-goals:** No async; no I/O; pure arithmetic.
-    - **Acceptance:** AC-08 — both conformance tests green.
+    - **Acceptance:** AC-08 — all three conformance tests green (runtime math + constructor bounds + source-grep).
     - **Per-task kill criteria (extends default):**
       - "Source code contains `c -= X`, `c += X`, `current - X`, `confidence + X` patterns on confidence" → R23 trigger; R4.4 violation. Convert to multiplicative or escalate.
       - "Test `confidence-scorer-no-additive.test.ts` removed or weakened" → R23 trigger; the test IS the constitution enforcement.
       - "Configurable factors set to values that mimic additive (e.g., factor close to 1 with magic offsets)" → R23 trigger; talk to engineering lead.
+      - **(v0.3 F06 closure)** "Constructor missing bounds validation (no `RangeError` throw on `failureFactor ∉ (0,1)` or `successFactor < 1`)" → R23 trigger; the bounds check is the structural guard preventing additive-mimicking config.
     - **Files:** `packages/agent-core/src/verification/ConfidenceScorer.ts`
     - **dep:** T051
 

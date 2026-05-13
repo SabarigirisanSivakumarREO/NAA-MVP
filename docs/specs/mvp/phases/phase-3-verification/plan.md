@@ -1,10 +1,10 @@
 ---
 title: Implementation Plan — Phase 3 Verification (thin)
 artifact_type: plan
-status: draft
-version: 0.2
+status: verified
+version: 0.3
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-14
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -40,10 +40,14 @@ delta:
     - 9 MVP tasks; 6 strategies deferred to v1.1
     - v0.2 — Phase 1 Design item 4 (ConfidenceScorer) grep-test details tightened (source path, comment-stripping, no-multiline) per analyze finding F06
     - v0.2 — Phase 1 Design item 4 explicitly drops AST claim — grep-only enforcement (analyze finding F01)
+    - v0.3 — ConfidenceScorerConfig constructor validation added (failureFactor bounds + successFactor bounds; throws RangeError on invalid config) per Session 19 Gate 1 finding F06
   changed:
     - v0.1 → v0.2 — analyze-driven fixes (F01, F06); no design changes
+    - v0.2 → v0.3 — F06 ConfidenceScorer factor bounds: constructor now throws RangeError on `failureFactor ∉ (0,1)` or `successFactor < 1`; closes subtle additive-mimicking config (no design changes; defensive guard at construction time). Phase 1 Design item 4 expanded to "Three enforcement blocks across two test files" (runtime math + constructor bounds + source-grep) per Pass-2 wording cleanup F-P2-03
   impacted: []
-  unchanged: []
+  unchanged:
+    - Phase 0 Research, Project Structure, Constitution Check, Approval Gates sections preserved verbatim
+    - Multiplicative-only enforcement (grep-only with comment-stripping)
 
 governing_rules:
   - Constitution R4.2, R4.4
@@ -234,13 +238,22 @@ Forward-compat: `register()` accepts any `VerifyStrategy` whose `name` is in the
 
 ```ts
 export interface ConfidenceScorerConfig {
-  failureFactor: number;  // default 0.97
-  successFactor: number;  // default 1.01
+  failureFactor: number;  // default 0.97; MUST be strictly > 0 AND strictly < 1
+  successFactor: number;  // default 1.01; MUST be >= 1 (1 = no rebound; >1 = mild rebound)
   floor: number;           // default 0.10
 }
 
 export class ConfidenceScorer {
-  constructor(private cfg: ConfidenceScorerConfig = { failureFactor: 0.97, successFactor: 1.01, floor: 0.10 }) {}
+  constructor(private cfg: ConfidenceScorerConfig = { failureFactor: 0.97, successFactor: 1.01, floor: 0.10 }) {
+    // v0.3 — F06 closure. Bounds validation at construction closes subtle additive-mimicking
+    // config (e.g., factor 0.999999 with magic offsets) AT THE GATE rather than silently in runtime.
+    if (!(cfg.failureFactor > 0 && cfg.failureFactor < 1)) {
+      throw new RangeError(`ConfidenceScorer: failureFactor must be in (0, 1); got ${cfg.failureFactor}`);
+    }
+    if (!(cfg.successFactor >= 1)) {
+      throw new RangeError(`ConfidenceScorer: successFactor must be >= 1; got ${cfg.successFactor}`);
+    }
+  }
 
   afterFailure(c: number): number { return c * this.cfg.failureFactor; }       // ONLY multiplication
   afterSuccess(c: number): number { return Math.min(1, c * this.cfg.successFactor); }
@@ -280,7 +293,11 @@ it('ConfidenceScorer source contains no additive math (R4.4)', async () => {
 });
 ```
 
-Plus runtime test that `afterFailure(1).toFixed(2) === '0.97'` (proves multiplication).
+**Three enforcement blocks across two test files (v0.3 — F06 + Pass-2 alignment):**
+
+1. **Runtime math correctness** — `confidence-scorer.test.ts` `describe('runtime math')` asserts `afterFailure(1).toFixed(2) === '0.97'` (proves multiplication; multiple iterations bound in (0,1)).
+2. **Constructor bounds** — `confidence-scorer.test.ts` `describe('constructor bounds')` (same file as block 1, separate describe) asserts `RangeError` thrown on `failureFactor ∈ {0, 1, -0.5}` + `successFactor ∈ {0.5}`; asserts ACCEPTED on default config + edge-case `successFactor === 1` (no rebound, allowed). Closes F06 — subtle additive-mimicking config rejected at construction time rather than silently in runtime.
+3. **Source-grep enforcement** — `confidence-scorer-no-additive.test.ts` runs the regex pack above against source text (comment-stripped; no AST).
 
 **Note (analyze finding F01):** spec.md AC-08 v0.2 dropped any "AST check" claim — enforcement is **grep-only** (with comment-stripping). AST traversal would catch more cases but adds tooling cost not justified by Phase 3 scope; revisit if grep-only proves insufficient.
 

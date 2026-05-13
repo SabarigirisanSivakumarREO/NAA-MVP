@@ -1,7 +1,7 @@
 ---
 title: Phase 3 — Verification & Confidence (thin)
 artifact_type: phase-readme
-status: approved
+status: verified
 version: 1.0
 phase_number: 3
 phase_name: Verification
