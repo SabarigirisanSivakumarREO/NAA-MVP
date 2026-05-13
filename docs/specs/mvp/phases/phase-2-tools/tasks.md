@@ -243,7 +243,7 @@ Each task **dep**: T-PHASE2-TYPES, T019, T-PHASE2-TESTS (and T016/T017/T018 for 
 
 ### Implementation tasks — Sandbox + Page tools
 
-- [ ] **T043 [US-1] browser_evaluate (sandboxed)** (AC-06, REQ-MCP-SANDBOX-001/002/003)
+- [x] **T043 [US-1] browser_evaluate (sandboxed)** (AC-06, REQ-MCP-SANDBOX-001/002/003)
   - **Brief — Outcome:** `mcp/tools/browserEvaluate.ts` exports the `browser_evaluate` tool. Before user script executes, injects a Proxy on `globalThis` blocking property access to: (a) `document.cookie`, (b) `localStorage` / `sessionStorage`, (c) `fetch` / `XMLHttpRequest`, (d) `window.location` setter / `history.pushState`. All 4 vectors verified in conformance test.
   - **Safety class (v0.2 — F-S12):** `requires_safety_check` — arbitrary JS execution surface even within sandbox; HITL-eligible per Phase 4 SafetyCheck policy
   - **Files:** `packages/agent-core/src/mcp/tools/browserEvaluate.ts`
@@ -253,7 +253,7 @@ Each task **dep**: T-PHASE2-TYPES, T019, T-PHASE2-TESTS (and T016/T017/T018 for 
   - **Kill criteria:** default block + extra: any 4-vector test fails → STOP, sandbox is the security guarantee
   - **v1.1 backlog (informational):** sandbox v2 should extend block list to WebSocket + IndexedDB + Cache API + postMessage (per Gate 1 critic surface 4 — not a Phase 2 blocker)
 
-- [ ] **T044 [P] [US-1] page_get_element_info** (AC-07)
+- [x] **T044 [P] [US-1] page_get_element_info** (AC-07)
   - **Brief — Outcome:** Returns `{ boundingBox, isAboveFold, computedStyles, contrastRatio }` for a target id. Contrast computed via WCAG luminance formula.
   - **Safety class (v0.2 — F-S12):** `safe` — read-only perception
   - **Files:** `mcp/tools/pageGetElementInfo.ts`
@@ -261,21 +261,21 @@ Each task **dep**: T-PHASE2-TYPES, T019, T-PHASE2-TESTS (and T016/T017/T018 for 
   - **Smoke test:** Returns valid contrast (4.5+ for WCAG AA passing fixtures).
   - **Kill criteria:** default block
 
-- [ ] **T045 [P] [US-1] page_get_performance** (AC-08)
+- [x] **T045 [P] [US-1] page_get_performance** (AC-08)
   - **Brief — Outcome:** Returns **4 baseline metrics** ({DOMContentLoaded, fullyLoaded, resourceCount, LCP}) + **4 v2.3 enrichments** ({INP, CLS, TTFB, timeToFirstCtaInteractable}) per T048 AnalyzePerception schema.
   - **Safety class (v0.2 — F-S12):** `safe` — read-only perception
   - **Files:** `mcp/tools/pageGetPerformance.ts`
   - **dep:** T019, T-PHASE2-TYPES
   - **Kill criteria:** default block
 
-- [ ] **T046 [P] [US-1] page_screenshot_full** (AC-09)
+- [x] **T046 [P] [US-1] page_screenshot_full** (AC-09)
   - **Brief — Outcome:** Scroll-stitch full-page screenshot up to 15000 px, JPEG ≤ 2 MB via Sharp.
   - **Safety class (v0.2 — F-S12):** `safe` — read-only perception
   - **Files:** `mcp/tools/pageScreenshotFull.ts`
   - **dep:** T019, T-PHASE2-TYPES
   - **Kill criteria:** default block
 
-- [ ] **T047 [P] [US-1] page_annotate_screenshot** (AC-10)
+- [x] **T047 [P] [US-1] page_annotate_screenshot** (AC-10)
   - **Brief — Outcome:** Sharp-based overlay of severity-colored boxes + non-overlapping labels + legend.
   - **Safety class (v0.2 — F-S12):** `safe` — read-only perception (annotation produces new image; doesn't mutate page)
   - **Files:** `mcp/tools/pageAnnotateScreenshot.ts`
