@@ -116,11 +116,25 @@ describe('ElementAppearsStrategy — AC-04 conformance (RED until T054)', () => 
     }
   });
 
-  it('AC-04 (b): zero-dimension element (width=0 or height=0) → ok:false, failedCriterion:"b"', async () => {
+  it('AC-04 (b): zero-WIDTH element (width=0, height>0) → ok:false, failedCriterion:"b"', async () => {
     const strategy = new ElementAppearsStrategy(stubMonitor('stable'));
     const session = stubSession({
       present: true,
       boundingBox: { width: 0, height: 50 },
+      computedStyle: { visibility: 'visible', display: 'block', opacity: '1' },
+    });
+    const result = await strategy.verify(makeContract('.cart-count'), session);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.failedCriterion).toBe('b');
+    }
+  });
+
+  it('AC-04 (b): zero-HEIGHT element (width>0, height=0) → ok:false, failedCriterion:"b" (Stage 2.5 F-04 closure)', async () => {
+    const strategy = new ElementAppearsStrategy(stubMonitor('stable'));
+    const session = stubSession({
+      present: true,
+      boundingBox: { width: 100, height: 0 },
       computedStyle: { visibility: 'visible', display: 'block', opacity: '1' },
     });
     const result = await strategy.verify(makeContract('.cart-count'), session);
