@@ -333,7 +333,7 @@ Each task **dep**: T-PHASE2-TYPES, T019, T-PHASE2-TESTS (and T016/T017/T018 for 
 
 - [x] **T-PHASE2-DOC [P]** Update root README quickstart with `pnpm test:integration phase2` validator.
 - [x] **T-PHASE2-INSPECTOR [P]** (optional) Document local MCP Inspector setup for manual tool debugging.
-- [ ] **T-PHASE2-ROLLUP** Author `phase-2-current.md` per R19. Sections: active modules (mcp/, mcp/tools/, browser-runtime/ Mouse+Typing+Scroll+RateLimiter, analysis/types.ts AnalyzePerception); contracts (MCPToolRegistry, MCPToolSchema, AnalyzePerception, RateLimiter — all NEW); flows operational (29-tool MCP surface; namespace contract honored); known limitations (no LLM yet, no orchestration yet, sandbox 4-vector MVP scope only — v1.1 backlog); open risks for Phase 5 (LangGraph composition) + Phase 7 (AnalyzePerception schema stability under deep_perceive load + IframePurpose enum extension if new vendors emerge).
+- [x] **T-PHASE2-ROLLUP** Author `phase-2-current.md` per R19. Sections: active modules (mcp/, mcp/tools/, browser-runtime/ Mouse+Typing+Scroll+RateLimiter, analysis/types.ts AnalyzePerception); contracts (MCPToolRegistry, MCPToolSchema, AnalyzePerception, RateLimiter — all NEW); flows operational (29-tool MCP surface; namespace contract honored); known limitations (no LLM yet, no orchestration yet, sandbox 4-vector MVP scope only — v1.1 backlog); open risks for Phase 5 (LangGraph composition) + Phase 7 (AnalyzePerception schema stability under deep_perceive load + IframePurpose enum extension if new vendors emerge).
 
 ---
 
