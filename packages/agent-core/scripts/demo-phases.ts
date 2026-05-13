@@ -171,12 +171,26 @@ async function main(): Promise<void> {
   );
   row('→ Saved:', 'out/demo/heuristics-summary.txt');
 
+  // ─────── Open ONE Chromium session shared across Phase 1 + Phase 2 ───────
+  // Why share: real production usage (Phase 5 BrowseNode) keeps a single session
+  // open and composes tool calls against it. Two sessions in a row would visually
+  // pop and close the Chromium window twice — confusing for non-technical viewers.
+  // Phase 1c's R11.4 spec patch added ContextAssembler.captureFromSession() for
+  // exactly this case (caller owns the session, R20 forward-compat surface).
+  divider('Opening Chromium (one session shared across Phase 1 + Phase 2)');
+  process.stdout.write(`  Mode: ${headless ? 'headless' : 'VISIBLE window'}\n`);
+  process.stdout.write(`  URL:  ${url}\n`);
+  const sharedSession = await new BrowserManager().newSession({ headless });
+  const navStartedAt = new Date();
+  await sharedSession.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+  process.stdout.write('  ✓ Page loaded; session ready for Phase 1 + Phase 2 to share.\n');
+
   // ─────── Phase 1 ───────
-  divider('Phase 1 — Real browser capture (Chromium navigates the URL)');
-  process.stdout.write(`  Opening Chromium${headless ? ' (headless)' : ' (visible window)'}...\n`);
-  process.stdout.write(`  Navigating to: ${url}\n`);
+  divider('Phase 1 — ContextAssembler.captureFromSession() perception');
   const t1 = performance.now();
-  const psm = await contextAssembler.capture(url, { session: { headless } });
+  const psm = await contextAssembler.captureFromSession(sharedSession, {
+    navigationStartedAt: navStartedAt,
+  });
   const captureMs = Math.round(performance.now() - t1);
   process.stdout.write('  ✓ Page captured.\n\n');
   row('Wall-clock:', `${captureMs}ms`);
@@ -204,13 +218,8 @@ async function main(): Promise<void> {
   row('→ Saved:', 'out/demo/page-state-model.json');
 
   // ─────── Phase 2 ───────
-  divider('Phase 2 — page_analyze tool → AnalyzePerception v2.3');
-  process.stdout.write('  Opening a fresh Chromium session for the MCP tool layer...\n');
-  const manager = new BrowserManager();
-  const session = await manager.newSession({ headless });
-  process.stdout.write(`  Navigating MCP session to: ${url}\n`);
-  await session.page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
-  process.stdout.write('  ✓ Page loaded under MCP session.\n\n');
+  divider('Phase 2 — page_analyze tool → AnalyzePerception v2.3 (same session)');
+  const session = sharedSession; // shared with Phase 1; no new Chromium opens here
 
   // page_analyze: the v2.3 enrichment surface
   const analyzeTool = createPageAnalyzeTool({ session });
@@ -263,7 +272,8 @@ async function main(): Promise<void> {
 
   const perfTool = createPageGetPerformanceTool({ session });
   const perfResult = await perfTool.handler({}, makeCtx('demo-get_performance-1'));
-  row('page_get_performance:', `LCP=${perfResult.baseline.LCP ?? 'n/a'} · TTFB=${perfResult.v23.TTFB ?? 'n/a'} · CLS=${perfResult.v23.CLS ?? 'n/a'} · INP=${perfResult.v23.INP ?? 'n/a'}`);
+  const fmt = (n: number | null): string => (n == null ? 'n/a' : Math.round(n).toString());
+  row('page_get_performance:', `LCP=${fmt(perfResult.baseline.LCP)}ms · TTFB=${fmt(perfResult.v23.TTFB)}ms · CLS=${perfResult.v23.CLS != null ? perfResult.v23.CLS.toFixed(3) : 'n/a'} · INP=${fmt(perfResult.v23.INP)}ms`);
   row('  Resource count:', perfResult.baseline.resourceCount);
   if (perfResult.nullReasons) {
     row('  Null metrics:', Object.keys(perfResult.nullReasons).join(', '));
