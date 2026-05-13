@@ -13,4 +13,5 @@
  */
 export * from './types.js';
 export { VerifyEngine } from './VerifyEngine.js';
+export { ConfidenceScorer, type ConfidenceScorerConfig } from './ConfidenceScorer.js';
 export { FailureClassifier } from './FailureClassifier.js';
