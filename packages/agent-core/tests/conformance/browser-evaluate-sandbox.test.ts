@@ -98,3 +98,69 @@ describe('browser_evaluate sandbox — AC-06 conformance (T043 GREEN)', () => {
     expect(out).toMatchObject({ ok: true, result: '3.14' });
   });
 });
+
+describe('AC-06 KNOWN LIMITATIONS (v1.1 hardening backlog — F-001 documented bypasses)', () => {
+  /**
+   * @AC-06 KNOWN LIMITATION #1 — Constructor-chain Function escape.
+   *
+   * Property access via `(function(){}).constructor` traverses Function.prototype
+   * to the REAL Function constructor (the windowProxy stub is only consulted via
+   * identifier lookup, not via property access). The newly constructed function
+   * body runs in global scope, bypassing `with(proxy)`.
+   *
+   * Documented in phase-2-current.md §4 and spec.md AC-06. v1.1 backlog will
+   * close via full isolated-context sandbox (iframe-shadow-realm or off-page
+   * worker).
+   *
+   * Test asserts the CURRENT behavior (bypass succeeds). If v1.1 hardening
+   * lands, this test MUST be flipped — that's the point: future drift triggers
+   * deliberate spec revision rather than silent regression.
+   */
+  it('AC-06 KNOWN LIMITATION: constructor-chain reaches real Function (NOT blocked in MVP; F-001 #1)', async () => {
+    // The windowProxy.get('Function') stub returns a thrower function, but
+    // `(function(){}).constructor` is property access (NOT identifier lookup
+    // through `with(proxy)`), so it traverses Function.prototype to the REAL
+    // native Function constructor. We observe the bypass by reading
+    // .name === 'Function' on the real constructor obtained via property
+    // access. (Comparing `=== Function` returns false because the bare
+    // `Function` identifier resolves to the proxy's thrower stub, not the
+    // real constructor — confirming the proxy DOES shadow identifier lookup
+    // but does NOT shadow property access.)
+    const out = await runUserScript('return (function(){}).constructor.name;');
+    // CURRENT behavior: returns 'Function' (real native constructor reachable
+    // via property access). v1.1 fix flips this.
+    expect(out).toMatchObject({ ok: true, result: 'Function' });
+  });
+
+  /**
+   * @AC-06 KNOWN LIMITATION #2 — document.location bypass.
+   *
+   * documentProxy.get only traps the 'cookie' key; all other keys fall through
+   * Reflect.get(realDocument, p), returning the REAL Location / Window / etc.
+   *
+   * The bypass is observable via property access (NOT via assignment, since
+   * assignment to `.href` would actually navigate the page — we assert read
+   * access to the real Location object).
+   */
+  it('AC-06 KNOWN LIMITATION: document.location returns real Location object (NOT blocked in MVP; F-001 #2)', async () => {
+    const out = await runUserScript('return typeof document.location.href;');
+    // CURRENT behavior: returns 'string' (real Location reachable). v1.1 fix
+    // flips this.
+    expect(out).toMatchObject({ ok: true, result: 'string' });
+  });
+
+  /**
+   * @AC-06 F-006 — `this`-binding bypass closed by Wave-18 strict-mode IIFE.
+   *
+   * Pre-patch: `(function(){ USER })()` runs in sloppy mode → `this` falls
+   * back to the global object → `this.fetch` reaches the real fetch. Post-patch
+   * the IIFE body starts with `"use strict";` → `this` is `undefined` → any
+   * property access on `this` throws TypeError.
+   *
+   * This test pins the POST-PATCH behavior. If F-006 is reverted, this test
+   * goes red — that's the regression guard.
+   */
+  it('AC-06 F-006: strict-mode IIFE forces this=undefined; this.fetch throws (closes F-001 #3)', async () => {
+    await expect(runUserScript('return this.fetch("/x");')).rejects.toThrow();
+  });
+});

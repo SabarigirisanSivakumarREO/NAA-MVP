@@ -172,6 +172,7 @@ governing_rules:
 | Limitation | Phase to resolve | Workaround in place |
 |---|---|---|
 | `browser_evaluate` sandbox is MVP 5-vector scope only | v1.1 backlog | T043 file comment documents WebSocket + IndexedDB + Cache API + postMessage extension as v1.1; not a Phase 2 blocker |
+| `browser_evaluate` (T043) — 3 structural sandbox bypass classes documented at Stage 2.5 (F-001, Path B): (1) constructor-chain Function escape via `(function(){}).constructor` (property-access traversal of Function.prototype reaches real native constructor — bypass observable but `Function` identifier still resolves to proxy stub); (2) `document.location` reach-through via documentProxy's pass-through `Reflect.get` (only `'cookie'` is trapped); (3) `this`-binding bypass in sloppy-mode IIFE — **closed by F-006 strict-mode-IIFE patch** which makes `this` `undefined` inside the user-script IIFE | v1.1 — full isolated-context sandbox (iframe-shadow-realm or off-page worker) | Phase 4 DomainPolicy gates `browser_evaluate` reachability per domain — untrusted domains never reach the tool; spec.md AC-06 wording revised v0.3.2 to match implementation reality; 3 bypasses pinned as AC-06 KNOWN LIMITATION tests (`browser-evaluate-sandbox.test.ts` describe block "AC-06 KNOWN LIMITATIONS") so future drift triggers deliberate spec revision rather than silent regression |
 | `page_get_performance` v2.3 enrichments (INP/CLS/timeToFirstCtaInteractable) partially populated — require observer-hook wiring at capture time | Phase 5 BrowseNode (observer install) + Phase 7 (consumption) | Fields nullable with reason on the AnalyzePerceptionSchema; baseline 4 metrics always populated |
 | LLM not wired | Phase 4 (AnthropicAdapter) + Phase 7 (evaluate/self-critique) | No-op; Phase 2 is pure tool surface |
 | LangGraph orchestration not wired | Phase 5 (BrowseNode + ActionNode) + Phase 8 (AuditOrchestrator) | Tools register fine standalone; Inspector + integration test exercise them directly |
@@ -195,6 +196,7 @@ governing_rules:
 | IframePurpose closed-enum extension demand from new vendors (e.g., emerging captcha providers, new chat platforms) | Detection gaps; misclassification as 'other' | engineering lead | R18 append-only extension path: bump Phase 1c enum + classifier + page_analyze.script.ts pattern mirror in lockstep; never invent ad-hoc strings |
 | Field rename on AnalyzePerception schema in Phase 7 hindsight | R23 kill trigger across grounding rules + evaluate + report | Phase 7 lead | impact.md forward-stability promise locks shape; new fields = optional additive only; rename = fresh impact.md cycle |
 | `browser_evaluate` sandbox v1.1 attack vectors (WebSocket + IndexedDB + Cache API + postMessage) remain reachable | Sandbox bypass possible on untrusted page domains | v1.1 lead | T043 file comment documents; Phase 4 SafetyCheck DomainPolicy gates the tool's invocation on untrusted domains |
+| `browser_evaluate` (T043) — 3 documented structural bypasses (F-001 Path B, see §4) means the sandbox is **defense in depth, not the primary control** for arbitrary-JS on untrusted pages | Bypass-class abuse possible if `browser_evaluate` is ever reachable from an untrusted domain ahead of DomainPolicy wiring | Phase 5 BrowseNode lead | When wiring `browser_evaluate` into BrowseNode, ensure Phase 4 DomainPolicy is **in place AND default-deny on untrusted domains BEFORE first invocation** — the Proxy + `with` sandbox does NOT close property-access escapes; v1.1 isolated-context sandbox is the structural fix |
 
 ---
 
@@ -207,7 +209,7 @@ governing_rules:
 | `tests/conformance/scroll-behavior.test.ts` | AC-03 | ✅ green | 2026-05-13 |
 | `tests/conformance/mcp-server.test.ts` | AC-04 | ✅ green | 2026-05-13 |
 | `tests/conformance/{navigate,go-back,go-forward,reload,get-state,screenshot,get-metadata,click,click-coords,type,scroll,select,hover,press-key,upload,tab-manage,extract,download,find-by-text,get-network,wait-for,agent-complete,agent-request-human}-tool.test.ts` (23 files) + `browse-tools.test.ts` parameterized | AC-05 | ✅ green (all 23 browse tools + 2 agent tools registered with EXACT v3.1 names) | 2026-05-13 |
-| `tests/conformance/browser-evaluate-sandbox.test.ts` | AC-06 | ✅ green (5 attack vectors blocked) | 2026-05-13 |
+| `tests/conformance/browser-evaluate-sandbox.test.ts` | AC-06 | ✅ green (12 tests = 9 GREEN identifier-lookup vectors + 2 KNOWN-LIMITATION pins for F-001 bypasses #1+#2 + 1 F-006 strict-mode-IIFE regression guard for closed bypass #3; Wave-18 Stage 2.5 Path B) | 2026-05-13 |
 | `tests/conformance/page-get-element-info.test.ts` | AC-07 | ✅ green | 2026-05-13 |
 | `tests/conformance/page-get-performance.test.ts` | AC-08 | ✅ green (4 baseline + 4 v2.3 — observer-hooked fields nullable with reason) | 2026-05-13 |
 | `tests/conformance/page-screenshot-full.test.ts` | AC-09 | ✅ green | 2026-05-13 |

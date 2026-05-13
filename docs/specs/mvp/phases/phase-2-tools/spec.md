@@ -2,7 +2,7 @@
 title: Phase 2 — MCP Tools + Human Behavior
 artifact_type: spec
 status: approved
-version: 0.3.1
+version: 0.3.2
 created: 2026-04-27
 updated: 2026-05-12
 owner: engineering lead
@@ -73,14 +73,23 @@ delta:
     - v0.2 → v0.3 — Gate 1 Pass 1 patch wave (8 actions act-001..act-008); no scope changes; staleness sweep + drift fixes
     # v0.3.1 — T-PHASE2-TYPES R11.4 correction (commit pending; master orchestrator session 16, 2026-05-12)
     - v0.3 → v0.3.1 — IframePurpose enum value correction discovered by T-PHASE2-TYPES subagent: actual Phase 1c enum is 9-value (checkout, chat, video, analytics, social_embed, captcha, cmp, payment_3ds, other), NOT 10-value; `video` not `video_embed`; `cross_origin` is a classifyIframe() security-override return value, NOT an enum member. v0.3 Pass 1 patch wave cited Phase 1c enum from memory; T-PHASE2-TYPES verified against IframePolicyEngine.ts:44-58 verbatim and reported drift. Corrected in 4 sites across spec.md + impact.md.
+    # v0.3.2 — Stage 2.5 remediation Path B (master orchestrator session 18, 2026-05-13) — Wave-18
+    - v0.3 → v0.3.2 — Stage 2.5 code-review finding F-001 (CRITICAL — `browser_evaluate` sandbox has 3 structural bypass classes the AC-06 test did not cover) resolved via Path B (accept-as-known-limitation + extend tests + revise spec wording + ship F-006 strict-mode-IIFE patch closing bypass #3). AC-06 row wording: tightened claim from "cannot escape its sandbox" / "All 4 verified" (overstated relative to the as-shipped implementation) to "blocks the 5 enumerated attack vectors via unqualified identifier lookup; property-access bypasses (Function.prototype.constructor, document.location, document.defaultView) are out of MVP scope and documented as known limitations in phase-2-current.md §4". US-1 lead paragraph similarly softened. SC-003 "4-vector" → "5-vector identifier-lookup" + KNOWN LIMITATION pin reference. Rationale: Stage 2.5 review identified 3 structural bypasses that the Proxy-shadowed-globalThis + `with(proxy)` sandbox CANNOT close at the architectural level (constructor-chain traversal, documentProxy passthrough, sloppy-mode `this` binding — last one closed by F-006 patch). Path B (vs Path A patch-all) accepts these as MVP limitations because (a) Phase 4 DomainPolicy is the operational compensating control (untrusted domains never reach `browser_evaluate`), (b) v1.1 already has IP-hardening + sandbox rework on the roadmap, (c) pinning the bypasses via AC-06 KNOWN LIMITATION tests turns the defect into a test invariant that future drift will surface. Conformance test extended from 9 → 12 vectors (9 GREEN + 2 KNOWN-LIMITATION pins for F-001 #1+#2 + 1 F-006 strict-mode-IIFE regression guard for closed bypass #3). R23 kill criterion #5 RELAXATION explicitly documented; closes pending Gate 2 blocker.
   impacted:
     - Constitution R9 — second adapter category (MCP server) lands
     - PRD §F-003 + §F-004 "12 MCP tools" references are legacy (PRD line numbers no longer cited per F-S8); master plan v2.3 + this spec govern (29 tools)
     - tasks-v2.md "28 tools" — same off-by-one; flagged for end-of-session cross-phase audit (do NOT patch in this round)
+    # v0.3.2 impacted surfaces
+    - phase-2-current.md §4 — new row enumerating the 3 bypass classes + Phase 4 DomainPolicy compensating control
+    - packages/agent-core/src/mcp/tools/browserEvaluate.ts — F-006 strict-mode IIFE patch (closes F-001 bypass #3)
+    - packages/agent-core/src/mcp/Server.ts — F-005 error-envelope redaction (typed error codes; full Zod / handler messages stay in Pino) — prompt-injection-via-error-envelope defense ahead of Phase 5 wiring
+    - packages/agent-core/tests/conformance/browser-evaluate-sandbox.test.ts — 3 new AC-06 KNOWN-LIMITATION tests pinning F-001 bypasses + F-006 regression guard
+    - v1.1 backlog — full isolated-context sandbox (iframe-shadow-realm or off-page worker) per BACKLOG_V1.1 reference
   unchanged:
     - AC-01..AC-13 stable IDs and acceptance scenarios (R18 append-only)
     - R-01..R-15 functional requirement IDs and statements
     - User Scenarios, Out of Scope structure, Constitution Alignment Check sections preserved (R18 append-only — only field VALUES updated, not IDs or structure)
+    - v0.3.2 — the 5 enumerated identifier-lookup vectors remain blocked by the Proxy + `with` sandbox; AC-06 conformance tests are EXTENDED (not regressed)
 
 governing_rules:
   - Constitution R4 (Browser Agent Rules — perception first, exact tool names)
@@ -159,7 +168,7 @@ Phase 2 sits on top of Phase 1b (extension layer, shipped 2026-05-11) and Phase 
 
 ### User Story 1 — An LLM-driven agent can drive the browser via MCP tools (Priority: P1) 🎯 MVP
 
-The Neural orchestrator (or any MCP client) connects to the Phase 2 MCP server, lists available tools, and invokes them by name to perceive and act on web pages. Every tool input + output is Zod-validated. RateLimiter prevents abuse. `browser_evaluate` cannot escape its sandbox.
+The Neural orchestrator (or any MCP client) connects to the Phase 2 MCP server, lists available tools, and invokes them by name to perceive and act on web pages. Every tool input + output is Zod-validated. RateLimiter prevents abuse. `browser_evaluate` blocks the 5 enumerated identifier-lookup attack vectors (cookies / storage / network / navigation / Function-eval); property-access bypasses are documented as MVP known limitations gated by Phase 4 DomainPolicy (see AC-06 + phase-2-current.md §4).
 
 **Why this priority:** This is the action half of Phase 1's perception-first split. Without Phase 2, no Phase 5 Browse MVP, no Phase 7 deep_perceive can call `page_analyze`.
 
@@ -195,7 +204,7 @@ The Neural orchestrator (or any MCP client) connects to the Phase 2 MCP server, 
 | AC-03 | ScrollBehavior produces variable-momentum scrolling that triggers lazy-loaded content within one scroll cycle on a fixture page | `tests/conformance/scroll-behavior.test.ts` | T018 |
 | AC-04 | MCP server boots; `tools/list` returns 29 MCP tools (22 browser_* + 2 agent_* + 5 page_*) each with a Zod-derived JSON schema + safety classification | `tests/conformance/mcp-server.test.ts` | T019 |
 | AC-05 | All 23 browse tools (T020-T042) register, accept Zod-valid input, return Zod-valid output, log via Pino with correlation fields tool_name + tool_call_id + client_session_id | `tests/conformance/browse-tools.test.ts` (parameterized over 23 tools) | T020-T042 |
-| AC-06 | `browser_evaluate` sandbox blocks: (a) `document.cookie` access, (b) `localStorage` / `sessionStorage`, (c) `fetch()` / `XMLHttpRequest`, (d) `window.location` mutation / `history.pushState`. All 4 verified in conformance test. | `tests/conformance/browser-evaluate-sandbox.test.ts` | T043 |
+| AC-06 | `browser_evaluate` sandbox blocks the 5 enumerated attack vectors — (a) `document.cookie` access, (b) `localStorage` / `sessionStorage`, (c) `fetch()` / `XMLHttpRequest`, (d) `window.location` mutation / `history.pushState`, (e) `Function` / `eval` constructor — via unqualified identifier lookup through the Proxy-shadowed `globalThis` + `with(proxy)` execution scope. Property-access bypasses (`Function.prototype.constructor`, `document.location`, `document.defaultView`) are **out of MVP scope** and documented as **known limitations** in phase-2-current.md §4; v1.1 backlog ships a full isolated-context sandbox (iframe-shadow-realm or off-page worker). Operational compensating control: Phase 4 DomainPolicy gates `browser_evaluate` reachability per domain; untrusted domains never reach this tool. Conformance test extends to 12 vectors (9 GREEN + 3 KNOWN-LIMITATION pins from F-001 + 1 F-006 strict-mode-IIFE regression guard). | `tests/conformance/browser-evaluate-sandbox.test.ts` | T043 |
 | AC-07 | `page_get_element_info` returns `{ boundingBox, isAboveFold, computedStyles, contrastRatio }` for a target id; contrast computed correctly for both light + dark text on light background | `tests/conformance/page-get-element-info.test.ts` | T044 |
 | AC-08 | `page_get_performance` returns 8 metrics partitioned as: **4 baseline** ({ DOMContentLoaded, fullyLoaded, resourceCount, LCP }) + **4 v2.3 enrichments** ({ INP, CLS, TTFB, timeToFirstCtaInteractable }) per §07.9.1. Conformance test asserts each of the 8 fields populated (or explicitly null with reason) on the fixture page. | `tests/conformance/page-get-performance.test.ts` | T045 (with v2.3 enrichment definitions consumed from T048's AnalyzePerception schema) |
 | AC-09 | `page_screenshot_full` produces a JPEG ≤ 2 MB up to 15000 px tall via scroll-stitch; uses Sharp for compression | `tests/conformance/page-screenshot-full.test.ts` | T046 |
@@ -266,7 +275,7 @@ AC-NN IDs are append-only per Constitution R18. (13 AC for 35 tasks because tool
 
 - **SC-001:** Phase 2 integration test (T050) exercises all 29 MCP tools against amazon.in within 5 minutes; every tool produces Zod-valid output.
 - **SC-002:** AnalyzePerception schema validates fixtures from 3 page types (homepage, PDP, checkout) on first try.
-- **SC-003:** browser_evaluate sandbox passes 4-vector security test (cookies, localStorage, fetch, navigation).
+- **SC-003:** browser_evaluate sandbox passes 5-vector identifier-lookup security test (cookies, localStorage/sessionStorage, fetch/XMLHttpRequest, navigation, Function/eval). Property-access bypass classes are PINNED as KNOWN LIMITATION tests in the same suite (v0.3.2 — F-001 documented; v1.1 backlog hardens via isolated-context sandbox).
 - **SC-004:** RateLimiter test simulates 60-call burst on same domain; pacing matches spec; no starvation observed.
 - **SC-005:** No direct `import ... from '@modelcontextprotocol/sdk'` outside `mcp/Server.ts` + `mcp/tools/*.ts` (R9 grep verify).
 

@@ -95,6 +95,19 @@ const DEFAULT_SERVER_INFO: MCPServerInfo = {
 };
 
 /**
+ * F-005 (Wave-18 Stage 2.5 remediation): typed error codes returned to MCP
+ * clients in the response envelope. Full Zod / handler messages are logged
+ * via Pino (callLogger.warn/.error retain the err field); ONLY the code
+ * surfaces to the client to prevent prompt-injection-via-error-envelope on
+ * the Phase 5 BrowseNode untrusted-input path.
+ */
+const ERROR_CODES = {
+  INVALID_INPUT: 'MCP-INVALID-INPUT-001',
+  INVALID_OUTPUT: 'MCP-INVALID-OUTPUT-001',
+  HANDLER_FAILURE: 'MCP-HANDLER-FAILURE-001',
+} as const;
+
+/**
  * Crypto-strong tool_call_id generator (Node 22 has `crypto.randomUUID`
  * native; importing via `node:crypto` keeps the dep tree clean).
  */
@@ -202,7 +215,7 @@ export class MCPServerAdapter {
       callLogger.warn({ err: parsedInput.error.message }, 'mcp.tool.input_invalid');
       return {
         isError: true,
-        content: [{ type: 'text', text: `Invalid input: ${parsedInput.error.message}` }],
+        content: [{ type: 'text', text: ERROR_CODES.INVALID_INPUT }],
       };
     }
     const ctx: ToolContext = {
@@ -217,7 +230,7 @@ export class MCPServerAdapter {
         callLogger.error({ err: parsedOutput.error.message }, 'mcp.tool.output_invalid');
         return {
           isError: true,
-          content: [{ type: 'text', text: `Invalid output: ${parsedOutput.error.message}` }],
+          content: [{ type: 'text', text: ERROR_CODES.INVALID_OUTPUT }],
         };
       }
       return {
@@ -226,7 +239,7 @@ export class MCPServerAdapter {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       callLogger.error({ err: msg }, 'mcp.tool.handler_error');
-      return { isError: true, content: [{ type: 'text', text: msg }] };
+      return { isError: true, content: [{ type: 'text', text: ERROR_CODES.HANDLER_FAILURE }] };
     }
   }
 }

@@ -130,7 +130,11 @@ function sandboxRunner(args: SandboxArgs): string {
       return Reflect.set(t, p, v);
     },
   });
-  const fn = new NativeFunction('proxy', 'with(proxy) { return (function() { ' + userScript + ' })(); }') as (proxy: unknown) => unknown;
+  // F-006 (Wave-18 Stage 2.5 remediation): inject "use strict" at the START of
+  // the INNER IIFE body so `this` is `undefined` inside the user script (closes
+  // F-001 bypass #3 — sloppy-mode `this`-binding to real window). The OUTER
+  // Function body stays sloppy because `with` is forbidden in strict mode.
+  const fn = new NativeFunction('proxy', 'with(proxy) { return (function(){"use strict";' + userScript + '})(); }') as (proxy: unknown) => unknown;
   const raw = fn(windowProxy);
   if (returnAs === 'undefined') return '';
   if (returnAs === 'string') return String(raw);
