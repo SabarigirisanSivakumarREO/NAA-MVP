@@ -31,14 +31,18 @@ findings:
 
 2. **Severity sanity check.** If `/speckit.analyze` marked something CRITICAL but description is cosmetic, downgrade with note. If marked LOW but blocks impl, escalate. Document any reclassification.
 
-3. **Map severity → action.**
+3. **Map severity → action — fix-all-spec-defects policy (Session 19, 2026-05-13).**
 
-| Severity | Verdict signal | Action type | Block gate? |
-|---|---|---|---|
-| CRITICAL | REVISE or RE-SPEC | Spec patch (must) before impl | YES |
-| HIGH | REVISE | Spec patch (must) before impl | YES |
-| MED | PASS | Log; surfaced for human awareness | NO |
-| LOW | PASS | Log; surfaced for human awareness | NO |
+| Severity | Class | Verdict signal | Action type | Block gate? |
+|---|---|---|---|---|
+| CRITICAL | any | REVISE or RE-SPEC | Spec patch (must) before impl | YES |
+| HIGH | any | REVISE | Spec patch (must) before impl | YES |
+| MED | any | **REVISE** | Spec patch before impl | **YES** |
+| LOW | spec_defect (INCONSISTENCY / AMBIGUITY / UNDERSPECIFICATION / SPEC_IMPL_SHAPE_MISMATCH) | **REVISE** | Spec patch before impl | **YES** |
+| LOW | tooling_quirk (parser noise, build artifacts) | PASS | Log; surfaced for human awareness | NO |
+| LOW | pure_cosmetic (stale comments, formatting) | PASS | Log; surfaced for human awareness | NO |
+
+**Classification rule:** Default LOW findings to `spec_defect` (block). Only mark `tooling_quirk` if the finding describes a tool's parsing/output behavior NOT spec content. Only mark `pure_cosmetic` if zero behavior impact. When in doubt → block. False-positive blocks cost ~5 min of patch wave; false-negative deferrals cost mid-impl R11.4 confusion measured in hours. See `SKILL.md` § "Severity routing" for the supersession rationale (Day-0 "MED/LOW never block" → severity-by-class policy).
 
 4. **Determine action type per finding:**
 
@@ -87,15 +91,18 @@ correctness:
      whether any block, whether any cross-phase>
 ```
 
-## Verdict synthesis rule
+## Verdict synthesis rule — fix-all-spec-defects policy (Session 19, 2026-05-13)
 
 ```
 correctness_verdict =
-  if any finding severity = CRITICAL:    REVISE  (or RE-SPEC if structural)
-  elif any finding severity = HIGH:      REVISE
-  elif total findings = 0:               PASS
-  else:                                  PASS (with MED/LOW logged)
+  if any finding severity = CRITICAL:                       REVISE  (or RE-SPEC if structural)
+  elif any finding severity = HIGH:                         REVISE
+  elif any finding severity = MED:                          REVISE
+  elif any finding (severity=LOW AND class=spec_defect):    REVISE
+  elif total blocking findings = 0:                         PASS  (with non-blocking LOW tooling/cosmetic logged)
 ```
+
+Non-blocking LOWs (class=tooling_quirk OR class=pure_cosmetic) are logged in the verdict summary for human awareness but do not block gate transition.
 
 RE-SPEC reserved for structural issues — e.g., multiple CRITICAL findings indicating phase scope wrong; dependency cycles; spec wholly inconsistent with predecessor phase rollup.
 

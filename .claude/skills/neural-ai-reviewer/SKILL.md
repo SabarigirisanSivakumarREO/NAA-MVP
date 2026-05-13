@@ -108,16 +108,45 @@ recommended_actions:
 human_stamp_required: true
 ```
 
-## Severity routing
+## Severity routing — fix-all-spec-defects policy (Session 19, 2026-05-13)
 
-| Severity | At Gate 1 (pre-flight) | At Gate 2 (verification) |
-|---|---|---|
-| CRITICAL | Block; verdict = REVISE or RE-SPEC | Block; verdict = RETURN-TO-IMPL |
-| HIGH | Block; verdict = REVISE | Block; verdict = RETURN-TO-IMPL |
-| MED | Log; verdict can pass; surfaced in summary for human awareness | Same |
-| LOW | Log; verdict can pass; surfaced in summary for human awareness | Same |
+**Policy:** Severity-by-CLASS, not severity-by-blocker-tier. CRITICAL/HIGH block always. MED + LOW block IF they are spec defects (inconsistency / ambiguity / spec-impl shape mismatch / underspecification). MED + LOW LOG-ONLY if they are tooling quirks or pure cosmetics.
 
-CRITICAL and HIGH always block. MED/LOW never block (per Day 0 decision).
+This supersedes the Day-0 "MED/LOW never block" decision — see superseded policy + rationale at the bottom of this section.
+
+| Severity | Finding class | At Gate 1 (pre-flight) | At Gate 2 (verification) |
+|---|---|---|---|
+| CRITICAL | any | Block; verdict = REVISE or RE-SPEC | Block; verdict = RETURN-TO-IMPL |
+| HIGH | any | Block; verdict = REVISE | Block; verdict = RETURN-TO-IMPL |
+| MED | any | **Block; verdict = REVISE** | **Block; verdict = RETURN-TO-IMPL** |
+| LOW | spec_defect (INCONSISTENCY / AMBIGUITY / UNDERSPECIFICATION / SPEC_IMPL_SHAPE_MISMATCH) | **Block; verdict = REVISE** | **Block; verdict = RETURN-TO-IMPL** |
+| LOW | tooling_quirk (matrix-parser quirks, build artifacts, harness noise) | Log only — surfaced in summary | Same |
+| LOW | pure_cosmetic (stale comments, formatting, eslint-disable cleanup) | Log only — surfaced in summary | Same |
+
+### How the reviewer classifies LOW findings
+
+The reviewer MUST assign each LOW finding a `class` field:
+- `spec_defect` — fix at Gate 1 (default; assume LOW is a spec defect unless evidence says otherwise)
+- `tooling_quirk` — only if the finding describes a tool's parsing/output behavior, NOT spec content (e.g., "matrix parser tripped on `|` characters in markdown table cell" is tooling_quirk; the spec text is correct)
+- `pure_cosmetic` — only if the finding is stylistic with zero behavior impact (e.g., "stale eslint-disable comment that no longer suppresses anything")
+
+When in doubt → classify as `spec_defect` (block at gate). False-positive blocks cost ~5 min of patch wave; false-negative deferrals cost mid-impl R11.4 confusion measured in hours.
+
+### Rationale for the supersession
+
+The Day-0 "MED/LOW never block" policy optimized for gate throughput. Real costs under-counted:
+
+1. **Comprehension debt accumulates.** Deferred LOWs carry cognitive friction every time the spec is read until they land. Phase 2 ended with 7 R18 append-only delta blocks (impact.md v0.2.2 → v0.2.8) — many were second-order fixes that started as Gate-1 "small things."
+2. **R11.4 canonical reading is "fix spec before implementing."** The "Option G lightweight" interpretation IS a relaxation; the policy now aligns with the canonical reading.
+3. **Implementer ambiguity is a friction multiplier.** Each unresolved LOW becomes a small "stop and think" for the subagent, often producing a mid-impl spec patch anyway.
+4. **Phase 2 already shipped this pattern de facto.** Phase 2 Gate 1 ran Pass 1 REVISE → 8-action patch wave → Pass 2 APPROVE. The documented policy lagged actual practice.
+
+### Operational impact
+
+- Gates run ~1.3 Passes on average (most phases will need one ridealong patch wave)
+- Every Gate 1 APPROVE = literally zero blocking findings (clean audit trail)
+- Mid-impl R11.4 patches drop sharply (Phase 2 had 5+ during impl; expected ~0-1 going forward)
+- Cost per phase up by ~$3-8 (one extra Pass 2 review); net win vs impl-time confusion it prevents
 
 ## Constitutional anchors
 

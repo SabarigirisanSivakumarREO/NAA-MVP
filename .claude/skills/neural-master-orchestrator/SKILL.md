@@ -49,8 +49,8 @@ When invoked with `--start` or any after-gate command:
 | Stage | Description | Reference |
 |---|---|---|
 | 1 — Pre-flight | Run `/speckit.analyze` + `pnpm spec:matrix --phase <N>`; verify R20 impact.md presence | [`references/state-machine.md`](references/state-machine.md) |
-| 1b — AI Review | Invoke `neural-ai-reviewer` skill with `--gate pre-flight`; receive verdict | Same |
-| 🚦 Gate 1 | Pause; render verdict summary; await human stamp | Same |
+| 1b — AI Review | Invoke `neural-ai-reviewer` skill with `--gate pre-flight`; receive verdict. **Fix-all-spec-defects policy (Session 19, 2026-05-13):** Gate 1 APPROVE requires zero blocking findings — CRITICAL/HIGH + MED + LOW-spec-defects all block; only LOW tooling-quirks + pure-cosmetics defer. See `neural-ai-reviewer/SKILL.md` § "Severity routing". | Same |
+| 🚦 Gate 1 | Pause; render verdict summary; await human stamp. **Patch-wave pattern (expected ~1.3 Passes/phase):** if Pass 1 returns REVISE, master apply approved spec patches (single commit, R18 delta blocks on every artifact touched), then re-run Stage 1 → Stage 1b for Pass 2 verdict. Repeat until APPROVE clean. | Same |
 | 2 — Implementation (engineering phases) | Task classifier → dispatch plan; sequential foundation tasks → parallel subagent fan-out | Same + [`pipeline-mode.md`](references/pipeline-mode.md) |
 | 2 — Implementation (content phases — Phase 0b) | Sub-states 2a (drafting) → 2b (`neural-heuristic-reviewer`) → 2c (human gate per heuristic) → 2d (commit) → 2e (AC-12 spot-check at +10/+20/+30 marks) | [`references/content-phase-state-machine.md`](references/content-phase-state-machine.md) |
 | 2.5 — Code Review | Invoke `superpowers:code-reviewer` agent on full impl diff | Same |
