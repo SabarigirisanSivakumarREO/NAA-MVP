@@ -2,7 +2,7 @@
 title: Phase 3 — Verification & Confidence — Review Notes (R17.4 gate)
 artifact_type: phase-review-notes
 status: approved
-version: 1.1
+version: 1.2
 phase_number: 3
 phase_name: Verification & Confidence (thin)
 review_rounds: 3 (Gate 1 — Stage 1 pre-flight)
@@ -22,13 +22,16 @@ delta:
   new:
     - v1.1 — 3-pass convergence record (Pass-1 11 findings → Pass-2 patch wave introduces 3 second-order findings → Pass-3 clean APPROVE)
     - v1.1 — Documents the fix-all-spec-defects policy supersession that drove Pass 2+3
+    - v1.2 — Gate 2 verdict appended (Stage 2.5 code review + Stage 3 verification + Stage 3b AI Reviewer all APPROVE; awaiting Sabari's Gate 2 stamp)
   changed:
     - v1.0 → v1.1 — verdict moved from "APPROVE with 2 MED + 6 LOW carryforward" to "APPROVE clean" under new policy; review-notes rewritten as 3-pass narrative
+    - v1.1 → v1.2 — Gate 2 verification record appended (§11 NEW); Phase 3 implementation complete (16 commits; 574 tests green; 0 regression; all 9 ACs GREEN)
   impacted:
     - .claude/skills/neural-ai-reviewer/SKILL.md § "Severity routing" (new policy encoded)
     - .claude/skills/neural-ai-reviewer/references/correctness-audit.md § severity→action mapping
     - .claude/skills/neural-master-orchestrator/SKILL.md § Gate 1 row + 🚦 Gate 1 row
-  unchanged: []
+  unchanged:
+    - sections 1-10 (3-pass Gate 1 narrative preserved verbatim)
 ---
 
 # Phase 3 Review Notes — Gate 1 (Stage 1 Pre-flight) — 3-Pass Record
@@ -180,4 +183,99 @@ If RE-SPEC → phase scope re-opened (not recommended — no structural defects 
 
 ---
 
-*End of Phase 3 review-notes.md v1.1. Authored 2026-05-13 by neural-ai-reviewer at orchestrator invocation `/master 3 --start` (Stage 1b — Pass 3). Supersedes review-notes.md v1.0 (Pass 1, old Day-0 policy).*
+---
+
+## 11. Gate 2 Verification Record (v1.2 addendum — 2026-05-14)
+
+After Gate 1 APPROVE, master orchestrator drove Stage 2 → Stage 3 → Stage 3b. This section records the Gate 2 verdict.
+
+### 11.1 Stage 2 Implementation summary
+
+Phase 3 implementation landed in **15 commits + 1 follow-up = 16 total** on `feat/phase-3-verification`:
+
+| Wave | Tasks | Commits | LOC added | Tests added |
+|---|---|---|---|---|
+| 1 | T-PHASE3-LOGGER + T-PHASE3-TESTS | 4e005fd + eca726d | +21 + ~1,555 | 0 + 74 RED |
+| 2 | T051 + T052 | 1fa51e6 + cf923cc | ~198 (types.ts) | +14 GREEN |
+| 3 | T053 + T054 + T055 | dcea912 + cdf3d71 + 3106f1f | 94 + 146 + 94 | +29 GREEN |
+| 4 | T062 VerifyEngine | 45766d6 | 145 | +7 GREEN |
+| 5 | T063 + T064 | 8362f2b + 449e287 + 58306f2 | 183 + 65 | +21 GREEN |
+| 6 | T065 integration | 16c4880 | 249 | +9 GREEN |
+| polish | T-PHASE3-DOC | ae063c4 | +8 (README) | — |
+| Stage 2.5 follow-up | F-01 + F-04 closure | 5ab011e | +27 | +1 GREEN (height:0) |
+
+**Test totals after Stage 3:** 574 agent-core tests passing (0 failures; +81 net from Phase 3); 12/12 acceptance tests passing; zero regression on 493 Phase 2 baseline.
+
+### 11.2 Stage 2.5 Code Review (superpowers:code-reviewer)
+
+**Verdict:** APPROVE. 0 CRITICAL, 0 HIGH, 2 MED, 4 LOW.
+
+Findings status:
+- **F-01 (MED) CLOSED** at 5ab011e — barrel re-exports added for 3 strategy classes + MutationSettleWaiter interface
+- **F-02 (MED) DEFERRED TO STAGE 4** — MutationSettleWaiter ↔ Phase 1 waitForSettle adapter shim requirement documented for phase-3-current.md §5 Open Risks for Next Phase
+- **F-04 (LOW spec_defect) CLOSED** at 5ab011e — verify-element-appears.test.ts AC-04 criterion-b split into width=0 + height=0 (test count 9 → 10)
+- **F-03, F-05, F-06 (LOW pure_cosmetic) DEFERRED TO V1.1** — non-blocking under new policy carve-out
+
+Full Stage 2.5 findings persisted in [`.phase-state/3/code-review-findings.yaml`](.phase-state/3/code-review-findings.yaml).
+
+### 11.3 Stage 3 Verification (empirical test execution)
+
+| Check | Result | Wall-clock |
+|---|---|---|
+| `pnpm typecheck` | ✅ PASS (3/3 packages clean) | 8.4 s |
+| `pnpm -F @neural/agent-core test` | ✅ PASS (574/574; 0 failures; 89 test files) | 43.4 s |
+| `pnpm test:integration` | ✅ PASS (12/12 Playwright acceptance) | 1.1 min |
+| `pnpm lint` | ✅ PASS (Phase 4 stub) | 0.4 s |
+
+Full Stage 3 results persisted in [`.phase-state/3/verify-test-results.json`](.phase-state/3/verify-test-results.json).
+
+### 11.4 Stage 3b AI Reviewer Gate 2 (neural-ai-reviewer)
+
+**Verdict:** APPROVE. 0 blocking findings under fix-all-spec-defects policy.
+
+Sub-audit results:
+- **Correctness:** PASS (Stage 2.5 findings either closed or deferred with rationale)
+- **Coverage:** PASS empirically (9/9 ACs GREEN per Stage 3 evidence; matrix tooling-quirk on workspace-path resolution noted as non-blocking)
+- **Completeness:** PASS for 3 categorical surfaces (ActionContract.type, VerifyStrategyName, FailureClass — all enumerated against MVP scope; v1.1 forward-compat reserved set complete)
+
+Constitutional invariants verified intact:
+- **R4.4** multiplicative-only confidence: source-grep test passes; live code uses only `*` and `<` operators on confidence
+- **R9** adapter pattern: zero Playwright imports outside Phase 1
+- **AC-06 forward-compat seam**: VerifyEngine.register() has no MVP whitelist; all 6 v1.1 reserved names register clean
+- **R23 kill criteria** T064 extended: constructor bounds validation present; no additive math; multiplicative-only enforced
+
+Full Gate 2 verdict persisted in [`.phase-state/3/verify-verdict.yaml`](.phase-state/3/verify-verdict.yaml).
+
+### 11.5 Cost + time summary
+
+| Stage | Cost (USD) | Wall-clock |
+|---|---|---|
+| Gate 1 (3 passes + patches) | ~1.40 | ~90 min |
+| Wave 1-6 subagent dispatch (8 subagents) | ~3.00 | ~3 hr |
+| Stage 2.5 code review | ~0.50 | ~5 min |
+| Stage 3 verification | ~0.10 (local runs) | ~3 min |
+| Stage 3b AI Reviewer | ~0.30 | ~3 min |
+| **Phase 3 total to date** | **~5.30** | **~4 hr** |
+
+Ceiling remaining: **$54.70 of $60** per-phase user-approved ceiling.
+
+### 11.6 Recommended Gate 2 stamp
+
+**APPROVE** — verdict supports:
+
+- [ ] **Human stamp (Sabari):** confirm APPROVE on `/master 3 --gate-2 APPROVE`
+- [ ] **Stage 4 exit (master executes on APPROVE):**
+  - R17 status bumps: `approved → implemented → verified` on spec/plan/tasks/impact frontmatter
+  - Author `phase-3-current.md` R19 rollup with F-02 documentation in §5
+  - Author `phase-3-validation.md` sibling (5 ASCII proof sections + spot-checks)
+  - INDEX.md row 3 flip 🟡 → 🟢 complete
+  - Branch push to origin/feat/phase-3-verification
+  - PR creation (Phase 3 → master)
+
+If APPROVE → master proceeds to Stage 4.
+
+If RETURN-TO-IMPL → identify failing checks; re-dispatch fix subagents.
+
+---
+
+*End of Phase 3 review-notes.md v1.2. v1.1 supersedes v1.0 (Gate 1); v1.2 appends Gate 2 record. Authored 2026-05-13 → 2026-05-14 by neural-ai-reviewer at orchestrator invocations `/master 3 --start` (Stage 1b) + `/master 3 --gate-1 APPROVE` (Stage 2 → 3 → 3b).*
