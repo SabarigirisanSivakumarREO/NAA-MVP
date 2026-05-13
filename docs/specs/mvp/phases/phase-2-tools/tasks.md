@@ -284,7 +284,7 @@ Each task **dep**: T-PHASE2-TYPES, T019, T-PHASE2-TESTS (and T016/T017/T018 for 
 
 ### Implementation task — page_analyze v2.3 (THE CRITICAL ONE)
 
-- [ ] **T048 [US-1] page_analyze v2.3** (AC-11, REQ-TOOL-PA-001 + REQ-ANALYZE-PERCEPTION-V23-001) **— extended kill criteria**
+- [x] **T048 [US-1] page_analyze v2.3** (AC-11, REQ-TOOL-PA-001 + REQ-ANALYZE-PERCEPTION-V23-001) **— extended kill criteria**
   - **Brief — Outcome:** `mcp/tools/pageAnalyze.ts` exports the `page_analyze` tool. **Single `page.evaluate()` call within the handler** (the upstream `waitForSettle` precondition's internal evaluate does NOT count — see kill criteria) runs all 9 baseline + 14 v2.3 enrichment extractions inside the page context, returning a JSON object that Zod-parses as `AnalyzePerception` (a SEPARATE Zod schema distinct from PSM — see F-G1 design decision below). The 14 v2.3 enrichments per §07.9.1: `metadata.canonical/lang/ogTags/schemaOrg`, `structure.titleH1Match/titleH1Similarity`, `textContent.valueProp/urgencyScarcityHits/riskReversalHits`, `ctas[].accessibleName/role/hoverFocusStyles`, `forms[].fields[].accessibleName/role`, `trustSignals[].subtype/source/attribution/freshnessDate/pixelDistanceToNearestCta`, `iframes[].purposeGuess`, `navigation.footerNavItems`, `accessibility.keyboardFocusOrder/skipLinks`, `performance.INP/CLS/TTFB/timeToFirstCtaInteractable`, `inferredPageType.primary/alternatives/signalsUsed`.
   - **Safety class (v0.2 — F-S12):** `safe` — read-only perception
   - **Context:** §07.9 + §07.9.1 are the verbatim authority. impact.md frames this as the highest-fanout schema in Neural; Phase 7 grounding rules + evaluate prompts depend on every field shape.
