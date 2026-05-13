@@ -1,10 +1,10 @@
 ---
 title: Impact Analysis — Phase 3 Verification (5 new shared contracts)
 artifact_type: impact
-status: draft
-version: 0.1
+status: approved
+version: 0.2
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-14
 owner: engineering lead
 
 supersedes: null
@@ -35,9 +35,18 @@ affected_contracts:
 delta:
   new:
     - First impact.md formalizing R4.2 verify-everything + R4.4 multiplicative confidence as code-level contracts
-  changed: []
+    - v0.2 — Session 19 Gate 1 Pass 1 REVISE fixes (fix-all-spec-defects policy enforcement)
+  changed:
+    - v0.1 → v0.2 — analyze-driven fixes carried over from v0.2 sibling sweep (F01 AST claim removed; Surface-1 ActionContract.type enum closure clarified; urlMatches string semantics pinned)
+    - §ConfidenceScorer line 151 — "greps source AST" → "greps source text (comment-stripped; no AST)" — aligns with spec v0.2 AC-08 + plan v0.2 + tasks v0.2 grep-only stance (F01)
+    - §ActionContract `type` field — `z.enum([..., /* ... */])` → `z.string()` + Phase 5 ownership comment — closes Surface-1 SPEC_GAP at Gate 1
+    - §ActionContract `urlMatches` field — added comment pinning string = strict equality; RegExp for substring/prefix match (F03 ambiguity closure)
   impacted: []
-  unchanged: []
+  unchanged:
+    - All 5 contract names + shapes
+    - Risk level: medium
+    - Forward Contract section (Phase 4 + Phase 5 consumers)
+    - Verification table
 
 governing_rules:
   - Constitution R4.2, R4.4
@@ -87,12 +96,26 @@ Phase 7 does NOT consume these — Phase 7 uses its own 4D finding scoring per a
 ```ts
 export const ActionContractSchema = z.object({
   id: z.string().uuid(),
-  type: z.enum(['navigate', 'click', 'type', 'scroll', 'select', 'press_key', 'upload', /* ... */]),
+  // type is informational metadata for logging + FailureClassifier subclass routing.
+  // It does NOT drive strategy dispatch — `expected.kind` does. Phase 5 BrowseNode
+  // owns concrete enum closure against Phase 2's 22 browser_* + 2 agent_* tools
+  // (per phase-2-tools/phase-2-current.md §1). Phase 3 ships z.string() as the
+  // forward-compat seam; Phase 5 may tighten to a closed z.enum() at impl time.
+  type: z.string(),
   target: z.object({ /* tool-specific */ }).optional(),
   expected: z.discriminatedUnion('kind', [
-    z.object({ kind: 'urlMatches', urlMatches: z.union([z.string(), z.instanceof(RegExp)]) }),
+    z.object({
+      kind: 'urlMatches',
+      // string urlMatches = strict equality (===); use RegExp for substring/prefix/pattern match.
+      urlMatches: z.union([z.string(), z.instanceof(RegExp)]),
+    }),
     z.object({ kind: 'elementAppears', selector: z.string(), timeoutMs: z.number().default(10000) }),
-    z.object({ kind: 'elementText', selector: z.string(), text: z.union([z.string(), z.instanceof(RegExp)]) }),
+    z.object({
+      kind: 'elementText',
+      selector: z.string(),
+      // string text = substring match (case-sensitive); use RegExp for pattern match.
+      text: z.union([z.string(), z.instanceof(RegExp)]),
+    }),
     // v1.1 will add discriminants for network_request, snapshot_diff, etc.
   ]),
   candidateStrategies: z.array(z.string()),  // priority-ordered names
@@ -148,7 +171,8 @@ export interface ConfidenceScorer {
 
 **R4.4 enforcement at code level:**
 - Implementation: ConfidenceScorer.ts uses `*` operator only — no `-` or `+` on confidence.
-- Conformance test: `confidence-scorer-no-additive.test.ts` greps the source AST for `-=`, `+=`, `- 0.`, `+ 0.` patterns on confidence variables; FAIL the test if found.
+- Conformance test: `confidence-scorer-no-additive.test.ts` greps the source **text** (comment-stripped; no AST) for `-=`, `+=`, `- 0.`, `+ 0.` patterns on confidence variables; FAIL the test if found. Comments (`//` + `/* */`) are STRIPPED before grep so explanatory prose with `+`/`-` is allowed. Each line is evaluated independently (no multiline matching). See plan.md v0.3 Phase 1 Design item 4 for the canonical test code.
+- Constructor validation: ConfidenceScorer throws on `failureFactor ∉ (0, 1)` or `successFactor < 1` — closes subtle additive-mimicking config (per F06 Gate 1 finding).
 - Kill criterion in tasks.md T064: any additive math = STOP.
 
 ### `FailureClassifier` (NEW)

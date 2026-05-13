@@ -1,10 +1,10 @@
 ---
 title: Phase 3 — Verification & Confidence (thin)
 artifact_type: spec
-status: draft
-version: 0.2
+status: approved
+version: 0.3
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-14
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -44,15 +44,18 @@ delta:
     - 3 MVP verify strategies; 6 deferred to v1.1 per tasks-v2 v2.3.2
     - v0.2 — AC-04 element_appears visibility criterion concrete (analyze finding F04)
     - v0.2 — AC-08 ConfidenceScorer enforcement narrowed to "grep-based source check" (no AST claim) + grep test details specified (analyze findings F01 + F06)
+    - v0.3 — Session 19 Gate 1 Pass 1 REVISE fixes (fix-all-spec-defects policy enforcement; 6 LOW findings closed)
   changed:
     - v0.1 → v0.2 — analyze-driven fixes (F01, F04, F06); no scope changes
+    - v0.2 → v0.3 — F03 urlMatches string semantics pinned (strict equality); F04 elementText wording aligned with impact.md discriminated-union shape; F05 ElementAppearsStrategy two-timer relationship pinned (MutationMonitor settle is precondition gate, same 10s ceiling for visibility check); F06 ConfidenceScorer factor bounds validation added to AC-08; matrix-tool COV-001 + COV-002 quirks resolved via markdown escape on AC-07 + AC-08 row split
   impacted:
-    - Constitution R4.4 (multiplicative confidence decay) — first concrete enforcement in ConfidenceScorer
+    - Constitution R4.4 (multiplicative confidence decay) — first concrete enforcement in ConfidenceScorer (v0.3 extends to factor bounds validation)
     - Constitution R4.2 (verify everything) — VerifyEngine is the runtime enforcement
   unchanged:
     - AC-NN stable IDs and acceptance scenarios (R18 append-only)
     - R-NN functional requirement IDs and statements
     - User Scenarios, Out of Scope, Constitution Alignment Check sections preserved verbatim
+    - Scope (9 MVP tasks; 6 deferred to v1.1)
 
 governing_rules:
   - Constitution R4 (browser rules — R4.2 verify everything; R4.4 multiplicative confidence)
@@ -108,9 +111,9 @@ When a Phase 5 Browse MVP node performs an action (navigate / click / type), it 
 
 **Acceptance Scenarios:**
 
-1. **Given** an `ActionContract { type: 'navigate', expected: { urlMatches: 'https://example.com' } }`, **When** the action lands on `https://example.com`, **Then** `url_change` strategy returns `{ ok: true, strategy: 'url_change', evidence: { actualUrl: 'https://example.com' } }`.
-2. **Given** an `ActionContract { type: 'click', expected: { elementAppears: { selector: '.cart-count' } } }`, **When** the click triggers DOM mutation revealing `.cart-count`, **Then** `element_appears` returns `{ ok: true }` after `MutationMonitor` settles (uses Phase 1's MutationMonitor).
-3. **Given** an `ActionContract { type: 'type', expected: { elementText: { selector: 'input.search', text: 'amazon' } } }`, **When** `element_text` runs after typing, **Then** verification returns `{ ok: true }` if the input value matches.
+1. **Given** an `ActionContract { type: 'navigate', expected: { kind: 'urlMatches', urlMatches: 'https://example.com' } }`, **When** the action lands on `https://example.com`, **Then** `url_change` strategy returns `{ ok: true, strategy: 'url_change', evidence: { actualUrl: 'https://example.com' } }`. (String urlMatches uses strict equality; for substring/prefix match, use a RegExp.)
+2. **Given** an `ActionContract { type: 'click', expected: { kind: 'elementAppears', selector: '.cart-count', timeoutMs: 10000 } }`, **When** the click triggers DOM mutation revealing `.cart-count`, **Then** `element_appears` returns `{ ok: true }` after `MutationMonitor` settles (uses Phase 1's MutationMonitor as precondition gate).
+3. **Given** an `ActionContract { type: 'type', expected: { kind: 'elementText', selector: 'input.search', text: 'amazon' } }`, **When** `element_text` runs after typing, **Then** verification returns `{ ok: true }` if the input value contains `'amazon'` (string text = substring match, case-sensitive; use RegExp for pattern match).
 4. **Given** all 3 strategies fail for a contract, **When** `VerifyEngine.verify()` returns, **Then** the result is `{ ok: false, attemptedStrategies: ['url_change', 'element_appears', 'element_text'], failures: [...] }` and `FailureClassifier` typed-classes the overall failure.
 5. **Given** N consecutive failed verifies in a session, **When** `ConfidenceScorer.afterFailure()` runs N times, **Then** confidence = `initial × 0.97^N` (multiplicative); no additive math; bounded in (0, 1).
 6. **Given** the v1.1-deferred strategy `no_captcha`, **When** `VerifyEngine.registerStrategy('no_captcha', impl)` is called by future v1.1 code, **Then** registration succeeds without engine code changes (forward-compat seam verified).
@@ -121,9 +124,10 @@ When a Phase 5 Browse MVP node performs an action (navigate / click / type), it 
 
 - **Navigation completes but URL is unexpected (e.g., redirect to login):** `url_change` returns `ok: false` with `actualUrl`; FailureClassifier marks `unexpected_redirect` (subclass for retry routing).
 - **Element appears but is hidden by CSS:** `element_appears` MUST check **all three** visibility criteria — (a) DOM presence (`querySelector !== null`), (b) bounding box > 0 in both width and height, (c) computed style `visibility !== 'hidden'` AND `display !== 'none'` AND `opacity > 0`. All three required to declare `ok: true`. Bare DOM presence is insufficient.
-- **MutationMonitor never settles within 10s during verify:** strategy returns `ok: false` with `unstable: true` rather than blocking forever.
+- **ElementAppearsStrategy two-timer semantics (v0.3 — F05 closure):** MutationMonitor settle is a **precondition gate** for visibility checking, not a separate timer. The contract's `timeoutMs` (default 10 000 ms) is the **single shared ceiling** — MutationMonitor must settle AND the 3-criterion visibility check must pass within that ceiling. If MutationMonitor returns `unstable: true` before settle (its own 2 s internal timer fires while DOM is still mutating), the strategy returns `{ ok: false, unstable: true }` WITHOUT proceeding to visibility check. If MutationMonitor settles but visibility check fails within remaining budget, strategy returns `{ ok: false, failedCriterion: 'a'|'b'|'c' }`.
 - **All 3 strategies inapplicable to a contract (e.g., file download):** VerifyEngine returns `{ ok: false, reason: 'no_applicable_strategy' }`; FailureClassifier marks `unverifiable` (subclass — Phase 5 can route to HITL or skip).
 - **Confidence floor:** if `confidence × 0.97^N < 0.10`, ConfidenceScorer emits a `low_confidence_threshold` warning event for orchestrator escalation. Floor is configurable; default 0.10.
+- **ConfidenceScorer factor bounds (v0.3 — F06 closure):** constructor throws `RangeError` if `failureFactor ∉ (0, 1)` (must be strictly > 0 and strictly < 1) or `successFactor < 1` (must be ≥ 1, with default 1.01 representing mild rebound). Closes subtle additive-mimicking config (e.g., factor 0.999999 with magic offsets) at construction time rather than runtime.
 
 ---
 
@@ -133,12 +137,12 @@ When a Phase 5 Browse MVP node performs an action (navigate / click / type), it 
 |----|-----------|----------------------|-------------|
 | AC-01 | `ActionContract` Zod schema validates `{ id, type, target?, expected, candidateStrategies }`; `expected` is a discriminated union (urlMatches / elementAppears / elementText / etc.) | `tests/conformance/action-contract.test.ts` | T051 |
 | AC-02 | `VerifyStrategy` interface defines `name: string`, `priority: number`, `applicable(contract): boolean`, `verify(contract, session): Promise<VerifyResult>`. All 3 MVP strategies implement this interface; 6 v1.1 strategies have reserved name slots in the interface enum | `tests/conformance/verify-strategy.test.ts` | T052 |
-| AC-03 | `url_change` strategy reads `session.page.url()` post-action; matches against `expected.urlMatches` (string or regex); returns `VerifyResult` | `tests/conformance/verify-url-change.test.ts` | T053 |
+| AC-03 | `url_change` strategy reads `session.page.url()` post-action; matches against `expected.urlMatches` when `expected.kind === 'urlMatches'` (string urlMatches = strict equality `===`; RegExp urlMatches = pattern match); returns `VerifyResult` | `tests/conformance/verify-url-change.test.ts` | T053 |
 | AC-04 | `element_appears` strategy waits up to 10 s for selector to be **fully visible**, defined as ALL THREE: (a) `querySelector(selector) !== null`, (b) `boundingBox.width > 0 AND boundingBox.height > 0`, (c) computed style `visibility !== 'hidden'` AND `display !== 'none'` AND `opacity > 0`. Uses Phase 1 `MutationMonitor` for stability before checking. Returns `VerifyResult { ok: false }` if any of the 3 visibility criteria fail. | `tests/conformance/verify-element-appears.test.ts` (covers all 3 visibility branches via fixtures) | T054 |
-| AC-05 | `element_text` strategy reads element value/text post-action; substring/regex match per `expected.elementText.text`; returns `VerifyResult` | `tests/conformance/verify-element-text.test.ts` | T055 |
+| AC-05 | `element_text` strategy reads element value/text post-action; matches against `expected.text` when `expected.kind === 'elementText'` (string text = substring match, case-sensitive; RegExp text = pattern match); returns `VerifyResult` | `tests/conformance/verify-element-text.test.ts` | T055 |
 | AC-06 | `VerifyEngine` accepts a `StrategyRegistry`; runs strategies in priority order; respects `applicable()` gating; returns aggregated `VerifyResult`. Registration of v1.1 strategy slots succeeds without engine code change (forward-compat) | `tests/conformance/verify-engine.test.ts` | T062 |
-| AC-07 | `FailureClassifier` typed-classes outcomes into `{ class: 'verify_failed' \| 'safety_blocked' \| 'rate_limited' \| 'unverifiable' \| 'bot_detected_likely', subclass: string, shouldRetry: boolean }`. Pre-positions `bot_detected_likely` for v1.1's `no_bot_block` strategy. | `tests/conformance/failure-classifier.test.ts` | T063 |
-| AC-08 | `ConfidenceScorer` enforces multiplicative decay: `afterFailure(c)` = `c × 0.97` (default factor); `afterSuccess(c)` = `min(1, c × 1.01)` (mild rebound); NEVER `c - 0.05` or `c + 0.01`. **Two-test enforcement:** (1) runtime test asserts the math (`afterFailure(1).toFixed(2) === '0.97'`); (2) **source-grep test** reads `packages/agent-core/src/verification/ConfidenceScorer.ts` as text and asserts NO regex match for `\bc\s*[-+]\s*\d`, `\bc\s*[-+]=`, `\bcurrent\s*[-+]\s*\d`, `\bconfidence\s*[-+]` patterns. Comments (`//` and `/* */`) are STRIPPED before grep so explanatory prose with `+`/`-` is allowed. The grep does NOT cross newlines (each line evaluated independently). | `tests/conformance/confidence-scorer.test.ts` + `tests/conformance/confidence-scorer-no-additive.test.ts` | T064 |
+| AC-07 | `FailureClassifier` typed-classes outcomes into a `FailureClassification` value with `class` field one of `verify_failed` / `safety_blocked` / `rate_limited` / `unverifiable` / `bot_detected_likely`; plus `subclass: string` and `shouldRetry: boolean`. Pre-positions `bot_detected_likely` for v1.1's `no_bot_block` strategy. | `tests/conformance/failure-classifier.test.ts` | T063 |
+| AC-08 | `ConfidenceScorer` enforces multiplicative decay: `afterFailure(c)` = `c × 0.97` (default factor); `afterSuccess(c)` = `min(1, c × 1.01)` (mild rebound); NEVER `c - 0.05` or `c + 0.01`. **Constructor validates factor bounds (v0.3 — F06):** throws `RangeError` if `failureFactor ∉ (0, 1)` or `successFactor < 1`. **Three-test enforcement:** (1) runtime test asserts the math (`afterFailure(1).toFixed(2) === '0.97'`); (2) constructor-bounds test asserts throws on `failureFactor = 0` / `1` / negative + `successFactor < 1`; (3) **source-grep test** reads `packages/agent-core/src/verification/ConfidenceScorer.ts` as text and asserts NO regex match for `\bc\s*[-+]\s*\d`, `\bc\s*[-+]=`, `\bcurrent\s*[-+]\s*\d`, `\bconfidence\s*[-+]` patterns. Comments (`//` and `/* */`) are STRIPPED before grep so explanatory prose with `+`/`-` is allowed. The grep does NOT cross newlines (each line evaluated independently). | `tests/conformance/confidence-scorer.test.ts`; `tests/conformance/confidence-scorer-no-additive.test.ts` | T064 |
 | AC-09 | Phase 3 integration test exercises 10 synthetic contracts (3 success / 3 verify_failed / 2 rate_limited / 2 safety_blocked) end-to-end through ActionContract → VerifyEngine → 3 strategies → FailureClassifier → ConfidenceScorer; total wall-clock < 30 s | `tests/integration/phase3.test.ts` | T065 |
 
 AC-NN IDs are append-only per Constitution R18.
