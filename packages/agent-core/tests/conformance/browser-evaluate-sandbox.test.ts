@@ -3,75 +3,98 @@
  *
  * Spec source:
  *   docs/specs/mvp/phases/phase-2-tools/spec.md AC-06 + R-06
- *   docs/specs/mvp/phases/phase-2-tools/tasks.md T043
- *     (REQ-MCP-SANDBOX-001/002/003)
+ *   docs/specs/mvp/phases/phase-2-tools/tasks.md T043 (REQ-MCP-SANDBOX-001/002/003)
  *
- * AC-06 contract — sandbox blocks 4 vectors:
+ * AC-06 contract — sandbox blocks 5 vectors:
  *   (a) document.cookie access
  *   (b) localStorage / sessionStorage access
  *   (c) fetch() / XMLHttpRequest
  *   (d) window.location setter / history.pushState
+ *   (e) Function constructor / eval bypass
  *
- * RED state — implementation lands at T043 (Wave 5+). All 4 vector
- *   assertions are `it.todo` until then. NO MOCKS per task brief — sandbox
- *   tests MUST exercise the real Proxy injection at T043; we deliberately
- *   defer until then.
+ * GREEN state — T043 has landed; all assertions are live. Tests exercise the
+ * real Proxy injection via Playwright Chromium (no mocks per R3.1).
  *
- * Anchor: @AC-06 — 4-vector sandbox enforcement.
+ * Anchor: @AC-06 — 5-vector sandbox enforcement.
  */
-import { describe, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { BrowserManager } from '../../src/browser-runtime/BrowserManager.js';
+import { createBrowserEvaluateTool } from '../../src/mcp/tools/browserEvaluate.js';
+import { createLogger } from '../../src/observability/logger.js';
+import type { BrowserSession } from '../../src/adapters/BrowserEngine.js';
+import type { ToolContext } from '../../src/mcp/types.js';
 
-// NOTE (R3.1): import deliberately commented out so this file compiles +
-// loads cleanly until T043 lands. Uncomment when browserEvaluate.ts exists:
-// import { browserEvaluate } from '../../src/mcp/tools/browserEvaluate.js';
+const MINIMAL_HTML =
+  '<!doctype html><html><body><div id="test">sandbox fixture</div></body></html>';
 
-describe('browser_evaluate sandbox — AC-06 conformance (Wave 0 RED)', () => {
-  /**
-   * @AC-06 vector (a) — document.cookie access blocked.
-   * Script `return document.cookie` should throw or return undefined.
-   */
-  it.todo('AC-06 (a): script accessing document.cookie returns undefined / throws');
+let session: BrowserSession | undefined;
 
-  /**
-   * @AC-06 vector (b1) — localStorage access blocked.
-   */
-  it.todo('AC-06 (b1): script accessing localStorage returns undefined / throws');
+beforeAll(async () => {
+  const manager = new BrowserManager();
+  session = await manager.newSession({ headless: true });
+  await session.page.setContent(MINIMAL_HTML);
+}, 30000);
 
-  /**
-   * @AC-06 vector (b2) — sessionStorage access blocked.
-   */
-  it.todo('AC-06 (b2): script accessing sessionStorage returns undefined / throws');
+beforeEach(async () => {
+  // Reload the minimal fixture before each test so a vector-d test that
+  // unexpectedly leaks a navigation (regression detector) doesn't cascade
+  // failures into the next assertion's execution context.
+  if (session) await session.page.setContent(MINIMAL_HTML);
+});
 
-  /**
-   * @AC-06 vector (c1) — fetch() blocked.
-   */
-  it.todo('AC-06 (c1): script invoking fetch() rejects / throws');
+afterAll(async () => {
+  if (session) await session.close();
+});
 
-  /**
-   * @AC-06 vector (c2) — XMLHttpRequest blocked.
-   */
-  it.todo('AC-06 (c2): script instantiating XMLHttpRequest throws');
+function stubCtx(): ToolContext {
+  return {
+    logger: createLogger('test-browser-evaluate'),
+    toolCallId: 't-1',
+    clientSessionId: 'c-1',
+  };
+}
 
-  /**
-   * @AC-06 vector (d1) — window.location setter blocked.
-   * Script `window.location = '...'` or `window.location.href = '...'`
-   * should throw or be a no-op.
-   */
-  it.todo('AC-06 (d1): script writing to window.location throws / no-op');
+async function runUserScript(script: string): Promise<unknown> {
+  if (!session) throw new Error('session not initialized');
+  const tool = createBrowserEvaluateTool({ session });
+  return tool.handler({ script, returnAs: 'string' }, stubCtx());
+}
 
-  /**
-   * @AC-06 vector (d2) — history.pushState blocked.
-   */
-  it.todo('AC-06 (d2): script invoking history.pushState throws / no-op');
+async function expectBlocked(script: string, vectorTag: string): Promise<void> {
+  await expect(
+    runUserScript(script),
+    `vector ${vectorTag} must throw`,
+  ).rejects.toThrow(/sandbox/);
+}
 
-  /**
-   * @AC-06 — sandbox bypass via Function constructor blocked
-   * (per spec.md Edge Cases line 183).
-   */
-  it.todo('AC-06 (bypass): script using Function constructor to escape sandbox is blocked');
-
-  /**
-   * @AC-06 — emits Pino correlation fields per T-PHASE2-LOGGER.
-   */
-  it.todo('AC-06: logs tool_name + tool_call_id + client_session_id correlation fields');
+describe('browser_evaluate sandbox — AC-06 conformance (T043 GREEN)', () => {
+  it('AC-06 (a): script accessing document.cookie throws', async () => {
+    await expectBlocked('return document.cookie;', 'a');
+  });
+  it('AC-06 (b1): script accessing localStorage throws', async () => {
+    await expectBlocked('return localStorage.getItem("x");', 'b1');
+  });
+  it('AC-06 (b2): script accessing sessionStorage throws', async () => {
+    await expectBlocked('return sessionStorage.getItem("x");', 'b2');
+  });
+  it('AC-06 (c1): script invoking fetch() throws', async () => {
+    await expectBlocked('return fetch("/x");', 'c1');
+  });
+  it('AC-06 (c2): script instantiating XMLHttpRequest throws', async () => {
+    await expectBlocked('return new XMLHttpRequest();', 'c2');
+  });
+  it('AC-06 (d1): script writing to window.location throws', async () => {
+    await expectBlocked('window.location = "https://attacker/";', 'd1');
+  });
+  it('AC-06 (d2): script invoking history.pushState throws', async () => {
+    await expectBlocked('history.pushState({}, "", "/x");', 'd2');
+  });
+  it('AC-06 (e): script using Function constructor or eval to escape sandbox is blocked', async () => {
+    await expectBlocked('return new Function("return document.cookie")();', 'e-Function');
+    await expectBlocked('return eval("document.cookie");', 'e-eval');
+  });
+  it('AC-06: non-blocked operations succeed (Math.PI returns)', async () => {
+    const out = await runUserScript('return String(Math.PI.toFixed(2));');
+    expect(out).toMatchObject({ ok: true, result: '3.14' });
+  });
 });
