@@ -17,10 +17,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { SessionRecorder } from '../../src/observability/SessionRecorder.js';
-import { AuditEventKindSchema } from '../../src/types/audit-events.js';
+import { AuditEventTypeEnum } from '../../src/types/audit-events.js';
 import { getDbClient, runMigrations } from '../../src/db/client.js';
 
-const ALL_22_EVENT_KINDS = [
+const ALL_22_EVENT_TYPES = [
   'audit_started',
   'audit_completed',
   'audit_failed',
@@ -58,14 +58,14 @@ describe('SessionRecorder — AC-07 conformance (RED until T072)', () => {
     await db.end?.();
   });
 
-  it('AC-07: AuditEventKindSchema accepts each of the 22 canonical kinds', () => {
-    for (const kind of ALL_22_EVENT_KINDS) {
-      expect(() => AuditEventKindSchema.parse(kind)).not.toThrow();
+  it('AC-07: AuditEventTypeEnum accepts each of the 22 canonical event types', () => {
+    for (const event_type of ALL_22_EVENT_TYPES) {
+      expect(() => AuditEventTypeEnum.parse(event_type)).not.toThrow();
     }
   });
 
-  it('AC-07: AuditEventKindSchema rejects an unknown kind', () => {
-    expect(() => AuditEventKindSchema.parse('not_a_real_kind')).toThrow();
+  it('AC-07: AuditEventTypeEnum rejects an unknown event_type', () => {
+    expect(() => AuditEventTypeEnum.parse('not_a_real_event_type')).toThrow();
   });
 
   it('AC-07: SessionRecorder.recordEvent writes one row to audit_events for "audit_started"', async () => {
@@ -74,25 +74,27 @@ describe('SessionRecorder — AC-07 conformance (RED until T072)', () => {
     await recorder.recordEvent({
       audit_run_id: auditRunId,
       client_id: '00000000-0000-4000-8000-000000000401',
-      kind: 'audit_started',
-      payload: {},
+      event_type: 'audit_started',
+      page_url: null,
+      metadata: {},
     });
     const db = getDbClient();
-    const r = await db.query<{ kind: string }>(
-      `SELECT kind FROM audit_events WHERE audit_run_id = $1`,
+    const r = await db.query<{ event_type: string }>(
+      `SELECT event_type FROM audit_events WHERE audit_run_id = $1`,
       [auditRunId],
     );
-    expect(r.rows.some((row) => row.kind === 'audit_started')).toBe(true);
+    expect(r.rows.some((row) => row.event_type === 'audit_started')).toBe(true);
   });
 
-  it('AC-07: recordEvent rejects unknown kinds via Zod parse', async () => {
+  it('AC-07: recordEvent rejects unknown event_types via Zod parse', async () => {
     const recorder = new SessionRecorder();
     await expect(
       recorder.recordEvent({
         audit_run_id: '00000000-0000-4000-8000-000000000402',
         client_id: '00000000-0000-4000-8000-000000000403',
-        kind: 'unknown_kind' as never,
-        payload: {},
+        event_type: 'unknown_event_type' as never,
+        page_url: null,
+        metadata: {},
       }),
     ).rejects.toThrow();
   });

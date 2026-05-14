@@ -35,7 +35,7 @@ interface CircuitBreakerStub {
 }
 
 interface SessionRecorderStub {
-  recordEvent(event: { kind: string; tool_name?: string; reason?: string }): Promise<void>;
+  recordEvent(event: { event_type: string; tool_name?: string; reason?: string }): Promise<void>;
 }
 
 interface AuditRunStub {
@@ -52,9 +52,9 @@ function makeStubs(opts: {
   domainPolicy: DomainPolicyStub;
   breaker: CircuitBreakerStub;
   recorder: SessionRecorderStub;
-  recordEventCalls: Array<{ kind: string; tool_name?: string; reason?: string }>;
+  recordEventCalls: Array<{ event_type: string; tool_name?: string; reason?: string }>;
 } {
-  const recordEventCalls: Array<{ kind: string; tool_name?: string; reason?: string }> = [];
+  const recordEventCalls: Array<{ event_type: string; tool_name?: string; reason?: string }> = [];
   return {
     classifier: { classify: vi.fn(() => opts.safetyClass) },
     domainPolicy: { classify: vi.fn(() => opts.domainVerdict ?? 'unknown') },
@@ -92,7 +92,7 @@ describe('SafetyCheck — AC-02 conformance (RED until T067)', () => {
     await expect(check.assertAllowed('agent_request_human', 'example.com', AUDIT_RUN)).rejects.toThrow(
       SafetyBlockedError,
     );
-    expect(stubs.recordEventCalls.some((e) => e.kind === 'hitl_requested')).toBe(true);
+    expect(stubs.recordEventCalls.some((e) => e.event_type === 'hitl_requested')).toBe(true);
   });
 
   it('AC-02 requires_safety_check: blocks when DomainPolicy === "blocked"', async () => {
