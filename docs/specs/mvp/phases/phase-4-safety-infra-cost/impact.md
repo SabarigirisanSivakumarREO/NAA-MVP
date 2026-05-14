@@ -1,11 +1,12 @@
 ---
-title: Impact Analysis — Phase 4 Safety + Infra + Cost (18 new shared contracts)
+title: Impact Analysis — Phase 4 Safety + Infra + Cost (19 new shared contracts)
 artifact_type: impact
 status: draft
-version: 0.1
+version: 0.2
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-14
 owner: engineering lead
+authors: [Claude (drafter), Claude (master orchestrator session 19 — Gate 1 Pass 1 patch wave)]
 
 supersedes: null
 supersededBy: null
@@ -46,13 +47,23 @@ affected_contracts:
   - DBSchema
   - LLMCallRecord
   - AuditEvent
+  - RobotsChecker          # v0.2 — 19th contract (REQ-SAFETY-005 / AC-16 / T080a)
 
 delta:
   new:
     - First impact.md introducing DB schema as shared contract; 18 simultaneous contracts
-  changed: []
-  impacted: []
-  unchanged: []
+    - v0.2 — RobotsChecker added as 19th affected contract (per spec.md v0.3 / tasks.md v0.3 / AC-16 / T080a — REQ-SAFETY-005)
+    - v0.2 — context_profiles table slot reservation entry added under Forward Contract (spec.md AC-17 / tasks.md T070 sub-AC; Phase 4b T4B-012 owns the migration)
+  changed:
+    - v0.1 → v0.2 — RobotsChecker added to affected_contracts (was 18; now 19); delta blocks per R18
+  impacted:
+    - Phase 4b T4B-003 HtmlFetcher imports RobotsChecker.isAllowed() — Phase 4 must ship before Phase 4b begins
+    - Phase 4b T4B-012 lands the actual context_profiles migration; T070 schema baseline reserves the slot
+    - Phase 5 browse-mode navigation gates on RobotsChecker — Phase 5 imports the same utility
+  unchanged:
+    - 18 original contracts (LLMAdapter, AnthropicAdapter, TemperatureGuard, BudgetGate, StorageAdapter, PostgresStorage, ScreenshotStorage, LocalDiskStorage, ActionClassifier, SafetyCheck, DomainPolicy, CircuitBreaker, AuditLogger, SessionRecorder, StreamEmitter, DBSchema, LLMCallRecord, AuditEvent) — full original list
+    - Risk level HIGH; breaking false
+    - DB schema 15-table inventory (act-001 corrects table count; structural categorization unchanged)
 
 governing_rules:
   - Constitution R7
@@ -65,22 +76,22 @@ governing_rules:
   - Constitution R22
 ---
 
-# Impact Analysis: 18 new shared contracts (LLM + DB + Storage + Safety + Observability)
+# Impact Analysis: 19 new shared contracts (LLM + DB + Storage + Safety + Observability)
 
 ## Why R20 applies — and why risk_level is HIGH
 
-Phase 4 introduces eighteen new shared contracts, more than any other phase. Three categories:
+Phase 4 introduces nineteen new shared contracts (v0.2 — RobotsChecker added; was 18), more than any other phase. Three categories:
 
 1. **LLM contract surface** (LLMAdapter, AnthropicAdapter, TemperatureGuard, BudgetGate, LLMCallRecord) — Neural's first LLM contact. Every later phase that calls LLMs (Phase 7 evaluate/self_critique, Phase 9 nothing) consumes this. **R10 reproducibility** + **R14 cost accountability** both materialize here.
-2. **Database surface** (DBSchema with 12 tables + RLS + append-only, StorageAdapter, PostgresStorage, AuditLogger, SessionRecorder, AuditEvent) — first persistence. Phase 5 audit_runs + Phase 7 findings + Phase 8 reproducibility_snapshots + Phase 9 reports all read/write this schema. **R7.1/R7.2/R7.4** materialize here.
+2. **Database surface** (DBSchema with 15 tables + RLS + append-only, StorageAdapter, PostgresStorage, AuditLogger, SessionRecorder, AuditEvent) — first persistence. Phase 5 audit_runs + Phase 7 findings + Phase 8 reproducibility_snapshots + Phase 9 reports all read/write this schema. **R7.1/R7.2/R7.4** materialize here.
 3. **Safety + Observability** (ActionClassifier, SafetyCheck, DomainPolicy, CircuitBreaker, ScreenshotStorage, LocalDiskStorage, StreamEmitter) — wraps every action invocation in Phase 5+ and produces the observability spine.
 
 risk_level: **HIGH** because:
 - DB schema is the most fan-out contract — touched by every phase 5+. Schema mistakes are expensive to migrate.
 - LLMAdapter is Neural's reproducibility boundary (R10 enforced here). One TemperatureGuard slip-up + Phase 7 grounding produces non-reproducible findings.
-- 18 contracts in one phase means 18 review surfaces — comprehension-debt risk per PRD §10.10.
+- 19 contracts in one phase means 19 review surfaces — comprehension-debt risk per PRD §10.10.
 
-Compare Phase 2 (4 contracts, HIGH risk): Phase 4 has 18 contracts and the DB schema specifically. Hence HIGH (could argue CRITICAL but holding HIGH because all additive — no migrations from prior versions).
+Compare Phase 2 (4 contracts, HIGH risk): Phase 4 has 19 contracts and the DB schema specifically. Hence HIGH (could argue CRITICAL but holding HIGH because all additive — no migrations from prior versions).
 
 ## Affected modules
 
@@ -100,11 +111,12 @@ Compare Phase 2 (4 contracts, HIGH risk): Phase 4 has 18 contracts and the DB sc
 | `packages/agent-core/src/safety/SafetyCheck.ts` | safety | Runtime gate; emits hitl_requested events |
 | `packages/agent-core/src/safety/DomainPolicy.ts` | safety | trusted/unknown/blocked |
 | `packages/agent-core/src/safety/CircuitBreaker.ts` | safety | 3-failure / 1-hour |
+| `packages/agent-core/src/safety/RobotsChecker.ts` | safety | Fetches/parses robots.txt + ai-agent.txt; AC-16 / T080a / REQ-SAFETY-005 (v0.2 — 19th contract) |
 | `packages/agent-core/src/observability/AuditLogger.ts` | observability | Writes to audit_log (append-only) |
 | `packages/agent-core/src/observability/SessionRecorder.ts` | observability | 22 audit_event types |
 | `packages/agent-core/src/observability/StreamEmitter.ts` | observability | SSE publish |
-| `packages/agent-core/src/db/schema.ts` | db | Drizzle table definitions (12 tables) |
-| `packages/agent-core/src/db/migrations/0001_initial.sql` | db | Initial 7 tables (Phase 1 of master plan) |
+| `packages/agent-core/src/db/schema.ts` | db | Drizzle table definitions (15 tables) |
+| `packages/agent-core/src/db/migrations/0001_initial.sql` | db | Initial 10 tables (7 client-scoped + 3 append-only) (Phase 1 of master plan) |
 | `packages/agent-core/src/db/migrations/0002_master_extensions.sql` | db | 5 extension tables + ALTER on findings + RLS policies + append-only triggers |
 | `packages/agent-core/src/db/index.ts` | db | barrel + connection helper |
 | `packages/agent-core/src/types/llm.ts` | types | LLMCallRecord Zod schema |
@@ -181,7 +193,7 @@ export class TemperatureGuard {
 
 Called at the top of `AnthropicAdapter.complete()` BEFORE any API call.
 
-### DB Schema (NEW — 12 tables)
+### DB Schema (NEW — 15 tables)
 
 Per §13-data-layer canonical:
 - **Client-scoped** (RLS enforced via `app.client_id` session var): `clients`, `audit_runs`, `findings`, `screenshots`, `sessions`, `page_states`, `state_interactions`, `finding_rollups`, `reproducibility_snapshots`, `audit_requests`
@@ -228,11 +240,11 @@ This is also the row shape for the `llm_call_log` Drizzle table.
 
 ## Breaking changes
 
-None — all 18 contracts are additive.
+None — all 19 contracts are additive.
 
 ## Migration plan
 
-Drizzle migrations are NOT a "migration" in the v0.1 → v0.2 sense — they're the FIRST migrations from "no schema" to "12 tables". So `migration: none required at contract level`, and the `db:migrate` Phase 0 stub is replaced by real Drizzle migrations.
+Drizzle migrations are NOT a "migration" in the v0.1 → v0.2 sense — they're the FIRST migrations from "no schema" to "15 tables". So `migration: none required at contract level`, and the `db:migrate` Phase 0 stub is replaced by real Drizzle migrations.
 
 ## Forward Contract — what later phases will import
 
@@ -273,6 +285,46 @@ await storage.writeReproducibilitySnapshot({ audit_run_id, model_versions, promp
 await storage.finalizeAuditRun(audit_run_id, { completion_reason: 'success' });
 ```
 
+### Phase 4b T4B-003 HtmlFetcher (v0.2)
+
+```ts
+import { RobotsChecker } from '@neural/agent-core/safety';
+
+const verdict = await robotsChecker.isAllowed(targetUrl, userAgent);
+if (!verdict.allowed) {
+  // Skip fetch; emit ROBOTS_TXT_DISALLOWED warning into PerceptionBundle
+}
+```
+
+Phase 4 must ship `RobotsChecker` (T080a) before Phase 4b T4B-003 begins. Single utility serves both Phase 4b and Phase 5.
+
+### Phase 5 browse-mode navigation (v0.2)
+
+```ts
+import { RobotsChecker } from '@neural/agent-core/safety';
+
+// Inside BrowseNode before any page.goto():
+const verdict = await robotsChecker.isAllowed(url, userAgent);
+if (!verdict.allowed) {
+  await sessionRecorder.recordEvent({
+    kind: 'page_browse_failed',
+    reason: 'ROBOTS_TXT_DISALLOWED',
+    matched_directive: verdict.matched_directive,
+  });
+  return; // skip this URL
+}
+```
+
+Phase 5 browse-mode navigation gates on the same `RobotsChecker` utility shipped here.
+
+### context_profiles table slot reservation (v0.2 — Forward Contract)
+
+T070 schema baseline reserves a `context_profiles` table slot but does NOT create the table. **Phase 4b T4B-012 owns the actual `CREATE TABLE context_profiles` migration.** The reservation contract:
+
+- T070 conformance test asserts schema baseline does NOT define `context_profiles` AND does NOT collide with the column shapes specified at `docs/specs/mvp/phases/phase-4b-context-capture/impact.md §6` (the Phase 4b shape contract).
+- If Phase 4b impact.md does not exist at T070 implementation time, T070 conformance falls back to asserting absence-only; full collision assertion gated on Phase 4b artifact landing.
+- This is a forward-compatible reservation — adding `context_profiles` in Phase 4b does NOT require a Phase 4 schema rewrite (AC-17 / R-17 enforcement guarantee).
+
 **Forward stability promises:**
 - LLMAdapter interface methods (`complete`, `estimateCost`) are LOCKED.
 - `LLMOperation` enum values are LOCKED — Phase 7 hard-references these.
@@ -294,7 +346,7 @@ await storage.finalizeAuditRun(audit_run_id, { completion_reason: 'success' });
 
 | Check | Test |
 |---|---|
-| 12 tables exist + RLS + append-only | `tests/conformance/db-{schema,rls,append-only}.test.ts` (AC-05) |
+| 15 tables exist + RLS + append-only | `tests/conformance/db-{schema,rls,append-only}.test.ts` (AC-05) |
 | TemperatureGuard rejects temp > 0 on 3 ops | `tests/conformance/temperature-guard.test.ts` (AC-09) |
 | BudgetGate blocks pre-call when exhausted | `tests/conformance/budget-gate.test.ts` (AC-10) |
 | Atomic LLM log written before return | `tests/conformance/llm-adapter.test.ts` (AC-08) |
@@ -330,7 +382,7 @@ why:
 | Gate | Approver | Evidence |
 |---|---|---|
 | Impact analysis review | engineering lead | this `status: approved` |
-| R20 compliance — HIGH risk | engineering lead | full review of 18 contracts |
+| R20 compliance — HIGH risk | engineering lead | full review of 19 contracts |
 | R7.1/R7.2/R7.4 enforcement | engineering lead | T070 conformance tests in place |
 | R10 TemperatureGuard | engineering lead | T073 conformance + kill criterion |
 | R14 cost accountability (atomic log + budget gate + failover) | engineering lead | T073 sub-tests |

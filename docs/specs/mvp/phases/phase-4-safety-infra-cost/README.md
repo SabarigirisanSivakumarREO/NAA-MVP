@@ -43,7 +43,7 @@ governing_rules:
 
 # Phase 4 — Safety + Infrastructure + Cost
 
-> **Summary (~150 tokens):** The infrastructure spine. **12 MVP tasks** (T066-T076 + T080; T077-T079 reserved). Lands four safety primitives (ActionClassifier, SafetyCheck, DomainPolicy, CircuitBreaker), the **first real Postgres schema** via Drizzle (T070 — 12 tables + RLS + append-only triggers + ALTER on findings), audit logging (AuditLogger to `audit_log` append-only table, SessionRecorder to `audit_events`), the **first LLM adapter** (LLMAdapter + AnthropicAdapter with TemperatureGuard enforcing R10 + cost logging per R14 + per-call failover protocol per R14.5), StorageAdapter + PostgresStorage + ScreenshotStorage + LocalDiskStorage, StreamEmitter for SSE, and a Phase 4 integration test. **Highest cross-cutting surface in MVP** — third adapter category (LLM), first DB schema, first LLM call. Phase 5+ depends on every contract here.
+> **Summary (~150 tokens):** The infrastructure spine. **12 MVP tasks** (T066-T076 + T080; T077-T079 reserved). Lands four safety primitives (ActionClassifier, SafetyCheck, DomainPolicy, CircuitBreaker), the **first real Postgres schema** via Drizzle (T070 — 15 tables + RLS + append-only triggers + ALTER on findings), audit logging (AuditLogger to `audit_log` append-only table, SessionRecorder to `audit_events`), the **first LLM adapter** (LLMAdapter + AnthropicAdapter with TemperatureGuard enforcing R10 + cost logging per R14 + per-call failover protocol per R14.5), StorageAdapter + PostgresStorage + ScreenshotStorage + LocalDiskStorage, StreamEmitter for SSE, and a Phase 4 integration test. **Highest cross-cutting surface in MVP** — third adapter category (LLM), first DB schema, first LLM call. Phase 5+ depends on every contract here.
 
 ## Goal
 
@@ -57,7 +57,7 @@ After Phase 4: Drizzle schema migrated; `pnpm db:migrate` applies real schema (n
 | T067 | SafetyCheck — runtime gate; HITL pause for `requires_hitl` |
 | T068 | DomainPolicy — trusted/unknown/blocked domain registry |
 | T069 | CircuitBreaker — domain failure threshold (3 failures → 1-hour block) |
-| T070 | PostgreSQL schema (Drizzle) — 12 tables + RLS + append-only enforcement + initial + extensions migrations |
+| T070 | PostgreSQL schema (Drizzle) — 15 tables + RLS + append-only enforcement + initial + extensions migrations |
 | T071 | AuditLogger — writes to `audit_log` (append-only) |
 | T072 | SessionRecorder — writes to `audit_events` (22 event types per §34.4) |
 | T073 | LLMAdapter + AnthropicAdapter — first LLM contact; TemperatureGuard; failover; cost logging |
@@ -102,7 +102,7 @@ Full descriptions: [tasks.md](tasks.md). Cross-reference: [tasks-v2.md T066-T080
 pnpm spec:rollup --phase 4
 ```
 
-`phase-4-current.md` per R19. Active modules: `safety/`, `db/` (Drizzle), `adapters/` (LLM, Storage, ScreenshotStorage), `observability/` extended, `mcp/` (StreamEmitter integration). Contracts (most-impactful set in MVP): LLMAdapter, AnthropicAdapter, TemperatureGuard, BudgetGate, StorageAdapter, ScreenshotStorage, ActionClassifier, SafetyCheck, DomainPolicy, CircuitBreaker, AuditLogger, SessionRecorder, StreamEmitter, **DB schema (12 tables)**. Forward risks for Phase 5 (action node integration), Phase 7 (LLM call surface stability), Phase 8 (reproducibility snapshot composition).
+`phase-4-current.md` per R19. Active modules: `safety/`, `db/` (Drizzle), `adapters/` (LLM, Storage, ScreenshotStorage), `observability/` extended, `mcp/` (StreamEmitter integration). Contracts (most-impactful set in MVP): LLMAdapter, AnthropicAdapter, TemperatureGuard, BudgetGate, StorageAdapter, ScreenshotStorage, ActionClassifier, SafetyCheck, DomainPolicy, CircuitBreaker, AuditLogger, SessionRecorder, StreamEmitter, **DB schema (15 tables)**. Forward risks for Phase 5 (action node integration), Phase 7 (LLM call surface stability), Phase 8 (reproducibility snapshot composition).
 
 ## Reading order for Claude Code
 
