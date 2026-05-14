@@ -268,7 +268,7 @@ Add ESLint rule (in T073 PR):
 
 ### LLM + storage + stream pillar
 
-- [ ] **T073 [US-1] LLMAdapter + AnthropicAdapter + TemperatureGuard + BudgetGate** (AC-08, AC-09, AC-10, AC-11, REQ-LLM-*) **— extended kill criteria**
+- [x] **T073 [US-1] LLMAdapter + AnthropicAdapter + TemperatureGuard + BudgetGate** (AC-08, AC-09, AC-10, AC-11, REQ-LLM-*) **— extended kill criteria**
   - **Brief:**
     - **Outcome:** Five files build the LLM contract surface together (split to keep each < 200 lines):
       - `adapters/LLMAdapter.ts` — interface + LLMCompleteRequest + LLMCompleteResponse types + LLMOperation enum

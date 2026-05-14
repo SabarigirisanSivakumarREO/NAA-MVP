@@ -36,11 +36,12 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "lint": "echo \"lint configured in Phase 4 (ESLint with T073)\"",
+    "lint": "eslint src --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.96.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "drizzle-orm": "^0.36.4",
     "ghost-cursor": "^1.4.2",
@@ -55,6 +56,9 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@types/pg": "^8.11.10",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^9.16.0",
     "pino-pretty": "^11.3.0",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0"
