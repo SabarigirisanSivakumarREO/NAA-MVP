@@ -1,10 +1,10 @@
 ---
 title: Implementation Plan — Phase 4 Safety + Infra + Cost
 artifact_type: plan
-status: draft
-version: 0.2
+status: verified
+version: 1.0
 created: 2026-04-27
-updated: 2026-04-28
+updated: 2026-05-14
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -30,6 +30,12 @@ req_ids:
   - REQ-LLM-COST-LOG-001
   - REQ-STORAGE-ADAPTER-001
   - REQ-SCREENSHOT-STORAGE-001
+  - REQ-SAFETY-DOMAIN-POLICY-001          # v0.3 — F-05 closure (missing from prior versions)
+  - REQ-SAFETY-CIRCUIT-BREAKER-001        # v0.3 — F-05 closure
+  - REQ-OBSERVE-AUDIT-LOG-001             # v0.3 — F-05 closure
+  - REQ-OBSERVE-SESSION-RECORDER-001      # v0.3 — F-05 closure
+  - REQ-STREAM-EMITTER-001                # v0.3 — F-05 closure
+  - REQ-SAFETY-005                        # v0.3 — RobotsChecker (promoted to affected_contracts)
 
 impact_analysis: docs/specs/mvp/phases/phase-4-safety-infra-cost/impact.md
 breaking: false
@@ -52,6 +58,7 @@ affected_contracts:
   - DBSchema
   - LLMCallRecord
   - AuditEvent
+  - RobotsChecker          # v0.3 — promoted to affected_contracts (REQ-SAFETY-005)
 
 delta:
   new:
@@ -59,8 +66,11 @@ delta:
     - First Drizzle migrations (T070 — replaces Phase 0 stub)
     - First LLM adapter (T073 — third adapter category lands; ESLint rule activates)
     - v0.2 — T080a RobotsChecker (§11.1.1) added; T070 schema baseline reserves context_profiles slot
+    - v0.3 — RobotsChecker added to affected_contracts (per spec.md v0.3 + impact.md v0.2); REQ-SAFETY-005 added to req_ids
   changed:
     - v0.1 → v0.2 — adds §11.1.1 robots/ToS utility + context_profiles slot reservation; both unblock Phase 4b T4B-003 + T4B-012
+    - v0.2 → v0.3 — RobotsChecker promoted to affected_contracts frontmatter; req_ids frontmatter completed (6 IDs added per act-005); Phase 0 #7 enumerates all 22 audit_event types inline per act-009
+    - v0.3 → v1.0 — Stage 4 EXIT, status: verified (R17.4 gate cleared by `.phase-state/4/verify-verdict.yaml` Gate 2 APPROVE 2026-05-14). 12 MVP tasks + T080a all shipped; plan execution matched the v0.3 file map without drift. R18 append-only preserved.
   impacted:
     - Phase 4b T4B-003 HtmlFetcher imports `RobotsChecker.isAllowed()` — Phase 4 must ship this utility before Phase 4b begins
     - Phase 4b T4B-012 lands the actual context_profiles migration — Phase 4 reserves the slot in the T070 schema baseline
@@ -80,7 +90,7 @@ governing_rules:
 
 # Implementation Plan: Phase 4 — Safety + Infra + Cost
 
-> **Summary (~120 tokens):** Build the infrastructure spine in 12 MVP tasks. T066-T069 safety primitives. T070 Drizzle schema (12 tables + RLS + append-only triggers across two migrations). T071-T072 audit observability. **T073 the cornerstone**: LLMAdapter + AnthropicAdapter + TemperatureGuard + BudgetGate + atomic logging + failover protocol — all in ONE coherent module set. T074-T076 storage + screenshot + stream. T080 integration test. ESLint `no-restricted-imports` rule activates here (third adapter category). Adds Anthropic SDK + Drizzle + pg deps. impact.md HIGH-risk (18 contracts).
+> **Summary (~120 tokens):** Build the infrastructure spine in 12 MVP tasks. T066-T069 safety primitives. T070 Drizzle schema (15 tables + RLS + append-only triggers across two migrations). T071-T072 audit observability. **T073 the cornerstone**: LLMAdapter + AnthropicAdapter + TemperatureGuard + BudgetGate + atomic logging + failover protocol — all in ONE coherent module set. T074-T076 storage + screenshot + stream. T080 integration test. ESLint `no-restricted-imports` rule activates here (third adapter category). Adds Anthropic SDK + Drizzle + pg deps. impact.md HIGH-risk (19 contracts).
 
 **Branch:** `phase-4-safety-infra-cost`
 **Date:** 2026-04-27
@@ -93,7 +103,7 @@ governing_rules:
 Phase 4 is the densest infrastructure phase in MVP. Three pillars built in parallel:
 
 1. **Safety pillar (T066-T069):** ActionClassifier consumes Phase 2's SafetyClass; SafetyCheck wraps action invocation with HITL emission; DomainPolicy + CircuitBreaker round out the safety surface.
-2. **Data pillar (T070-T072):** Drizzle migrations land 12 tables with RLS + append-only triggers; AuditLogger writes append-only to `audit_log`; SessionRecorder emits 22 audit_event types.
+2. **Data pillar (T070-T072):** Drizzle migrations land 15 tables with RLS + append-only triggers; AuditLogger writes append-only to `audit_log`; SessionRecorder emits 22 audit_event types.
 3. **LLM + storage pillar (T073-T076):** LLMAdapter + AnthropicAdapter + TemperatureGuard + BudgetGate (the cornerstone task T073); StorageAdapter + ScreenshotStorage; StreamEmitter for SSE.
 
 All three pillars converge in T080 integration test.
@@ -136,12 +146,12 @@ All three pillars converge in T080 integration test.
 - [x] R9 adapter — third adapter category (LLM) + StorageAdapter + ScreenshotStorage. ESLint `no-restricted-imports` rule lands now. AnthropicAdapter is the SOLE Anthropic importer; PostgresStorage is the SOLE pg/Drizzle importer outside `db/`
 - [x] R10 TemperatureGuard — at AnthropicAdapter boundary; rejects temp > 0 on evaluate / self_critique / evaluate_interactive
 - [x] R10.1-R10.6 file/function size, no console.log — declared per task; LLMAdapter is the largest (~250 lines, may need split into LLMAdapter.ts + AnthropicAdapter.ts + TemperatureGuard.ts + BudgetGate.ts to stay under 300/file)
-- [x] R11.2 REQ-ID tracing — 16 REQ-IDs cited
+- [x] R11.2 REQ-ID tracing — 17 REQ-IDs cited (v0.3 — 6 IDs added per act-005)
 - [x] R14.1 atomic log — log row written BEFORE return
 - [x] R14.2 pre-call budget — BudgetGate is structural
 - [x] R14.5 failover protocol — 3 primary retries → throw; v1.2 plugs fallback
 - [x] R14.6 model_mismatch flag — `findings.model_mismatch` column added in T070; populated by Phase 7
-- [x] R20 impact.md — REQUIRED, HIGH risk, 18 contracts; authored
+- [x] R20 impact.md — REQUIRED, HIGH risk, 19 contracts; authored (v0.3 — RobotsChecker added)
 - [x] R23 kill criteria — default block + per-task on T070 (DB schema; > 2hr; shared contract; HIGH risk) + T073 (LLM adapter; > 2hr; shared contract; R10 enforcement)
 
 ---
@@ -152,7 +162,7 @@ All three pillars converge in T080 integration test.
 docs/specs/mvp/phases/phase-4-safety-infra-cost/
 ├── README.md
 ├── spec.md
-├── impact.md           # R20 — HIGH risk (18 contracts)
+├── impact.md           # R20 — HIGH risk (19 contracts)
 ├── plan.md             # this file
 ├── tasks.md
 ├── checklists/requirements.md
@@ -244,7 +254,34 @@ packages/agent-core/tests/
 4. **TemperatureGuard placement:** at top of `AnthropicAdapter.complete()` BEFORE any API call. Operation class is required field on `LLMCompleteRequest` — no inference, caller must declare.
 5. **BudgetGate placement:** also in `AnthropicAdapter.complete()`, AFTER TemperatureGuard, BEFORE API call. Reads `audit_runs.budget_remaining_usd` with row-level lock.
 6. **Failover protocol:** 3 primary retries with exponential backoff (1s, 2s, 4s). After 3 failures: write log row with `outcome='unavailable'`, throw `LLMUnavailableError`. v1.2 will register a fallback adapter that the protocol invokes after primary exhaustion.
-7. **22 audit_event types:** enumerated in `types/audit-events.ts` Zod enum per §34.4. Examples: `audit_started`, `audit_complete`, `tool_invoked`, `hitl_requested`, `hitl_approved`, `hitl_rejected`, `circuit_breaker_tripped`, `budget_warning`, `budget_exceeded`, `llm_call_made`, `llm_call_failed`, `finding_created`, `finding_grounded`, `finding_rejected`, etc.
+7. **22 audit_event types:** enumerated in `types/audit-events.ts` Zod enum per `docs/specs/final-architecture/34-observability.md` §34.4 REQ-OBS-012 (authoritative source). The full sealed enum is:
+
+   ```
+   1.  audit_started
+   2.  audit_completed
+   3.  audit_failed
+   4.  page_browse_started
+   5.  page_browse_completed
+   6.  page_browse_failed
+   7.  page_analyze_started
+   8.  page_analyze_completed
+   9.  page_analyze_skipped
+   10. finding_produced
+   11. finding_grounding_rejected
+   12. finding_critique_rejected
+   13. finding_published
+   14. budget_warning
+   15. budget_exceeded
+   16. llm_call_completed
+   17. llm_call_failed
+   18. llm_provider_fallback
+   19. perception_quality_low
+   20. hitl_requested
+   21. cross_page_analysis_completed
+   22. overlay_dismissed
+   ```
+
+   Sealed in Phase 4 per impact.md "Forward stability"; new types require Phase 4 amendment + impact.md cycle.
 8. **MockAnthropicAdapter:** lives in `tests/test-utils/MockAnthropicAdapter.ts`; never imported from production code. Phase 4 also lands a generic `MockLLMAdapter` for use across phases (Phase 7 will use it for unit tests).
 
 ---
@@ -268,7 +305,7 @@ Key design decisions inline:
 
 **None — plan respects all 23 Constitution rules.**
 
-The 18-contract surface is the *expected* outcome of materializing R7 + R9 + R10 + R14 simultaneously. Not a violation; impact.md provides provenance per R22.
+The 19-contract surface (v0.3 — RobotsChecker added) is the *expected* outcome of materializing R7 + R9 + R10 + R14 simultaneously. Not a violation; impact.md provides provenance per R22.
 
 ---
 

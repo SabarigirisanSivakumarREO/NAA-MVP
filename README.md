@@ -2,7 +2,7 @@
 
 > Conversion-rate optimization audit platform for REO Digital. Walks a real D2C product page; runs Claude through a deep-perceive → evaluate → self-critique → ground → annotate pipeline; emits grounded, consultant-reviewable findings + a branded PDF.
 
-**Status:** Phase 0 (workspace + scaffolding), Phase 1 (browser perception foundation), Phase 2 (29-tool MCP surface), and Phase 3 (verification & confidence — thin) implemented; Phase 4+ (safety + infra + cost, browse, analysis pipeline, orchestration, delivery) in progress per the [walking-skeleton roadmap](docs/specs/mvp/implementation-roadmap.md).
+**Status:** Phase 0 (workspace + scaffolding), Phase 1 (browser perception foundation), Phase 2 (29-tool MCP surface), Phase 3 (verification & confidence — thin), and **Phase 4 (safety + infra + cost — 15-table Postgres schema + RLS + LLM/Storage/Screenshot adapters + observability)** implementation complete; Phase 5+ (browse, analysis pipeline, orchestration, delivery) ahead per the [walking-skeleton roadmap](docs/specs/mvp/implementation-roadmap.md).
 
 Phase 1 ships the `contextAssembler.capture(url)` API in `@neural/agent-core` — opens a Playwright Chromium session, captures an accessibility tree, filters to a compact `PageStateModel` (under 20,000 tokens — NF-Phase1-01 v0.4), monitors DOM mutations, and produces a JPEG screenshot. Phase 1 acceptance is green for example.com, amazon.in, and a Peregrine PDP fixture (5/5 integration tests pass; full 3-site capture in ~9.5 s wall-clock).
 
@@ -34,13 +34,15 @@ pnpm install
 # 2. Bring up local services (Postgres 16 + pgvector, Valkey 8, Mailpit)
 docker compose up -d --wait
 
-# 3. Copy env template + fill in secrets you need (ANTHROPIC_API_KEY for Phase 4+)
+# 3. Copy env template + fill in secrets (see "Environment variables" below)
 cp .env.example .env
-# edit .env
+# edit .env — REQUIRED for Phase 4: ANTHROPIC_API_KEY, DATABASE_URL (or POSTGRES_URL)
 
-# 4. Apply database setup (Phase 0: just CREATE EXTENSION vector)
+# 4. Apply database setup — Phase 4 runs the real Drizzle migrations
+#    (Phase 0 stub replaced by scripts/db-migrate.mjs; idempotent).
 pnpm db:migrate
-# Expected: "OK pgvector v0.8.2"
+# Expected: "OK pgvector v0.8.2" + "Applied 3 migrations" (0001 initial schema,
+#           0002 master extensions, 0003 force RLS).
 
 # 5. Smoke-test the CLI
 pnpm cro:audit --version
@@ -111,6 +113,40 @@ await server.start();
 
 Full tool catalog + per-tool acceptance criteria: [`docs/specs/mvp/phases/phase-2-tools/spec.md`](docs/specs/mvp/phases/phase-2-tools/spec.md) AC-04 through AC-13.
 
+### Phase 4 — safety, infra, cost (T070 schema + T073 LLMAdapter + T074/T075 storage)
+
+Phase 4 ships the data spine and external-SDK adapters that Phase 5+ pipelines depend on. After `pnpm db:migrate` lands the 15-table schema + RLS + append-only triggers, the AC-15 acceptance gate exercises every Phase 4 surface end-to-end (1 audit_log row + 3 audit_events + 3 llm_call_log outcomes + 1 screenshot + 15-table queryable check) in under 2 minutes:
+
+```bash
+pnpm -F @neural/agent-core test integration/phase4
+# Expected: 1 passed (AC-15 acceptance gate)
+```
+
+Required env for Phase 4 tests: `DATABASE_URL` (or `POSTGRES_URL`); `ANTHROPIC_API_KEY` (mocked in conformance tests — set any non-empty string to satisfy the loader; live calls hit the mock adapter via the `transport:` seam).
+
+Optional env for Phase 4: `SCREENSHOTS_DIR` (defaults to `./screenshots`); `AUDIT_BUDGET_USD` / `PAGE_BUDGET_USD` (defaults 15 / 5 USD per R8.1 BudgetGate).
+
+Architecture cross-references:
+- [`docs/specs/mvp/phases/phase-4-safety-infra-cost/spec.md`](docs/specs/mvp/phases/phase-4-safety-infra-cost/spec.md) — AC-01..AC-17
+- [`packages/agent-core/src/adapters/README.md`](packages/agent-core/src/adapters/README.md) — adapter catalog (R9 boundary)
+
+---
+
+## Environment variables (Phase 4+)
+
+| Variable | Required? | Default | Used by |
+|---|---|---|---|
+| `ANTHROPIC_API_KEY` | **Required** for Phase 4+ | — | `AnthropicAdapter` (T073) — Claude Sonnet 4 calls |
+| `DATABASE_URL` | **Required** for Phase 4+ | — | `db/client.ts` — Postgres connection (canonical) |
+| `POSTGRES_URL` | Fallback | — | Honored when `DATABASE_URL` is unset (Phase 0 compat) |
+| `SCREENSHOTS_DIR` | Optional | `./screenshots` | `LocalDiskStorage` (T075) — screenshot bytes path |
+| `STORAGE_MODE` | Optional | `local_disk` | `ScreenshotStorage` adapter selector (T075) |
+| `AUDIT_BUDGET_USD` | Optional | `15` | `BudgetGate` (R8.1) — hard cap per audit |
+| `PAGE_BUDGET_USD` | Optional | `5` | `BudgetGate` (R8.1) — hard cap per page |
+| `NODE_ENV` / `LOG_LEVEL` | Optional | `development` / `info` | Pino logger + adapter selectors |
+
+Full `.env.example` template covers Cloudflare R2, Resend, Clerk, Upstash for Week 11+ prod swap.
+
 ---
 
 ## Common commands
@@ -132,15 +168,18 @@ pnpm test:integration              # Playwright Test acceptance suite
 pnpm -F @neural/agent-core test integration/phase1   # Phase 1: perception (5 tests, ~10s)
 pnpm -F @neural/agent-core test integration/phase2   # Phase 2: 29-tool MCP surface (11 tests, < 5 min)
 pnpm -F @neural/agent-core test integration/phase3   # Phase 3: verification & confidence (9 tests, < 30s; R4.4 multiplicative decay)
+pnpm -F @neural/agent-core test integration/phase4   # Phase 4: 15-table DB + adapters (AC-15 gate, < 2 min)
 
 # CLI
 pnpm cro:audit --version           # prints version
 # pnpm cro:audit --url=<URL>       # full audit — lands Week 1 walking skeleton
 
 # DB
-pnpm db:migrate                    # runs scripts/db-migrate-stub.mjs
-                                   # (Phase 0: CREATE EXTENSION vector;
-                                   #  Phase 4: real Drizzle migrations)
+pnpm db:migrate                    # runs scripts/db-migrate.mjs
+                                   # Phase 4: applies 0001_initial.sql (15 tables) +
+                                   # 0002_master_extensions.sql (master-spec ALTERs) +
+                                   # 0003_force_rls.sql (FORCE ROW LEVEL SECURITY).
+                                   # Idempotent — safe to re-run.
 ```
 
 ---
@@ -150,8 +189,9 @@ pnpm db:migrate                    # runs scripts/db-migrate-stub.mjs
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `error while loading shared libraries: api-ms-win-crt-*.dll` | Windows: UCRT API sets missing | `winget install Microsoft.VCRedist.2015+.x64` (admin) |
-| `pnpm db:migrate` → `ERROR: POSTGRES_URL not set` | `.env` not created | `cp .env.example .env` |
+| `pnpm db:migrate` → `DB connection unset` | `.env` not created or `DATABASE_URL`/`POSTGRES_URL` blank | `cp .env.example .env` then edit |
 | `pnpm db:migrate` → `ECONNREFUSED 127.0.0.1:5432` | Postgres container not running | `docker compose up -d --wait postgres` |
+| Phase 4 conformance tests → `DATABASE_URL must be set` | Env not exported into the vitest process | `pnpm -F @neural/agent-core test integration/phase4` (script loads `.env`); or export `DATABASE_URL` in the shell |
 | `pnpm cro:audit --version` → unknown command | dependencies not installed | `pnpm install` |
 | `pnpm install` → `Unsupported engine` warning | Local Node ≠ 22 (e.g. 24) | Warning only — CI uses Node 22; local Node ≥22 works fine |
 | Docker compose `--wait` flag not recognized | Docker Compose <v2.17 | Upgrade Docker Desktop or use `docker compose up -d` then poll healthcheck |
@@ -167,14 +207,25 @@ neural-nba/
 ├── packages/
 │   └── agent-core/           # @neural/agent-core — shared library
 │       └── src/
-│           ├── adapters/         # R9 boundary — external SDKs wrapped here (BrowserEngine, ...)
+│           ├── adapters/         # R9 boundary — external SDKs wrapped here.
+│           │                     # Phase 1: BrowserEngine. Phase 4: AnthropicAdapter
+│           │                     # (T073) + PostgresStorage (T074) + LocalDiskStorage
+│           │                     # (T075) + TemperatureGuard + BudgetGate. See
+│           │                     # adapters/README.md for the catalog.
 │           ├── analysis/         # Phase 2: AnalyzePerception v2.3 schema + Phase 7 node stubs
 │           │                     # (DeepPerceive / Evaluate / SelfCritique / Annotate / Store)
 │           ├── browser-runtime/  # Phase 1+1b+2: BrowserManager + Mouse/Typing/Scroll + RateLimiter
+│           ├── db/               # Phase 4: Drizzle schema (15 tables) + SQL migrations +
+│           │                     # connection client.
 │           ├── mcp/              # Phase 2: 29-tool MCP surface (browser_* / agent_* / page_*)
 │           │                     # ToolRegistry + Server + per-tool factories under tools/
-│           ├── observability/    # Pino logger factory
-│           └── perception/       # Phase 1+1c: ContextAssembler + extractors + extensions/ pipeline
+│           ├── observability/    # Phase 0+4: Pino logger factory + AuditLogger (T071) +
+│           │                     # SessionRecorder (T072) + StreamEmitter (T076).
+│           ├── perception/       # Phase 1+1c: ContextAssembler + extractors + extensions/ pipeline
+│           ├── safety/           # Phase 4: ActionClassifier (T066) + SafetyCheck (T067) +
+│           │                     # DomainPolicy (T068) + CircuitBreaker (T069) +
+│           │                     # RobotsChecker (T080a).
+│           └── types/            # Phase 4: AuditEvent + LLMCallRecord Zod schemas (T-PHASE4-TYPES)
 ├── scripts/                  # dev/build tooling (R9-exempt per spec.md §Assumptions)
 │   └── db-migrate-stub.mjs   # Phase 0 CREATE EXTENSION; Phase 4 → Drizzle
 ├── tests/
