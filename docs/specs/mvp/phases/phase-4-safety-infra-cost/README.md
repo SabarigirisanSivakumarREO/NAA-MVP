@@ -1,12 +1,12 @@
 ---
 title: Phase 4 — Safety + Infrastructure + Cost
 artifact_type: phase-readme
-status: approved
+status: verified
 version: 1.0
 phase_number: 4
 phase_name: Safety + Infra + Cost
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-14
 owner: engineering lead
 req_ids:
   - REQ-SAFETY-CLASSIFIER-001
@@ -28,7 +28,8 @@ req_ids:
 delta:
   new:
     - Phase 4 README
-  changed: []
+  changed:
+    - v1.0 (lifecycle) — Stage 4 EXIT, status: approved → verified (R17.4 gate cleared by `.phase-state/4/verify-verdict.yaml` Gate 2 APPROVE 2026-05-14). README body content unchanged; lifecycle transition only.
   impacted: []
   unchanged: []
 governing_rules:

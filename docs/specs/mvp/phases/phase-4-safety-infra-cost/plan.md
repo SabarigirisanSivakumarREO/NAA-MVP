@@ -1,8 +1,8 @@
 ---
 title: Implementation Plan — Phase 4 Safety + Infra + Cost
 artifact_type: plan
-status: approved
-version: 0.3
+status: verified
+version: 1.0
 created: 2026-04-27
 updated: 2026-05-14
 owner: engineering lead
@@ -70,6 +70,7 @@ delta:
   changed:
     - v0.1 → v0.2 — adds §11.1.1 robots/ToS utility + context_profiles slot reservation; both unblock Phase 4b T4B-003 + T4B-012
     - v0.2 → v0.3 — RobotsChecker promoted to affected_contracts frontmatter; req_ids frontmatter completed (6 IDs added per act-005); Phase 0 #7 enumerates all 22 audit_event types inline per act-009
+    - v0.3 → v1.0 — Stage 4 EXIT, status: verified (R17.4 gate cleared by `.phase-state/4/verify-verdict.yaml` Gate 2 APPROVE 2026-05-14). 12 MVP tasks + T080a all shipped; plan execution matched the v0.3 file map without drift. R18 append-only preserved.
   impacted:
     - Phase 4b T4B-003 HtmlFetcher imports `RobotsChecker.isAllowed()` — Phase 4 must ship this utility before Phase 4b begins
     - Phase 4b T4B-012 lands the actual context_profiles migration — Phase 4 reserves the slot in the T070 schema baseline

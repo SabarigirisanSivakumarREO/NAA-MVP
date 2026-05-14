@@ -1,8 +1,8 @@
 ---
 title: Tasks — Phase 4 Safety + Infra + Cost
 artifact_type: tasks
-status: approved
-version: 0.4
+status: verified
+version: 1.0
 created: 2026-04-27
 updated: 2026-05-14
 owner: engineering lead
@@ -53,6 +53,7 @@ delta:
   changed:
     - v0.1 → v0.2 — T075 SCREENSHOTS_DIR clarification; spec AC tightening at v0.2 (F-07/F-09/F-17/F-27)
     - v0.3 → v0.4 — F-04/F-09/F-11 + 22-type inline enumeration in T-PHASE4-TYPES + T070 outcome update
+    - v0.4 → v1.0 — Stage 4 EXIT, status: verified (R17.4 gate cleared by `.phase-state/4/verify-verdict.yaml` Gate 2 APPROVE 2026-05-14). act-001 checkbox sweep (12 completed tasks flipped `[ ] → [x]`; T-PHASE4-ROLLUP remains `[ ]` per skill flow; flips on rollup landing). act-002 T070 addendum documents `0003_force_rls.sql` (4 RLS-enforcement defects closed during T074). act-003 T-PHASE4-ROLLUP body wording 18 → 19 contracts. R18 append-only preserved.
   impacted:
     - v0.4 — sibling: spec.md v0.4 / plan.md v0.3 / impact.md v0.2 land together (Gate 1 Pass 1 REVISE — single-commit patch wave)
   unchanged:
@@ -152,9 +153,9 @@ Add ESLint rule (in T073 PR):
 
 ## Phase 2 — Foundational
 
-- [ ] **T-PHASE4-TESTS [P] [SETUP]** Author all **17 conformance tests** + Phase 4 integration test FIRST. **AC-01..AC-17** + adapter boundary test FAIL initially. R3.1 enforcement.
-- [ ] **T-PHASE4-LOGGER [SETUP]** Modify `observability/logger.ts` to register `audit_run_id`, `client_id`, `llm_call_id`, `event_type`, `safety_class`, `domain` correlation fields.
-- [ ] **T-PHASE4-TYPES [SETUP]** Author `types/llm.ts` (LLMCallRecord) + `types/audit-events.ts` (22-type AuditEvent enum) Zod schemas. Land BEFORE T070 (which creates DB tables matching these shapes) and T073 (which uses LLMCallRecord).
+- [x] **T-PHASE4-TESTS [P] [SETUP]** Author all **17 conformance tests** + Phase 4 integration test FIRST. **AC-01..AC-17** + adapter boundary test FAIL initially. R3.1 enforcement.
+- [x] **T-PHASE4-LOGGER [SETUP]** Modify `observability/logger.ts` to register `audit_run_id`, `client_id`, `llm_call_id`, `event_type`, `safety_class`, `domain` correlation fields.
+- [x] **T-PHASE4-TYPES [SETUP]** Author `types/llm.ts` (LLMCallRecord) + `types/audit-events.ts` (22-type AuditEvent enum) Zod schemas. Land BEFORE T070 (which creates DB tables matching these shapes) and T073 (which uses LLMCallRecord).
   - **Authoritative enum (per `docs/specs/final-architecture/34-observability.md` §34.4 REQ-OBS-012 — LOCKED per impact.md Forward Stability; new types require Phase 4 amendment + impact.md cycle):**
 
     ```
@@ -196,7 +197,7 @@ Add ESLint rule (in T073 PR):
 
 ### Safety pillar
 
-- [ ] **T066 [P] [US-1] ActionClassifier** (AC-01, REQ-SAFETY-CLASSIFIER-001)
+- [x] **T066 [P] [US-1] ActionClassifier** (AC-01, REQ-SAFETY-CLASSIFIER-001)
   - **Brief:**
     - **Outcome:** `safety/ActionClassifier.ts` exports `ActionClassifier` class with `classify(toolName: string): SafetyClass`. Reads from Phase 2's MCPToolRegistry — Phase 2 owns the source of truth.
     - **Constraints:** File < 100 lines. Pure delegation to registry.
@@ -205,7 +206,7 @@ Add ESLint rule (in T073 PR):
     - **dep:** Phase 2 MCPToolRegistry, T-PHASE4-TESTS
     - **Kill criteria:** default block
 
-- [ ] **T067 [US-1] SafetyCheck** (AC-02, REQ-SAFETY-CHECK-001)
+- [x] **T067 [US-1] SafetyCheck** (AC-02, REQ-SAFETY-CHECK-001)
   - **Brief:**
     - **Outcome:** `safety/SafetyCheck.ts` exports `SafetyCheck.assertAllowed(toolName, domain, auditRun): Promise<void>`. For `safe`: passes through. For `requires_safety_check`: consults DomainPolicy + CircuitBreaker. For `requires_hitl`: writes `audit_events` row of type `hitl_requested` and throws `SafetyBlockedError`. For `forbidden`: throws immediately.
     - **Constraints:** File < 200 lines. Calls SessionRecorder for audit_events emission.
@@ -214,7 +215,7 @@ Add ESLint rule (in T073 PR):
     - **dep:** T066, T068, T069, T072 (SessionRecorder)
     - **Kill criteria:** default block
 
-- [ ] **T068 [P] [US-1] DomainPolicy** (AC-03, REQ-SAFETY-DOMAIN-POLICY-001)
+- [x] **T068 [P] [US-1] DomainPolicy** (AC-03, REQ-SAFETY-DOMAIN-POLICY-001)
   - **Brief:**
     - **Outcome:** `safety/DomainPolicy.ts` exports `DomainPolicy` class with `classify(url): 'trusted' | 'unknown' | 'blocked'`. Configurable via `domain_policy` config object passed to constructor.
     - **Constraints:** File < 150 lines.
@@ -223,7 +224,7 @@ Add ESLint rule (in T073 PR):
     - **dep:** T-PHASE4-TESTS
     - **Kill criteria:** default block
 
-- [ ] **T069 [P] [US-1] CircuitBreaker** (AC-04, REQ-SAFETY-CIRCUIT-BREAKER-001)
+- [x] **T069 [P] [US-1] CircuitBreaker** (AC-04, REQ-SAFETY-CIRCUIT-BREAKER-001)
   - **Brief:**
     - **Outcome:** `safety/CircuitBreaker.ts` exports `CircuitBreaker` class with `recordFailure(domain)`, `isOpen(domain)`, `reset(domain)`. Trips after 3 consecutive failures within window; blocks for 1 hour; resets after window.
     - **Constraints:** File < 150 lines. In-memory state for MVP (Redis-backed in Phase 8).
@@ -234,7 +235,7 @@ Add ESLint rule (in T073 PR):
 
 ### Data pillar
 
-- [ ] **T070 [US-1] PostgreSQL schema (Drizzle) [MOD]** (AC-05, AC-17, REQ-DATA-SCHEMA-001 + REQ-DATA-RLS-001 + REQ-DATA-APPEND-ONLY-001) **— extended kill criteria**
+- [x] **T070 [US-1] PostgreSQL schema (Drizzle) [MOD]** (AC-05, AC-17, REQ-DATA-SCHEMA-001 + REQ-DATA-RLS-001 + REQ-DATA-APPEND-ONLY-001) **— extended kill criteria**
   - **Brief:**
     - **Outcome:** `db/schema.ts` defines all **15 tables** via Drizzle. `db/migrations/0001_initial.sql` creates **10 base tables (clients, audit_runs, findings, screenshots, sessions, audit_log, rejected_findings, finding_edits, llm_call_log, audit_events)** per §13.1-§13.5 (7 client-scoped + 3 append-only — `finding_edits`/`llm_call_log`/`audit_events` are append-only and foundational; needed by AuditLogger T071, SessionRecorder T072, LLMAdapter T073). `db/migrations/0002_master_extensions.sql` creates 5 extension tables (page_states, state_interactions, finding_rollups, reproducibility_snapshots, audit_requests) + ALTER on findings (adds scope, template_id, workflow_id, state_ids, parent_finding_ids, polarity, business_impact, effort, priority, source, analysis_scope, interaction_evidence — all nullable, backward-compatible) + RLS policies on all 10 client-scoped tables + append-only triggers on the 5 append-only tables (audit_log, rejected_findings, finding_edits, llm_call_log, audit_events) + `published_findings` view per §13.6.11. **Total: 10 + 5 = 15 tables.** `db/client.ts` exports a Drizzle client with connection pooling; `pnpm db:migrate` replaces Phase 0's stub.
     - **Context:** §13-data-layer is the verbatim authority for table shapes. impact.md captures the contract.
@@ -247,8 +248,9 @@ Add ESLint rule (in T073 PR):
     - **Acceptance:** AC-05 — 3 sub-tests (db-schema, db-rls, db-append-only) all green. **v0.3 — AC-17:** schema baseline reserves a `context_profiles` table slot (column shapes per §13 + Phase 4b impact.md §6); T070 does NOT create the table itself — Phase 4b T4B-012 owns that migration. T070 conformance asserts no shape collision with Phase 4b's planned migration. **v0.4 — AC-17 enforcement mechanism (F-06 closure):** T070 conformance test asserts that the schema baseline does NOT define a `context_profiles` table AND does NOT collide with the column shapes specified at `docs/specs/mvp/phases/phase-4b-context-capture/impact.md §6` (the Phase 4b shape contract). If Phase 4b impact.md doesn't exist at T070 implementation time, T070 conformance falls back to asserting absence-only; full collision assertion gated on Phase 4b artifact landing.
     - **Files:** `packages/agent-core/src/db/schema.ts`, `packages/agent-core/src/db/migrations/0001_initial.sql`, `packages/agent-core/src/db/migrations/0002_master_extensions.sql`, `packages/agent-core/src/db/client.ts`, `packages/agent-core/src/db/index.ts`; modify `packages/agent-core/package.json` to add Drizzle + pg deps; modify root `package.json` to point `db:migrate` at Drizzle (replaces Phase 0 stub).
     - **dep:** T-PHASE4-TESTS, T-PHASE4-TYPES, Phase 0 (Postgres + pgvector container)
+    - **Stage 4 addendum (2026-05-14 — act-002 from `.phase-state/4/verify-verdict.yaml`):** Migration `0003_force_rls.sql` was added during T074 implementation to remediate 4 RLS-enforcement defects discovered at integration time in T070's `0002_master_extensions.sql`: (1) `FORCE ROW LEVEL SECURITY` was missing on the 10 client-scoped tables; (2) Postgres superuser bypassed RLS via the implicit `BYPASSRLS` attribute (resolved by introducing a non-superuser `app_user` role and `SET LOCAL ROLE` in PostgresStorage.withClient); (3) RLS policies compared raw `current_setting('app.client_id')` to UUID columns and failed case-sensitively (resolved via a `public.current_client_id()` helper that explicit-casts to `uuid`); (4) `clients.client_id` was added as a `GENERATED ALWAYS AS (id) STORED` alias so AC-12 conformance can use a uniform `WHERE client_id = $1` shape across all 10 RLS tables. AC-05 spec wording (migrations 0001 + 0002) remains operationally correct — the 0003 migration is an additive enforcement layer, not a schema change.
 
-- [ ] **T071 [P] [US-1] AuditLogger** (AC-06, REQ-OBSERVE-AUDIT-LOG-001)
+- [x] **T071 [P] [US-1] AuditLogger** (AC-06, REQ-OBSERVE-AUDIT-LOG-001)
   - **Brief:**
     - **Outcome:** `observability/AuditLogger.ts` exports `AuditLogger.log(entry)` that appends to `audit_log` via PostgresStorage. Verifies UPDATE/DELETE attempts fail.
     - **Constraints:** File < 150 lines. INSERT-only methods.
@@ -257,7 +259,7 @@ Add ESLint rule (in T073 PR):
     - **dep:** T070, T074
     - **Kill criteria:** default block
 
-- [ ] **T072 [P] [US-1] SessionRecorder** (AC-07, REQ-OBSERVE-SESSION-RECORDER-001)
+- [x] **T072 [P] [US-1] SessionRecorder** (AC-07, REQ-OBSERVE-SESSION-RECORDER-001)
   - **Brief:**
     - **Outcome:** `observability/SessionRecorder.ts` exports `SessionRecorder.recordEvent(event: AuditEvent)` writing to `audit_events` (append-only). Validates against the 22-type Zod enum.
     - **Constraints:** File < 200 lines.
@@ -287,7 +289,7 @@ Add ESLint rule (in T073 PR):
     - **Files:** `packages/agent-core/src/adapters/LLMAdapter.ts`, `packages/agent-core/src/adapters/AnthropicAdapter.ts`, `packages/agent-core/src/adapters/TemperatureGuard.ts`, `packages/agent-core/src/adapters/BudgetGate.ts`; ESLint config; modify `packages/agent-core/package.json`.
     - **dep:** T070 (DB schema for llm_call_log), T-PHASE4-TYPES (LLMCallRecord), T-PHASE4-TESTS
 
-- [ ] **T074 [US-1] StorageAdapter + PostgresStorage** (AC-12, REQ-STORAGE-ADAPTER-001)
+- [x] **T074 [US-1] StorageAdapter + PostgresStorage** (AC-12, REQ-STORAGE-ADAPTER-001)
   - **Brief:**
     - **Outcome:** `adapters/StorageAdapter.ts` (interface) + `adapters/PostgresStorage.ts` (Drizzle-based concrete) — typed methods per entity (createAuditRun, getFindings, writeReproducibilitySnapshot, etc. — initial subset; expanded by Phase 7+8). `SET LOCAL app.client_id = $1` set at start of every transaction. SOLE pg + Drizzle importer outside `db/`.
     - **Constraints:** Each file < 300 lines. No raw SQL.
@@ -296,7 +298,7 @@ Add ESLint rule (in T073 PR):
     - **dep:** T070, T-PHASE4-TESTS
     - **Kill criteria:** default block + R9 import boundary
 
-- [ ] **T075 [P] [US-1] ScreenshotStorage + LocalDiskStorage** (AC-13, REQ-SCREENSHOT-STORAGE-001)
+- [x] **T075 [P] [US-1] ScreenshotStorage + LocalDiskStorage** (AC-13, REQ-SCREENSHOT-STORAGE-001)
   - **Brief:**
     - **Outcome:** `adapters/ScreenshotStorage.ts` (interface) + `adapters/LocalDiskStorage.ts` (concrete). LocalDisk writes to `<SCREENSHOTS_DIR>/<audit_run_id>/<page_url_hash>.jpg` where `SCREENSHOTS_DIR` is read from env (default `./screenshots` relative to project root). Returns stable path; `get(id)` reads back.
     - **Constraints:** File < 200 lines. R2 client integration deferred to post-MVP-pilot per PRD §3.2; interface ready. SCREENSHOTS_DIR env var documented in `.env.example` update (Phase 0's .env.example gets the new key in this task).
@@ -305,7 +307,7 @@ Add ESLint rule (in T073 PR):
     - **dep:** T-PHASE4-TESTS
     - **Kill criteria:** default block
 
-- [ ] **T076 [P] [US-1] StreamEmitter** (AC-14, REQ-STREAM-EMITTER-001)
+- [x] **T076 [P] [US-1] StreamEmitter** (AC-14, REQ-STREAM-EMITTER-001)
   - **Brief:**
     - **Outcome:** `observability/StreamEmitter.ts` exports `StreamEmitter` class with `publish(event)` + `subscribe(callback)`. Phase 4 buffers events in memory; Phase 9 dashboard wires Hono SSE endpoint. SSE format compliance (event: name, data: JSON).
     - **Constraints:** File < 150 lines. No HTTP; Phase 9 wraps.
@@ -323,7 +325,7 @@ Add ESLint rule (in T073 PR):
     - **dep:** T066-T076
     - **Kill criteria:** default block + extra: wall-clock > 2 min → STOP, individual component perf regression
 
-- [ ] **T080a [US-1] RobotsChecker (§11.1.1 — v0.3 NEW)** (AC-16, REQ-SAFETY-005)
+- [x] **T080a [US-1] RobotsChecker (§11.1.1 — v0.3 NEW)** (AC-16, REQ-SAFETY-005)
   - **Brief:**
     - **Outcome:** `safety/RobotsChecker.ts` exports `isAllowed(url: string, userAgent: string): Promise<{ allowed: boolean; matched_directive?: string; warning_code?: "ROBOTS_TXT_DISALLOWED" }>`. Fetches `<root>/robots.txt` once per audit (cache by audit_run_id), parses User-agent + Disallow rules per RFC 9309, falls back to `<root>/ai-agent.txt` if robots.txt missing (REQ-RATE-003). Refuses spoofed Googlebot/Bingbot/etc. user agents (REQ-SAFETY-007). Emits `ROBOTS_TXT_DISALLOWED` warning with the matched directive when path disallowed. **Cache mechanism (v0.4 — F-08 closure):** in-memory `Map<auditRunId, RobotsTxt>` populated lazily after `audit_runs` row creation; cleanup hook at `audit_completed`. Cache TTL = audit lifetime.
     - **Context:** Used by Phase 4b T4B-003 HtmlFetcher AND by Phase 5 browse-mode navigation. Single utility serves both.
@@ -343,7 +345,7 @@ Add ESLint rule (in T073 PR):
 
 - [x] **T-PHASE4-DOC [P]** Update root README dev quickstart (add `pnpm db:migrate` real schema; add ANTHROPIC_API_KEY to .env required keys).
 - [x] **T-PHASE4-ADAPTERS-README** Update `adapters/README.md` to list LLM, Storage, ScreenshotStorage as new categories beside BrowserEngine.
-- [ ] **T-PHASE4-ROLLUP** Author `phase-4-current.md` per R19. Active modules: 18 NEW contracts. Known limitations: R2 deferred; v1.2 fallback adapter not yet plugged. Forward risks for Phase 5 (action node integration), Phase 7 (LLM call surface stability under evaluate/self-critique load), Phase 8 (reproducibility_snapshot composition).
+- [ ] **T-PHASE4-ROLLUP** Author `phase-4-current.md` per R19. Active modules: 19 active contracts (v0.3 added RobotsChecker as the 19th). Known limitations: R2 deferred; v1.2 fallback adapter not yet plugged. Forward risks for Phase 5 (action node integration), Phase 7 (LLM call surface stability under evaluate/self-critique load), Phase 8 (reproducibility_snapshot composition).
 
 ---
 

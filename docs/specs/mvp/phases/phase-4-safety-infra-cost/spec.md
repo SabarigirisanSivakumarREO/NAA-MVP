@@ -1,8 +1,8 @@
 ---
 title: Phase 4 — Safety + Infrastructure + Cost
 artifact_type: spec
-status: approved
-version: 0.4
+status: verified
+version: 1.0
 created: 2026-04-27
 updated: 2026-05-14
 owner: engineering lead
@@ -79,6 +79,7 @@ delta:
     - v0.4 — 10-action patch wave per .phase-state/4/preflight-verdict.yaml (Gate 1 Pass 1 REVISE)
     - v0.4 — Table count corrected 12 → 15 (F-01); RLS scope clarified (F-02)
     - v0.4 — AC-16 cache model + AC-17 enforcement + Budget race resolution + 22 audit_event types inline-enumerated
+    - v1.0 — Stage 4 EXIT, status: verified (R17.4 gate cleared by `.phase-state/4/verify-verdict.yaml` Gate 2 APPROVE 2026-05-14). 17/17 ACs GREEN; 13 impl tasks complete; Stage 2.5 + Stage 3 + Stage 3b all APPROVE. v0.4 body content unchanged (R18 append-only); release version bump only.
   changed:
     - v0.1 → v0.2 — analyze-driven AC tightening (F-07, F-09, F-17, F-27); no scope changes
     - v0.2 → v0.3 — adds §11.1.1 robots/ToS utility (REQ-SAFETY-005) + context_profiles slot reservation; surfaces Phase 4b coordination dependencies
@@ -95,6 +96,7 @@ delta:
     - R-01..R-15 functional requirement statements
     - Out of Scope, Constitution Alignment Check sections
     - v0.4 — 17 AC IDs (AC-01..AC-17) and R-01..R-17 functional requirements (R18 append-only — no AC removed)
+    - v1.0 — All AC/R body wording unchanged; status:verified is a lifecycle transition, not a content change (R18 append-only preserved)
 
 governing_rules:
   - Constitution R7 (DB + Storage)

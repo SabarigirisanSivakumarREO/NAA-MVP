@@ -1,8 +1,8 @@
 ---
 title: Impact Analysis — Phase 4 Safety + Infra + Cost (19 new shared contracts)
 artifact_type: impact
-status: approved
-version: 0.2
+status: verified
+version: 1.0
 created: 2026-04-27
 updated: 2026-05-14
 owner: engineering lead
@@ -56,6 +56,7 @@ delta:
     - v0.2 — context_profiles table slot reservation entry added under Forward Contract (spec.md AC-17 / tasks.md T070 sub-AC; Phase 4b T4B-012 owns the migration)
   changed:
     - v0.1 → v0.2 — RobotsChecker added to affected_contracts (was 18; now 19); delta blocks per R18
+    - v0.2 → v1.0 — Stage 4 EXIT, status: verified (R17.4 gate cleared by `.phase-state/4/verify-verdict.yaml` Gate 2 APPROVE 2026-05-14). 19 contracts shipped; Forward Contract honored across Stage 2 implementation (no contract drift; Stage 2.5 captured 0003_force_rls.sql as additive RLS-enforcement layer, not a new contract). R18 append-only preserved.
   impacted:
     - Phase 4b T4B-003 HtmlFetcher imports RobotsChecker.isAllowed() — Phase 4 must ship before Phase 4b begins
     - Phase 4b T4B-012 lands the actual context_profiles migration; T070 schema baseline reserves the slot
