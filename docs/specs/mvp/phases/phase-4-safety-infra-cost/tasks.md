@@ -1,7 +1,7 @@
 ---
 title: Tasks — Phase 4 Safety + Infra + Cost
 artifact_type: tasks
-status: draft
+status: approved
 version: 0.4
 created: 2026-04-27
 updated: 2026-05-14
