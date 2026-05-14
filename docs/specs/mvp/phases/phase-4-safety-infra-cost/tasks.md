@@ -341,8 +341,8 @@ Add ESLint rule (in T073 PR):
 
 ## Phase N — Polish
 
-- [ ] **T-PHASE4-DOC [P]** Update root README dev quickstart (add `pnpm db:migrate` real schema; add ANTHROPIC_API_KEY to .env required keys).
-- [ ] **T-PHASE4-ADAPTERS-README** Update `adapters/README.md` to list LLM, Storage, ScreenshotStorage as new categories beside BrowserEngine.
+- [x] **T-PHASE4-DOC [P]** Update root README dev quickstart (add `pnpm db:migrate` real schema; add ANTHROPIC_API_KEY to .env required keys).
+- [x] **T-PHASE4-ADAPTERS-README** Update `adapters/README.md` to list LLM, Storage, ScreenshotStorage as new categories beside BrowserEngine.
 - [ ] **T-PHASE4-ROLLUP** Author `phase-4-current.md` per R19. Active modules: 18 NEW contracts. Known limitations: R2 deferred; v1.2 fallback adapter not yet plugged. Forward risks for Phase 5 (action node integration), Phase 7 (LLM call surface stability under evaluate/self-critique load), Phase 8 (reproducibility_snapshot composition).
 
 ---
