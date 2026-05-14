@@ -316,7 +316,7 @@ Add ESLint rule (in T073 PR):
 
 ### Phase 4 acceptance gate
 
-- [ ] **T080 [US-1] Phase 4 integration test** (AC-15)
+- [x] **T080 [US-1] Phase 4 integration test** (AC-15)
   - **Brief:**
     - **Outcome:** `tests/integration/phase4.test.ts` against fresh DB + LocalDisk + MockAnthropicAdapter: migrate → write 1 audit_log + 3 audit_events → 1 LLM call (success path) + 1 LLM call (budget exceeded; verifies log row with outcome='budget_blocked') + 1 LLM call (failover after 3 retries; verifies log row with outcome='unavailable') → 1 screenshot to LocalDisk → query findings table empty → assert all 15 tables queryable. Total wall-clock < 2 min.
     - **Files:** `packages/agent-core/tests/integration/phase4.test.ts`

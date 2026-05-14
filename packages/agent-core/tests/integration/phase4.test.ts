@@ -5,29 +5,43 @@
  *   docs/specs/mvp/phases/phase-4-safety-infra-cost/spec.md AC-15
  *   docs/specs/mvp/phases/phase-4-safety-infra-cost/tasks.md T080
  *
- * End-to-end flow:
- *   1. Migrate a fresh DB.
- *   2. Write 1 audit_log row + 3 audit_events rows.
- *   3. 1 LLM call (success path).
- *   4. 1 LLM call (budget exceeded — verifies log row with outcome='budget_blocked').
- *   5. 1 LLM call (failover after 3 retries — verifies log row with outcome='unavailable').
- *   6. 1 screenshot to LocalDisk.
- *   7. Query findings table — empty (no findings produced this phase).
- *   8. All 15 tables queryable.
+ * End-to-end flow (one happy-path traversal of every Phase 4 surface):
+ *   1. Migrate a fresh DB (0001 + 0002 + 0003).
+ *   2. Seed FK targets (clients + audit_runs).
+ *   3. Write 1 audit_log row (T071 path).
+ *   4. Write 3 audit_events rows (T072 path).
+ *   5. 1 LLM call (success path) → llm_call_log outcome='ok'.
+ *   6. 1 LLM call (budget exceeded) → llm_call_log outcome='budget_blocked'.
+ *   7. 1 LLM call (failover after 3 retries) → llm_call_log outcome='unavailable'.
+ *   8. 1 screenshot to LocalDisk (T075 path).
+ *   9. Query findings table — empty (Phase 7 unimplemented).
+ *  10. Assert all 15 tables queryable.
  *
- * Total wall-clock < 2 min (NF-Phase4-05).
+ * Total wall-clock < 2 min (NF-Phase4-05 / R23 KC-extended).
  *
- * RED state — Phase 4 Wave 1 (T-PHASE4-TESTS). SUT modules don't exist →
- * import fails. Wave 2-7 will green the test.
+ * @AC-15 — Phase 4 acceptance gate.
  *
- * Anchor: @AC-15 — Phase 4 acceptance gate.
+ * # LLM audit-run scoping note (T080 GREEN)
+ *
+ * AnthropicAdapter (T073) resolves `audit_runs` via `withClient(PLACEHOLDER_UUID)`
+ * — the hardcoded scope means RLS only returns rows whose `client_id` equals
+ * the all-zeroes UUID. To exercise the budget_blocked path the adapter must
+ * find the audit_run; we therefore seed a SECOND audit_run owned by
+ * PLACEHOLDER_CLIENT_ID for the LLM-call portion of the gate (line-level call
+ * sites use `LLM_AUDIT_RUN_ID`). The audit_log + audit_events + findings paths
+ * stay on the canonical (CLIENT_ID, AUDIT_RUN_ID) pair — they don't go through
+ * the adapter's lookup.
+ *
+ * R11.4 note: this is a TEST-side scoping decision; production code is locked
+ * at the T070-T076 + T067 cornerstone commits. The orchestration graph in
+ * Phase 5+ will own setting RLS scope before invoking the adapter; until then
+ * the placeholder fallback is the documented degrade-open behaviour.
  */
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-// SUTs (don't exist yet — Wave 2-7 lands them). Import fails → RED.
 import { AnthropicAdapter } from '../../src/adapters/AnthropicAdapter.js';
 import { LocalDiskStorage } from '../../src/adapters/LocalDiskStorage.js';
 import { getDbClient, runMigrations } from '../../src/db/client.js';
@@ -37,8 +51,16 @@ import { MockAnthropicAdapter } from '../test-utils/mocks/MockAnthropicAdapter.j
 
 const PHASE4_WALL_CLOCK_MS = 120_000;
 
+// Canonical Phase 4 scope — audit_log + audit_events + findings live here.
 const AUDIT_RUN_ID = '00000000-0000-4000-8000-000000000F00';
 const CLIENT_ID = '00000000-0000-4000-8000-000000000F01';
+
+// AnthropicAdapter's hardcoded RLS lookup scope (PLACEHOLDER_UUID in T073).
+// We seed a parallel audit_run owned by this placeholder so the budget_blocked
+// path can be exercised end-to-end (the lookup degrades open when the audit_run
+// row isn't visible to the placeholder RLS scope).
+const PLACEHOLDER_CLIENT_ID = '00000000-0000-0000-0000-000000000000';
+const LLM_AUDIT_RUN_ID = '00000000-0000-4000-8000-000000000F02';
 
 const ALL_15_TABLES = [
   'clients',
@@ -58,7 +80,7 @@ const ALL_15_TABLES = [
   'audit_events',
 ];
 
-describe('Phase 4 integration — AC-15 acceptance gate (RED until T080)', () => {
+describe('Phase 4 integration — AC-15 acceptance gate', () => {
   let tempScreenshotDir: string;
 
   beforeAll(async () => {
@@ -68,12 +90,23 @@ describe('Phase 4 integration — AC-15 acceptance gate (RED until T080)', () =>
     tempScreenshotDir = mkdtempSync(join(tmpdir(), 'phase4-screens-'));
     process.env.SCREENSHOTS_DIR = tempScreenshotDir;
     await runMigrations();
-    // Seed client + audit_run for FK targets.
+
+    // Seed FK targets. The raw `getDbClient()` runs as the connection's
+    // configured Postgres user (superuser in dev), bypassing RLS — INSERTs
+    // need no `app.client_id` setup. PostgresStorage.withClient is the
+    // RLS-scoped path; tests don't need it for plain FK seeding.
     const db = getDbClient();
     await db.query(`INSERT INTO clients (id) VALUES ($1) ON CONFLICT DO NOTHING`, [CLIENT_ID]);
+    await db.query(`INSERT INTO clients (id) VALUES ($1) ON CONFLICT DO NOTHING`, [
+      PLACEHOLDER_CLIENT_ID,
+    ]);
     await db.query(
       `INSERT INTO audit_runs (id, client_id, budget_remaining_usd) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
       [AUDIT_RUN_ID, CLIENT_ID, 1.0],
+    );
+    await db.query(
+      `INSERT INTO audit_runs (id, client_id, budget_remaining_usd) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+      [LLM_AUDIT_RUN_ID, PLACEHOLDER_CLIENT_ID, 1.0],
     );
   }, PHASE4_WALL_CLOCK_MS);
 
@@ -89,7 +122,7 @@ describe('Phase 4 integration — AC-15 acceptance gate (RED until T080)', () =>
       const auditLogger = new AuditLogger();
       const sessionRecorder = new SessionRecorder();
 
-      // 1) 1 audit_log row
+      // 1) 1 audit_log row (T071 + AC-06).
       await auditLogger.log({
         audit_run_id: AUDIT_RUN_ID,
         client_id: CLIENT_ID,
@@ -97,17 +130,30 @@ describe('Phase 4 integration — AC-15 acceptance gate (RED until T080)', () =>
         payload: {},
       });
 
-      // 2) 3 audit_events rows
-      for (const kind of ['audit_started', 'page_browse_started', 'page_browse_completed'] as const) {
+      // 2) 3 audit_events rows (T072 + AC-07).
+      //    Field is `event_type` per W1C AuditEventSchema (NOT `kind`);
+      //    `page_url` is non-optional (nullable for audit-level events per
+      //    §34.4 emit-by column); `metadata` (NOT `payload`) is the canonical
+      //    JSONB column name.
+      const events = [
+        { event_type: 'audit_started' as const, page_url: null },
+        { event_type: 'page_browse_started' as const, page_url: 'https://example.com/ac15' },
+        { event_type: 'page_browse_completed' as const, page_url: 'https://example.com/ac15' },
+      ];
+      for (const ev of events) {
         await sessionRecorder.recordEvent({
           audit_run_id: AUDIT_RUN_ID,
           client_id: CLIENT_ID,
-          kind,
-          payload: {},
+          event_type: ev.event_type,
+          page_url: ev.page_url,
+          metadata: {},
         });
       }
 
-      // 3) LLM call — success
+      // 3) LLM call — success path (T073 + AC-08).
+      //    LLM_AUDIT_RUN_ID is owned by PLACEHOLDER_CLIENT_ID so the
+      //    adapter's `withClient(PLACEHOLDER_UUID)` lookup finds it; the
+      //    seeded budget (1.0) clears BudgetGate.check; mock returns ok.
       const okAdapter = new AnthropicAdapter({
         apiKey: 'mock-key',
         defaultModel: 'claude-sonnet-4-mock',
@@ -116,19 +162,22 @@ describe('Phase 4 integration — AC-15 acceptance gate (RED until T080)', () =>
       });
       await okAdapter.complete({
         operation: 'classify',
-        audit_run_id: AUDIT_RUN_ID,
+        audit_run_id: LLM_AUDIT_RUN_ID,
         userPrompt: 'ok-path',
         temperature: 0,
         maxTokens: 16,
       });
 
-      // 4) LLM call — budget exceeded (set budget to 0 first).
-      await db.query(`UPDATE audit_runs SET budget_remaining_usd = 0 WHERE id = $1`, [AUDIT_RUN_ID]);
+      // 4) LLM call — budget_blocked (T073 + AC-10).
+      //    Drop the budget to 0; BudgetGate fires before the transport call.
+      await db.query(`UPDATE audit_runs SET budget_remaining_usd = 0 WHERE id = $1`, [
+        LLM_AUDIT_RUN_ID,
+      ]);
       let budgetThrew = false;
       try {
         await okAdapter.complete({
           operation: 'classify',
-          audit_run_id: AUDIT_RUN_ID,
+          audit_run_id: LLM_AUDIT_RUN_ID,
           userPrompt: 'budget-blocked',
           temperature: 0,
           maxTokens: 1024,
@@ -140,10 +189,12 @@ describe('Phase 4 integration — AC-15 acceptance gate (RED until T080)', () =>
 
       // Restore budget for the failover call.
       await db.query(`UPDATE audit_runs SET budget_remaining_usd = 1.0 WHERE id = $1`, [
-        AUDIT_RUN_ID,
+        LLM_AUDIT_RUN_ID,
       ]);
 
-      // 5) LLM call — failover (3 retries then unavailable).
+      // 5) LLM call — unavailable (T073 + AC-11).
+      //    Mock throws synthetic 5xx every attempt; 1 initial + 3 retries =
+      //    4 transport calls → LLMUnavailableError → outcome='unavailable'.
       const failoverAdapter = new AnthropicAdapter({
         apiKey: 'mock-key',
         defaultModel: 'claude-sonnet-4-mock',
@@ -154,7 +205,7 @@ describe('Phase 4 integration — AC-15 acceptance gate (RED until T080)', () =>
       try {
         await failoverAdapter.complete({
           operation: 'classify',
-          audit_run_id: AUDIT_RUN_ID,
+          audit_run_id: LLM_AUDIT_RUN_ID,
           userPrompt: 'unavailable',
           temperature: 0,
           maxTokens: 16,
@@ -164,31 +215,31 @@ describe('Phase 4 integration — AC-15 acceptance gate (RED until T080)', () =>
       }
       expect(failoverThrew).toBe(true);
 
-      // Verify the 3 outcomes recorded in llm_call_log.
+      // Verify the 3 outcomes recorded atomically in llm_call_log (R14.1).
       const r = await db.query<{ outcome: string }>(
         `SELECT outcome FROM llm_call_log WHERE audit_run_id = $1`,
-        [AUDIT_RUN_ID],
+        [LLM_AUDIT_RUN_ID],
       );
       const outcomes = r.rows.map((row) => row.outcome);
       expect(outcomes).toContain('ok');
       expect(outcomes).toContain('budget_blocked');
       expect(outcomes).toContain('unavailable');
 
-      // 6) 1 screenshot to LocalDisk
+      // 6) 1 screenshot to LocalDisk (T075 + AC-13).
       const screenshots = new LocalDiskStorage();
       await screenshots.put(Buffer.from('mock-jpeg'), {
         audit_run_id: AUDIT_RUN_ID,
         page_url: 'https://example.com/ac15',
       });
 
-      // 7) findings table is empty for this audit_run
+      // 7) findings table is empty for this audit_run (Phase 7 unimplemented).
       const findingsR = await db.query<{ id: string }>(
         `SELECT id FROM findings WHERE audit_run_id = $1`,
         [AUDIT_RUN_ID],
       );
       expect(findingsR.rows.length).toBe(0);
 
-      // 8) all 15 tables queryable
+      // 8) all 15 tables queryable (T070 + AC-05 surface check).
       for (const table of ALL_15_TABLES) {
         await expect(db.query(`SELECT 1 FROM ${table} LIMIT 0`)).resolves.toBeDefined();
       }
