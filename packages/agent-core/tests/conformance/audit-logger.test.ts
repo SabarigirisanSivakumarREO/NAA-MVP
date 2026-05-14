@@ -19,12 +19,26 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AuditLogger } from '../../src/observability/AuditLogger.js';
 import { getDbClient, runMigrations } from '../../src/db/client.js';
 
+// Canonical AC-06 scope. Seeded in beforeAll so FK constraints on audit_log
+// (audit_run_id → audit_runs, client_id → clients) are satisfied. Mirrors the
+// integration-test seed pattern from tests/integration/phase4.test.ts.
+const AC06_AUDIT_RUN_ID = '00000000-0000-4000-8000-000000000300';
+const AC06_CLIENT_ID = '00000000-0000-4000-8000-000000000301';
+
 describe('AuditLogger — AC-06 conformance (RED until T071)', () => {
   beforeAll(async () => {
     if (process.env.DATABASE_URL === undefined || process.env.DATABASE_URL === '') {
       throw new Error('AC-06: DATABASE_URL must be set; tests must NOT silently skip');
     }
     await runMigrations();
+    // Seed FK targets via raw client (dev superuser bypasses RLS — same as
+    // tests/integration/phase4.test.ts L94-110). Idempotent ON CONFLICT.
+    const db = getDbClient();
+    await db.query(`INSERT INTO clients (id) VALUES ($1) ON CONFLICT DO NOTHING`, [AC06_CLIENT_ID]);
+    await db.query(
+      `INSERT INTO audit_runs (id, client_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+      [AC06_AUDIT_RUN_ID, AC06_CLIENT_ID],
+    );
   });
 
   afterAll(async () => {
@@ -34,18 +48,16 @@ describe('AuditLogger — AC-06 conformance (RED until T071)', () => {
 
   it('AC-06: log(entry) appends a row to audit_log', async () => {
     const logger = new AuditLogger();
-    const auditRunId = '00000000-0000-4000-8000-000000000300';
-    const clientId = '00000000-0000-4000-8000-000000000301';
     await logger.log({
-      audit_run_id: auditRunId,
-      client_id: clientId,
+      audit_run_id: AC06_AUDIT_RUN_ID,
+      client_id: AC06_CLIENT_ID,
       event: 'phase4_ac06_test_event',
       payload: { hello: 'world' },
     });
     const db = getDbClient();
     const r = await db.query<{ event: string }>(
       `SELECT event FROM audit_log WHERE audit_run_id = $1`,
-      [auditRunId],
+      [AC06_AUDIT_RUN_ID],
     );
     expect(r.rows.some((row) => row.event === 'phase4_ac06_test_event')).toBe(true);
   });

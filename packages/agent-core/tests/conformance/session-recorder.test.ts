@@ -45,12 +45,24 @@ const ALL_22_EVENT_TYPES = [
   'overlay_dismissed',
 ] as const;
 
+// Canonical AC-07 scope. Seeded in beforeAll so the FK on audit_events
+// (audit_run_id → audit_runs, client_id → clients) is satisfied for the
+// happy-path recordEvent INSERT. Mirrors tests/integration/phase4.test.ts.
+const AC07_AUDIT_RUN_ID = '00000000-0000-4000-8000-000000000400';
+const AC07_CLIENT_ID = '00000000-0000-4000-8000-000000000401';
+
 describe('SessionRecorder — AC-07 conformance (RED until T072)', () => {
   beforeAll(async () => {
     if (process.env.DATABASE_URL === undefined || process.env.DATABASE_URL === '') {
       throw new Error('AC-07: DATABASE_URL must be set; tests must NOT silently skip');
     }
     await runMigrations();
+    const db = getDbClient();
+    await db.query(`INSERT INTO clients (id) VALUES ($1) ON CONFLICT DO NOTHING`, [AC07_CLIENT_ID]);
+    await db.query(
+      `INSERT INTO audit_runs (id, client_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+      [AC07_AUDIT_RUN_ID, AC07_CLIENT_ID],
+    );
   });
 
   afterAll(async () => {
@@ -70,10 +82,9 @@ describe('SessionRecorder — AC-07 conformance (RED until T072)', () => {
 
   it('AC-07: SessionRecorder.recordEvent writes one row to audit_events for "audit_started"', async () => {
     const recorder = new SessionRecorder();
-    const auditRunId = '00000000-0000-4000-8000-000000000400';
     await recorder.recordEvent({
-      audit_run_id: auditRunId,
-      client_id: '00000000-0000-4000-8000-000000000401',
+      audit_run_id: AC07_AUDIT_RUN_ID,
+      client_id: AC07_CLIENT_ID,
       event_type: 'audit_started',
       page_url: null,
       metadata: {},
@@ -81,7 +92,7 @@ describe('SessionRecorder — AC-07 conformance (RED until T072)', () => {
     const db = getDbClient();
     const r = await db.query<{ event_type: string }>(
       `SELECT event_type FROM audit_events WHERE audit_run_id = $1`,
-      [auditRunId],
+      [AC07_AUDIT_RUN_ID],
     );
     expect(r.rows.some((row) => row.event_type === 'audit_started')).toBe(true);
   });

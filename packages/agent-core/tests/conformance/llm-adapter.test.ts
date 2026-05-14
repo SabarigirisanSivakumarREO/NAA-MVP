@@ -26,12 +26,32 @@ import type { LLMAdapter } from '../../src/adapters/LLMAdapter.js';
 import { getDbClient, runMigrations } from '../../src/db/client.js';
 import { MockAnthropicAdapter } from '../test-utils/mocks/MockAnthropicAdapter.js';
 
+// AC-08 R14.1 scope. The llm_call_log row's audit_run_id FK requires a parent
+// audit_runs row to exist; AnthropicAdapter's #resolveAuditContext looks the
+// row up under withClient(PLACEHOLDER_UUID), so we seed the audit_run owned
+// by PLACEHOLDER_CLIENT_ID. Mirrors tests/integration/phase4.test.ts L94-110.
+const PLACEHOLDER_CLIENT_ID = '00000000-0000-0000-0000-000000000000';
+const AC08_AUDIT_RUN_ID = '00000000-0000-4000-8000-000000000501';
+
 describe('LLMAdapter — AC-08 conformance (RED until T073)', () => {
   beforeAll(async () => {
     if (process.env.DATABASE_URL === undefined || process.env.DATABASE_URL === '') {
       throw new Error('AC-08: DATABASE_URL must be set; tests must NOT silently skip');
     }
     await runMigrations();
+    // Seed FK target. AnthropicAdapter resolves the audit_run under
+    // PLACEHOLDER_UUID scope; without this row the lookup degrades open and
+    // the subsequent llm_call_log INSERT violates the FK (silently swallowed
+    // → the SELECT-back assertion fails). Default budget = '15' (schema) is
+    // sufficient to clear BudgetGate for a 16-token call.
+    const db = getDbClient();
+    await db.query(`INSERT INTO clients (id) VALUES ($1) ON CONFLICT DO NOTHING`, [
+      PLACEHOLDER_CLIENT_ID,
+    ]);
+    await db.query(
+      `INSERT INTO audit_runs (id, client_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+      [AC08_AUDIT_RUN_ID, PLACEHOLDER_CLIENT_ID],
+    );
   });
 
   afterAll(async () => {
@@ -72,10 +92,9 @@ describe('LLMAdapter — AC-08 conformance (RED until T073)', () => {
       // here is the MockAnthropicAdapter behaviour.
       transport: new MockAnthropicAdapter({ behaviour: 'ok' }),
     });
-    const auditRunId = '00000000-0000-4000-8000-000000000501';
     await adapter.complete({
       operation: 'classify',
-      audit_run_id: auditRunId,
+      audit_run_id: AC08_AUDIT_RUN_ID,
       userPrompt: 'ping',
       temperature: 0,
       maxTokens: 16,
@@ -83,7 +102,7 @@ describe('LLMAdapter — AC-08 conformance (RED until T073)', () => {
     const db = getDbClient();
     const r = await db.query<{ outcome: string }>(
       `SELECT outcome FROM llm_call_log WHERE audit_run_id = $1`,
-      [auditRunId],
+      [AC08_AUDIT_RUN_ID],
     );
     expect(r.rows.some((row) => row.outcome === 'ok')).toBe(true);
   });

@@ -63,7 +63,13 @@ function findImports(allFiles: string[], pkg: string): ImportFinding[] {
 }
 
 function isUnder(file: string, ...allowedSubpaths: string[]): boolean {
-  const norm = file.replace(/\\\\/g, '/');
+  // Windows path normalization: file may contain single backslashes; replace
+  // each with forward slash so allowedSubpaths can use POSIX form.
+  // Prior pattern `/\\\\/g` (regex source: 4 chars `\\\\` → matches 2 literal
+  // backslashes) was a defect — Windows paths use a SINGLE backslash per
+  // separator. `/\\/g` (regex source: 2 chars `\\` → matches 1 literal `\`)
+  // is correct.
+  const norm = file.replace(/\\/g, '/');
   return allowedSubpaths.some((p) => norm.includes(p));
 }
 
