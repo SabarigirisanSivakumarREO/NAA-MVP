@@ -40,25 +40,24 @@
  *
  * R10.1 ≤ 200 lines. R10.2 named exports only.
  */
-import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
-
 import type { AuditEvent } from '../types/audit-events.js';
 import type { LLMCallRecord } from '../types/llm.js';
 import type {
-  auditLog,
-  auditRuns,
-  auditRequests,
-  clients,
-  findingEdits,
-  findingRollups,
-  findings,
-  pageStates,
-  rejectedFindings,
-  reproducibilitySnapshots,
-  screenshots,
-  sessions,
-  stateInteractions,
-} from '../db/schema.js';
+  AuditLogInsert as DbAuditLogInsert,
+  AuditRequestInsert as DbAuditRequestInsert,
+  AuditRunInsert as DbAuditRunInsert,
+  ClientInsert as DbClientInsert,
+  FindingEditInsert as DbFindingEditInsert,
+  FindingInsert as DbFindingInsert,
+  FindingRollupInsert as DbFindingRollupInsert,
+  FindingRow as DbFindingRow,
+  PageStateInsert as DbPageStateInsert,
+  RejectedFindingInsert as DbRejectedFindingInsert,
+  ReproducibilitySnapshotInsert as DbReproducibilitySnapshotInsert,
+  ScreenshotInsert as DbScreenshotInsert,
+  SessionInsert as DbSessionInsert,
+  StateInteractionInsert as DbStateInteractionInsert,
+} from '../db/index.js';
 
 /**
  * RawTxQuery — escape hatch for raw SQL inside a transaction. Used by
@@ -80,26 +79,28 @@ export interface StorageTx {
 }
 
 // ────────────────────────────────────────────────────────────────────────
-// Row types — derived from the Drizzle schema via InferInsertModel so the
-// interface stays in lock-step with T070's table definitions automatically.
-// Consumers (T071/T072/T073/Phase 7/Phase 8) re-import these by name.
+// Row types — re-exported from `db/index.ts` where they are derived via
+// Drizzle's InferInsertModel / InferSelectModel. This adapter file does NOT
+// import `drizzle-orm` directly (R9 boundary; T073 grep test enforces); the
+// db barrel is the SOLE outside-of-adapters file that touches drizzle types.
+// Consumers (T071/T072/T073/Phase 7/Phase 8) re-import these from here.
 // ────────────────────────────────────────────────────────────────────────
 
-export type ClientInsert = InferInsertModel<typeof clients>;
-export type AuditRunInsert = InferInsertModel<typeof auditRuns>;
-export type FindingInsert = InferInsertModel<typeof findings>;
-export type ScreenshotInsert = InferInsertModel<typeof screenshots>;
-export type SessionInsert = InferInsertModel<typeof sessions>;
-export type PageStateInsert = InferInsertModel<typeof pageStates>;
-export type StateInteractionInsert = InferInsertModel<typeof stateInteractions>;
-export type FindingRollupInsert = InferInsertModel<typeof findingRollups>;
-export type ReproducibilitySnapshotInsert = InferInsertModel<typeof reproducibilitySnapshots>;
-export type AuditRequestInsert = InferInsertModel<typeof auditRequests>;
+export type ClientInsert = DbClientInsert;
+export type AuditRunInsert = DbAuditRunInsert;
+export type FindingInsert = DbFindingInsert;
+export type ScreenshotInsert = DbScreenshotInsert;
+export type SessionInsert = DbSessionInsert;
+export type PageStateInsert = DbPageStateInsert;
+export type StateInteractionInsert = DbStateInteractionInsert;
+export type FindingRollupInsert = DbFindingRollupInsert;
+export type ReproducibilitySnapshotInsert = DbReproducibilitySnapshotInsert;
+export type AuditRequestInsert = DbAuditRequestInsert;
 
 // Append-only insert rows
-export type AuditLogInsert = InferInsertModel<typeof auditLog>;
-export type RejectedFindingInsert = InferInsertModel<typeof rejectedFindings>;
-export type FindingEditInsert = InferInsertModel<typeof findingEdits>;
+export type AuditLogInsert = DbAuditLogInsert;
+export type RejectedFindingInsert = DbRejectedFindingInsert;
+export type FindingEditInsert = DbFindingEditInsert;
 
 /**
  * StorageAdapter — the persistence boundary contract.
@@ -175,10 +176,10 @@ export interface StorageAdapter {
 }
 
 /**
- * FindingRow — read-shape returned by `getFindings`. `InferSelectModel`
- * yields the columns as Postgres returns them (all server-side defaults
- * already filled in, vs `InferInsertModel` which makes defaulted columns
- * optional). Re-exported here so Phase 9 consumers don't have to drill
- * into `db/schema.js` directly.
+ * FindingRow — read-shape returned by `getFindings`. Yields the columns
+ * as Postgres returns them (all server-side defaults already filled in,
+ * vs `*Insert` shapes where defaulted columns are optional). Re-exported
+ * from `db/index.ts` so Phase 9 consumers don't have to drill into
+ * `db/schema.js` directly.
  */
-export type FindingRow = InferSelectModel<typeof findings>;
+export type FindingRow = DbFindingRow;

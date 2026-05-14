@@ -55,6 +55,19 @@ const ensurePool = (): DbPool => {
 };
 
 /**
+ * Raw `pg.Pool` accessor — required by `PostgresStorage` (T074) so it can
+ * call `pool.connect()` and BEGIN a transaction on a single checked-out
+ * connection (the only way to scope `SET LOCAL app.client_id` correctly
+ * per R7.2). Domain code should NOT use this — prefer `getDb()` (Drizzle
+ * builder) or `getDbClient()` (raw `query` wrapper).
+ *
+ * R9: this accessor is the seam through which `PostgresStorage.ts` shares
+ * the singleton pool — without it, the adapter would have to create a
+ * second pool, leaving connections open after the singleton is closed.
+ */
+export const getPool = (): DbPool => ensurePool();
+
+/**
  * Drizzle ORM client — domain code uses this. Single instance per process.
  */
 export const getDb = (): DbDrizzle => {
