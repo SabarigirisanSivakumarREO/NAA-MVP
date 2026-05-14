@@ -1,7 +1,7 @@
 ---
 title: Phase 4 — Safety + Infrastructure + Cost
 artifact_type: spec
-status: draft
+status: approved
 version: 0.4
 created: 2026-04-27
 updated: 2026-05-14
