@@ -49,6 +49,36 @@
  *                          `unverifiable` | `bot_detected_likely`); pre-positioned
  *                          `bot_detected_likely` covers v1.1 forward-compat.
  *
+ * Phase 4 (safety + data + LLM) fields (spec.md AC-01..AC-15; REQ-SAFETY-* /
+ * REQ-DATA-RLS-001 / REQ-LLM-ADAPTER-001 / REQ-OBSERVE-SESSION-RECORDER-001):
+ *   - `client_id`        — UUID; client (tenant) scope for every audit_log /
+ *                          audit_events row write. Used by PostgresStorage to
+ *                          set `SET LOCAL app.client_id` per transaction (RLS).
+ *                          Note: `audit_run_id` is already registered above
+ *                          (Phase 0) and is NOT re-registered here.
+ *   - `llm_call_id`      — UUID per `LLMAdapter.complete()` invocation; one
+ *                          row per call in `llm_call_log`; correlates retries
+ *                          + provider fallback across log lines.
+ *   - `event_type`       — `audit_events` row type. One of the 22 enum values
+ *                          locked in §34.4 REQ-OBS-012 (audit_started,
+ *                          audit_completed, audit_failed, page_browse_started,
+ *                          page_browse_completed, page_browse_failed,
+ *                          page_analyze_started, page_analyze_completed,
+ *                          page_analyze_skipped, finding_produced,
+ *                          finding_grounding_rejected, finding_critique_rejected,
+ *                          finding_published, budget_warning, budget_exceeded,
+ *                          llm_call_completed, llm_call_failed,
+ *                          llm_provider_fallback, perception_quality_low,
+ *                          hitl_requested, cross_page_analysis_completed,
+ *                          overlay_dismissed). Set by SessionRecorder.recordEvent.
+ *   - `safety_class`     — ActionClassifier output for a tool invocation; one
+ *                          of `safe` | `requires_safety_check` | `requires_hitl` |
+ *                          `forbidden`. Set by SafetyCheck.assertAllowed.
+ *   - `domain`           — eTLD+1 (or full host) under SafetyCheck / DomainPolicy /
+ *                          CircuitBreaker evaluation. Same value seeds RateLimiter
+ *                          buckets in Phase 1; reused here so cross-module rate /
+ *                          policy / breaker events correlate by domain.
+ *
  * Future phases will extend `LogBindings` with their own correlation
  * fields (e.g. `heuristic_id`, `trace_id`) per the same convention.
  *
@@ -129,6 +159,21 @@ export interface LogBindings {
   verify_strategy?: string;
   /** FailureClassifier class (verify_failed|safety_blocked|rate_limited|unverifiable|bot_detected_likely). */
   failure_class?: string;
+
+  // --- Phase 4 (safety + data + LLM) — spec.md AC-01..AC-15 ---
+  // Set by SafetyCheck / PostgresStorage / LLMAdapter / SessionRecorder consumers.
+  // Note: `audit_run_id` is already registered in the Phase 0 block above and
+  // is NOT re-declared here (R18 append-only; no duplicate fields).
+  /** UUID; client (tenant) scope for RLS — every audit_log / audit_events row write (REQ-DATA-RLS-001). */
+  client_id?: string;
+  /** UUID per LLMAdapter.complete() invocation; one row per call in llm_call_log (REQ-LLM-ADAPTER-001). */
+  llm_call_id?: string;
+  /** audit_events row type — one of the 22 §34.4 REQ-OBS-012 values (set by SessionRecorder.recordEvent). */
+  event_type?: string;
+  /** ActionClassifier output: safe|requires_safety_check|requires_hitl|forbidden (set by SafetyCheck.assertAllowed). */
+  safety_class?: string;
+  /** eTLD+1 (or full host) under SafetyCheck / DomainPolicy / CircuitBreaker evaluation. */
+  domain?: string;
 }
 
 /**
