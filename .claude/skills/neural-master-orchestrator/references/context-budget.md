@@ -249,3 +249,25 @@ Phase 7 + Phase 9 are the most likely candidates for context-driven session spli
 - [`risk-gate-mode.md`](risk-gate-mode.md) — tighter WARN threshold under high-attention
 - [`templates/subagent-brief.template.md`](../templates/subagent-brief.template.md) — brief size cap tightens at 50% warn
 - `CLAUDE.md` §14 — master agent operating procedure (references this file)
+
+---
+
+## Runtime enforcement override (2026-05-15)
+
+The thresholds described above (50% WARN / 70% HARD CEILING) are the documented design. **Runtime enforcement** via `.claude/hooks/usage-guard.mjs` uses a TIGHTER hard ceiling — **60% instead of 70%** — per `.phase-state/cost-config.json`. Rationale: empirical evidence from Phase 4 implementation showed attention-quality concerns at ~65% (Session 19 checkpoint); the 60% enforcement floor preserves ~10% safety margin.
+
+Effective thresholds enforced at every `UserPromptSubmit`:
+
+| Level | % of 1M | Tokens | Hook action |
+|---|---|---|---|
+| **WARN** | 50% | 500K | Banner via `additionalContext`; prompt proceeds |
+| **HARD STOP** | 60% | 600K | `decision: "block"`; prompt refused; resume in fresh session via `/master <N> --resume` |
+
+Hook reads transcript JSONL line-by-line and sums `usage.input_tokens + cache_creation_input_tokens + cache_read_input_tokens` per assistant message; the peak across all turns is the context-window utilization metric.
+
+The 50/70 narrative above is **retained for historical context and rationale chain**. The single source of truth for live enforcement is the JSON config — bumping requires editing `.phase-state/cost-config.json` and committing (it is tracked).
+
+Hooks (also R18 append-only):
+- `.claude/hooks/usage-meter.mjs` — shared worker; reads JSONL, computes snapshot, persists to `.phase-state/usage-current.json` (gitignored)
+- `.claude/hooks/session-banner.mjs` — `SessionStart`; emits visible usage banner every new session
+- `.claude/hooks/usage-guard.mjs` — `UserPromptSubmit`; enforces WARN/STOP thresholds at runtime

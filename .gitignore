@@ -34,6 +34,13 @@ test-results/
 # + cost tracking + verdict YAMLs per phase. Local-only; never committed.
 .phase-state/
 
+# EXCEPT: cost-config.json is the tracked, authoritative thresholds for the
+# usage-guard hooks (see .claude/hooks/). Per-session runtime state stays
+# ignored. .gitignore negations require the parent dir AND the file pattern.
+!.phase-state/
+.phase-state/*
+!.phase-state/cost-config.json
+
 # Claude Code session-internal worktrees (auto-managed; embedded git repos)
 .claude/worktrees/
 

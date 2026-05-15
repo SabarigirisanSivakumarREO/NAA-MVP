@@ -534,7 +534,28 @@ Explicit to prevent drift:
 
 ---
 
-*End of CLAUDE.md. Last updated 2026-05-01 — Round 1 reading-order sync (per-phase artifact corpus structure; sibling files extracted from PRD §6/§9/§12/§15; constitution rule range R1-R26).*
+## 15.1 Usage discipline (automated)
+
+Every new session displays a usage banner via `.claude/hooks/session-banner.mjs` (Context: X% of 1M; Cost: $X / phase ceiling). The harness ENFORCES — not just documents — the following thresholds:
+
+- **Context WARN at 500K (50% of 1M Opus window)** — banner alert via `additionalContext`; LLM advised to wrap at next stage transition
+- **Context HARD STOP at 600K (60%)** — `UserPromptSubmit` hook returns `decision: "block"`; resume in fresh session via `/master <N> --resume`
+- **Cost ceilings per `.phase-state/cost-config.json`** — daily $50 / phase $10 / per-call $1 warn (defaults; high-attention mode reduces per-phase 50% per `references/risk-gate-mode.md`)
+
+The hooks read transcript JSONL + sum `usage.input_tokens + cache_creation_input_tokens + cache_read_input_tokens` per assistant message; the peak across all turns IS the context-window metric. Thresholds enforced regardless of LLM compliance — no need to "remember" to check.
+
+Override note: runtime ceiling is **60%**, tighter than the documented 70% in `references/context-budget.md` (R18 append-only override). Rationale: Session 19 Phase 4 checkpoint at ~65% exposed attention-degradation risk; 60% preserves ~10% safety margin.
+
+Files:
+- `.claude/hooks/usage-meter.mjs` — shared worker (cumulative + peak tokens; cost via Anthropic pricing table)
+- `.claude/hooks/session-banner.mjs` — `SessionStart` hook (banner on every new session)
+- `.claude/hooks/usage-guard.mjs` — `UserPromptSubmit` hook (WARN at 50% / BLOCK at 60%)
+- `.phase-state/cost-config.json` — TRACKED authoritative thresholds
+- `.phase-state/usage-current.json` — runtime state (gitignored)
+
+---
+
+*End of CLAUDE.md. Last updated 2026-05-15 — added §15.1 usage discipline (real-time hook enforcement: 50% WARN / 60% HARD STOP).*
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,

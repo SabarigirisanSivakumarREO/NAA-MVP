@@ -1,0 +1,22 @@
+{
+  "context": {
+    "window_size_tokens": 1000000,
+    "warn_pct": 50,
+    "hard_stop_pct": 60,
+    "warn_tokens": 500000,
+    "hard_stop_tokens": 600000
+  },
+  "cost": {
+    "daily_ceiling_usd": 50.00,
+    "daily_pause_pct": 70,
+    "daily_stop_pct": 100,
+    "phase_ceiling_usd": 10.00,
+    "phase_pause_pct": 70,
+    "phase_stop_pct": 100,
+    "per_call_warn_usd": 1.00,
+    "reset_local_time": "00:00",
+    "reset_timezone": "Asia/Kolkata"
+  },
+  "schema_version": 1,
+  "notes": "Authoritative thresholds for master orchestrator usage guard. Context thresholds 50/60 supersede the 50/70 default in references/context-budget.md (R20 update note included). Risk-gate mode may tighten further per references/risk-gate-mode.md."
+}
