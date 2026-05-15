@@ -122,23 +122,30 @@ describe('DB schema — AC-05 conformance (RED until T070)', () => {
 });
 
 /**
- * @AC-17 — context_profiles table slot reservation. T070 must NOT create
- * the table; Phase 4b T4B-012 owns the migration. Absence-only assertion
- * (full collision check gated on Phase 4b artifact landing).
+ * @AC-17 — context_profiles table slot reservation. Phase 4 T070 promised the
+ * absence; Phase 4b T4B-012 landed the migration (0004_context_profiles.sql).
+ * Post-T4B-012 this transitions to PRESENCE assertion. The full append-only +
+ * RLS + FK + index surface is covered by context-profiles-migration.test.ts
+ * (AC-12); this block remains as the AC-17 grep-anchor.
+ *
+ * Note: the AC-05 "15 tables" assertion above intentionally still asserts the
+ * Phase 4 T070 baseline of 15 tables — context_profiles is additive (16th
+ * table overall) and tracked under AC-12, not AC-05.
  */
-describe('DB schema — AC-17 context_profiles slot reservation (RED until T070)', () => {
+describe('DB schema — AC-17 context_profiles slot (presence after T4B-012)', () => {
   beforeAll(async () => {
     if (process.env.DATABASE_URL === undefined || process.env.DATABASE_URL === '') {
       throw new Error('AC-17: DATABASE_URL must be set; tests must NOT silently skip');
     }
+    await runMigrations();
   });
 
-  it('AC-17: schema baseline does NOT define a context_profiles table (Phase 4b owns it)', async () => {
+  it('AC-17: context_profiles table exists post-T4B-012 (slot closed by 0004 migration)', async () => {
     const db = getDbClient();
     const r = await db.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables
        WHERE table_schema = 'public' AND table_name = 'context_profiles'`,
     );
-    expect(r.rows.length).toBe(0);
+    expect(r.rows.length).toBe(1);
   });
 });

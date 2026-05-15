@@ -9,7 +9,7 @@
  * Append-only (R7.4) is two-layered: DB trigger + AppendOnlyTable brand.
  * R10.1 ≤ 300 lines. R10.2 named exports only.
  */
-import { boolean, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, char, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 // Type-level append-only brand (R7.4 complement of the DB trigger).
 export type AppendOnlyBrand = { readonly __appendOnly: true };
@@ -298,3 +298,20 @@ export const auditRequests = pgTable('audit_requests', {
   completedAt: ts('completed_at'),
   createdAt: tsNow('created_at'),
 });
+
+// ============ Phase 4b T4B-012 — context_profiles (append-only, R7.4) ============
+// CANONICAL SHAPE: docs/specs/mvp/phases/phase-4b-context-capture/impact.md §6.
+// Append-only intake/inference output pinned per audit; SHA-256 hash makes
+// re-runs idempotent (R-03). Closes Phase 4 T070 AC-17 slot reservation
+// (db-schema.test.ts + context-profiles-slot.test.ts flip from absence→presence
+// in this commit). RLS via current_client_id() (0003_force_rls.sql).
+// SQL truth: db/migrations/0004_context_profiles.sql.
+const _contextProfiles = pgTable('context_profiles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  auditRunId: uuid('audit_run_id').notNull().references(() => auditRuns.id),
+  clientId: uuid('client_id').notNull().references(() => clients.id),
+  profileHash: char('profile_hash', { length: 64 }).notNull(),
+  profileJson: jsonb('profile_json').notNull(),
+  createdAt: tsNow('created_at'),
+});
+export const contextProfiles = brand(_contextProfiles);

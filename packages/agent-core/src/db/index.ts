@@ -21,6 +21,7 @@ import type {
   auditRequests,
   auditRuns,
   clients,
+  contextProfiles,
   findingEdits,
   findingRollups,
   findings,
@@ -60,6 +61,7 @@ export type RejectedFindingInsert = InferInsertModel<typeof rejectedFindings>;
 export type FindingEditInsert = InferInsertModel<typeof findingEdits>;
 export type AuditEventInsert = InferInsertModel<typeof auditEvents>;
 export type LLMCallLogInsert = InferInsertModel<typeof llmCallLog>;
+export type ContextProfileInsert = InferInsertModel<typeof contextProfiles>;
 
 // ── Select-row aliases (read shapes) ───────────────────────────────────
 export type FindingRow = InferSelectModel<typeof findings>;
