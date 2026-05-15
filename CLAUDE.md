@@ -540,7 +540,7 @@ Every new session displays a usage banner via `.claude/hooks/session-banner.mjs`
 
 - **Context WARN at 500K (50% of 1M Opus window)** — banner alert via `additionalContext`; LLM advised to wrap at next stage transition
 - **Context HARD STOP at 600K (60%)** — `UserPromptSubmit` hook returns `decision: "block"`; resume in fresh session via `/master <N> --resume`
-- **Cost ceilings per `.phase-state/cost-config.json`** — daily $50 / phase $10 / per-call $1 warn (defaults; high-attention mode reduces per-phase 50% per `references/risk-gate-mode.md`)
+- **Cost ceilings — ENFORCEMENT DISABLED (2026-05-15):** cost is still tracked + displayed in the SessionStart banner, but no longer warns or blocks prompts. Phase ceiling tripped at ~10% context usage and blocked legitimate work; context discipline is the real performance lever, not spend. To re-enable, restore the 3-line classifier in `.claude/hooks/usage-guard.mjs` (commented at the call site).
 
 The hooks read transcript JSONL + sum `usage.input_tokens + cache_creation_input_tokens + cache_read_input_tokens` per assistant message; the peak across all turns IS the context-window metric. Thresholds enforced regardless of LLM compliance — no need to "remember" to check.
 

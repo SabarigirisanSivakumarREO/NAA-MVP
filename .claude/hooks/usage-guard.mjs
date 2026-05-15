@@ -119,9 +119,14 @@ function classify({ snapshot, costCfg, phase }) {
   const phaseStopPct = costCfg.cost?.phase_stop_pct || 100;
   const phaseSpend = Math.max(snapshot.cost_usd || 0, phase && phase.spent != null ? phase.spent : 0);
   const phasePct = phaseCeiling > 0 ? (phaseSpend / phaseCeiling) * 100 : 0;
-  let costLevel = 'clear';
-  if (phasePct >= phaseStopPct) costLevel = 'stop';
-  else if (phasePct >= phasePausePct) costLevel = 'warn';
+  // Cost guarding disabled by user request (2026-05-15) — context guarding still active.
+  // Phase ceiling tripped at 10% context usage which blocked legitimate work.
+  // Cost remains tracked + reported in banners but never blocks/warns the prompt.
+  // To re-enable: restore the original 3-line classifier below.
+  //   if (phasePct >= phaseStopPct) costLevel = 'stop';
+  //   else if (phasePct >= phasePausePct) costLevel = 'warn';
+  const costLevel = 'clear';
+  void phaseStopPct; void phasePausePct; void phasePct;
 
   return {
     ctxLevel,
