@@ -144,3 +144,137 @@ After master applies the 8-action patch wave:
 4. **Cost discipline.** This dispatch consumed ~$1.20-1.80 of the $5 phase ceiling. Patch wave estimated at $1.50-2.50. Total Stage 1 burn: $2.70-4.30 (under ceiling). Stage 2 impl will need the remaining $0.70-2.30 — tight but feasible per Phase 4 precedent (Phase 4 Stage 2 spent ~$1.50 with high-attention parallelism cap=3).
 
 5. **Pattern detection.** The "frontmatter req_ids drift" pattern (F-02 + F-03) recurs across phases (Phase 4 had a similar drift fix in Stage 1). Consider a `spec:matrix` extension that cross-checks frontmatter req_ids against body anchors. Logged for org-wide spec-driven workflow hygiene.
+
+---
+
+# Pass 2 — Post Patch-Wave Re-Review
+
+**Phase:** 4b (Context Capture Layer v1.0)
+**Gate:** 1 (Pre-flight — R17.4 status:draft → approved gate)
+**Pass:** 2
+**Reviewer:** neural-ai-reviewer (Stage 1b dispatch Pass 2; high-attention mode preserved)
+**Risk-gate mode:** high-attention (unchanged from Pass 1)
+**Policy applied:** fix-all-spec-defects (Session 19, 2026-05-13)
+**Date:** 2026-05-15
+**Branch:** feat/phase-4b-context-capture @ 821c266 (patch wave commit)
+**Pass 1 reference:** review-notes.md "Recommendation: REVISE" section above (commit 8965724)
+
+---
+
+## Recommendation: APPROVE
+
+**Strictest-of(correctness=APPROVE, coverage=PASS, completeness=APPROVE) → APPROVE**
+
+All 6 Pass 1 blocking findings CLOSED via 8-action patch wave (commit 821c266). Both Pass 1 completeness SPEC_GAP surfaces (business_archetype_universe, regulated_verticals_enum) CLOSED via act-007 + act-008 §Out-of-Scope additions. R17.4 lifecycle gate `status: draft → approved` is now UNBLOCKED pending master orchestrator stamp.
+
+---
+
+## Pass 1 finding closure table
+
+| ID   | Severity | Act    | Pass 2 status | Closure evidence (one-line)                                           |
+|------|----------|--------|---------------|------------------------------------------------------------------------|
+| F-01 | HIGH     | act-001 | **CLOSED**   | impact.md v0.2 has `consumes_from:` block (9 contracts) + §3a body; R20 item 5 discharged |
+| F-02 | MED      | act-002 | **CLOSED**   | 3 orphan dimension REQ-IDs removed from spec/plan/tasks frontmatter (Option B) |
+| F-03 | LOW      | act-003 | **CLOSED**   | REQ-SAFETY-005 added to plan.md + tasks.md req_ids                     |
+| F-04 | LOW      | act-004 | **CLOSED**   | spec.md L80 branch label updated to `feat/phase-4b-context-capture`    |
+| F-05 | LOW      | act-005 | **CLOSED**   | AC-13 + NF-06 carry "12-25 / 8-25 (library <40)" lower-bound clarification |
+| F-06 | LOW      | n/a     | STILL_LOG_ONLY | Migration filename placeholder (correct authoring pattern; not patched)    |
+| F-07 | LOW      | n/a     | STILL_LOG_ONLY | delta.new shorthand (harmless narrative; not patched)                  |
+| F-08 | LOW      | act-006 | **CLOSED**   | 6th affected_contracts entry added to plan.md + tasks.md (sibling-sync) |
+
+**Pass 1 blocking summary:** 6 blocking findings → 6 CLOSED, 0 STILL OPEN. 2 LOW non-blocking findings (F-06, F-07) correctly remain log_only per Pass 1 disposition.
+
+---
+
+## Pass 1 completeness SPEC_GAP closure table
+
+| Surface                              | Pass 1 verdict | Act     | Pass 2 status | Closure mechanism                                                       |
+|--------------------------------------|----------------|---------|---------------|--------------------------------------------------------------------------|
+| business_archetype_universe          | SPEC_GAP       | act-007 | **CLOSED**   | spec.md §Out-of-Scope: 5 long-tail archetypes deferred to v1.1 / Phase 13b |
+| regulated_verticals_enum             | SPEC_GAP       | act-008 | **CLOSED**   | spec.md AC-09 + R-10 + §Out-of-Scope: 7 additional verticals deferred to Phase 13b |
+
+**Critic Pass 2 verdict:** AGREE_CLOSED on both. Spec no longer relies silently on confidence-fallback; consultants now have pre-audit visibility into v1.0 archetype + regulatory coverage limits.
+
+---
+
+## Pass 2 new findings
+
+| ID   | Severity | Class         | Type                       | Disposition                                            |
+|------|----------|---------------|----------------------------|--------------------------------------------------------|
+| G-01 | LOW      | pure_cosmetic | VERIFICATION_OBSERVATION   | log_only (positive — confirms R18 sibling-sync atomicity) |
+| G-02 | LOW      | pure_cosmetic | VERIFICATION_OBSERVATION   | log_only (positive — R20 invalidation note item 5 closure cleanliness) |
+
+**No new blocking findings introduced by the patch wave.**
+
+---
+
+## Sub-audit summaries
+
+### Sub-audit 1: Correctness (Pass 2 re-analysis)
+- Pass 1 blocking: 6 → Pass 2 closed: 6 (100%)
+- Pass 1 non-blocking: 2 → Pass 2 still log_only: 2 (unchanged)
+- Pass 2 new findings: 2 LOW pure_cosmetic positive observations
+- Verdict: **APPROVE**
+
+### Sub-audit 2: Coverage (Pass 2 re-run)
+- spec:matrix --phase=4b regenerated at 2026-05-15T18:24:29Z; no AC delta (15 ACs preserved by R18 append-only)
+- Same 14 missing test files (Stage 2 impl lands them); same 74 cross-phase orphans (out of Phase 4b scope)
+- Verdict: **PASS** (identical to Pass 1)
+
+### Sub-audit 3: Completeness (Pass 2 critic re-probe)
+- 4 PASS surfaces from Pass 1 unchanged (patch wave did not modify their spec text; critic silent AGREE)
+- 2 SPEC_GAP surfaces re-probed:
+  - business_archetype_universe → critic verdict AGREE_CLOSED (act-007 closure satisfies Option B explicit deferral)
+  - regulated_verticals_enum → critic verdict AGREE_CLOSED (act-008 closure satisfies Option B with all 7 verticals named + framework-cited)
+- Verdict: **APPROVE**
+
+---
+
+## R17 + R20 gate state (Pass 2)
+
+| Rule  | State                                                          |
+|-------|----------------------------------------------------------------|
+| R17.4 | status:draft → approved **UNBLOCKED** — master may stamp + bump |
+| R18   | All 4 sibling artifacts bumped v0.1 → v0.2 with delta blocks; no body lines removed except orphan REQ-IDs flagged in act-002 |
+| R20   | act-001 closes R20 invalidation note item 5; remaining R20-touched items (act-002/003/006/008) all CLOSED; no new R20 invalidation introduced |
+| R11.2 | spec/plan/tasks now consistent at 10 REQ-IDs each; affected_contracts consistent at 6/6/6/6 |
+| R11.4 | All Pass 1 spec defects (CRITICAL/HIGH/MED + LOW spec_defect) patched BEFORE impl per fix-all-spec-defects policy |
+| R5.6  | Two-pass auditor + critic discharged; critic Pass 2 verdict AGREE_CLOSED on both Pass 1 SPEC_GAP surfaces |
+
+---
+
+## Master orchestrator next actions
+
+1. **Stamp Pass 2 APPROVE** on Gate 1. Update `.phase-state/4b.json` with `gate_1_pass2_verdict: APPROVE` + `stamped_at` timestamp.
+2. **Bump R17.4 lifecycle** — `status: draft → approved` on all 4 patched artifacts (spec.md, plan.md, tasks.md, impact.md). Commit message: `(R17.4 review approved per phase-4b/review-notes.md Pass 2)` — SEPARATE commit (not part of patch wave per dispatch policy).
+3. **Flip stage** — `.phase-state/4b.json` `stage: 1-preflight → 2-impl`. Stage 2 impl can now dispatch.
+4. **(Optional)** Mark `r20-invalidation-from-phase-4.md` as resolved (rename to `.resolved.md` or append §Resolved section). R20 propagation chain complete for Phase 4b.
+
+---
+
+## Pass 2 audit trail (file locations)
+
+| File                                                | Pass 2 update                                                  |
+|-----------------------------------------------------|----------------------------------------------------------------|
+| `.phase-state/4b/preflight-correctness.json`        | Overwritten 2026-05-15T18:30Z (Pass 2 re-analyze; 0 blocking findings) |
+| `.phase-state/4b/preflight-coverage.json`           | Regenerated 2026-05-15T18:24:29Z via `pnpm spec:matrix --phase=4b --json` |
+| `.phase-state/4b/preflight-verdict-pass2.yaml`      | NEW — Pass 2 verdict YAML w/ 3 sub-audits + closure table        |
+| `.phase-state/4b/verify-summary.md`                 | Overwritten with Pass 2 summary                                  |
+| `docs/specs/mvp/phases/phase-4b-context-capture/review-notes.md` | THIS FILE — Pass 2 section appended after Pass 1 |
+| `docs/specs/mvp/phases/phase-4b-context-capture/{spec,plan,tasks,impact}.md` | v0.1 → v0.2 patched (commit 821c266) |
+
+---
+
+## Pass 2 reviewer notes for future sessions
+
+1. **High-attention mode efficiency.** Pass 2 critic re-probe focused only on the 2 SPEC_GAP surfaces from Pass 1 (business_archetype_universe, regulated_verticals_enum). The 4 PASS surfaces from Pass 1 were not re-probed since the patch wave did not modify their underlying spec text — a silent AGREE per critic continuity. Wall-clock ~10 min vs Pass 1's ~30 min full critic probe.
+
+2. **Patch wave atomicity verification.** All 4 sibling artifacts (spec / plan / tasks / impact) bumped v0.1 → v0.2 in single commit 821c266. delta.changed blocks cross-reference siblings. R18 sibling-coherence verified. G-01 / G-02 are positive observations.
+
+3. **R20 closure completeness.** act-001 discharges R20 invalidation note item 5 explicitly. Remaining R20-touched items (act-002 req_id reconciliation; act-003 REQ-SAFETY-005 backfill; act-006 affected_contracts sync; act-008 R-10 extension) are all closed. R20 propagation chain for Phase 4b complete.
+
+4. **Cost discipline (Pass 2).** Pass 2 estimated cost ~$0.40-0.60 (focused finding-closure re-audit; no full critic deep-probe of unchanged surfaces). Combined with Pass 1 ($1.20-1.80) + patch wave (~$0.30-0.50 for the 4-file edit + commit dispatch overhead), Stage 1 + Gate 1 total burn: ~$1.90-2.90 of $5 ceiling. Stage 2 has ~$2.10-3.10 remaining headroom — comfortable per Phase 4 precedent ($1.50 with cap=3 parallelism).
+
+5. **No-regression check.** All 15 ACs + 15 R-NN + 6 NF-NN preserved by R18 append-only. AC IDs / R IDs / NF IDs unchanged. Task IDs (T4B-001..T4B-015) unchanged. Dependency chains in plan.md §1 unchanged. R25 enforcement points in plan.md §2.4 unchanged.
+
+6. **Stage 2 readiness.** Spec is now production-ready for parallel-subagent dispatch (cap=3 per high-attention mode). All shared contracts enumerated; consumes_from explicit; long-tail archetypes + verticals scoped; lower-bound thresholds clarified; R25 prohibitions preserved.
