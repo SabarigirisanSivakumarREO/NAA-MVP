@@ -2,9 +2,9 @@
 title: Phase 4b — Context Capture Layer v1.0 — Implementation Plan
 artifact_type: plan
 status: draft
-version: 0.1
+version: 0.2
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-05-15
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -23,9 +23,6 @@ derived_from:
 req_ids:
   - REQ-CONTEXT-DIM-BUSINESS-001
   - REQ-CONTEXT-DIM-PAGE-001
-  - REQ-CONTEXT-DIM-AUDIENCE-001
-  - REQ-CONTEXT-DIM-TRAFFIC-001
-  - REQ-CONTEXT-DIM-BRAND-001
   - REQ-CONTEXT-OUT-001
   - REQ-CONTEXT-OUT-002
   - REQ-CONTEXT-OUT-003
@@ -33,6 +30,7 @@ req_ids:
   - REQ-CONTEXT-DOWNSTREAM-001
   - REQ-GATEWAY-INTAKE-001
   - REQ-GATEWAY-INTAKE-002
+  - REQ-SAFETY-005
 
 impact_analysis: docs/specs/mvp/phases/phase-4b-context-capture/impact.md
 breaking: false
@@ -42,13 +40,37 @@ affected_contracts:
   - AuditRequest (extended)
   - HeuristicLoader (extended)
   - context_profiles DB table (NEW)
+  - AnalyzePerception.inferredPageType (read-through accessor to ContextProfile.page.type)
 
 delta:
   new:
     - Phase 4b plan — sequencing, ConfidenceScorer weights, R25 enforcement points, kill criteria
-  changed: []
-  impacted: []
-  unchanged: []
+  changed:
+    - v0.1 → v0.2 (2026-05-15) — Gate 1 Pass 1 patch wave (3 plan.md actions):
+        act-002 (MED, F-02 closure) — Removed 3 orphan dimension REQ-IDs from
+          frontmatter req_ids (REQ-CONTEXT-DIM-AUDIENCE-001,
+          REQ-CONTEXT-DIM-TRAFFIC-001, REQ-CONTEXT-DIM-BRAND-001). These
+          dimensions have no MVP inferrer; audience/traffic/brand are universal
+          {value,source,confidence} schema fields per AC-01 + ConfidenceScorer
+          AC-07. LLM-tag inference deferred to Phase 13b per spec.md §Out-of-Scope.
+          Cites R11.2 + R18.
+        act-003 (LOW, F-03 closure) — Added REQ-SAFETY-005 (robots.txt compliance
+          per T4B-003 HtmlFetcher / Phase 4 RobotsChecker T080a) to frontmatter
+          req_ids. Already in spec.md req_ids and cited at body L108/L205/L229/L316.
+          Cites R11.2 + R18.
+        act-006 (LOW, F-08 closure) — Added 6th affected_contracts entry
+          "AnalyzePerception.inferredPageType (read-through accessor)" to match
+          spec.md L43-49 + impact.md L34-40 (which already had all 6). Drift
+          fix; risk_gate trigger in .phase-state/4b.json (6 contracts ≥3
+          high-attention threshold) agrees with spec+impact. Cites R11.2 + R18.
+  impacted:
+    - spec.md + tasks.md + impact.md sibling artifacts (v0.1 → v0.2 in same commit per R18 sibling-coherence)
+  unchanged:
+    - All §1-§6 body sections (sequencing, architecture, risks, effort, verification, out-of-scope)
+    - All task dependencies (T4B-001..T4B-015 dep chains)
+    - ConfidenceScorer weights table (§2.2)
+    - R25 enforcement points (§2.4)
+    - BusinessArchetypeInferrer signal weighting (§2.6)
 
 governing_rules:
   - Constitution R10 (Budget)
