@@ -1,7 +1,7 @@
 ---
 title: Phase 4b — Context Capture Layer v1.0 — Tasks
 artifact_type: tasks
-status: draft
+status: approved
 version: 0.2
 created: 2026-04-28
 updated: 2026-05-15
@@ -56,6 +56,7 @@ delta:
         act-006 (LOW, F-08 closure) — Added 6th affected_contracts entry
           "AnalyzePerception.inferredPageType (read-through accessor)" to match
           spec.md + impact.md (which already had all 6). Cites R11.2 + R18.
+    - v0.2 → v0.2 — status:draft → approved (R17.4 gate cleared per .phase-state/4b/preflight-verdict-pass2.yaml Pass 2 APPROVE; 8/8 Pass 1 findings closed in patch wave commit 821c266; cross-artifact sibling coherence verified)
   impacted:
     - spec.md + plan.md + impact.md sibling artifacts (v0.1 → v0.2 in same commit per R18 sibling-coherence)
   unchanged:

@@ -1,7 +1,7 @@
 ---
 title: Phase 4b — Context Capture Layer v1.0
 artifact_type: spec
-status: draft
+status: approved
 version: 0.2
 created: 2026-04-28
 updated: 2026-05-15
@@ -78,6 +78,7 @@ delta:
           Phase 13b. T4B-009 emits no warning for unrecognized verticals in
           MVP (no fuzzy matching). Critic EXTEND on Surface 5 (R5.6 high-attention
           two-pass review). Cites R11.2 + R18 + R20.
+    - v0.2 → v0.2 — status:draft → approved (R17.4 gate cleared per .phase-state/4b/preflight-verdict-pass2.yaml Pass 2 APPROVE; 8/8 Pass 1 findings closed in patch wave commit 821c266; cross-artifact sibling coherence verified)
   impacted:
     - HeuristicLoader (T106) — extended at T4B-013 to filter on ContextProfile
     - audit_setup orchestration node — gains ContextCaptureNode predecessor

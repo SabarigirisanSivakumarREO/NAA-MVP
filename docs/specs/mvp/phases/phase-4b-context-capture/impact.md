@@ -1,7 +1,7 @@
 ---
 title: Phase 4b — Impact Analysis
 artifact_type: impact
-status: draft
+status: approved
 version: 0.2
 created: 2026-04-28
 updated: 2026-05-15
@@ -95,6 +95,7 @@ delta:
         Discharges r20-invalidation-from-phase-4.md "Required actions before Gate 1" item 5.
         Cites R20 + R11.4. R18 append-only — no existing lines removed.
         Also added §3a "Consumed Phase 4 contracts" body subsection cross-referencing the frontmatter block.
+    - v0.2 → v0.2 — status:draft → approved (R17.4 gate cleared per .phase-state/4b/preflight-verdict-pass2.yaml Pass 2 APPROVE; 8/8 Pass 1 findings closed in patch wave commit 821c266; cross-artifact sibling coherence verified)
   impacted: []
   unchanged:
     - All existing §1-§10 body sections (contract changes, producers, consumers, heuristic engine, cost, storage, reproducibility, documentation, risk register, sign-off requirements)
