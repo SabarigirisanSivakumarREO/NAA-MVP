@@ -165,7 +165,7 @@ T084 + T091 carry extended kill criteria.
   - **dep:** T084
   - **Kill criteria:** default block + R4.4 additive-math kill (still applies)
 
-- [ ] **T086 [P] [US-1] AuditCompleteNode** (AC-05 + AC-18, REQ-BROWSE-NODE-002)
+- [x] **T086 [P] [US-1] AuditCompleteNode** (AC-05 + AC-18, REQ-BROWSE-NODE-002)
   - **Brief — Outcome:** Writes terminal state to DB via PostgresStorage: `audit_runs.completion_reason`, `audit_runs.ended_at`. Emits `audit_completed` (success path) or `audit_failed` (timeout/aborted paths) — LOCKED `AuditEventTypeEnum` names from the 22-value set at `packages/agent-core/src/types/audit-events.ts` L58-81. On `completion_reason='aborted'`, writes `metadata.cause_class` on the event row (values: `hitl_timeout`, `bot_detected`, `safety_blocked`, `circuit_open`). On `completion_reason='timeout'`, writes `audit_failed` with `metadata.cause_class='wall_clock_timeout'`. Wall-clock cap hardcoded 60 min in MVP; external config (`AuditRequest.max_wall_clock_ms`) deferred to v1.1 + Phase 4b R20 amendment per AC-18 v0.4 wording. Returns terminal state slice.
   - **Constraints:** File < 100 lines.
   - **Acceptance:** AC-05 + AC-18.
