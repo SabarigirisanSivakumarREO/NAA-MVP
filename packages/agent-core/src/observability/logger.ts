@@ -174,6 +174,15 @@ export interface LogBindings {
   safety_class?: string;
   /** eTLD+1 (or full host) under SafetyCheck / DomainPolicy / CircuitBreaker evaluation. */
   domain?: string;
+
+  // --- Phase 5 (browse subgraph) — spec.md "Constraints Inherited" R-NF-Phase5-02 + T-PHASE5-LOGGER ---
+  // Set by BrowseNode + edges + BrowseGraph consumers. Names are spec-locked.
+  // Note: `node_name` is already registered in the Phase 0 block above and
+  // is NOT re-declared here (R18 append-only; no duplicate fields).
+  /** LangGraph subgraph emitting the log (browse | analyze). Set by BrowseGraph/AnalyzeGraph node entry. */
+  subgraph?: 'browse' | 'analyze';
+  /** Browse loop iteration counter per page; runaway detection trigger at >5 (T084 kill criterion). */
+  loop_iteration?: number;
 }
 
 /**
