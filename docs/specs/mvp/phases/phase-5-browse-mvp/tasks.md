@@ -122,7 +122,7 @@ T084 + T091 carry extended kill criteria.
 
 ### LangGraph state + nodes
 
-- [ ] **T081 [SETUP] [US-1] AuditState (browse-mode subset)** (AC-01, REQ-BROWSE-NODE-001)
+- [x] **T081 [SETUP] [US-1] AuditState (browse-mode subset)** (AC-01, REQ-BROWSE-NODE-001)
   - **Brief — Outcome:** `orchestration/AuditState.ts` exports `AuditStateBrowseSubsetSchema` per impact.md shape; includes `_phase8_extensions` forward-compat seam. `.strict()` for type safety.
   - **Constraints:** File < 200 lines. No `z.any()` outside the typed escape hatch.
   - **Acceptance:** AC-01 — Zod parse on 5 fixtures including one with `_phase8_extensions` populated; reject on schema-violating field.
@@ -130,7 +130,7 @@ T084 + T091 carry extended kill criteria.
   - **dep:** Phase 4 (DB schema for audit_run linkage), T-PHASE5-TESTS, T-PHASE5-LOGGER
   - **Kill criteria:** default block
 
-- [ ] **T082 [P] [US-1] AuditSetupNode** (AC-02, REQ-BROWSE-NODE-002)
+- [x] **T082 [P] [US-1] AuditSetupNode** (AC-02, REQ-BROWSE-NODE-002)
   - **Brief — Outcome:** `orchestration/nodes/AuditSetupNode.ts` exports node function `(state) => Partial<AuditStateBrowseSubset>`. Creates audit_run row via Phase 4 PostgresStorage; emits `audit_events.audit_started` via SessionRecorder; returns initial state.
   - **Constraints:** File < 150 lines.
   - **Acceptance:** AC-02 — DB row created; event emitted.
@@ -138,7 +138,7 @@ T084 + T091 carry extended kill criteria.
   - **dep:** T081
   - **Kill criteria:** default block
 
-- [ ] **T083 [P] [US-1] PageRouterNode** (AC-03, REQ-BROWSE-NODE-002)
+- [x] **T083 [P] [US-1] PageRouterNode** (AC-03, REQ-BROWSE-NODE-002)
   - **Brief — Outcome:** Pops next URL from `urls_remaining`; checks `budget_remaining_usd > 0` (R8.1) + DomainPolicy.classify (R4.3) + CircuitBreaker.isOpen (Phase 4); routes to `browse` (continue) OR `audit_complete` (terminate). Sets `current_url`.
   - **Constraints:** File < 200 lines. Pure routing logic; no I/O beyond Phase 4 adapter calls.
   - **Acceptance:** AC-03.
