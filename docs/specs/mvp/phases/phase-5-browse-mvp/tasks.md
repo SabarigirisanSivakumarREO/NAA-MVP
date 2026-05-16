@@ -33,7 +33,7 @@ delta:
     - T084 + T091 carry extended kill criteria
     - v0.2 — T090 references canonical 08-tool-manifest.md + adds drift-detection assertion (analyze finding F-002)
     - v0.3 — T097 promoted from reserved → MVP (client_id thread-through, H1+H2 closure); 2 polish tasks added (M3 budget concurrency + W1A migration deadlock); T086/T090/T093/T096 brief polish
-    - v0.4 — Pass 2 micro-fix: T085 AC-17 cite + checkpoint count
+    - v0.4 — Pass 2 micro-fix: T085 AC-17 cite + checkpoint count + T086 brief MVP hardcode 60min (drops forward-declared AuditRequest field consistent with AC-18 v0.4)
   changed:
     - v0.1 → v0.2 — T090 brief polish
     - v0.2 → v0.3 — patch-wave applied per .phase-state/5/preflight-verdict.yaml Pass 1 (REVISE) act-001..act-013; MVP count 16 → 17; LOCKED AuditEventTypeEnum compliance + 29-tool split (22+2+5) + budget+timeout patches
@@ -166,7 +166,7 @@ T084 + T091 carry extended kill criteria.
   - **Kill criteria:** default block + R4.4 additive-math kill (still applies)
 
 - [ ] **T086 [P] [US-1] AuditCompleteNode** (AC-05 + AC-18, REQ-BROWSE-NODE-002)
-  - **Brief — Outcome:** Writes terminal state to DB via PostgresStorage: `audit_runs.completion_reason`, `audit_runs.ended_at`. Emits `audit_completed` (success path) or `audit_failed` (timeout/aborted paths) — LOCKED `AuditEventTypeEnum` names from the 22-value set at `packages/agent-core/src/types/audit-events.ts` L58-81. On `completion_reason='aborted'`, writes `metadata.cause_class` on the event row (values: `hitl_timeout`, `bot_detected`, `safety_blocked`, `circuit_open`). On `completion_reason='timeout'`, writes `audit_failed` with `metadata.cause_class='wall_clock_timeout'`. Wall-clock cap default 60 min; configurable via `AuditRequest.max_wall_clock_ms`. Returns terminal state slice.
+  - **Brief — Outcome:** Writes terminal state to DB via PostgresStorage: `audit_runs.completion_reason`, `audit_runs.ended_at`. Emits `audit_completed` (success path) or `audit_failed` (timeout/aborted paths) — LOCKED `AuditEventTypeEnum` names from the 22-value set at `packages/agent-core/src/types/audit-events.ts` L58-81. On `completion_reason='aborted'`, writes `metadata.cause_class` on the event row (values: `hitl_timeout`, `bot_detected`, `safety_blocked`, `circuit_open`). On `completion_reason='timeout'`, writes `audit_failed` with `metadata.cause_class='wall_clock_timeout'`. Wall-clock cap hardcoded 60 min in MVP; external config (`AuditRequest.max_wall_clock_ms`) deferred to v1.1 + Phase 4b R20 amendment per AC-18 v0.4 wording. Returns terminal state slice.
   - **Constraints:** File < 100 lines.
   - **Acceptance:** AC-05 + AC-18.
   - **Files:** `packages/agent-core/src/orchestration/nodes/AuditCompleteNode.ts`
