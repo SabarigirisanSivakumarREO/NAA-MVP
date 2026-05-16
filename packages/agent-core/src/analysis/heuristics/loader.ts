@@ -18,6 +18,28 @@
  * `heuristics-repo/` in week 4. R20 impact.md required at that transition
  * (HeuristicLoader interface + R6 channel 1 first runtime activation).
  *
+ * Phase 4b T4B-013 EXTENSION (this file):
+ *   `loadForContext(profile, opts?)` filters loadAll() output by
+ *   ContextProfile.business.archetype + page.type +
+ *   traffic.device_priority. Filter only — no weight modifiers (Phase 13b
+ *   master track per R-13). Spec: phase-4b spec.md AC-13 + tasks.md
+ *   T4B-013 + final-architecture/37 §37.5 REQ-CONTEXT-DOWNSTREAM-001.
+ *
+ *   Why a value-mapper (not enum reconciliation): the manifest selectors
+ *   in types.ts use PRELIMINARY_* enums (case + naming differ from the
+ *   LOCKED Phase 4b enums in types/context-profile.ts; e.g. lowercase
+ *   `pdp` vs LOCKED `PDP`, `homepage` vs LOCKED `home`). Reconciling
+ *   would touch 30 real heuristics-repo fixtures + 3 skeleton fixtures
+ *   + R20 impact cycle — out of scope for T4B-013. The mapper bridges
+ *   in-process; preliminary enums remain the authoritative manifest
+ *   shape until Phase 13b reshape.
+ *
+ *   LOCKED-only enum values that have no preliminary counterpart
+ *   (`service` archetype; `post_purchase` / `category` / `blog` /
+ *   `about` page types) map to `null` and SKIP that dimension's filter
+ *   ("applies to all" semantics — same as matchesSelector with an
+ *   undefined selector). Documented per AC-13 reading.
+ *
  * R6 IP-boundary discipline (CRITICAL):
  *   - Loader returns Heuristic objects whose `body` field MUST NEVER be
  *     serialized to logs / API responses / dashboards / LangSmith traces.
@@ -35,12 +57,27 @@
  * 0 baseline. Filtering for `skeleton-*.json` is trivial regex; adding a
  * `glob` dep mirrors apps/cli but here we don't need its full surface.
  *
- * R10 compliance: file ≤ 100 lines.
+ * R10 compliance: file ≤ 300 lines.
  */
 import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { HeuristicSchemaExtended, type HeuristicExtended } from './types.js';
+
+import type {
+  BusinessArchetype,
+  ContextProfile,
+  PageType,
+} from '../../types/context-profile.js';
+import {
+  HeuristicSchemaExtended,
+  matchesSelector,
+  type HeuristicExtended,
+} from './types.js';
+import type {
+  PRELIMINARY_BUSINESS_ARCHETYPES,
+  PRELIMINARY_DEVICES,
+  PRELIMINARY_PAGE_TYPES,
+} from './types.js';
 
 const FIXTURE_DIR = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -53,6 +90,74 @@ const FIXTURE_DIR = join(
 );
 
 const SKELETON_FIXTURE_PATTERN = /^skeleton-\d+\.json$/;
+
+// ---------------------------------------------------------------------------
+// Phase 4b T4B-013 — value mappers (LOCKED → PRELIMINARY)
+// ---------------------------------------------------------------------------
+
+type PreliminaryArchetype = (typeof PRELIMINARY_BUSINESS_ARCHETYPES)[number];
+type PreliminaryPageType = (typeof PRELIMINARY_PAGE_TYPES)[number];
+type PreliminaryDevice = (typeof PRELIMINARY_DEVICES)[number];
+
+/**
+ * Maps the LOCKED 6-value BusinessArchetype enum to the preliminary
+ * manifest-selector archetype enum. `null` means "no preliminary
+ * counterpart in MVP" → caller skips archetype filter for that profile
+ * (Phase 13b reconciles).
+ */
+const ARCHETYPE_MAP: Record<BusinessArchetype, PreliminaryArchetype | null> = {
+  D2C: 'D2C',
+  B2B: 'B2B',
+  SaaS: 'SaaS',
+  marketplace: 'marketplace',
+  lead_gen: 'lead_gen',
+  service: null, // no preliminary counterpart in MVP
+};
+
+/**
+ * Maps the LOCKED 12-value PageType enum to the preliminary
+ * manifest-selector page_type enum. `null` means "no preliminary
+ * counterpart in MVP" → caller skips page filter for that profile
+ * (Phase 13b reconciles).
+ */
+const PAGE_TYPE_MAP: Record<PageType, PreliminaryPageType | null> = {
+  home: 'homepage',
+  PLP: 'plp',
+  PDP: 'pdp',
+  cart: 'cart',
+  checkout: 'checkout',
+  pricing: 'pricing',
+  comparison: 'comparison',
+  landing: 'landing',
+  post_purchase: null,
+  category: null,
+  blog: null,
+  about: null,
+};
+
+/** Devices map 1:1 — LOCKED `mobile|desktop|balanced` ⊂ preliminary. */
+const DEVICE_MAP: Record<
+  ContextProfile['traffic']['device_priority']['value'],
+  PreliminaryDevice
+> = {
+  mobile: 'mobile',
+  desktop: 'desktop',
+  balanced: 'balanced',
+};
+
+// ---------------------------------------------------------------------------
+// HeuristicLoader
+// ---------------------------------------------------------------------------
+
+/**
+ * Optional input for `loadForContext`. The `heuristics` field is a TEST
+ * SEAM (R3 conformance test isolation) — when supplied, the loader skips
+ * the file-system `loadAll()` call. Not a public API contract for runtime
+ * callers; production callers always omit `opts`.
+ */
+export interface LoadForContextOptions {
+  heuristics?: HeuristicExtended[];
+}
 
 export class HeuristicLoader {
   async loadAll(): Promise<HeuristicExtended[]> {
@@ -67,5 +172,49 @@ export class HeuristicLoader {
     );
 
     return heuristics.sort((a, b) => a.id.localeCompare(b.id));
+  }
+
+  /**
+   * Phase 4b T4B-013 — filter the heuristic library by ContextProfile.
+   *
+   * Reads ONLY three fields off the profile per spec.md §"Key Entities"
+   * (HeuristicLoader extended): `business.archetype`, `page.type`,
+   * `traffic.device_priority`. NO weight modifiers (filter only — Phase
+   * 13b master track adds weights per R-13).
+   *
+   * Returns heuristics whose manifest selectors match all three mapped
+   * dimensions, treating undefined / empty selectors as "applies to all"
+   * (delegated to `matchesSelector` in types.ts).
+   *
+   * @param profile  ContextProfile to read filter inputs from.
+   * @param opts     Test seam — see `LoadForContextOptions`.
+   */
+  async loadForContext(
+    profile: ContextProfile,
+    opts?: LoadForContextOptions,
+  ): Promise<HeuristicExtended[]> {
+    const all = opts?.heuristics ?? (await this.loadAll());
+
+    const archetypeValue = profile.business.archetype.value;
+    const pageTypeValue = profile.page.type.value;
+    const deviceValue = profile.traffic.device_priority.value;
+
+    const mappedArchetype = ARCHETYPE_MAP[archetypeValue];
+    const mappedPageType = PAGE_TYPE_MAP[pageTypeValue];
+    const mappedDevice = DEVICE_MAP[deviceValue];
+
+    return all.filter((h) => {
+      // null mapped value → skip this dimension's filter (= "applies to all")
+      if (mappedArchetype !== null && !matchesSelector(h.archetype, mappedArchetype)) {
+        return false;
+      }
+      if (mappedPageType !== null && !matchesSelector(h.page_type, mappedPageType)) {
+        return false;
+      }
+      if (!matchesSelector(h.device, mappedDevice)) {
+        return false;
+      }
+      return true;
+    });
   }
 }

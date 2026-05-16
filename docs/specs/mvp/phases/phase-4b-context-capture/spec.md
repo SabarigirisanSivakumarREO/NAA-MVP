@@ -1,10 +1,10 @@
 ---
 title: Phase 4b — Context Capture Layer v1.0
 artifact_type: spec
-status: draft
-version: 0.1
+status: verified
+version: 0.4
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-05-16
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -26,9 +26,6 @@ derived_from:
 req_ids:
   - REQ-CONTEXT-DIM-BUSINESS-001
   - REQ-CONTEXT-DIM-PAGE-001
-  - REQ-CONTEXT-DIM-AUDIENCE-001
-  - REQ-CONTEXT-DIM-TRAFFIC-001
-  - REQ-CONTEXT-DIM-BRAND-001
   - REQ-CONTEXT-OUT-001
   - REQ-CONTEXT-OUT-002
   - REQ-CONTEXT-OUT-003
@@ -53,15 +50,69 @@ delta:
     - Phase 4b spec — introduces ContextProfile, ContextCaptureNode, context_profiles table, intake clarification flow
     - AC-01 through AC-15 stable IDs for T4B-001..T4B-015 acceptance
     - R-01 through R-15 functional requirements
-  changed: []
+  changed:
+    - v0.1 → v0.2 (2026-05-15) — Gate 1 Pass 1 patch wave (5 spec.md actions):
+        act-002 (MED, F-02 closure) — Removed 3 orphan REQ-IDs from frontmatter
+          req_ids list (REQ-CONTEXT-DIM-AUDIENCE-001, REQ-CONTEXT-DIM-TRAFFIC-001,
+          REQ-CONTEXT-DIM-BRAND-001). Audience / traffic / brand dimensions are
+          universal {value, source, confidence} schema fields per AC-01 +
+          ConfidenceScorer AC-07; no dimension-specific inferrer in MVP. LLM-tag
+          inference deferred to Phase 13b per Out-of-Scope. Cites R11.2 + R18.
+        act-004 (LOW, F-04 closure) — Updated L80 "Feature Branch: master" stale
+          reference to "feat/phase-4b-context-capture (Stage 1 pre-flight onward;
+          spec authored on master per phase-0..phase-6 convention)". Cites R18.
+        act-005 (LOW, F-05 closure) — Clarified AC-13 + NF-06 lower-bound:
+          "Returns 12-25 heuristics when heuristic library ≥40 entries; 8-25
+          acceptable when library <40 (Phase 0b shipped 30). Kill criteria
+          escalation (ASK FIRST per plan §3) if filtered count <8 OR >25."
+          Cites R11.2 + R18.
+        act-007 (MED, completeness/business_archetype_universe SPEC_GAP closure) —
+          Appended §Out-of-Scope entry explicitly deferring publisher/
+          ad-supported, non-profit, content-subscription, education (.edu),
+          government (.gov) archetypes to Phase 13b master track. Critic EXTEND
+          on Surface 3 (R5.6 high-attention two-pass review). Cites R11.2 + R18.
+        act-008 (MED, completeness/regulated_verticals_enum SPEC_GAP closure) —
+          Extended AC-09 + R-10 + §Out-of-Scope with 7 additional regulated
+          verticals (cannabis, firearms, adult_content, tobacco_or_vape,
+          alcohol, financial_advice_or_RIA, telehealth) explicitly deferred to
+          Phase 13b. T4B-009 emits no warning for unrecognized verticals in
+          MVP (no fuzzy matching). Critic EXTEND on Surface 5 (R5.6 high-attention
+          two-pass review). Cites R11.2 + R18 + R20.
+    - v0.2 → v0.2 — status:draft → approved (R17.4 gate cleared per .phase-state/4b/preflight-verdict-pass2.yaml Pass 2 APPROVE; 8/8 Pass 1 findings closed in patch wave commit 821c266; cross-artifact sibling coherence verified)
+    - v0.2 → v0.3 (2026-05-16) — Gate 2 act-g2-001 closure: AC-07
+        conformance test path corrected from `confidence-scorer.test.ts`
+        to actual landing path `context-confidence-scorer.test.ts`.
+        Rename driven by pre-existing Phase 3 T064 file-name collision
+        at the original cited path (documented at
+        .phase-state/4b/stage-1-preflight-outputs.md L39 + Phase 4b
+        carry-forward #4 in session-2026-05-16-phase-4b-wave-5-handoff.md).
+        No contract / impl change; doc-only drift correction; SPEC_IMPL_SHAPE_MISMATCH
+        spec_defect blocked by Session 19 fix-all-spec-defects policy.
+        Cites R11.2 + R18. Sibling artifact (tasks.md) bumped v0.2 → v0.3
+        in same commit per R18 sibling-coherence.
+    - v0.3 → v0.4 (2026-05-16) — R17.4 lifecycle bump status:approved →
+        verified at Stage 4 EXIT. Gate 2 Pass 2 cleared
+        (.phase-state/4b/verify-verdict-pass2.yaml APPROVE; 0 blocking
+        findings post-act-g2-001 patch wave commit 9a3dbb1). 15/15 tasks
+        landed; 187/187 Phase 4b offline tests GREEN; R25 verified clean
+        (T4B-014 4/4); Stage 2.5 reviewer APPROVE with 2 MED-justified
+        soft R10.1 violations carry-forward to Phase 13b reconciliation
+        (Phase 4b #6). Sibling artifacts (plan.md / tasks.md / impact.md)
+        bumped v0.x → v0.4 status:verified in same commit per R18
+        sibling-coherence. Cites R17.4 + R18.
   impacted:
     - HeuristicLoader (T106) — extended at T4B-013 to filter on ContextProfile
     - audit_setup orchestration node — gains ContextCaptureNode predecessor
     - tasks-v2.md (T4B-001..T4B-015 already canonical there)
+    - plan.md + tasks.md sibling artifacts (v0.1 → v0.2 in same commit per R18 sibling-coherence)
+    - impact.md sibling artifact (v0.1 → v0.2; consumes_from + §3a closure for R20)
   unchanged:
     - Constitution R25 enforces what this layer MUST NOT do (no Playwright, no judgment, no silent defaults, no LLM in MVP)
     - Phases 5/6/7/8 internal contracts (perception / browse / analyze / orchestrator)
     - GR-001..GR-008 grounding rules
+    - All 15 acceptance criteria body rows (AC-01..AC-15 IDs append-only per R18)
+    - All 15 functional requirement body rows (R-01..R-15 IDs append-only per R18)
+    - All 6 non-functional requirement body rows (NF-01..NF-06)
 
 governing_rules:
   - Constitution R10 (Budget — ~$0.01 per audit)
@@ -77,7 +128,7 @@ governing_rules:
 
 > **Summary (~150 tokens — agent reads this first):** Build a pre-perception "consultant intake form, automated where possible" layer that captures 5 context dimensions (business archetype, page type + funnel, audience, traffic source + device, brand). Every output field is `{value, source, confidence}` so downstream layers can reason about evidence quality. Two input paths: explicit (user intake) and inferred (URL pattern + lightweight HTML fetch + JSON-LD — no Playwright). Confidence thresholds gate audit progress: ≥0.9 act, 0.6-0.9 use+flag, <0.6 ask. Blocking questions surface to the CLI before the audit proceeds. Output `ContextProfile` is hashed (SHA-256), pinned to the new `context_profiles` table, and consumed by the HeuristicLoader to filter the heuristic library down to 12-25 relevant rules. Fifteen tasks (T4B-001..T4B-015). Cost: ~$0.01 per audit (one HTTP fetch + ~5K-token profile). Constitution R25 forbids Playwright, judgment fields, silent defaults, and LLM calls inside this layer in MVP.
 
-**Feature Branch:** master (spec authoring; per phase-0..phase-6 convention)
+**Feature Branch:** feat/phase-4b-context-capture (Stage 1 pre-flight onward; spec was authored on master per phase-0..phase-6 convention, then cut to feature branch at commit d8ec532 on 2026-05-15)
 **Input:** Phase 4b scope from `docs/specs/mvp/tasks-v2.md` lines 476-568 + `docs/specs/final-architecture/37-context-capture-layer.md` + `docs/Improvement/context_capture_layer_spec.md`
 
 ---
@@ -206,13 +257,13 @@ After Phase 4b completes, the HeuristicLoader (T4B-013) reads `business.archetyp
 | AC-04 | JsonLdParser parses Product / Service / SoftwareApplication / Organization fixtures; extracts `@type`, `name`, `offers`, `description`; returns `null` when no JSON-LD. | `packages/agent-core/tests/conformance/json-ld-parser.test.ts` | REQ-CONTEXT-FLOW-001 |
 | AC-05 | BusinessArchetypeInferrer infers correctly on D2C / B2B / SaaS / marketplace / lead_gen / service fixtures; "Add to cart" → D2C confident (≥0.9); "Request demo" → B2B confident; "/mo" + signup → SaaS confident; mixed signals → low confidence + open_question; provenance present on every output. | `packages/agent-core/tests/conformance/business-archetype-inferrer.test.ts` | REQ-CONTEXT-DIM-BUSINESS-001 |
 | AC-06 | PageTypeInferrer infers on 30 fixtures with ≥0.7 confidence on 90% of fixtures; emits `inferredPageType` shape backward-compatible with §07 §7.4 (existing `AnalyzePerception.inferredPageType` consumers continue to work via accessor). | `packages/agent-core/tests/conformance/page-type-inferrer.test.ts` | REQ-CONTEXT-DIM-PAGE-001 |
-| AC-07 | ConfidenceScorer + ProvenanceAssembler scores a 5-dimension fixture; every field tagged with `source` ∈ {user, url_pattern, schema_org, copy_inference, layout_inference, default}; weighted `overall_confidence` ∈ [0, 1]; thresholds applied (≥0.9 act / 0.6-0.9 use+flag / <0.6 ask). | `packages/agent-core/tests/conformance/confidence-scorer.test.ts` | REQ-CONTEXT-OUT-001 |
+| AC-07 | ConfidenceScorer + ProvenanceAssembler scores a 5-dimension fixture; every field tagged with `source` ∈ {user, url_pattern, schema_org, copy_inference, layout_inference, default}; weighted `overall_confidence` ∈ [0, 1]; thresholds applied (≥0.9 act / 0.6-0.9 use+flag / <0.6 ask). | `packages/agent-core/tests/conformance/context-confidence-scorer.test.ts` | REQ-CONTEXT-OUT-001 |
 | AC-08 | OpenQuestionsBuilder produces blocking and non-blocking questions on a low-confidence fixture; `field_path` + `question` + `blocking` populated; blocking when REQUIRED field has confidence <0.6 OR value missing. | `packages/agent-core/tests/conformance/open-questions-builder.test.ts` | REQ-CONTEXT-OUT-002 |
-| AC-09 | AuditRequest intake schema (extended) validates `goal.primary_kpi` REQUIRED — rejects without; `constraints.regulatory` non-empty for regulated verticals (pharma / fintech / gambling / healthcare / legal / insurance) — rejects when empty; all other intake fields optional. | `packages/agent-core/tests/conformance/audit-request-intake.test.ts` | REQ-GATEWAY-INTAKE-001, REQ-GATEWAY-INTAKE-002 |
+| AC-09 | AuditRequest intake schema (extended) validates `goal.primary_kpi` REQUIRED — rejects without; `constraints.regulatory` non-empty for the 6 MVP regulated verticals (pharma / fintech / gambling / healthcare / legal / insurance) — rejects when empty; all other intake fields optional. **Additional regulated verticals (cannabis / firearms / adult_content / tobacco_or_vape / alcohol / financial_advice_or_RIA / telehealth) are NOT auto-rejected in MVP** — consultant must manually flag via `constraints.regulatory` (see §Out-of-Scope below); T4B-009 emits no warning for these unrecognized verticals in v1.0 (no fuzzy matching). Phase 13b master track adds config-driven extensible enum + warn-on-uncertain logic. | `packages/agent-core/tests/conformance/audit-request-intake.test.ts` | REQ-GATEWAY-INTAKE-001, REQ-GATEWAY-INTAKE-002 |
 | AC-10 | CLI clarification prompt reads blocking questions from stdin, validates user answers against ContextProfile schema, merges into profile, resumes audit; non-blocking warnings printed to stderr; idempotent on re-run with same answers (identical `profile_hash`). | `packages/agent-core/tests/conformance/cli-clarification.test.ts` | REQ-CONTEXT-OUT-002, REQ-CONTEXT-FLOW-001 |
 | AC-11 | ContextCaptureNode runs before `audit_setup`; halts on blocking; populates `state.context_profile_id` + `state.context_profile_hash`; pins to `context_profiles`; resumes cleanly after user answers. | `packages/agent-core/tests/conformance/context-capture-node.test.ts` | REQ-CONTEXT-OUT-003, audit_setup integration |
 | AC-12 | `context_profiles` migration runs cleanly; append-only enforcement (no UPDATE, no DELETE per R7.4); SHA-256 hash stored; FK to `audit_runs`; indexes on `audit_run_id`, `client_id`, `profile_hash`. | `packages/agent-core/tests/conformance/context-profiles-migration.test.ts` | §13 + REQ-CONTEXT-OUT-003 |
-| AC-13 | HeuristicLoader extension loads with ContextProfile; filters by `business.archetype + page.type + traffic.device_priority`; returns 12-25 heuristics for typical context. **No weight modifiers** — filter only (weight modifiers deferred to Phase 13b master). | `packages/agent-core/tests/conformance/heuristic-loader-context-filter.test.ts` | REQ-CONTEXT-DOWNSTREAM-001 |
+| AC-13 | HeuristicLoader extension loads with ContextProfile; filters by `business.archetype + page.type + traffic.device_priority`; returns 12-25 heuristics for typical context when heuristic library ≥40 entries; 8-25 acceptable when library <40 (Phase 0b shipped 30 heuristics — Phase 4b first verification expected to land in the 8-25 band). Kill-criteria ASK FIRST escalation (per plan.md §3 risk register) if filtered count <8 OR >25. **No weight modifiers** — filter only (weight modifiers deferred to Phase 13b master). | `packages/agent-core/tests/conformance/heuristic-loader-context-filter.test.ts` | REQ-CONTEXT-DOWNSTREAM-001 |
 | AC-14 | Constitution R25 compliance test: no Playwright import in `packages/agent-core/src/context/*`; no judgment fields (severity / impact / score) in ContextProfile schema; provenance present on every output; no silent defaults — every default value tagged `source: "default"`. | `packages/agent-core/tests/constitution/R25.test.ts` | R25 |
 | AC-15 | Phase 4b integration test on 5 fixtures: (1) full intake — proceeds; (2) URL only — degrades; (3) regulated vertical without `constraints.regulatory` — rejects; (4) low-confidence inference — produces blocking question; (5) HtmlFetcher fails — degrades to URL-only. All 5 dimensions populated with provenance; clarification loop fires; profile hashed and pinned; audit halts then resumes. R25 compliance verified. | `packages/agent-core/tests/integration/context-capture.test.ts` | All Phase 4b REQ-IDs |
 
@@ -231,7 +282,7 @@ After Phase 4b completes, the HeuristicLoader (T4B-013) reads `business.archetyp
 | R-07 | System MUST infer `business.archetype` from JSON-LD + CTA copy + URL TLD signals; emit lowest-confidence + `open_question` when signals are mixed. | F-006 | §37 §37.1.1 |
 | R-08 | System MUST score `overall_confidence` as a weighted aggregate of dimension confidences (weights documented in plan.md); apply thresholds ≥0.9 act / 0.6-0.9 use+flag / <0.6 ask. | F-006 | §37 §37.2, REQ-CONTEXT-OUT-001 |
 | R-09 | System MUST surface blocking questions for required fields with confidence <0.6 OR missing values; non-blocking warnings for fields with confidence 0.6-0.9. | F-001 | §37 §37.2, REQ-CONTEXT-OUT-002 |
-| R-10 | System MUST extend `AuditRequest` intake schema: `goal.primary_kpi` REQUIRED; `constraints.regulatory` non-empty for regulated verticals (pharma / fintech / gambling / healthcare / legal / insurance). | F-001 | §18, REQ-GATEWAY-INTAKE-001..002 |
+| R-10 | System MUST extend `AuditRequest` intake schema: `goal.primary_kpi` REQUIRED; `constraints.regulatory` non-empty for the 6 MVP regulated verticals (pharma / fintech / gambling / healthcare / legal / insurance). Additional regulated verticals (cannabis, firearms, adult_content, tobacco_or_vape, alcohol, financial_advice_or_RIA, telehealth) are NOT auto-rejected in v1.0 — consultant must manually declare via `constraints.regulatory` when auditing these verticals; full extensible enum + warn-on-uncertain is Phase 13b master track per §Out-of-Scope. | F-001 | §18, REQ-GATEWAY-INTAKE-001..002 |
 | R-11 | System MUST integrate `ContextCaptureNode` before `audit_setup` in the orchestration graph; halt on blocking; populate `state.context_profile_id` + `state.context_profile_hash`; resume cleanly after user answers. | F-001, F-019 | §04 audit_setup, §37 §37.3 |
 | R-12 | System MUST persist `ContextProfile` to a new append-only `context_profiles` table; FK to `audit_runs`; SHA-256 hash stored; never UPDATE, never DELETE (R7.4). | F-019 | §13 + R7.4 |
 | R-13 | System MUST extend HeuristicLoader to filter heuristics by `business.archetype + page.type + traffic.device_priority`; return 12-25 heuristics for typical context. **Filter only** — no weight modifiers (Phase 13b master track). | F-006 | §09, REQ-CONTEXT-DOWNSTREAM-001 |
@@ -249,7 +300,7 @@ After Phase 4b completes, the HeuristicLoader (T4B-013) reads `business.archetyp
 | NF-03 | URLPatternMatcher precision on fixture set | ≥95% | — | Conformance test on 30-URL fixture |
 | NF-04 | PageTypeInferrer confidence ≥0.7 on fixtures | ≥90% of fixtures | — | Conformance test on 30-URL+HTML fixture |
 | NF-05 | Net new LLM cost per audit | $0 in MVP | NF-002 | `llm_call_log` row count diff |
-| NF-06 | HeuristicLoader filtered set size | 12-25 heuristics for typical context | — | Conformance test on representative profiles |
+| NF-06 | HeuristicLoader filtered set size | 12-25 heuristics for typical context when heuristic library ≥40 entries; 8-25 acceptable when library <40 (Phase 0b currently 30). ASK FIRST per plan.md §3 if filtered count falls outside 8-25. | — | Conformance test on representative profiles |
 
 ---
 
@@ -302,6 +353,22 @@ After Phase 4b completes, the HeuristicLoader (T4B-013) reads `business.archetyp
 - **Multi-page context aggregation** — Phase 4b is per-audit (one ContextProfile per audit, even with multi-URL inputs); cross-page synthesis is Phase 8.
 - **Conversion-rate prediction** — permanent non-goal (R5.3 + GR-007).
 - **Authenticated-page context capture** — PRD §3.2 permanent non-goal.
+- **Business archetypes outside D2C / B2B / SaaS / marketplace / lead_gen / service** (added 2026-05-15 per Gate 1 Pass 1 act-007 — closes completeness/business_archetype_universe SPEC_GAP from R5.6 critic EXTEND). Phase 4b v1.0 supports exactly the 6 archetypes enumerated in AC-05 + R-07. Other archetypes deferred to v1.1 / Phase 13b master track:
+    - **publisher / ad-supported** (e.g., BBC News, NYT, Medium — ad revenue model; no Add-to-cart or demo CTA)
+    - **non-profit / donation-driven** (e.g., Red Cross, Wikipedia — Donate CTA doesn't fit ATC/demo/trial bucket)
+    - **content-subscription** (e.g., Netflix, Spotify, Patreon — subscription cadence + content delivery, distinct from SaaS software)
+    - **education / .edu** (universities, edtech — admissions or enrollment flow ≠ commerce)
+    - **government / .gov** (.gov sites — service delivery, not commercial conversion)
+  Audits on these archetypes will produce low-confidence `business.archetype` (per BusinessArchetypeInferrer mixed-signal path) and a blocking `open_question` per AC-08; consultant manually selects the closest archetype match or escalates. The heuristic library filtered by `business.archetype` (T4B-013) will NOT have matching rules for these archetypes in v1.0 — manual heuristic selection or escalation to engineering. Full archetype-universe expansion is Phase 13b master track per §37 Out-of-Scope (architecture spec).
+- **Regulated verticals beyond pharma / fintech / gambling / healthcare / legal / insurance** (added 2026-05-15 per Gate 1 Pass 1 act-008 — closes completeness/regulated_verticals_enum SPEC_GAP from R5.6 critic EXTEND). Phase 4b v1.0 auto-rejects intake on the 6 MVP regulated verticals listed in AC-09 + R-10. The following additional regulated verticals are recognized as out-of-scope in v1.0 and require manual `constraints.regulatory` declaration by the consultant; T4B-009 emits no warning for these (no fuzzy matching in MVP):
+    - **cannabis** — state-licensed dispensaries (CA, CO, MA, etc.); FDA gray zone + advertising restrictions; ad platform bans
+    - **firearms** — ATF-regulated + state variance; ad platform restrictions
+    - **adult_content** — FOSTA/SESTA + age verification + payment processor restrictions
+    - **tobacco_or_vape** — FDA Deeming Rule + state regs + ad platform bans
+    - **alcohol** — TTB labeling + state regs + age gating
+    - **financial_advice_or_RIA** — SEC investment-adviser regs; many newsletter/SaaS sites cross this line outside the broad "fintech" enum entry
+    - **telehealth** — HIPAA + state medical-board variance + additional state-specific licensing beyond core "healthcare"
+  Phase 13b master track adds (a) config-driven extensible regulated-verticals enum (`heuristics-repo/regulated-verticals.json`-style), (b) warn-on-uncertain logic for unrecognized verticals (e.g., product mentions "CBD" but no enum hit emits a non-blocking warning), and (c) optional automatic enum extension via consultant-driven taxonomy curation. Until then, consultants auditing any of these 7 verticals MUST manually populate `AuditRequest.constraints.regulatory` to flag findings as regulatory-sensitive. Failure to declare = findings produced may be unpublishable without rework (risk acknowledged in plan.md §3).
 
 ---
 

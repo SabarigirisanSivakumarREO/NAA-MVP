@@ -1,5 +1,13 @@
 # Cost Ceiling — Budget Enforcement
 
+> **⚠️ ENFORCEMENT DISABLED (2026-05-15):** runtime cost-based blocking in
+> `.claude/hooks/usage-guard.mjs` is NEUTERED. The phase ceiling tripped at
+> ~10% context usage and blocked legitimate work. Cost is still tracked and
+> displayed in the SessionStart banner, but no longer pauses or blocks prompts.
+> Context WARN/STOP (50% / 60%) remain active. To re-enable, restore the
+> 3-line classifier in `usage-guard.mjs` (see comment at the call site).
+
+
 ## Defaults
 
 | Ceiling | Default | Pause threshold | Stop threshold |
