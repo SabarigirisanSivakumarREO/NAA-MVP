@@ -2,9 +2,9 @@
 title: Impact Analysis — Phase 5 Browse MVP (3 new contracts)
 artifact_type: impact
 status: draft
-version: 0.2
+version: 0.3
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-16
 owner: engineering lead
 
 supersedes: null
@@ -36,9 +36,12 @@ delta:
     - First impact.md introducing LangGraph as orchestration runtime
     - AuditState forward-compat seam (Phase 5 subset → Phase 8 widening)
     - v0.2 — BrowseAgentSystemPrompt section now cites `docs/specs/final-architecture/08-tool-manifest.md` as canonical tool-name source (analyze finding F-002)
+    - v0.3 — Phase 4b R20 propagation; R25 added to governing_rules (Phase 5 read-only consumer of ContextProfile); 22+2+5 tool-split correction
   changed:
     - v0.1 → v0.2 — cross-reference polish; no contract changes
-  impacted: []
+    - v0.2 → v0.3 — patch-wave applied per .phase-state/5/preflight-verdict.yaml Pass 1 (REVISE) act-001..act-013; BrowseAgentSystemPrompt section corrected to 22 browser_* + 2 agent_* + 5 page_* = 29
+  impacted:
+    - AuditState narrow subset now EXTENDS Phase 4b fwd-stub at `packages/agent-core/src/orchestration/state.ts` (additive)
   unchanged:
     - All contract shapes (LangGraph subgraph, prompt, AuditState narrow subset)
 
@@ -47,6 +50,7 @@ governing_rules:
   - Constitution R18
   - Constitution R20
   - Constitution R22
+  - Constitution R25 (Context Capture MUST NOT — Phase 5 is read-only consumer)
 ---
 
 # Impact Analysis: BrowseSubGraph + BrowseAgentSystemPrompt + AuditStateBrowseSubset
@@ -140,7 +144,7 @@ export const ActionProposalSchema = z.object({
 }).strict();
 ```
 
-The 29 tool names embedded in the prompt are sourced from Phase 2's MCPToolRegistry at compile time (NOT generated dynamically — to ensure prompt stability for reproducibility). The registry's tool-name list is itself anchored to the canonical manifest at `docs/specs/final-architecture/08-tool-manifest.md` (24 `browser_*` + 2 `agent_*` + 5 `page_*` = 29 per tasks-v2.md v2.3.1 reconciliation). Phase 5's golden snapshot test (T090 conformance) asserts `MCPToolRegistry.list().length === 29` to catch drift between the registry and the prompt.
+The 29 tool names embedded in the prompt are sourced from Phase 2's MCPToolRegistry at compile time (NOT generated dynamically — to ensure prompt stability for reproducibility). The registry's tool-name list is itself anchored to the canonical manifest at `docs/specs/final-architecture/08-tool-manifest.md` (**22 `browser_*` (21 numbered + restricted `browser_evaluate`) + 2 `agent_*` + 5 `page_*` = 29** per tasks-v2.md v2.3.1 reconciliation + Phase 4 rollup §5). Phase 5's golden snapshot test (T090 conformance) asserts `MCPToolRegistry.list().length === 29` to catch drift between the registry and the prompt. Per `08-tool-manifest.md` §8.2 Mode Availability Matrix, the 5 `page_*` tools are ANALYZE-mode-only; Phase 5 BROWSE_AGENT prompt MAY exclude them (decision recorded in `r20-invalidation-from-phase-4b.md`).
 
 ### `BrowseSubGraph` (NEW)
 

@@ -2,11 +2,11 @@
 title: Phase 5 — Browse Mode MVP
 artifact_type: phase-readme
 status: approved
-version: 1.0
+version: 1.1
 phase_number: 5
 phase_name: Browse MVP
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-16
 owner: engineering lead
 req_ids:
   - REQ-BROWSE-NODE-001
@@ -17,9 +17,12 @@ req_ids:
 delta:
   new:
     - Phase 5 README
-  changed: []
+    - v1.1 — Summary line corrected to "4 distinct LangGraph nodes + browse split into 2 functions sharing one node-level Zod I/O boundary"; MVP count 16 → 17 (T097 promoted v0.3)
+  changed:
+    - v1.0 → v1.1 — patch-wave applied per .phase-state/5/preflight-verdict.yaml Pass 1 (REVISE) act-001..act-013
   impacted: []
-  unchanged: []
+  unchanged:
+    - Goal, Exit criteria, Depends on, Blocks, Reading order
 governing_rules:
   - Constitution R4 (Browser Agent Rules — every rule converges in Phase 5)
   - Constitution R8 (R8.1 audit budget, R8.2 page budget enforced in browse loop)
@@ -30,27 +33,28 @@ governing_rules:
 
 # Phase 5 — Browse Mode MVP
 
-> **Summary (~150 tokens):** First end-to-end browse-mode integration. **16 MVP tasks** (T081-T096; T097-T100 reserved). Builds the LangGraph browse subgraph: state graph + nodes (audit_setup, page_router, browse, page_router → loop, audit_complete), edges with conditional routing, the **browse-agent system prompt** (drives LLM-led action selection), and `BrowseGraph` assembly. Five integration tests exercise the loop on real sites (BBC, Amazon, multi-step workflow, recovery from failure, budget exhaustion). Consumes everything before it: BrowserEngine + PageStateModel (Phase 1), MCP tools + AnalyzePerception schema (Phase 2), ActionContract + VerifyEngine + ConfidenceScorer + FailureClassifier (Phase 3), LLMAdapter + SafetyCheck + ScreenshotStorage + AuditLogger + SessionRecorder (Phase 4). **The first phase where the browser agent autonomously navigates + acts under LLM control with safety, verification, cost, and observability all wired together.**
+> **Summary (~150 tokens):** First end-to-end browse-mode integration. **17 MVP tasks** (T081-T097; T098-T100 reserved). Builds the LangGraph browse subgraph: state graph + **4 distinct LangGraph nodes (audit_setup, page_router, browse, audit_complete); browse internally split into 2 functions (selectAction + verifyAndRoute) sharing one node-level Zod I/O boundary**, edges with conditional routing, the **browse-agent system prompt** (drives LLM-led action selection), and `BrowseGraph` assembly. Five integration tests exercise the loop on real sites (BBC, Amazon, multi-step workflow, recovery from failure, budget exhaustion). Consumes everything before it: BrowserEngine + PageStateModel (Phase 1), MCP tools + AnalyzePerception schema (Phase 2), ActionContract + VerifyEngine + ConfidenceScorer + FailureClassifier (Phase 3), LLMAdapter + SafetyCheck + ScreenshotStorage + AuditLogger + SessionRecorder (Phase 4), ContextProfile read-only consumer (Phase 4b). **The first phase where the browser agent autonomously navigates + acts under LLM control with safety, verification, cost, and observability all wired together.**
 
 ## Goal
 
 After Phase 5: `pnpm cro:audit --urls ./urls.txt` (still incomplete CLI; full CLI in Phase 9) can run an end-to-end browse session on a list of URLs. Each page enters the browse subgraph: perception captured → LLM decides next action → SafetyCheck gates → MCP tool invokes (with RateLimiter + CircuitBreaker) → VerifyEngine checks → ConfidenceScorer updates → FailureClassifier routes (retry / replan / give up) → AuditLogger writes → SessionRecorder emits events → StreamEmitter publishes for live observation → loop until audit_complete or budget exhausted. No analysis yet (Phase 7); browse session terminates after navigation + workflow completion.
 
-## Tasks (MVP — 16 tasks)
+## Tasks (MVP — 17 tasks)
 
 | Group | Tasks | Description |
 |---|---|---|
-| LangGraph state + nodes | T081-T087 | AuditState (browse-mode subset; full schema Phase 8), 4-5 LangGraph nodes (audit_setup, page_router, browse, audit_complete), node-level Zod I/O |
-| Edges + routing | T088-T089 | Conditional edges, fail/retry/replan routing |
-| System prompt | T090 | Browse-agent system prompt — LLM-led action selection |
+| LangGraph state + nodes | T081-T087 | AuditState (browse-mode subset; EXTENDS Phase 4b fwd-stub; full schema Phase 8), 4 distinct LangGraph nodes (audit_setup, page_router, browse, audit_complete) with browse internally split into 2 functions, node-level Zod I/O |
+| Edges + routing | T088-T089 | Conditional edges, fail/retry/replan routing per FailureClass table |
+| System prompt | T090 | Browse-agent system prompt — LLM-led action selection (22 browser_* + 2 agent_* + 5 page_* = 29 tools per canonical 08-tool-manifest.md) |
 | BrowseGraph assembly | T091 | Compiles nodes + edges + prompt into runnable LangGraph |
 | Integration tests | T092 | example.com / BBC simple navigation |
 |  | T093 | amazon.in product search workflow |
 |  | T094 | Multi-step workflow (navigate → click → type → submit → verify) |
 |  | T095 | Recovery from verify failure (replan via FailureClassifier) |
 |  | T096 | Budget exhaustion (audit terminates with completion_reason='budget_exceeded') |
+| Carry-forward closure | T097 | client_id thread-through (Phase 4 H1+H2 closure; promoted from reserved at v0.3) |
 
-T097-T100 reserved (no MVP scope).
+T098-T100 reserved (no MVP scope).
 
 Full descriptions: [tasks.md](tasks.md). Cross-reference: [tasks-v2.md T081-T100](docs/specs/mvp/tasks-v2.md).
 

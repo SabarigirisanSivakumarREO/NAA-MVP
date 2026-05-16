@@ -2,9 +2,9 @@
 title: Implementation Plan — Phase 5 Browse MVP
 artifact_type: plan
 status: draft
-version: 0.1
+version: 0.2
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-16
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -36,9 +36,12 @@ delta:
   new:
     - First plan introducing LangGraph.js as orchestration runtime
     - 16 MVP tasks (T081-T096; T097-T100 reserved)
-  changed: []
+    - v0.2 — T097 promoted from reserved → MVP (17 tasks); test path consolidation note; R10/R22.6 dedup
+  changed:
+    - v0.1 → v0.2 — patch-wave applied per .phase-state/5/preflight-verdict.yaml Pass 1 (REVISE) act-001..act-013; conformance test list trimmed to single node-browse.test.ts with two describe blocks; MockLLMAdapter → MockAnthropicAdapter; Constitution Check R10 row dedup
   impacted: []
-  unchanged: []
+  unchanged:
+    - Project Structure, Phase 0 research items, Phase 1 design, Approval Gates
 
 governing_rules:
   - Constitution R4 (full convergence)
@@ -103,7 +106,7 @@ Phase 5 wires every prior phase contract into a working LangGraph browse subgrap
 - [x] R8.3 rate limiting — Phase 2 RateLimiter inside browse node
 - [x] R8.4 HITL — LangGraph interrupt
 - [x] R9 — interfaces only; no direct vendor SDKs
-- [x] R10 — Phase 5 LLM ops are non-bound (`other` / `classify` / `extract`); TemperatureGuard inactive on these by design
+- [x] R10 — Phase 5 LLM ops are non-bound (`other` / `classify` / `extract`); TemperatureGuard inactive on these by design. R22.6 stale-xref noted (see spec.md L97).
 - [x] R10.1-R10.6 — files/functions sized; Pino correlation extended
 - [x] R11.2 — REQ-IDs cited
 - [x] R14.1 atomic LLM logging — preserved
@@ -153,8 +156,10 @@ packages/agent-core/tests/
 │   ├── audit-state-browse-subset.test.ts       # AC-01
 │   ├── node-audit-setup.test.ts                # AC-02
 │   ├── node-page-router.test.ts                # AC-03
-│   ├── node-browse.test.ts                     # AC-04 (action selection)
-│   ├── node-browse-verify-route.test.ts        # AC-04 (verify+route portion)
+│   ├── node-browse.test.ts                     # AC-04 — two describe blocks: 'actionSelection' (T084) + 'verifyAndRoute' (T085)
+│   ├── node-browse-events.test.ts              # AC-17 (LOCKED page_browse_started/completed/failed names)
+│   ├── browse-llm-client-id.test.ts            # AC-16 (T097 — H1+H2 closure)
+│   ├── audit-timeout.test.ts                   # AC-18 (wall-clock timeout)
 │   ├── node-audit-complete.test.ts             # AC-05
 │   ├── node-io-zod.test.ts                     # AC-06 (parameterized over 4 nodes)
 │   ├── edges-routing.test.ts                   # AC-07
@@ -179,7 +184,7 @@ packages/agent-core/tests/
 
 **Open design choices resolved:**
 
-1. **AuditState forward-compat:** chose `_phase8_extensions: z.record(z.string(), z.unknown()).optional()` over `.passthrough()`. Phase 8 will EXTEND the schema with concrete typed fields; `_phase8_extensions` is a transitional escape hatch, deprecated when all Phase 8 fields are typed. Documented in impact.md.
+1. **AuditState forward-compat:** chose `_phase8_extensions: z.record(z.string(), z.unknown()).optional()` over `.passthrough()`. **Phase 4b acknowledgement (added v0.2):** Phase 4b shipped 2026-05-16 with a fwd-stub at `packages/agent-core/src/orchestration/state.ts` (6 base slots + `AuditNodeStatusEnum` 5 vals). Phase 5 chooses **EXTEND-not-replace**: `AuditStateBrowseSubsetSchema = Phase4bBaseSchema.extend({...})`. Phase 4b's 6 slots (`audit_run_id`, `client_id`, `current_node`, `node_status`, `context_profile_id`, `context_profile_hash`, `pending_questions`) stay in place; Phase 5 adds browse-specific fields. Phase 8 will EXTEND further with concrete typed fields; `_phase8_extensions` is a transitional escape hatch, deprecated when all Phase 8 fields are typed. See `r20-invalidation-from-phase-4b.md` + impact.md.
 2. **BrowseNode file split:** single file `BrowseNode.ts` with two exported functions (`selectAction` + `verifyAndRoute`) rather than two files. Keeps related logic adjacent; both share state shape. File expected ~250 lines (under R10.1 cap); if it exceeds, split to two files at that point.
 3. **Browse-agent prompt — token budget:** target < 2000 tokens. The 29 tool names are the largest contributor (~600 tokens). Static at compile time; not regenerated per call (reproducibility — same prompt always = same hash).
 4. **Action proposal validation:** LLM output Zod-parsed via `ActionProposalSchema.safeParse()`; on failure, retry up to 2 times with feedback ("invalid JSON, must match schema X") before escalating to FailureClassifier as `verify_failed/replan`.
@@ -197,7 +202,7 @@ packages/agent-core/tests/
 3. **Browse-agent system prompt** is a single TypeScript const string interpolating the tool name list at module load time (build-time freeze). Golden snapshot test catches drift.
 4. **Conditional edges** use LangGraph's standard `addConditionalEdges` API; routing function reads FailureClassifier output from state.
 5. **BrowseGraph** is a factory function `buildBrowseGraph(deps)` returning a compiled graph. All Phase 1-4 contracts injected as deps (R9 preserved).
-6. **Mock LLM in tests:** `MockLLMAdapter` from Phase 4's test-utils; configured with deterministic action proposals per fixture URL.
+6. **Mock LLM in tests:** `MockAnthropicAdapter` from Phase 4's test-utils (Phase 4 actual name per `tests/conformance/llm-failover.test.ts`); configured with deterministic action proposals per fixture URL.
 
 ---
 
