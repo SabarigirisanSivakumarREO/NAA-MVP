@@ -28,6 +28,11 @@
       "import": "./dist/analysis/heuristics/types.js",
       "default": "./dist/analysis/heuristics/types.js"
     },
+    "./types/context-profile": {
+      "types": "./dist/types/context-profile.d.ts",
+      "import": "./dist/types/context-profile.js",
+      "default": "./dist/types/context-profile.js"
+    },
     "./audit": {
       "types": "./dist/audit.d.ts",
       "import": "./dist/audit.js",
