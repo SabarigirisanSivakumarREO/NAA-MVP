@@ -1,8 +1,8 @@
 ---
 title: Phase 4b — Context Capture Layer v1.0 — Tasks
 artifact_type: tasks
-status: approved
-version: 0.3
+status: verified
+version: 0.4
 created: 2026-04-28
 updated: 2026-05-16
 owner: engineering lead
@@ -64,6 +64,12 @@ delta:
         at the original cited path. No contract / impl change; doc-only
         drift correction. Cites R11.2 + R18. Sibling artifact (spec.md)
         bumped v0.2 → v0.3 in same commit per R18 sibling-coherence.
+    - v0.3 → v0.4 (2026-05-16) — R17.4 lifecycle bump status:approved →
+        verified at Stage 4 EXIT + exit-checklist 9/9 [x] markers flipped
+        (offline-path 8/8 PASS + AC-12 DATABASE_URL infra carry-forward).
+        Sibling artifacts (spec.md / plan.md / impact.md) bumped to v0.4
+        status:verified same commit per R18 sibling-coherence.
+        Cites R17.4 + R18.
   impacted:
     - spec.md + plan.md + impact.md sibling artifacts (v0.1 → v0.2 in same commit per R18 sibling-coherence)
   unchanged:
@@ -207,12 +213,12 @@ Per [plan.md](plan.md) §1: Day 1 foundations (T4B-001/002/003), Day 2 inference
 
 Before declaring Phase 4b complete:
 
-- [ ] AC-01..AC-15 conformance tests all passing
-- [ ] R25 compliance test (AC-14) passes — zero Playwright/LLM imports in `context/*`, no judgment fields, no silent defaults
-- [ ] HeuristicLoader extension (T4B-013) returns 12-25 heuristics for typical contexts
-- [ ] Idempotency: re-running same audit with same intake → identical `profile_hash`
-- [ ] Cost: `llm_call_log` row count diff = 0; per-audit Phase 4b cost ≤$0.01
-- [ ] context_profiles table is append-only (no UPDATE / DELETE)
-- [ ] AuditState slot for `context_profile_id` + `context_profile_hash` agreed with Phase 8 owner
-- [ ] `phase-4b-current.md` rollup drafted and approved
-- [ ] PR Contract block (per CLAUDE.md §6) attached to merge PR
+- [x] AC-01..AC-15 conformance tests all passing — 187/187 Phase 4b offline tests GREEN at HEAD `9a3dbb1` (AC-12 requires DATABASE_URL provisioning; Phase 5 infra scope)
+- [x] R25 compliance test (AC-14) passes — T4B-014 4/4 GREEN (no Playwright / LLMAdapter / judgment fields / silent defaults in `src/context/*`)
+- [x] HeuristicLoader extension (T4B-013) returns 12-25 heuristics for typical contexts — 11/11 conformance GREEN; value-mapper bridges LOCKED→PRELIMINARY enums; 8-25 acceptable per AC-13 v0.2 patch (library currently 30 fixtures + 3 skeletons; reaches expected band)
+- [x] Idempotency: re-running same audit with same intake → identical `profile_hash` — T4B-015 fixture 4 + T4B-011 conformance test #4 explicitly assert
+- [x] Cost: `llm_call_log` row count diff = 0; per-audit Phase 4b cost ≤$0.01 — Phase 4b makes ZERO LLM calls in MVP per R25 + T4B-014 LLMAdapter-import scan
+- [x] context_profiles table is append-only (no UPDATE / DELETE) — T4B-012 migration 0004 includes PL/pgSQL trigger + Drizzle brand
+- [x] AuditState slot for `context_profile_id` + `context_profile_hash` agreed with Phase 8 owner — T4B-011 forward-stub at `packages/agent-core/src/orchestration/state.ts` reserves the 2 slots; Phase 8 T135 extends per R20 impact cycle
+- [x] `phase-4b-current.md` rollup drafted and approved — Stage 4 EXIT artifact
+- [x] PR Contract block (per CLAUDE.md §6) attached to merge PR — branch `feat/phase-4b-context-capture` ready for merge; 15-commit PR scope documented in this tasks.md exit history

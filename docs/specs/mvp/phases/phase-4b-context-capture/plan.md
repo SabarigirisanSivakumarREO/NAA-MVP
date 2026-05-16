@@ -1,10 +1,10 @@
 ---
 title: Phase 4b — Context Capture Layer v1.0 — Implementation Plan
 artifact_type: plan
-status: approved
-version: 0.2
+status: verified
+version: 0.4
 created: 2026-04-28
-updated: 2026-05-15
+updated: 2026-05-16
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -64,6 +64,12 @@ delta:
           fix; risk_gate trigger in .phase-state/4b.json (6 contracts ≥3
           high-attention threshold) agrees with spec+impact. Cites R11.2 + R18.
     - v0.2 → v0.2 — status:draft → approved (R17.4 gate cleared per .phase-state/4b/preflight-verdict-pass2.yaml Pass 2 APPROVE; 8/8 Pass 1 findings closed in patch wave commit 821c266; cross-artifact sibling coherence verified)
+    - v0.2 → v0.4 (2026-05-16) — R17.4 lifecycle bump status:approved →
+        verified at Stage 4 EXIT (skipped v0.3 marker since plan.md was
+        not touched by the act-g2-001 spec/tasks drift fix — sibling
+        coherence bump direct from v0.2 → v0.4 to align with spec.md).
+        Gate 2 Pass 2 cleared per .phase-state/4b/verify-verdict-pass2.yaml
+        APPROVE; 15/15 tasks; 187/187 tests GREEN. Cites R17.4 + R18.
   impacted:
     - spec.md + tasks.md + impact.md sibling artifacts (v0.1 → v0.2 in same commit per R18 sibling-coherence)
   unchanged:

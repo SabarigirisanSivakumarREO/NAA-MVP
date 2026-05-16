@@ -1,10 +1,10 @@
 ---
 title: Phase 4b — Impact Analysis
 artifact_type: impact
-status: approved
-version: 0.2
+status: verified
+version: 0.4
 created: 2026-04-28
-updated: 2026-05-15
+updated: 2026-05-16
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -96,6 +96,15 @@ delta:
         Cites R20 + R11.4. R18 append-only — no existing lines removed.
         Also added §3a "Consumed Phase 4 contracts" body subsection cross-referencing the frontmatter block.
     - v0.2 → v0.2 — status:draft → approved (R17.4 gate cleared per .phase-state/4b/preflight-verdict-pass2.yaml Pass 2 APPROVE; 8/8 Pass 1 findings closed in patch wave commit 821c266; cross-artifact sibling coherence verified)
+    - v0.2 → v0.4 (2026-05-16) — R17.4 lifecycle bump status:approved →
+        verified at Stage 4 EXIT (skipped v0.3 for sibling-coherence with
+        spec.md v0.4). Gate 2 Pass 2 cleared per
+        .phase-state/4b/verify-verdict-pass2.yaml APPROVE; 15/15 tasks;
+        187/187 Phase 4b offline tests GREEN; R25 verified clean (T4B-014
+        4/4). All 6 affected_contracts shipped per
+        spec.md/plan.md/tasks.md final state. R20 propagation notes
+        authored for downstream consumers (Phase 5/6/7/8/13b — see
+        downstream_impact section). Cites R17.4 + R18 + R20.
   impacted: []
   unchanged:
     - All existing §1-§10 body sections (contract changes, producers, consumers, heuristic engine, cost, storage, reproducibility, documentation, risk register, sign-off requirements)

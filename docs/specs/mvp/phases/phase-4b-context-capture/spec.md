@@ -1,8 +1,8 @@
 ---
 title: Phase 4b — Context Capture Layer v1.0
 artifact_type: spec
-status: approved
-version: 0.3
+status: verified
+version: 0.4
 created: 2026-04-28
 updated: 2026-05-16
 owner: engineering lead
@@ -90,6 +90,16 @@ delta:
         spec_defect blocked by Session 19 fix-all-spec-defects policy.
         Cites R11.2 + R18. Sibling artifact (tasks.md) bumped v0.2 → v0.3
         in same commit per R18 sibling-coherence.
+    - v0.3 → v0.4 (2026-05-16) — R17.4 lifecycle bump status:approved →
+        verified at Stage 4 EXIT. Gate 2 Pass 2 cleared
+        (.phase-state/4b/verify-verdict-pass2.yaml APPROVE; 0 blocking
+        findings post-act-g2-001 patch wave commit 9a3dbb1). 15/15 tasks
+        landed; 187/187 Phase 4b offline tests GREEN; R25 verified clean
+        (T4B-014 4/4); Stage 2.5 reviewer APPROVE with 2 MED-justified
+        soft R10.1 violations carry-forward to Phase 13b reconciliation
+        (Phase 4b #6). Sibling artifacts (plan.md / tasks.md / impact.md)
+        bumped v0.x → v0.4 status:verified in same commit per R18
+        sibling-coherence. Cites R17.4 + R18.
   impacted:
     - HeuristicLoader (T106) — extended at T4B-013 to filter on ContextProfile
     - audit_setup orchestration node — gains ContextCaptureNode predecessor
