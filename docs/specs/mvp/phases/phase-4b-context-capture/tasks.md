@@ -2,9 +2,9 @@
 title: Phase 4b — Context Capture Layer v1.0 — Tasks
 artifact_type: tasks
 status: approved
-version: 0.2
+version: 0.3
 created: 2026-04-28
-updated: 2026-05-15
+updated: 2026-05-16
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -57,6 +57,13 @@ delta:
           "AnalyzePerception.inferredPageType (read-through accessor)" to match
           spec.md + impact.md (which already had all 6). Cites R11.2 + R18.
     - v0.2 → v0.2 — status:draft → approved (R17.4 gate cleared per .phase-state/4b/preflight-verdict-pass2.yaml Pass 2 APPROVE; 8/8 Pass 1 findings closed in patch wave commit 821c266; cross-artifact sibling coherence verified)
+    - v0.2 → v0.3 (2026-05-16) — Gate 2 act-g2-001 closure: T4B-007
+        conformance test path corrected from `confidence-scorer.test.ts`
+        to actual landing path `context-confidence-scorer.test.ts`.
+        Rename driven by pre-existing Phase 3 T064 file-name collision
+        at the original cited path. No contract / impl change; doc-only
+        drift correction. Cites R11.2 + R18. Sibling artifact (spec.md)
+        bumped v0.2 → v0.3 in same commit per R18 sibling-coherence.
   impacted:
     - spec.md + plan.md + impact.md sibling artifacts (v0.1 → v0.2 in same commit per R18 sibling-coherence)
   unchanged:
@@ -134,7 +141,7 @@ Per [plan.md](plan.md) §1: Day 1 foundations (T4B-001/002/003), Day 2 inference
 - **files:** `packages/agent-core/src/context/ConfidenceScorer.ts` + `packages/agent-core/src/context/ProvenanceAssembler.ts`
 - **acceptance:** Score 5-dimension fixture. All fields tagged with `source` ∈ {user, url_pattern, schema_org, copy_inference, layout_inference, default}. Weighted `overall_confidence` ∈ [0, 1]. Confidence thresholds applied: ≥0.9 act / 0.6-0.9 use+flag / <0.6 ask.
 - **weights:** see [plan.md §2.2](plan.md)
-- **conformance test:** `packages/agent-core/tests/conformance/confidence-scorer.test.ts` (AC-07)
+- **conformance test:** `packages/agent-core/tests/conformance/context-confidence-scorer.test.ts` (AC-07)
 
 ## T4B-008 — OpenQuestionsBuilder
 - **dep:** T4B-007

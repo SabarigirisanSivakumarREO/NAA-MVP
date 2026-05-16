@@ -2,9 +2,9 @@
 title: Phase 4b — Context Capture Layer v1.0
 artifact_type: spec
 status: approved
-version: 0.2
+version: 0.3
 created: 2026-04-28
-updated: 2026-05-15
+updated: 2026-05-16
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -79,6 +79,17 @@ delta:
           MVP (no fuzzy matching). Critic EXTEND on Surface 5 (R5.6 high-attention
           two-pass review). Cites R11.2 + R18 + R20.
     - v0.2 → v0.2 — status:draft → approved (R17.4 gate cleared per .phase-state/4b/preflight-verdict-pass2.yaml Pass 2 APPROVE; 8/8 Pass 1 findings closed in patch wave commit 821c266; cross-artifact sibling coherence verified)
+    - v0.2 → v0.3 (2026-05-16) — Gate 2 act-g2-001 closure: AC-07
+        conformance test path corrected from `confidence-scorer.test.ts`
+        to actual landing path `context-confidence-scorer.test.ts`.
+        Rename driven by pre-existing Phase 3 T064 file-name collision
+        at the original cited path (documented at
+        .phase-state/4b/stage-1-preflight-outputs.md L39 + Phase 4b
+        carry-forward #4 in session-2026-05-16-phase-4b-wave-5-handoff.md).
+        No contract / impl change; doc-only drift correction; SPEC_IMPL_SHAPE_MISMATCH
+        spec_defect blocked by Session 19 fix-all-spec-defects policy.
+        Cites R11.2 + R18. Sibling artifact (tasks.md) bumped v0.2 → v0.3
+        in same commit per R18 sibling-coherence.
   impacted:
     - HeuristicLoader (T106) — extended at T4B-013 to filter on ContextProfile
     - audit_setup orchestration node — gains ContextCaptureNode predecessor
@@ -236,7 +247,7 @@ After Phase 4b completes, the HeuristicLoader (T4B-013) reads `business.archetyp
 | AC-04 | JsonLdParser parses Product / Service / SoftwareApplication / Organization fixtures; extracts `@type`, `name`, `offers`, `description`; returns `null` when no JSON-LD. | `packages/agent-core/tests/conformance/json-ld-parser.test.ts` | REQ-CONTEXT-FLOW-001 |
 | AC-05 | BusinessArchetypeInferrer infers correctly on D2C / B2B / SaaS / marketplace / lead_gen / service fixtures; "Add to cart" → D2C confident (≥0.9); "Request demo" → B2B confident; "/mo" + signup → SaaS confident; mixed signals → low confidence + open_question; provenance present on every output. | `packages/agent-core/tests/conformance/business-archetype-inferrer.test.ts` | REQ-CONTEXT-DIM-BUSINESS-001 |
 | AC-06 | PageTypeInferrer infers on 30 fixtures with ≥0.7 confidence on 90% of fixtures; emits `inferredPageType` shape backward-compatible with §07 §7.4 (existing `AnalyzePerception.inferredPageType` consumers continue to work via accessor). | `packages/agent-core/tests/conformance/page-type-inferrer.test.ts` | REQ-CONTEXT-DIM-PAGE-001 |
-| AC-07 | ConfidenceScorer + ProvenanceAssembler scores a 5-dimension fixture; every field tagged with `source` ∈ {user, url_pattern, schema_org, copy_inference, layout_inference, default}; weighted `overall_confidence` ∈ [0, 1]; thresholds applied (≥0.9 act / 0.6-0.9 use+flag / <0.6 ask). | `packages/agent-core/tests/conformance/confidence-scorer.test.ts` | REQ-CONTEXT-OUT-001 |
+| AC-07 | ConfidenceScorer + ProvenanceAssembler scores a 5-dimension fixture; every field tagged with `source` ∈ {user, url_pattern, schema_org, copy_inference, layout_inference, default}; weighted `overall_confidence` ∈ [0, 1]; thresholds applied (≥0.9 act / 0.6-0.9 use+flag / <0.6 ask). | `packages/agent-core/tests/conformance/context-confidence-scorer.test.ts` | REQ-CONTEXT-OUT-001 |
 | AC-08 | OpenQuestionsBuilder produces blocking and non-blocking questions on a low-confidence fixture; `field_path` + `question` + `blocking` populated; blocking when REQUIRED field has confidence <0.6 OR value missing. | `packages/agent-core/tests/conformance/open-questions-builder.test.ts` | REQ-CONTEXT-OUT-002 |
 | AC-09 | AuditRequest intake schema (extended) validates `goal.primary_kpi` REQUIRED — rejects without; `constraints.regulatory` non-empty for the 6 MVP regulated verticals (pharma / fintech / gambling / healthcare / legal / insurance) — rejects when empty; all other intake fields optional. **Additional regulated verticals (cannabis / firearms / adult_content / tobacco_or_vape / alcohol / financial_advice_or_RIA / telehealth) are NOT auto-rejected in MVP** — consultant must manually flag via `constraints.regulatory` (see §Out-of-Scope below); T4B-009 emits no warning for these unrecognized verticals in v1.0 (no fuzzy matching). Phase 13b master track adds config-driven extensible enum + warn-on-uncertain logic. | `packages/agent-core/tests/conformance/audit-request-intake.test.ts` | REQ-GATEWAY-INTAKE-001, REQ-GATEWAY-INTAKE-002 |
 | AC-10 | CLI clarification prompt reads blocking questions from stdin, validates user answers against ContextProfile schema, merges into profile, resumes audit; non-blocking warnings printed to stderr; idempotent on re-run with same answers (identical `profile_hash`). | `packages/agent-core/tests/conformance/cli-clarification.test.ts` | REQ-CONTEXT-OUT-002, REQ-CONTEXT-FLOW-001 |
