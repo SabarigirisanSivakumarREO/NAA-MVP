@@ -2,7 +2,7 @@
 title: Phase 5 — Browse Mode MVP
 artifact_type: spec
 status: draft
-version: 0.3
+version: 0.4
 created: 2026-04-27
 updated: 2026-05-16
 owner: engineering lead
@@ -45,9 +45,11 @@ delta:
     - v0.2 — Constraints + AC-09 cite `docs/specs/final-architecture/08-tool-manifest.md` as the canonical 29-tool list source (analyze finding F-002)
     - v0.2 — Temperature invariant cited correctly to R13 NEVER + TemperatureGuard adapter, NOT R10 Code Quality (Constitution R22.6 stale-xref note; analyze finding F-003)
     - v0.3 — AC-16 + AC-17 + AC-18 + R-13 + R-14 (LOCKED-name compliance + client_id thread-through + budget thresholds + wall-clock timeout)
+    - v0.4 — Pass 2 micro-fix: AC-18 wording defer
   changed:
     - v0.1 → v0.2 — analyze-driven xref polish; no scope changes
     - v0.2 → v0.3 — patch-wave applied per .phase-state/5/preflight-verdict.yaml Pass 1 (REVISE) act-001..act-013; LOCKED AuditEventTypeEnum drift fixes + Phase 4b R20 propagation + AC-04 test path consolidation + FailureClass routing table + 29-tool split (22+2+5) + 'timeout' wall-clock + R22.6 dedup
+    - v0.3 → v0.4 — Pass 2 micro-patch: AC-18 wording (drop AuditRequest forward field declaration; hardcode 60min in MVP); LOCKED-name + R20 hygiene preserved
   impacted:
     - Constitution R4.1 (perception first) + R4.2 (verify everything) — first runtime convergence
     - Phase 8 AuditState — Phase 5 ships browse-mode SUBSET; Phase 8 lands full schema (additive, no migration)
@@ -161,7 +163,7 @@ The CLI (`pnpm cro:audit --urls ./urls.txt --business-type ecommerce`) reads URL
 | AC-15 | Integration test for budget exhaustion: audit_run with `budget_remaining_usd=0.05` against a multi-page list; loop debits cost across pages; on exhaustion, audit terminates with `completion_reason='budget_exceeded'`; remaining pages NOT entered | `tests/integration/phase5-budget.test.ts` | T096 |
 | AC-16 | Every Phase 5 browse-mode LLM invocation populates `LLMCompleteRequest.client_id` from `AuditState.client_id` (no PLACEHOLDER_UUID). Closes Phase 4 Stage 2.5 H1 + H2 carry-forward per `r20-invalidation-from-phase-4.md` L24-26. Conformance test asserts zero `llm_call_log.client_id = PLACEHOLDER_UUID` for any browse-mode row. | `tests/conformance/browse-llm-client-id.test.ts` | T097 |
 | AC-17 | `page_browse_started` emitted on entry to browse node per page; `page_browse_completed` on successful exit; `page_browse_failed` on unrecoverable failure (all LOCKED names from the 22-value `AuditEventTypeEnum`). | `tests/conformance/node-browse-events.test.ts` | T085 |
-| AC-18 | Audit-level wall-clock cap (default 60 min; configurable via `AuditRequest.max_wall_clock_ms`) terminates audit cleanly with `completion_reason='timeout'`. AuditEvent row uses `audit_failed` with `metadata.cause_class='wall_clock_timeout'`. | `tests/conformance/audit-timeout.test.ts` | T086 |
+| AC-18 | Audit-level wall-clock cap (hardcoded 60 min in MVP; configurable wiring via `AuditRequest.max_wall_clock_ms` deferred to v1.1 + Phase 4b R20 amendment) terminates audit cleanly with `completion_reason='timeout'`. AuditEvent row uses `audit_failed` with `metadata.cause_class='wall_clock_timeout'`. | `tests/conformance/audit-timeout.test.ts` | T086 |
 
 AC-NN IDs append-only per Constitution R18.
 
