@@ -1,7 +1,7 @@
 ---
 title: Implementation Plan — Phase 5 Browse MVP
 artifact_type: plan
-status: draft
+status: approved
 version: 0.2
 created: 2026-04-27
 updated: 2026-05-16

@@ -119,12 +119,80 @@ See `.phase-state/5/preflight-verdict.yaml` `recommended_actions` for full text.
 
 fix-all-spec-defects (Session 19, 2026-05-13). All HIGH + MED + LOW-spec_defect block. 1 LOW pure_cosmetic logged. Pass 1 verdict: REVISE.
 
-## Human stamp
+## Human stamp — Pass 1
 
-**Awaiting Sabari decision:** APPROVE / REVISE / RE-SPEC
+**Pass 1 stamped:** REVISE by Sabari at 2026-05-16T14:25:00Z. Master dispatched patch-wave subagent for act-001..act-013. Commit `71941ec` landed v0.3 patches.
 
-- APPROVE → master spawns patch-wave subagent to apply act-001 through act-013; re-run Stage 1+1b for Pass 2.
-- REVISE → user supplies alternate patch direction or rejects specific actions; master applies subset.
-- RE-SPEC → phase paused; design discussion re-opened; may require fresh /speckit.specify.
+---
 
-Stamp via `/master 5 --gate-1 APPROVE` (or REVISE / RE-SPEC).
+# Pass 2 — Re-review post v0.3 patch wave (2026-05-16T14:57:00Z)
+
+## Recommendation
+
+**REVISE** — 3 residual findings introduced by v0.3 patch wave.
+
+| ID | Severity | Issue | Resolution |
+|---|---|---|---|
+| F-016 | MED | AC-18 silently extended Phase 4b AuditRequest contract via `max_wall_clock_ms` forward declaration without R20 documentation | Hardcode 60min in MVP; defer external config + R20 amendment to v1.1 |
+| F-017 | LOW | T085 brief missing AC-17 cite (spec.md AC-17 links T085) | T085 brief cites AC-17 + brief mentions emit semantics |
+| F-018 | LOW | tasks.md checkpoint count "17 ACs" (correct = 18) | Corrected to 18 |
+
+## Patch wave Pass 2
+
+Commit `8af1871` v0.4 micro-patch (spec.md + tasks.md). Plus follow-up commit `1ed2578` for the same AuditRequest-forward-decl wording in tasks.md T086 brief (missed by Pass 2 patch — caught + fixed in Pass 2.5).
+
+---
+
+# Pass 3 — Re-review post v0.4 micro-patch + Pass 2.5 follow-up (2026-05-16T15:05:00Z)
+
+## Recommendation
+
+**APPROVE** — clean. Zero blocking findings. All 18 Pass 1+2 findings resolved.
+
+## Sub-audit summary
+
+| Dimension | Verdict | Detail |
+|---|---|---|
+| Correctness | PASS | 0 findings; all 15 Pass 1 + 3 Pass 2 findings resolved |
+| Coverage | PASS | 18/18 ACs missing = expected pre-impl baseline; T-PHASE5-TESTS lands at Stage 2 start |
+| Completeness | PASS | 7/7 categorical surfaces PASS (22 events + 29 MCP tools + 5 FailureClass + 6 LLMOps + 4 completion_reason + 4 SafetyClass + 4 nodes) |
+
+## Final state
+
+- spec.md v0.4 draft
+- plan.md v0.2 draft
+- tasks.md v0.4 draft
+- impact.md v0.3 draft
+- README.md v1.1
+- r20-invalidation-from-phase-4b.md v1.0 (NEW)
+- 18 ACs (AC-01..AC-18) all codified with conformance test paths + linked tasks
+- 14 functional requirements (R-01..R-14)
+- 17 MVP tasks (T081-T097; T098-T100 reserved per tasks-v2)
+- 2 polish tasks (T-PHASE5-CONCURRENCY-HARDEN + T-PHASE5-TESTINFRA-DEADLOCK)
+
+## Post-APPROVE actions
+
+Master bumps `status: draft → approved` on spec.md / plan.md / tasks.md / impact.md / r20-invalidation-from-phase-4b.md per R17.4. README.md remains `approved` (unchanged).
+
+## Human stamp — Pass 3
+
+**Stamped: APPROVE** by Sabari at 2026-05-16T15:10:00Z. Master applied R17.4 status bumps:
+
+- spec.md `draft → approved` v0.4
+- plan.md `draft → approved` v0.2
+- tasks.md `draft → approved` v0.4
+- impact.md `draft → approved` v0.3
+- r20-invalidation-from-phase-4b.md `draft → approved` v1.0
+- README.md unchanged (already approved v1.1)
+
+Phase state file `.phase-state/5.json` advanced `1-preflight-patch-wave → 2-implementation` (`stage_status: ready_for_dispatch`).
+
+**Gate 1 closed.** Stage 2 implementation kickoff next.
+
+---
+
+## R17.4 audit trail
+
+This file is the canonical R17.4 audit trail justifying the `draft → approved` transitions on all 5 Phase 5 artifacts. Future Claude Code sessions reading the Phase 5 folder see why approval was granted (3 passes, 18 findings resolved, clean Pass 3 verdict).
+
+Commit referencing this file: master Gate 1 close-out commit (this session).

@@ -1,7 +1,7 @@
 ---
 title: R20 invalidation note — Phase 4b landed 2026-05-16
 artifact_type: r20-note
-status: draft
+status: approved
 version: 1.0
 created: 2026-05-16
 updated: 2026-05-16

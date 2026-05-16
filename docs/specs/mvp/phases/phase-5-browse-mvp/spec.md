@@ -1,7 +1,7 @@
 ---
 title: Phase 5 — Browse Mode MVP
 artifact_type: spec
-status: draft
+status: approved
 version: 0.4
 created: 2026-04-27
 updated: 2026-05-16
