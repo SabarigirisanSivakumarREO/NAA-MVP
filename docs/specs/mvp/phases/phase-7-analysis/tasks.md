@@ -79,10 +79,10 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 
 ## Block A — State + Utilities (Day 1)
 
-### T113 — AnalysisState extension
+### T113 — AnalysisState extension ✅
 - **dep:** T081 (AuditState foundation)
 - **spec:** REQ-STATE-001 (analyze fields)
-- **files:** `packages/agent-core/src/orchestration/AuditState.ts` (extend with analyze fields)
+- **files:** `packages/agent-core/src/orchestration/AnalysisState.ts` (NEW; sibling to AuditState.ts; extends AuditStateBrowseSubsetSchema additively per R20) + barrel `orchestration/index.ts` + `tests/conformance/analysis-state.test.ts` (7/7 PASS 2026-05-18)
 - **acceptance:** All analyze-mode fields added to AuditState — `current_page_perception_bundle`, `current_page_type`, `confidence_tier`, `evaluate_findings_raw[]`, `critique_findings[]`, `grounded_findings[]`, `rejected_findings[]`, `analysis_cost_usd`, `analysis_status`, `current_page_signals` (for §7.13 cross-page emission). Zod-validated. Backward-compatible (additive only — Phase 1-5 code unaffected).
 - **conformance:** AC-01
 
