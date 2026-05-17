@@ -1,7 +1,7 @@
 ---
 title: Tasks — Phase 6 Heuristic KB Engine
 artifact_type: tasks
-status: approved
+status: implemented
 version: 0.6
 created: 2026-04-27
 updated: 2026-05-17
@@ -230,8 +230,8 @@ T106 + T107 carry extended kill criteria.
 
 ## Phase N — Polish
 
-- [ ] **T-PHASE6-DOC [P]** Update root README dev quickstart (note: heuristics-repo/ exists but content is Phase 0b workstream).
-- [ ] **T-PHASE6-ROLLUP** Author `phase-6-current.md` per R19. Active modules: `analysis/heuristics/`. Contracts: 7 NEW. Forward dependency: Phase 0b populates content; Phase 7 consumes filtered output.
+- [x] **T-PHASE6-DOC [P]** Update root README dev quickstart (note: heuristics-repo/ exists but content is Phase 0b workstream).
+- [x] **T-PHASE6-ROLLUP** Author `phase-6-current.md` per R19. Active modules: `analysis/heuristics/`. Contracts: 7 NEW. Forward dependency: Phase 0b populates content; Phase 7 consumes filtered output.
 
 ---
 
