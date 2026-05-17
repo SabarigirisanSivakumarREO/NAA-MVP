@@ -2,9 +2,9 @@
 title: Phase 7 — Analysis Pipeline — Implementation Plan
 artifact_type: plan
 status: draft
-version: 0.1
+version: 0.2
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-05-18
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -40,7 +40,10 @@ affected_contracts:
 delta:
   new:
     - Phase 7 plan — sequencing, R10/R5.6/R6 first-activation strategy, kill criteria
-  changed: []
+  changed:
+    - v0.2 (2026-05-18) Gate 1 Pass 1 patch wave act-001 + act-005
+    - act-001 (C1) — §2.3 persona-divergence metric: replaced "Levenshtein distance ≥ N" with concrete "token-set Jaccard distance ≥ 0.5 AND zero shared word 5-grams between persona-descriptor sentences" (programmatic; aligns AC-08)
+    - act-005 (T1) — §1 sequencing clarified: `quality_gate` is the `routeAfterPerceive` routing edge (not a 6th node); 5-node pipeline retained per AC-21 + REQ-ANALYZE-GRAPH-001
   impacted: []
   unchanged: []
 
@@ -64,6 +67,8 @@ governing_rules:
 ## 1. Sequencing
 
 ```
+Note (v0.2 act-005): `quality_gate` shown below between deep_perceive and evaluate is the `routeAfterPerceive` routing EDGE (per §7.10 + R15.1), NOT a 6th LangGraph node. AC-21 + REQ-ANALYZE-GRAPH-001 retain the 5-node pipeline (deep_perceive → evaluate → self_critique → ground → annotate_and_store) with 3 routing functions.
+
 Day 1 (Block A — state + utilities; ~6h):
   T113 AnalysisState extension                             — extend AuditState with analyze fields
   T114 detectPageType (MOD v2.3)                           — ranked list + signals; reads ContextProfile.page.type when set
@@ -181,7 +186,7 @@ Conformance test (T134) inspects emitted trace; asserts heuristic body NOT in de
 
 EvaluateNode (T119) returns `RawFinding[]`. SelfCritiqueNode (T121) takes `RawFinding[]` as input, makes a NEW `LLMAdapter.invoke({tag: 'self_critique', ...})` call with a DIFFERENT system prompt. Distinct system prompt persona text is the canary — code review enforces it's non-overlapping with evaluate's system text.
 
-Conformance test (T121) asserts: (a) `llm_call_log` has 2 distinct rows per page (one tag=evaluate, one tag=self_critique); (b) the system prompts differ by Levenshtein distance ≥ N (chosen empirically post-prompt-authoring); (c) ≥1 of 5 raw findings rejected on test fixture.
+Conformance test (T121) asserts: (a) `llm_call_log` has 2 distinct rows per page (one tag=evaluate, one tag=self_critique); (b) persona-descriptor sentences of the two system prompts satisfy **token-set Jaccard distance ≥ 0.5 AND zero shared word 5-grams** (v0.2 act-001 — both metrics deterministic, programmatically enforceable; supersedes prior placeholder "Levenshtein distance ≥ N"); (c) ≥1 of 5 raw findings rejected on test fixture.
 
 ---
 
