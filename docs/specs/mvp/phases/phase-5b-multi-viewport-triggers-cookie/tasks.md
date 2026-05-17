@@ -71,7 +71,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 
 ## Pre-impl Stream (T5B-PRE-001) — R20 cross-phase Zod widening
 
-### T5B-PRE-001 — popups[] behavior fields Zod widen (R20)
+### T5B-PRE-001 — popups[] behavior fields Zod widen (R20) ✅
 - **dep:** none (foundational; lands FIRST before T5B-005/006 mutate)
 - **spec:** Phase 5b spec §"affected_contracts" + impact §1 row "popups[] behavior fields"
 - **files:** `packages/agent-core/src/perception/types.ts` (lines 484-486)
