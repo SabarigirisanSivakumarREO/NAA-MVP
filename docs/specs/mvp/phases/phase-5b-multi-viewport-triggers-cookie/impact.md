@@ -1,8 +1,8 @@
 ---
 title: Phase 5b — Impact Analysis
 artifact_type: impact
-status: approved
-version: 0.3
+status: implemented
+version: 0.4
 created: 2026-04-28
 updated: 2026-05-17
 owner: engineering lead
@@ -212,6 +212,10 @@ Per R20:
 ---
 
 ## Delta Log
+
+### v0.3 → v0.4 — 2026-05-17 (Stage 4 exit — status bump approved → implemented per Gate 2 APPROVE verdict)
+
+- R17.4 lifecycle: `status: approved` → `status: implemented`. Cross-cutting impacts to Phase 1b (popups[] Zod widening at perception/types.ts:484-486) + Phase 1c (settle predicate consumed by T5B-006) + Phase 4b (AuditRequest extension at src/types/audit-request.ts) confirmed landed per Gate 2 verify-verdict.
 
 ### v0.2 → v0.3 — 2026-05-17 (Pass 2 micro-wave per preflight-correctness-pass2.json)
 

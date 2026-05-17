@@ -1,8 +1,8 @@
 ---
 title: Phase 5b — Multi-Viewport + Trigger Taxonomy + Cookie Policy
 artifact_type: spec
-status: approved
-version: 0.3
+status: implemented
+version: 0.4
 created: 2026-04-28
 updated: 2026-05-17
 owner: engineering lead
@@ -343,6 +343,10 @@ After approval (`status: draft → validated → approved`):
 ---
 
 ## Delta Log
+
+### v0.3 → v0.4 — 2026-05-17 (Stage 4 exit — status bump approved → implemented per Gate 2 APPROVE verdict)
+
+- R17.4 lifecycle: `status: approved` → `status: implemented`. All 20 tasks landed (T5B-PRE-001 + T5B-001..T5B-019); ~104 new tests green; 19/19 ACs passing per `.phase-state/5b/verify-verdict.yaml`. Cost ceiling honored (zero new LLM calls); Phase 5 backward-compat preserved.
 
 ### v0.2 → v0.3 — 2026-05-17 (Pass 2 micro-wave per preflight-correctness-pass2.json)
 

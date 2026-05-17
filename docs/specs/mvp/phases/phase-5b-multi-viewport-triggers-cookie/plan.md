@@ -1,8 +1,8 @@
 ---
 title: Phase 5b — Multi-Viewport + Triggers + Cookie — Implementation Plan
 artifact_type: plan
-status: approved
-version: 0.3
+status: implemented
+version: 0.4
 created: 2026-04-28
 updated: 2026-05-17
 owner: engineering lead
@@ -330,6 +330,10 @@ Tasks above 2.0h: T5B-006 (2.0h), T5B-014 (2.0h), T5B-019 (3.5h). All have expli
 ---
 
 ## Delta Log
+
+### v0.3 → v0.4 — 2026-05-17 (Stage 4 exit — status bump approved → implemented per Gate 2 APPROVE verdict)
+
+- R17.4 lifecycle: `status: approved` → `status: implemented`. All 20 tasks landed; ~104 new tests green; 19/19 ACs passing per `.phase-state/5b/verify-verdict.yaml`. Effort actual within 28.5h ± 3 budget. Sibling `phase-5b-current.md` rollup + `phase-5b-validation.md` authored per R19 + CLAUDE.md §8c.
 
 ### v0.2 → v0.3 — 2026-05-17 (Pass 2 micro-wave per preflight-correctness-pass2.json)
 
