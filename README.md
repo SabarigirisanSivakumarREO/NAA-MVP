@@ -2,7 +2,7 @@
 
 > Conversion-rate optimization audit platform for REO Digital. Walks a real D2C product page; runs Claude through a deep-perceive → evaluate → self-critique → ground → annotate pipeline; emits grounded, consultant-reviewable findings + a branded PDF.
 
-**Status:** Phase 0 (workspace + scaffolding), Phase 1 (browser perception foundation), Phase 2 (29-tool MCP surface), Phase 3 (verification & confidence — thin), and **Phase 4 (safety + infra + cost — 15-table Postgres schema + RLS + LLM/Storage/Screenshot adapters + observability)** implementation complete; Phase 5+ (browse, analysis pipeline, orchestration, delivery) ahead per the [walking-skeleton roadmap](docs/specs/mvp/implementation-roadmap.md).
+**Status:** Phase 0 (workspace + scaffolding), Phase 1 (browser perception foundation), Phase 2 (29-tool MCP surface), Phase 3 (verification & confidence — thin), Phase 4 (safety + infra + cost — 15-table Postgres schema + RLS + LLM/Storage/Screenshot adapters + observability), and **Phase 5 (Browse MVP — LangGraph `BrowseSubGraph` end-to-end with `completion_reason` terminal classification)** implementation complete; Phase 6+ (analysis pipeline, full orchestration, delivery) ahead per the [walking-skeleton roadmap](docs/specs/mvp/implementation-roadmap.md).
 
 Phase 1 ships the `contextAssembler.capture(url)` API in `@neural/agent-core` — opens a Playwright Chromium session, captures an accessibility tree, filters to a compact `PageStateModel` (under 20,000 tokens — NF-Phase1-01 v0.4), monitors DOM mutations, and produces a JPEG screenshot. Phase 1 acceptance is green for example.com, amazon.in, and a Peregrine PDP fixture (5/5 integration tests pass; full 3-site capture in ~9.5 s wall-clock).
 
@@ -129,6 +129,47 @@ Optional env for Phase 4: `SCREENSHOTS_DIR` (defaults to `./screenshots`); `AUDI
 Architecture cross-references:
 - [`docs/specs/mvp/phases/phase-4-safety-infra-cost/spec.md`](docs/specs/mvp/phases/phase-4-safety-infra-cost/spec.md) — AC-01..AC-17
 - [`packages/agent-core/src/adapters/README.md`](packages/agent-core/src/adapters/README.md) — adapter catalog (R9 boundary)
+
+### Phase 5 — Browse MVP (LangGraph `BrowseSubGraph` end-to-end)
+
+Phase 5 wires the first end-to-end orchestration surface: a compiled LangGraph `BrowseSubGraph` (audit_setup → page_router → browse → audit_complete) that drives a list of URLs through the Phase 1-4 stack and emits a terminal `completion_reason` per page. No analysis, findings, or PDF yet — those land in Phase 7-9.
+
+The browse-mode quickstart command (Phase 5 target surface):
+
+```bash
+# 1-URL smoke (single-line --url= form; Phase 0b walking-skeleton path)
+pnpm cro:audit --url=https://example.com
+
+# Multi-URL browse-mode (Phase 5 target surface — wires through Phase 9 T-PHASE9-CLI)
+pnpm cro:audit --urls ./urls.txt --business-type ecommerce
+```
+
+Where `urls.txt` is one URL per line. The Phase 5 browse loop:
+1. **audit_setup** — creates one `audit_runs` row + initial `audit_events` (REQ-BROWSE-NODE-001)
+2. **page_router** — iterates the URL list; per URL, enters `browse` subgraph
+3. **browse** — captures `PageStateModel` via Phase 1 `contextAssembler`; LLM-decides next action through the Phase 2 29-tool MCP surface; loops until perception is stable or budget exhausts
+4. **audit_complete** — writes terminal `completion_reason` ∈ `{success, budget_exhausted, max_iterations, error}` + final `audit_events` (REQ-BROWSE-NODE-003)
+
+Output at Phase 5: one `audit_runs` row + per-page `page_browse_*` events + LLM-call log entries — all queryable from Postgres. There is no `findings.json` / report PDF yet (Phase 7 = `AnalyzeSubGraph`; Phase 9 = delivery).
+
+**MVP limitations (documented for honesty):**
+- Real Playwright is *not* exercised in the Phase 5 conformance/integration tests — mock browser + mock LLM cover the LangGraph wiring; live Playwright runs land alongside Phase 8 acceptance.
+- `DATABASE_URL` provisioning is still ad-hoc per shell — automation (vitest `globalSetup` centralization) is tracked under `T-PHASE5-TESTINFRA-DEADLOCK` (Wave 8 polish).
+- CLI flag parsing for `--urls` + `--business-type` is documented as the Phase 5 *target* surface; full wiring lands in Phase 9 `T-PHASE9-CLI`. The Phase 0b walking-skeleton `--url=<URL>` path is the supported invocation today.
+
+Acceptance gate:
+
+```bash
+pnpm -F @neural/agent-core test integration/phase5
+# Expected: AC-01..AC-18 green (18 ACs); BrowseGraph compiles + invokes end-to-end
+#           on mock fixtures in < 60s wall-clock per AC-10.
+```
+
+Required env for Phase 5: same as Phase 4 (`DATABASE_URL`, `ANTHROPIC_API_KEY`); no new variables introduced.
+
+Architecture cross-references:
+- [`docs/specs/mvp/phases/phase-5-browse-mvp/spec.md`](docs/specs/mvp/phases/phase-5-browse-mvp/spec.md) — AC-01..AC-18 + REQ-BROWSE-* contracts
+- [`docs/specs/mvp/phases/phase-5-browse-mvp/plan.md`](docs/specs/mvp/phases/phase-5-browse-mvp/plan.md) — `BrowseSubGraph` node layout + budget threading
 
 ---
 

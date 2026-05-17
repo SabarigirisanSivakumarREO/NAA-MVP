@@ -264,7 +264,7 @@ T084 + T091 carry extended kill criteria.
 
 ## Phase N — Polish
 
-- [ ] **T-PHASE5-DOC [P]** Update root README dev quickstart (`pnpm cro:audit --urls ./urls.txt --business-type ecommerce` works for browse-only end-to-end).
+- [x] **T-PHASE5-DOC [P]** Update root README dev quickstart (`pnpm cro:audit --urls ./urls.txt --business-type ecommerce` works for browse-only end-to-end).
 - [ ] **T-PHASE5-CONCURRENCY-HARDEN [P]** Address Phase 4 Stage 2.5 M3 (Budget concurrency serialization). Pick one of: (a) Postgres advisory lock around the `withClient` transaction that updates `audit_runs.budget_remaining_usd`; (b) Application-level mutex per `audit_run_id`. Document choice + rationale in `phase-5-current.md` §4. Acceptance: 2 concurrent LLM calls against the same audit_run never double-debit budget.
 - [ ] **T-PHASE5-TESTINFRA-DEADLOCK [P]** Address Phase 4 act-005 W1A (parallel-migration deadlock costs ~30s per test run). Pick one of: (a) Postgres advisory lock around migration apply; (b) vitest globalSetup centralization that runs migrations once; (c) `__migrations__` idempotency-detection table. Document choice in commit message. Acceptance: `pnpm test:conformance` recovers ~30s by enabling parallel mode.
 - [ ] **T-PHASE5-ROLLUP** Author `phase-5-current.md` per R19. Active modules: full `orchestration/` populated. Contracts: BrowseSubGraph, BrowseAgentSystemPrompt, AuditStateBrowseSubset (all NEW). Forward risks for Phase 7 (analyze subgraph alongside browse — both write same AuditState), Phase 8 (full AuditState widening), Phase 9 (CLI/dashboard wiring).
