@@ -1,8 +1,8 @@
 ---
 title: Phase 7 — Analysis Pipeline
 artifact_type: spec
-status: draft
-version: 0.2
+status: approved
+version: 0.3
 created: 2026-04-28
 updated: 2026-05-18
 owner: engineering lead
@@ -36,7 +36,7 @@ req_ids:
   - REQ-ANALYZE-NODE-004               # ground
   - REQ-ANALYZE-NODE-005               # annotate_and_store
   - REQ-ANALYZE-PERCEPTION-001
-  - REQ-ANALYZE-PERCEPTION-V23-001     # canonical (act-002 v0.2); supersedes REQ-ANALYZE-PERCEPTION-V23-001 alias
+  - REQ-ANALYZE-PERCEPTION-V23-001     # canonical (act-002 v0.2); supersedes prior REQ-ANALYZE-V23-001 alias usages
   - REQ-ANALYZE-GROUND-001             # 8 grounding rules + GR-012
   - REQ-ANALYZE-QUALITY-001            # score computation (7 weighted signals → [0,1])
   - REQ-ANALYZE-QUALITY-002            # routing decision (proceed/partial/skip thresholds 0.6/0.3)
