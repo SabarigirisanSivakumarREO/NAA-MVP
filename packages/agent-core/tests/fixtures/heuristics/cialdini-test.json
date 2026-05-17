@@ -1,0 +1,346 @@
+[
+  {
+    "id": "CIALDINI-TEST-001",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic CIALDINI fixture entry 001 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "reciprocity",
+    "version": "0.0.1",
+    "rule_vs_guidance": "rule",
+    "business_impact_weight": 0.9,
+    "effort_category": "quick_win",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "quantitative",
+      "value": 44,
+      "unit": "px",
+      "metric": "synthetic_test_metric_touch_target"
+    },
+    "provenance": {
+      "source_url": "https://example.test/cialdini/001",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C"
+    ],
+    "page_type": [
+      "pdp"
+    ],
+    "device": [
+      "mobile"
+    ]
+  },
+  {
+    "id": "CIALDINI-TEST-002",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic CIALDINI fixture entry 002 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "commitment",
+    "version": "0.0.1",
+    "rule_vs_guidance": "guidance",
+    "business_impact_weight": 0.2,
+    "effort_category": "strategic",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "qualitative",
+      "standard_text": "TEST FIXTURE — synthetic qualitative standard B; not a real standard"
+    },
+    "provenance": {
+      "source_url": "https://example.test/cialdini/002",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C",
+      "marketplace"
+    ],
+    "page_type": [
+      "homepage"
+    ],
+    "device": [
+      "desktop"
+    ]
+  },
+  {
+    "id": "CIALDINI-TEST-003",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic CIALDINI fixture entry 003 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "social_proof",
+    "version": "0.0.1",
+    "rule_vs_guidance": "rule",
+    "business_impact_weight": 0.7,
+    "effort_category": "incremental",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "quantitative",
+      "value": 4.5,
+      "unit": "ratio",
+      "metric": "synthetic_test_metric_contrast"
+    },
+    "provenance": {
+      "source_url": "https://example.test/cialdini/003",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C"
+    ],
+    "page_type": [
+      "plp"
+    ],
+    "device": [
+      "balanced"
+    ]
+  },
+  {
+    "id": "CIALDINI-TEST-004",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic CIALDINI fixture entry 004 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "authority",
+    "version": "0.0.1",
+    "rule_vs_guidance": "guidance",
+    "business_impact_weight": 0.5,
+    "effort_category": "quick_win",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "qualitative",
+      "standard_text": "TEST FIXTURE — synthetic qualitative standard D; not a real standard"
+    },
+    "provenance": {
+      "source_url": "https://example.test/cialdini/004",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "SaaS"
+    ],
+    "page_type": [
+      "checkout"
+    ],
+    "device": [
+      "mobile"
+    ]
+  },
+  {
+    "id": "CIALDINI-TEST-005",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic CIALDINI fixture entry 005 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "liking",
+    "version": "0.0.1",
+    "rule_vs_guidance": "guidance",
+    "business_impact_weight": 0.3,
+    "effort_category": "deprioritized",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "quantitative",
+      "value": 60,
+      "unit": "%",
+      "metric": "synthetic_test_metric_completion"
+    },
+    "provenance": {
+      "source_url": "https://example.test/cialdini/005",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C",
+      "marketplace"
+    ],
+    "page_type": [
+      "landing"
+    ],
+    "device": [
+      "balanced"
+    ]
+  },
+  {
+    "id": "CIALDINI-TEST-006",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic CIALDINI fixture entry 006 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "scarcity",
+    "version": "0.0.1",
+    "rule_vs_guidance": "rule",
+    "business_impact_weight": 0.85,
+    "effort_category": "quick_win",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "qualitative",
+      "standard_text": "TEST FIXTURE — synthetic qualitative standard A; not a real standard"
+    },
+    "provenance": {
+      "source_url": "https://example.test/cialdini/006",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C"
+    ],
+    "page_type": [
+      "pdp",
+      "checkout"
+    ],
+    "device": [
+      "mobile"
+    ]
+  },
+  {
+    "id": "CIALDINI-TEST-007",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic CIALDINI fixture entry 007 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "unity",
+    "version": "0.0.1",
+    "rule_vs_guidance": "guidance",
+    "business_impact_weight": 0.1,
+    "effort_category": "strategic",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "quantitative",
+      "value": 2500,
+      "unit": "ms",
+      "metric": "synthetic_test_metric_load_time"
+    },
+    "provenance": {
+      "source_url": "https://example.test/cialdini/007",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "B2B"
+    ],
+    "page_type": [
+      "pricing"
+    ],
+    "device": [
+      "desktop"
+    ]
+  },
+  {
+    "id": "CIALDINI-TEST-008",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic CIALDINI fixture entry 008 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "reciprocity",
+    "version": "0.0.1",
+    "rule_vs_guidance": "rule",
+    "business_impact_weight": 0.6,
+    "effort_category": "incremental",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "qualitative",
+      "standard_text": "TEST FIXTURE — synthetic qualitative standard C; not a real standard"
+    },
+    "provenance": {
+      "source_url": "https://example.test/cialdini/008",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C"
+    ],
+    "page_type": [
+      "cart"
+    ],
+    "device": [
+      "balanced"
+    ]
+  },
+  {
+    "id": "CIALDINI-TEST-009",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic CIALDINI fixture entry 009 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "social_proof",
+    "version": "0.0.1",
+    "rule_vs_guidance": "guidance",
+    "business_impact_weight": 0.4,
+    "effort_category": "quick_win",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "quantitative",
+      "value": 7,
+      "unit": "count",
+      "metric": "synthetic_test_metric_form_fields"
+    },
+    "provenance": {
+      "source_url": "https://example.test/cialdini/009",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C",
+      "marketplace"
+    ],
+    "page_type": [
+      "checkout"
+    ],
+    "device": [
+      "mobile"
+    ]
+  },
+  {
+    "id": "CIALDINI-TEST-010",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic CIALDINI fixture entry 010 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "scarcity",
+    "version": "0.0.1",
+    "rule_vs_guidance": "rule",
+    "business_impact_weight": 0.75,
+    "effort_category": "strategic",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "qualitative",
+      "standard_text": "TEST FIXTURE — synthetic qualitative standard E; not a real standard"
+    },
+    "provenance": {
+      "source_url": "https://example.test/cialdini/010",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "lead_gen"
+    ],
+    "page_type": [
+      "homepage"
+    ],
+    "device": [
+      "balanced"
+    ]
+  }
+]

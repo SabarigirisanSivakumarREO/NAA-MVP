@@ -1,0 +1,346 @@
+[
+  {
+    "id": "NIELSEN-TEST-001",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic NIELSEN fixture entry 001 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "visibility",
+    "version": "0.0.1",
+    "rule_vs_guidance": "rule",
+    "business_impact_weight": 0.9,
+    "effort_category": "quick_win",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "quantitative",
+      "value": 44,
+      "unit": "px",
+      "metric": "synthetic_test_metric_touch_target"
+    },
+    "provenance": {
+      "source_url": "https://example.test/nielsen/001",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C"
+    ],
+    "page_type": [
+      "pdp"
+    ],
+    "device": [
+      "mobile"
+    ]
+  },
+  {
+    "id": "NIELSEN-TEST-002",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic NIELSEN fixture entry 002 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "match_real_world",
+    "version": "0.0.1",
+    "rule_vs_guidance": "guidance",
+    "business_impact_weight": 0.2,
+    "effort_category": "strategic",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "qualitative",
+      "standard_text": "TEST FIXTURE — synthetic qualitative standard B; not a real standard"
+    },
+    "provenance": {
+      "source_url": "https://example.test/nielsen/002",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C",
+      "marketplace"
+    ],
+    "page_type": [
+      "homepage"
+    ],
+    "device": [
+      "desktop"
+    ]
+  },
+  {
+    "id": "NIELSEN-TEST-003",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic NIELSEN fixture entry 003 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "user_control",
+    "version": "0.0.1",
+    "rule_vs_guidance": "rule",
+    "business_impact_weight": 0.7,
+    "effort_category": "incremental",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "quantitative",
+      "value": 4.5,
+      "unit": "ratio",
+      "metric": "synthetic_test_metric_contrast"
+    },
+    "provenance": {
+      "source_url": "https://example.test/nielsen/003",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C"
+    ],
+    "page_type": [
+      "plp"
+    ],
+    "device": [
+      "balanced"
+    ]
+  },
+  {
+    "id": "NIELSEN-TEST-004",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic NIELSEN fixture entry 004 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "consistency",
+    "version": "0.0.1",
+    "rule_vs_guidance": "guidance",
+    "business_impact_weight": 0.5,
+    "effort_category": "quick_win",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "qualitative",
+      "standard_text": "TEST FIXTURE — synthetic qualitative standard D; not a real standard"
+    },
+    "provenance": {
+      "source_url": "https://example.test/nielsen/004",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "SaaS"
+    ],
+    "page_type": [
+      "checkout"
+    ],
+    "device": [
+      "mobile"
+    ]
+  },
+  {
+    "id": "NIELSEN-TEST-005",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic NIELSEN fixture entry 005 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "error_prevention",
+    "version": "0.0.1",
+    "rule_vs_guidance": "guidance",
+    "business_impact_weight": 0.3,
+    "effort_category": "deprioritized",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "quantitative",
+      "value": 60,
+      "unit": "%",
+      "metric": "synthetic_test_metric_completion"
+    },
+    "provenance": {
+      "source_url": "https://example.test/nielsen/005",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C",
+      "marketplace"
+    ],
+    "page_type": [
+      "landing"
+    ],
+    "device": [
+      "balanced"
+    ]
+  },
+  {
+    "id": "NIELSEN-TEST-006",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic NIELSEN fixture entry 006 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "recognition",
+    "version": "0.0.1",
+    "rule_vs_guidance": "rule",
+    "business_impact_weight": 0.85,
+    "effort_category": "quick_win",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "qualitative",
+      "standard_text": "TEST FIXTURE — synthetic qualitative standard A; not a real standard"
+    },
+    "provenance": {
+      "source_url": "https://example.test/nielsen/006",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C"
+    ],
+    "page_type": [
+      "pdp",
+      "checkout"
+    ],
+    "device": [
+      "mobile"
+    ]
+  },
+  {
+    "id": "NIELSEN-TEST-007",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic NIELSEN fixture entry 007 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "flexibility",
+    "version": "0.0.1",
+    "rule_vs_guidance": "guidance",
+    "business_impact_weight": 0.1,
+    "effort_category": "strategic",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "quantitative",
+      "value": 2500,
+      "unit": "ms",
+      "metric": "synthetic_test_metric_load_time"
+    },
+    "provenance": {
+      "source_url": "https://example.test/nielsen/007",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "B2B"
+    ],
+    "page_type": [
+      "pricing"
+    ],
+    "device": [
+      "desktop"
+    ]
+  },
+  {
+    "id": "NIELSEN-TEST-008",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic NIELSEN fixture entry 008 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "aesthetic",
+    "version": "0.0.1",
+    "rule_vs_guidance": "rule",
+    "business_impact_weight": 0.6,
+    "effort_category": "incremental",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "qualitative",
+      "standard_text": "TEST FIXTURE — synthetic qualitative standard C; not a real standard"
+    },
+    "provenance": {
+      "source_url": "https://example.test/nielsen/008",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C"
+    ],
+    "page_type": [
+      "cart"
+    ],
+    "device": [
+      "balanced"
+    ]
+  },
+  {
+    "id": "NIELSEN-TEST-009",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic NIELSEN fixture entry 009 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "error_recovery",
+    "version": "0.0.1",
+    "rule_vs_guidance": "guidance",
+    "business_impact_weight": 0.4,
+    "effort_category": "quick_win",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "quantitative",
+      "value": 7,
+      "unit": "count",
+      "metric": "synthetic_test_metric_form_fields"
+    },
+    "provenance": {
+      "source_url": "https://example.test/nielsen/009",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "D2C",
+      "marketplace"
+    ],
+    "page_type": [
+      "checkout"
+    ],
+    "device": [
+      "mobile"
+    ]
+  },
+  {
+    "id": "NIELSEN-TEST-010",
+    "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Synthetic NIELSEN fixture entry 010 used by Phase 6 filter + loader tests. Plausible-but-fake content; do not use in production.",
+    "category": "help",
+    "version": "0.0.1",
+    "rule_vs_guidance": "rule",
+    "business_impact_weight": 0.75,
+    "effort_category": "strategic",
+    "preferred_states": [
+      "default"
+    ],
+    "status": "active",
+    "benchmark": {
+      "kind": "qualitative",
+      "standard_text": "TEST FIXTURE — synthetic qualitative standard E; not a real standard"
+    },
+    "provenance": {
+      "source_url": "https://example.test/nielsen/010",
+      "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+      "draft_model": "human",
+      "verified_by": "phase-6-test-fixtures",
+      "verified_date": "2026-05-17T00:00:00Z"
+    },
+    "archetype": [
+      "lead_gen"
+    ],
+    "page_type": [
+      "homepage"
+    ],
+    "device": [
+      "balanced"
+    ]
+  }
+]
