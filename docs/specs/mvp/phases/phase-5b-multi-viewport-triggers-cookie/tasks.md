@@ -179,7 +179,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **acceptance:** Run page for N seconds (default 5s, max 10s). Diff DOM. Treat new nodes as time-triggered. Captures time-delayed banners and announcements.
 - **conformance test:** `packages/agent-core/tests/conformance/time-delay-trigger.test.ts` (AC-12)
 
-### T5B-013 — ExitIntentTrigger
+### T5B-013 — ExitIntentTrigger ✅
 - **dep:** T091
 - **spec:** §20 trigger taxonomy + spec §3.1
 - **files:** `packages/agent-core/src/browser-runtime/triggers/ExitIntentTrigger.ts`
