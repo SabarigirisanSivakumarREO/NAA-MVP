@@ -5,6 +5,11 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     passWithNoTests: true,
     environment: 'node',
+    // Phase 5 T-PHASE5-TESTINFRA-DEADLOCK: pre-apply Drizzle migrations ONCE
+    // before any worker spawns. Removes the cold-DDL race that previously
+    // forced `--no-file-parallelism` (Phase 4 act-005 W1A; ~30s overhead).
+    // When DATABASE_URL is unset, the setup silently skips.
+    globalSetup: ['tests/_setup/migrations-once.ts'],
     // Phase 1b T1B-001..T1B-010: per-extractor conformance tests parse HTML
     // with DOMParser, which needs a DOM-providing environment. Keep `node`
     // as the default so Phase 1 conformance + walking-skeleton + AC-00
