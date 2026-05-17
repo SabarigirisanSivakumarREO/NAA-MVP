@@ -21,6 +21,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/subagent-monitor.mjs"
+          }
+        ]
+      }
     ]
   }
 }
