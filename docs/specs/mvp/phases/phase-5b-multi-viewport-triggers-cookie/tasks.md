@@ -2,11 +2,11 @@
 title: Phase 5b — Multi-Viewport + Triggers + Cookie — Tasks
 artifact_type: tasks
 status: draft
-version: 0.2
+version: 0.3
 created: 2026-04-28
 updated: 2026-05-17
 owner: engineering lead
-authors: [Claude (drafter), Claude (master orchestrator Pass 1 patch wave 2026-05-17)]
+authors: [Claude (drafter), Claude (master orchestrator Pass 1 patch wave 2026-05-17), Claude (master orchestrator Pass 2 micro-wave 2026-05-17)]
 reviewers: []
 
 supersedes: null
@@ -141,7 +141,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **files:** 5 separate JSON files at `heuristics-repo/multi-viewport/`:
   - `MULTIVIEW-CTA-001.json` — "Primary CTA hidden below fold on mobile"
   - `MULTIVIEW-CTA-002.json` — "Sticky CTA covers >40% viewport on mobile"
-  - `MULTIVIEW-FORM-001.json` — "Form layout breaks on mobile"
+  - `MULTIVIEW-FORM-001.json` — "Form layout breaks on mobile" (detection criteria defined in per-heuristic JSON per T5B-008; objective signals: horizontal overflow > 0px OR field-width < min-tap-target 44px on mobile viewport)
   - `MULTIVIEW-TRUST-001.json` — "Trust signals not surfaced on mobile fold"
   - `MULTIVIEW-PRICING-001.json` — "Pricing display truncated on mobile"
 - **acceptance:** All 5 files conform to Phase 0b heuristic-lint schema (validated by `apps/cli/tests/conformance/heuristic-lint.test.ts`). Tier assigned per heuristic. Heuristic body refs `viewport.device_type === "mobile"` (NOT hardcoded pixel widths) to remain forward-compatible with v1.1 Android baseline addition.
@@ -235,7 +235,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **dep:** T5B-001 through T5B-018
 - **spec:** Phase 5b extended exit gate
 - **files:** `packages/agent-core/tests/integration/phase5b-full.test.ts`
-- **acceptance:** Run 1 audit with `viewports:["desktop","mobile"]`, all 8 trigger types active, both cookie policies tested. Findings include: mobile-only / desktop-only issues + dark patterns + hover-revealed microcopy + exit-intent popups + time-delayed banners. Cost ≤2× single-viewport baseline. All warnings types emit on appropriate fixtures.
+- **acceptance:** Run 1 audit with `viewports:["desktop","mobile"]`, all 6 MVP-active triggers (click from Phase 5 + hover/scroll/time/exit_intent/form_input; tab/accordion deferred v1.1) active, both cookie policies tested. Findings include: mobile-only / desktop-only issues + dark patterns + hover-revealed microcopy + exit-intent popups + time-delayed banners. Cost ≤2× single-viewport baseline. All warnings types emit on appropriate fixtures.
 - **integration test:** `packages/agent-core/tests/integration/phase5b-full.test.ts` (AC-19)
 
 ---
@@ -246,11 +246,11 @@ Before declaring Phase 5b complete:
 
 - [ ] AC-01..AC-19 conformance tests all passing
 - [ ] T5B-009 multi-viewport integration test passes; cost ≤2× single-viewport baseline
-- [ ] T5B-019 full integration test passes; all 8 trigger types active; both cookie policies tested
+- [ ] T5B-019 full integration test passes; all 6 MVP-active triggers (click + hover/scroll/time/exit_intent/form_input; tab/accordion deferred v1.1) active; both cookie policies tested
 - [ ] R26 compliance: per-trigger budget ≤10; cc-*/password skipped; no infinite loops; no cross-origin trigger
 - [ ] Phase 5 (T100) integration test passes unchanged on default AuditRequest (no Phase 5b opts)
 - [ ] PopupDismissibilityTester state restoration verified (before/after equality)
-- [ ] Cookie detection precision ≥95% on 5-fixture cookie set
+- [ ] Cookie detection precision ≥95% on 8-fixture cookie set (OneTrust + Cookiebot + TrustArc + Quantcast Choice + Didomi + Iubenda + Sourcepoint + 1 generic)
 - [ ] Net new LLM cost = $0 (no LLM calls in Phase 5b)
 - [ ] `phase-5b-current.md` rollup drafted and approved
 - [ ] PR Contract block (per CLAUDE.md §6) attached to merge PR
@@ -258,6 +258,14 @@ Before declaring Phase 5b complete:
 ---
 
 ## Delta Log
+
+### v0.2 → v0.3 — 2026-05-17 (Pass 2 micro-wave per preflight-correctness-pass2.json)
+
+Applied findings: F1, E2, C2.
+
+- F1 (MED) — T5B-019 acceptance + Phase exit checklist trigger wording: "8 trigger types" → "6 MVP-active triggers (click + hover/scroll/time/exit_intent/form_input; tab/accordion deferred v1.1)".
+- E2 (LOW) — Phase exit checklist cookie fixture line: "5-fixture" → "8-fixture (OneTrust + Cookiebot + TrustArc + Quantcast Choice + Didomi + Iubenda + Sourcepoint + 1 generic)".
+- C2 (LOW) — T5B-008 MULTIVIEW-FORM-001 clarification: "Form layout breaks on mobile" gains objective-signals note (horizontal overflow > 0px OR field-width < 44px tap target on mobile viewport) deferring detection criteria to per-heuristic JSON.
 
 ### v0.1 → v0.2 — 2026-05-17 (Pass 1 patch wave per review-notes.md)
 

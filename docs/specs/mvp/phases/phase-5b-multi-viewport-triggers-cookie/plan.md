@@ -2,11 +2,11 @@
 title: Phase 5b — Multi-Viewport + Triggers + Cookie — Implementation Plan
 artifact_type: plan
 status: draft
-version: 0.2
+version: 0.3
 created: 2026-04-28
 updated: 2026-05-17
 owner: engineering lead
-authors: [Claude (drafter), Claude (master orchestrator Pass 1 patch wave 2026-05-17)]
+authors: [Claude (drafter), Claude (master orchestrator Pass 1 patch wave 2026-05-17), Claude (master orchestrator Pass 2 micro-wave 2026-05-17)]
 reviewers: []
 
 supersedes: null
@@ -52,7 +52,7 @@ delta:
     - §2.6 cookie library detection — 7 libraries (added Quantcast Choice + Didomi + Iubenda); Generic relaxed (cookie|consent|privacy|preferences regex + >5% fold)
     - §2.7 R26 enforcement — FormInputTrigger exclusion list expanded to 6 categories
     - §3 risk register — cost-cap split per NF-01a/b/c; storage assertion row added
-    - §4 effort table — unified 28h±3 (dropped "30h±4" inconsistency in summary)
+    - §4 effort table — unified 28.5h±3 (Pass 2 F3 — was 28h±3 in summary header / risk register but per-task sum is 28.5h post T5B-PRE-001 add)
   impacted: []
   unchanged: []
 
@@ -67,7 +67,7 @@ governing_rules:
 
 # Phase 5b Implementation Plan
 
-> **Summary (~120 tokens):** 19 tasks across 4 work-streams. Multi-viewport (9 tasks): AuditRequest field → ViewportConfigService → MultiViewportOrchestrator → ViewportDiffEngine → popup behavior probes → DarkPatternDetector → heuristics pack (lint-only via Phase 0b) → integration. Trigger taxonomy (6 tasks): 5 new triggers + candidate discovery. Cookie policy (3 tasks): detector (7 libraries + Generic) + policy + AuditRequest field. Full integration (1 task): 8-trigger + multi-viewport + both cookie policies. Total ~28h ±3 across 2-3 weeks. Kill criteria: cost overrun (NF-01a/b/c per-feature caps), R26 violation (cross-origin trigger / destructive form submit), cookie detection precision <90%.
+> **Summary (~120 tokens):** 19 tasks across 4 work-streams. Multi-viewport (9 tasks): AuditRequest field → ViewportConfigService → MultiViewportOrchestrator → ViewportDiffEngine → popup behavior probes → DarkPatternDetector → heuristics pack (lint-only via Phase 0b) → integration. Trigger taxonomy (6 tasks): 5 new triggers + candidate discovery. Cookie policy (3 tasks): detector (7 libraries + Generic) + policy + AuditRequest field. Full integration (1 task): 6 MVP-active triggers (click + hover/scroll/time/exit_intent/form_input; tab/accordion deferred v1.1) + multi-viewport + both cookie policies. Total ~28.5h ±3 across 2-3 weeks. Kill criteria: cost overrun (NF-01a/b/c per-feature caps), R26 violation (cross-origin trigger / destructive form submit), cookie detection precision <90%.
 
 ---
 
@@ -98,12 +98,12 @@ Week 10 — Cookie policy + full integration:
   Day 1: T5B-016 CookieBannerDetector (OneTrust/Cookiebot/TrustArc + generic)
          T5B-018 AuditRequest.cookie_policy field
   Day 2: T5B-017 CookieBannerPolicy
-  Day 3-4: T5B-019 Full integration test (8 triggers + 2 viewports + 2 cookie policies)
+  Day 3-4: T5B-019 Full integration test (6 MVP-active triggers [click + hover/scroll/time/exit_intent/form_input; tab/accordion deferred v1.1] + 2 viewports + 2 cookie policies)
   Day 5: phase-5b-current.md rollup + PR Contract
 ```
 
 Dependencies (from tasks-v2.md):
-- Multi-viewport stream: T5B-001 → T5B-002 → T5B-003 → T5B-004; T5B-005 ← T1B-004 (PopupPresenceDetector); T5B-006 ← T1B-004; T5B-007 ← T5B-005 + T5B-006; T5B-008 ← T101 (HeuristicSchema); T5B-009 ← T5B-001..T5B-008.
+- Multi-viewport stream: T5B-001 → T5B-002 → T5B-003 → T5B-004; T5B-005 ← T1B-004 (PopupPresenceDetector); T5B-006 ← T1B-004; T5B-007 ← T5B-005 + T5B-006; T5B-008 ← Phase 0b heuristic-lint test (lint-only-conformance per act-004); T5B-009 ← T5B-001..T5B-008.
 - Trigger stream: T5B-010..T5B-014 ← T091 (BrowseGraph); T5B-015 ← T5B-010..T5B-014 + T1C-007 (ElementGraph from Phase 1c).
 - Cookie stream: T5B-016 ← T091; T5B-017 ← T5B-016 + T5B-018; T5B-018 ← T5B-001.
 - Final: T5B-019 ← T5B-001..T5B-018.
@@ -261,7 +261,7 @@ Generic detector emits the descriptor with `library: "generic"`; CookieBannerPol
 | Risk | Trigger | Action |
 |---|---|---|
 | NF-01a multi-viewport $USD cost >2× single-viewport baseline | T5B-009 cost assertion fails (`SUM(llm_call_log.cost_usd WHERE audit_run_id=X) > 2 * baseline_single_viewport_usd`) | KILL: profile per-viewport cost; investigate redundant fetches; ASK FIRST before relaxing 2× target |
-| NF-01b 8-triggers per-page $USD >1.5× baseline browse | T5B-015 or T5B-019 cost assertion fails | KILL: reduce per-trigger candidate cap below 10; ASK FIRST before relaxing 1.5× target |
+| NF-01b 6 MVP-active triggers (click + hover/scroll/time/exit_intent/form_input) per-page $USD >1.5× baseline browse | T5B-015 or T5B-019 cost assertion fails | KILL: reduce per-trigger candidate cap below 10; ASK FIRST before relaxing 1.5× target |
 | NF-01c cookie policy per-page $USD >1.05× baseline browse | T5B-017 or T5B-019 cost assertion fails | KILL: investigate dismissal retry loop; ASK FIRST before relaxing 1.05× target |
 | Storage doubling under universal multi-viewport (>1.3GB/day) | T5B-009 storage assertion fails (per-snapshot bytes × 2 viewports > Phase 0 budget) | Defer to Phase 9 dedup-by-content-hash OR scope multi-viewport opt-in to high-value clients; ASK FIRST |
 | Popup state restoration fails on test fixtures | T5B-006 before/after equality assertion fails | KILL: do NOT skip state restoration. Investigate root cause (likely localStorage, sessionStorage, or document.body class drift). Phase 5b cannot ship without reliable restore. |
@@ -301,7 +301,7 @@ Generic detector emits the descriptor with `library: "generic"`; CookieBannerPol
 | T5B-018 AuditRequest.cookie_policy | 0.5h | Zod field + reject `block` |
 | T5B-019 Full integration test | 3.5h | 8 triggers × 2 viewports × 2 cookie policies |
 | T5B-PRE-001 popups[] Zod widen (R20) | 0.5h | `z.null()` → `z.boolean().nullable()` at perception/types.ts:484-486; non-breaking; widens before T5B-005/006 mutate |
-| **Total** | **28.5h ± 3** | Single engineer (was 28h; +0.5h for T5B-PRE-001 R20 widening) |
+| **Total** | **28.5h ± 3** | Single engineer (28h base + 0.5h T5B-PRE-001 R20 widening) |
 
 Tasks above 2.0h: T5B-006 (2.0h), T5B-014 (2.0h), T5B-019 (3.5h). All have explicit kill criteria above per R23.
 
@@ -330,6 +330,14 @@ Tasks above 2.0h: T5B-006 (2.0h), T5B-014 (2.0h), T5B-019 (3.5h). All have expli
 ---
 
 ## Delta Log
+
+### v0.2 → v0.3 — 2026-05-17 (Pass 2 micro-wave per preflight-correctness-pass2.json)
+
+Applied findings: F1, F2, F3.
+
+- F1 (MED) — Trigger wording aligned: §1 Week 10 row + Summary now read "6 MVP-active triggers (click + hover/scroll/time/exit_intent/form_input) + 2 v1.1-deferred (tab/accordion)" instead of "8 triggers".
+- F2 (LOW) — §1 sequencing: stale "T5B-008 ← T101 (HeuristicSchema)" dep replaced with "T5B-008 ← Phase 0b heuristic-lint test (lint-only-conformance per act-004)".
+- F3 (LOW) — Effort locked to **28.5h ±3** across plan summary header (was 28h±3) + §4 total (already 28.5h±3) + delta note. README + risk register updated in parallel.
 
 ### v0.1 → v0.2 — 2026-05-17 (Pass 1 patch wave per review-notes.md)
 

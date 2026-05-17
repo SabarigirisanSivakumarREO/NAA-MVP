@@ -2,7 +2,7 @@
 title: Phase 5b — Multi-Viewport + Triggers + Cookie — README
 artifact_type: readme
 status: draft
-version: 0.2
+version: 0.3
 created: 2026-04-28
 updated: 2026-05-17
 owner: engineering lead
@@ -44,7 +44,7 @@ owner: engineering lead
 | Status | ⚪ Not started |
 | Depends on | Phase 5 ships + Phase 1b ships + Phase 1c ships; coordination with Phase 4b for AuditRequest schema (T4B-009 lands first) |
 | Blocks | Mobile-priority audits, popup-quality findings, variant-driven CRO findings, cookie-banner-aware audits |
-| Estimated effort | ~28h ±3 (single engineer across 2-3 weeks) |
+| Estimated effort | ~28.5h ±3 (single engineer across 2-3 weeks; 28h base + 0.5h T5B-PRE-001 R20 widening) |
 | Token impact | Per-page bundle count grows from 1 → 2 when multi-viewport ON; per-bundle size unchanged |
 | Cost impact | ~2× browse cost when multi-viewport ON; opt-in only. $0 new LLM cost. Default behavior cost-neutral. |
 | Affected contracts | `AuditRequest` extended; `AnalyzePerception popups[]` behavior fields populated; multi-bundle when multi-viewport; BrowseGraph extended |
@@ -53,6 +53,12 @@ owner: engineering lead
 ---
 
 ## Delta Log
+
+### v0.2 → v0.3 — 2026-05-17 (Pass 2 micro-wave per preflight-correctness-pass2.json)
+
+Applied findings: F3.
+
+- F3 (LOW) — Effort locked to **28.5h ±3** (was ~28h ±3; aligned with plan §4 per-task sum which includes T5B-PRE-001 R20 widening).
 
 ### v0.1 → v0.2 — 2026-05-17 (Pass 1 patch wave per review-notes.md)
 

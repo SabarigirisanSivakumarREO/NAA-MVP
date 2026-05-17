@@ -2,11 +2,11 @@
 title: Phase 5b — Impact Analysis
 artifact_type: impact
 status: draft
-version: 0.2
+version: 0.3
 created: 2026-04-28
 updated: 2026-05-17
 owner: engineering lead
-authors: [Claude (drafter), Claude (master orchestrator Pass 1 patch wave 2026-05-17)]
+authors: [Claude (drafter), Claude (master orchestrator Pass 1 patch wave 2026-05-17), Claude (master orchestrator Pass 2 micro-wave 2026-05-17)]
 reviewers: []
 
 cross_cutting_to:
@@ -69,7 +69,7 @@ governing_rules:
 | AuditRequest | (existing) | Adds `viewports: ("desktop"|"mobile")[]` (default `["desktop"]`) + `cookie_policy: "dismiss"|"preserve"` (default `"dismiss"`) | **No** — both have safe defaults |
 | AnalyzePerception popups[] behavior fields | `isEscapeDismissible: z.null()`, `isClickOutsideDismissible: z.null()`, `triggerType: undefined`, `dark_pattern_flag: undefined` (Phase 1b ships at `packages/agent-core/src/perception/types.ts:484-486`) | **R20 schema migration:** Zod widens from `z.null()` → `z.boolean().nullable()` via T5B-PRE-001 BEFORE Phase 5b T5B-005/006 mutate in place | **No** — widening is non-breaking (null still parses); Phase 5b fills in `true`/`false` after mutation; cross-cutting to Phase 1b per R20 |
 | PerceptionBundle | One bundle per audit page | Multiple bundles per audit page when `viewports.length > 1` | **No** — single-viewport audits unchanged; multi-viewport is opt-in |
-| BrowseGraph | Click trigger only | Eight triggers (click + hover + scroll + time + exit_intent + form_input + tab + accordion) | **No** — additive; existing click-only flow unchanged |
+| BrowseGraph | Click trigger only | 6 MVP-active triggers (click from Phase 5 + hover/scroll/time/exit_intent/form_input) + 2 v1.1-deferred (tab/accordion) | **No** — additive; existing click-only flow unchanged |
 | HeuristicLoader manifest | (existing heuristics) | Adds 5 multi-viewport heuristics | **No** — additive |
 
 ---
@@ -212,6 +212,12 @@ Per R20:
 ---
 
 ## Delta Log
+
+### v0.2 → v0.3 — 2026-05-17 (Pass 2 micro-wave per preflight-correctness-pass2.json)
+
+Applied findings: F1.
+
+- F1 (MED) — §1 Contracts BrowseGraph row trigger wording aligned: "Eight triggers (click + hover + scroll + time + exit_intent + form_input + tab + accordion)" → "6 MVP-active triggers (click from Phase 5 + hover/scroll/time/exit_intent/form_input) + 2 v1.1-deferred (tab/accordion)".
 
 ### v0.1 → v0.2 — 2026-05-17 (Pass 1 patch wave per review-notes.md)
 
