@@ -2,15 +2,15 @@
 title: Phase 5b — Multi-Viewport + Triggers + Cookie — README
 artifact_type: readme
 status: draft
-version: 0.1
+version: 0.3
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-05-17
 owner: engineering lead
 ---
 
 # Phase 5b — Multi-Viewport + Trigger Taxonomy + Cookie Policy
 
-> **Summary (~150 tokens — agent reads this first):** Three opt-in browse-mode extensions on top of Phase 5: (a) Multi-viewport — `AuditRequest.viewports: ["desktop","mobile"]` runs perception per viewport sequentially and produces a `ViewportDiffFinding` for fold/CTA/sticky differences. (b) Popup behavior — runtime probe + dismissibility tester + dark-pattern detector populates the popups[] behavior fields that Phase 1b emitted as null. (c) Trigger taxonomy — five new triggers (hover, scroll-position, time-delay, exit-intent, form-input) join click to form an 8-trigger set with prioritized candidate discovery. (d) Cookie policy — detect (OneTrust/Cookiebot/TrustArc + generic) + dismiss/preserve per `AuditRequest.cookie_policy`. 19 tasks (T5B-001..T5B-019). Cost: ~2× browse cost when multi-viewport ON; opt-in only — default desktop-only keeps cost flat. Zero new LLM calls. R26 enforces no destructive triggers (cc-*/password skipped), no cross-origin trigger, no infinite loops, per-trigger budget ≤10.
+> **Summary (~150 tokens — agent reads this first):** Three opt-in browse-mode extensions on top of Phase 5: (a) Multi-viewport — `AuditRequest.viewports: ["desktop","mobile"]` runs perception per viewport sequentially and produces a `ViewportDiffFinding` for fold/CTA/sticky differences. (b) Popup behavior — runtime probe + dismissibility tester + dark-pattern detector populates the popups[] behavior fields that Phase 1b emitted as null. (c) Trigger taxonomy — five new triggers (hover, scroll-position, time-delay, exit-intent, form-input) join click to form 6 MVP-active triggers + 2 v1.1-deferred (tab/accordion) with prioritized candidate discovery. (d) Cookie policy — detect (OneTrust/Cookiebot/TrustArc + generic) + dismiss/preserve per `AuditRequest.cookie_policy`. 19 tasks (T5B-001..T5B-019). Cost: ~2× browse cost when multi-viewport ON; opt-in only — default desktop-only keeps cost flat. Zero new LLM calls. R26 enforces no destructive triggers (cc-*/password skipped), no cross-origin trigger, no infinite loops, per-trigger budget ≤10.
 
 ---
 
@@ -44,8 +44,28 @@ owner: engineering lead
 | Status | ⚪ Not started |
 | Depends on | Phase 5 ships + Phase 1b ships + Phase 1c ships; coordination with Phase 4b for AuditRequest schema (T4B-009 lands first) |
 | Blocks | Mobile-priority audits, popup-quality findings, variant-driven CRO findings, cookie-banner-aware audits |
-| Estimated effort | ~28h ±3 (single engineer across 2-3 weeks) |
+| Estimated effort | ~28.5h ±3 (single engineer across 2-3 weeks; 28h base + 0.5h T5B-PRE-001 R20 widening) |
 | Token impact | Per-page bundle count grows from 1 → 2 when multi-viewport ON; per-bundle size unchanged |
 | Cost impact | ~2× browse cost when multi-viewport ON; opt-in only. $0 new LLM cost. Default behavior cost-neutral. |
 | Affected contracts | `AuditRequest` extended; `AnalyzePerception popups[]` behavior fields populated; multi-bundle when multi-viewport; BrowseGraph extended |
 | Constitution rule enforced | R26 (State Exploration MUST NOT) — per-trigger budget, cross-origin refusal, cc-*/password skip, no infinite loops, no navigation |
+
+---
+
+## Delta Log
+
+### v0.2 → v0.3 — 2026-05-17 (Pass 2 micro-wave per preflight-correctness-pass2.json)
+
+Applied findings: F3.
+
+- F3 (LOW) — Effort locked to **28.5h ±3** (was ~28h ±3; aligned with plan §4 per-task sum which includes T5B-PRE-001 R20 widening).
+
+### v0.1 → v0.2 — 2026-05-17 (Pass 1 patch wave per review-notes.md)
+
+Applied actions: act-013, act-014.
+
+- act-013 — Estimated effort confirmed at **~28h ±3** (aligned with plan.md §4 unified total; was already consistent in README).
+- act-014 — frontmatter `updated: 2026-05-17`, version `0.1 → 0.2`, delta block appended (R18).
+
+> No other acts touch this README — README is a navigation index, not a contract surface. Substantive patches landed in spec.md / plan.md / tasks.md / impact.md.
+

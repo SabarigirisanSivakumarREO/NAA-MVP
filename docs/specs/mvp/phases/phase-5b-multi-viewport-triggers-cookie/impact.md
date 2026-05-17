@@ -1,13 +1,18 @@
 ---
 title: Phase 5b — Impact Analysis
 artifact_type: impact
-status: draft
-version: 0.1
+status: implemented
+version: 0.4
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-05-17
 owner: engineering lead
-authors: [Claude (drafter)]
+authors: [Claude (drafter), Claude (master orchestrator Pass 1 patch wave 2026-05-17), Claude (master orchestrator Pass 2 micro-wave 2026-05-17)]
 reviewers: []
+
+cross_cutting_to:
+  - phase-1b-perception-extensions (popups[] Zod widening at perception/types.ts:484-486 — R20 schema migration)
+  - phase-1c-perception-bundle (settle predicate consumed by T5B-006 state-restoration equality check)
+  - phase-4b-context-capture (AuditRequest extension at src/types/audit-request.ts canonical path; T5B-001 + T5B-018 land AFTER T4B-009)
 
 supersedes: null
 supersededBy: null
@@ -36,7 +41,12 @@ affected_contracts:
 delta:
   new:
     - Phase 5b impact analysis — required by R20 (multiple shared contracts modified)
-  changed: []
+  changed:
+    - v0.1 → v0.2 (Pass 1 patch wave 2026-05-17 — file path corrections, popups[] Zod widening row, cross-cutting markers to Phase 1b/1c/4b, SnapshotBuilder claim softened, storage ceiling note added per acts 002/006/010/014/016)
+    - §2 Producers — file paths corrected to `src/browser-runtime/` and `src/types/audit-request.ts`; heuristics path → `heuristics-repo/multi-viewport/*.json` per-file
+    - §1 Contracts — popups[] row clarified: Zod widens from `z.null()` to `z.boolean().nullable()` BEFORE in-place mutation (R20 schema migration)
+    - §3 Consumers — Reproducibility row softened: extension contingent on Phase 0 SnapshotBuilder being shipped (verify — Phase 0 rollup does NOT cite SnapshotBuilder; assume deferred to Phase 9)
+    - §6 Storage — ceiling assertion noted (now enforced in T5B-009 conformance per act-010)
   impacted: []
   unchanged: []
 
@@ -57,9 +67,9 @@ governing_rules:
 | Contract | Before | After | Breaking? |
 |---|---|---|---|
 | AuditRequest | (existing) | Adds `viewports: ("desktop"|"mobile")[]` (default `["desktop"]`) + `cookie_policy: "dismiss"|"preserve"` (default `"dismiss"`) | **No** — both have safe defaults |
-| AnalyzePerception popups[] behavior fields | `isEscapeDismissible: null`, `isClickOutsideDismissible: null`, `triggerType: undefined`, `dark_pattern_flag: undefined` | Populated in place by Phase 5b | **No** — Phase 1b emitted these as `null`/optional; Phase 5b fills them |
+| AnalyzePerception popups[] behavior fields | `isEscapeDismissible: z.null()`, `isClickOutsideDismissible: z.null()`, `triggerType: undefined`, `dark_pattern_flag: undefined` (Phase 1b ships at `packages/agent-core/src/perception/types.ts:484-486`) | **R20 schema migration:** Zod widens from `z.null()` → `z.boolean().nullable()` via T5B-PRE-001 BEFORE Phase 5b T5B-005/006 mutate in place | **No** — widening is non-breaking (null still parses); Phase 5b fills in `true`/`false` after mutation; cross-cutting to Phase 1b per R20 |
 | PerceptionBundle | One bundle per audit page | Multiple bundles per audit page when `viewports.length > 1` | **No** — single-viewport audits unchanged; multi-viewport is opt-in |
-| BrowseGraph | Click trigger only | Eight triggers (click + hover + scroll + time + exit_intent + form_input + tab + accordion) | **No** — additive; existing click-only flow unchanged |
+| BrowseGraph | Click trigger only | 6 MVP-active triggers (click from Phase 5 + hover/scroll/time/exit_intent/form_input) + 2 v1.1-deferred (tab/accordion) | **No** — additive; existing click-only flow unchanged |
 | HeuristicLoader manifest | (existing heuristics) | Adds 5 multi-viewport heuristics | **No** — additive |
 
 ---
@@ -68,14 +78,15 @@ governing_rules:
 
 | Producer | File | Change required | Owner |
 |---|---|---|---|
-| AuditRequest schema | `packages/agent-core/src/gateway/AuditRequest.ts` | Extend Zod with viewports + cookie_policy | Phase 5b T5B-001 + T5B-018 |
+| AuditRequest schema | `packages/agent-core/src/types/audit-request.ts` ~~`src/gateway/AuditRequest.ts`~~ (Superseded by: act-002 — Phase 4b T4B-009 canonical path) | Extend Zod with viewports + cookie_policy (snake_case per Phase 4b convention) | Phase 5b T5B-001 + T5B-018 |
+| popups[] Zod widening (R20 cross-phase) | `packages/agent-core/src/perception/types.ts:484-486` | WIDEN `z.null()` → `z.boolean().nullable()` (non-breaking; null still accepted) | Phase 5b T5B-PRE-001 (lands FIRST) |
 | ViewportConfigService | `packages/agent-core/src/orchestration/ViewportConfigService.ts` | NEW | Phase 5b T5B-002 |
 | MultiViewportOrchestrator | `packages/agent-core/src/orchestration/MultiViewportOrchestrator.ts` | NEW | Phase 5b T5B-003 |
 | ViewportDiffEngine + DarkPatternDetector | `packages/agent-core/src/analysis/{ViewportDiffEngine,DarkPatternDetector}.ts` | NEW | Phase 5b T5B-004, T5B-007 |
-| Popup behavior probes | `packages/agent-core/src/browser/{PopupBehaviorProbe,PopupDismissibilityTester}.ts` | NEW (mutate Phase 1b output in place) | Phase 5b T5B-005, T5B-006 |
-| Trigger taxonomy | `packages/agent-core/src/browser/triggers/{HoverTrigger,ScrollPositionTrigger,TimeDelayTrigger,ExitIntentTrigger,FormInputTrigger,TriggerCandidateDiscovery}.ts` | NEW | Phase 5b T5B-010..T5B-015 |
-| Cookie banner | `packages/agent-core/src/browser/{CookieBannerDetector,CookieBannerPolicy}.ts` | NEW | Phase 5b T5B-016..T5B-017 |
-| Multi-viewport heuristics | `heuristics-repo/multi-viewport.json` | NEW (5 heuristics) | Phase 5b T5B-008 (or Phase 0b heuristic-authoring) |
+| Popup behavior probes | `packages/agent-core/src/browser-runtime/{PopupBehaviorProbe,PopupDismissibilityTester}.ts` ~~`src/browser/`~~ (Superseded by: act-001) | NEW (mutate Phase 1b output in place) | Phase 5b T5B-005, T5B-006 |
+| Trigger taxonomy | `packages/agent-core/src/browser-runtime/triggers/{HoverTrigger,ScrollPositionTrigger,TimeDelayTrigger,ExitIntentTrigger,FormInputTrigger,TriggerCandidateDiscovery}.ts` ~~`src/browser/`~~ (Superseded by: act-001) | NEW | Phase 5b T5B-010..T5B-015 |
+| Cookie banner | `packages/agent-core/src/browser-runtime/{CookieBannerDetector,CookieBannerPolicy}.ts` ~~`src/browser/`~~ (Superseded by: act-001) | NEW | Phase 5b T5B-016..T5B-017 |
+| Multi-viewport heuristics | `heuristics-repo/multi-viewport/MULTIVIEW-<scope>-<NNN>.json` (5 per-heuristic files) ~~`heuristics-repo/multi-viewport.json`~~ (Superseded by: act-003 — Phase 0b convention) | NEW (5 heuristics; lint-only via Phase 0b `heuristic-lint.test.ts` per act-004 USER DECISION b) | Phase 5b T5B-008 |
 | Phase 5b integration tests | `packages/agent-core/tests/integration/{multi-viewport,phase5b-full}.test.ts` | NEW | Phase 5b T5B-009, T5B-019 |
 
 ---
@@ -89,7 +100,7 @@ governing_rules:
 | Phase 7 EvaluateNode | `packages/agent-core/src/analysis/nodes/EvaluateNode.ts` | Reads heuristic set | **No** — heuristic library larger; loadForContext (T4B-013) handles filtering | None |
 | Phase 7 grounding rules GR-001..GR-008 | `packages/agent-core/src/analysis/grounding/*` | Reads AnalyzePerception | **No** — additive popup behavior fields don't break existing grounding paths | None |
 | Phase 8 Orchestrator + cross-page | `packages/agent-core/src/orchestration/*` | Reads AuditState + PerceptionBundle | **Maybe** — multi-viewport bundles cluster differently; cross-page synthesis needs to handle desktop+mobile pairs | Phase 8 spec acknowledges multi-viewport coordinate; surfaced in Phase 8 integration test |
-| Reproducibility snapshot | `packages/agent-core/src/reproducibility/*` | Snapshots PerceptionBundle | **Maybe** — multi-viewport audit snapshots two bundles; storage doubles for multi-viewport | Phase 0 reproducibility extension noted |
+| Reproducibility snapshot | `packages/agent-core/src/reproducibility/*` | Snapshots PerceptionBundle | **Contingent** — Phase 0 rollup does NOT cite a shipped SnapshotBuilder (verified 2026-05-17 against `phase-0-current.md`); reproducibility module likely lands Phase 9 polish. Extension claim softened. | If Phase 9 ships SnapshotBuilder, multi-viewport requires `reproducibility_snapshot.viewports` field; otherwise tracked in `audit_events` log only |
 | Delivery layer | `packages/agent-core/src/delivery/*`, `apps/dashboard/*` | Surfaces findings | **Maybe** — `ViewportDiffFinding` is a new finding type; dashboard may need rendering | Phase 9 polish (delivery) handles |
 | Phase 1b popups[] consumers | (any heuristic referencing popup behavior fields) | Reads `popups[].isEscapeDismissible` etc. | **No** — Phase 1b emitted these as `null`; Phase 5b populates with `boolean`; consumers gracefully read both shapes | None |
 | Audit cost tracking | `audit_events` table | Reads cost fields | **No** — multi-viewport audits log proportionally larger cost; no schema change | None |
@@ -135,7 +146,7 @@ R26 enforcement is wired into TriggerCandidateDiscovery — no heuristic-side en
 
 ## 6. Storage impact
 
-Multi-viewport doubles `reproducibility_snapshots` perception storage when active (one snapshot per viewport per page). At 100-audits/day ceiling × ~6.5K-per-bundle × 2 viewports = ~1.3GB/day if every audit goes multi-viewport — within Phase 0 storage budget.
+Multi-viewport doubles `reproducibility_snapshots` perception storage when active (one snapshot per viewport per page). At 100-audits/day ceiling × ~6.5K-per-bundle × 2 viewports = ~1.3GB/day if every audit goes multi-viewport — within Phase 0 storage budget. **Storage ceiling assertion enforced in T5B-009 conformance** (per act-010): per-snapshot bytes × 2 viewports ≤ Phase 0 reproducibility budget (~13KB/page-per-audit cap).
 
 `audit_events` log entries grow proportionally. Append-only — no migration.
 
@@ -194,6 +205,35 @@ Per R20:
 - [ ] Phase 7 owner agrees to multi-bundle iteration semantics
 - [ ] Phase 8 owner agrees to multi-viewport cross-page synthesis (desktop+mobile pairs)
 - [ ] Phase 9 (delivery) tracks ViewportDiffFinding rendering as polish task
-- [ ] Multi-viewport heuristic authoring (T5B-008 or Phase 0b) scheduled
-- [ ] Cookie banner library fixture set (OneTrust + Cookiebot + TrustArc + 2 generic) authored
-- [ ] State restoration test scaffolding (T5B-006) co-authored with Phase 5 owner
+- [ ] Multi-viewport heuristic authoring (T5B-008 — 5 per-heuristic JSON files; Phase 0b lint-only conformance per act-004 USER DECISION b) scheduled
+- [ ] Cookie banner library fixture set — **8 fixtures** (OneTrust + Cookiebot + TrustArc + Quantcast Choice + Didomi + Iubenda + Sourcepoint + 1 generic) authored per act-018
+- [ ] State restoration test scaffolding (T5B-006) co-authored with Phase 5 owner; content-hash equality formula locked (act-012)
+
+---
+
+## Delta Log
+
+### v0.3 → v0.4 — 2026-05-17 (Stage 4 exit — status bump approved → implemented per Gate 2 APPROVE verdict)
+
+- R17.4 lifecycle: `status: approved` → `status: implemented`. Cross-cutting impacts to Phase 1b (popups[] Zod widening at perception/types.ts:484-486) + Phase 1c (settle predicate consumed by T5B-006) + Phase 4b (AuditRequest extension at src/types/audit-request.ts) confirmed landed per Gate 2 verify-verdict.
+
+### v0.2 → v0.3 — 2026-05-17 (Pass 2 micro-wave per preflight-correctness-pass2.json)
+
+Applied findings: F1.
+
+- F1 (MED) — §1 Contracts BrowseGraph row trigger wording aligned: "Eight triggers (click + hover + scroll + time + exit_intent + form_input + tab + accordion)" → "6 MVP-active triggers (click from Phase 5 + hover/scroll/time/exit_intent/form_input) + 2 v1.1-deferred (tab/accordion)".
+
+### v0.1 → v0.2 — 2026-05-17 (Pass 1 patch wave per review-notes.md)
+
+Applied actions: act-001, act-002, act-003, act-004, act-006, act-010, act-014, act-016, act-018.
+
+- act-001 — §2 Producers file paths: `src/browser/` → `src/browser-runtime/` across popup probes, triggers, cookie modules.
+- act-002 — §2 AuditRequest schema producer path: `src/gateway/AuditRequest.ts` → `src/types/audit-request.ts` (Phase 4b T4B-009 canonical).
+- act-003 — §2 heuristics file row: monolithic `multi-viewport.json` → 5 per-heuristic files at `heuristics-repo/multi-viewport/MULTIVIEW-<scope>-<NNN>.json`.
+- act-004 — §2 heuristics row: lint-only-conformance via Phase 0b `heuristic-lint.test.ts` (Zod-schema validation gated Phase 6); Phase 5b ships 19 tasks unchanged.
+- act-006 — §1 Contracts row + frontmatter `cross_cutting_to`: marks Phase 1b (popups[] Zod widening at perception/types.ts:484-486) + Phase 1c (settle predicate) + Phase 4b (AuditRequest path) as cross-cutting consumers per R20.
+- act-010 — §6 Storage: ceiling assertion enforced in T5B-009 conformance (per-snapshot bytes × 2 viewports ≤ Phase 0 budget).
+- act-014 — frontmatter `updated: 2026-05-17`, version `0.1 → 0.2`, delta block appended (R18).
+- act-016 — §3 Reproducibility row softened: Phase 0 SnapshotBuilder NOT verified shipped (rollup search 2026-05-17 returned no matches); extension contingent on Phase 9 reproducibility module landing.
+- act-018 — §10 sign-off fixture set widened to 8 (Quantcast Choice / Didomi / Iubenda / Sourcepoint added to OneTrust / Cookiebot / TrustArc).
+

@@ -480,10 +480,15 @@ export const PopupSchema = z
     closeButtonAccessibleName: z.string().nullable(),
     viewportCoveragePercent: z.number(),
     blocksPrimaryContent: z.boolean(),
-    /** Phase 5b reserved — Phase 1b emits literal null (R-04). */
-    isEscapeDismissible: z.null(),
-    /** Phase 5b reserved — Phase 1b emits literal null (R-04). */
-    isClickOutsideDismissible: z.null(),
+    /**
+     * Phase 5b T5B-PRE-001 — widened from `z.null()` to
+     * `z.boolean().nullable()` (R20 cross-phase). Phase 1b PopupPresenceDetector
+     * continues emitting `null`; Phase 5b T5B-006 PopupDismissibilityTester
+     * mutates to boolean post-probe. NON-BREAKING.
+     */
+    isEscapeDismissible: z.boolean().nullable(),
+    /** Phase 5b T5B-PRE-001 — see isEscapeDismissible (R20 cross-phase). */
+    isClickOutsideDismissible: z.boolean().nullable(),
   })
   .strict();
 export type Popup = z.infer<typeof PopupSchema>;

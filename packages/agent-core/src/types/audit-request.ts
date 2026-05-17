@@ -218,6 +218,47 @@ export type AuditRequestIntake = z.infer<typeof AuditRequestIntakeSchema>;
 // ---------------------------------------------------------------------------
 
 /**
+ * Phase 5b T5B-001 — viewports field (REQ-GATEWAY-AUDITREQ-VIEWPORTS-001).
+ * MVP locks 2 preset device classes (desktop 1440×900, mobile iPhone 11
+ * 375×812 per plan §2.2). Custom widths deferred v1.1. snake_case field
+ * key per Phase 4b T4B-009 convention.
+ */
+export const ViewportNameEnum = z.enum(['desktop', 'mobile']);
+export type ViewportName = z.infer<typeof ViewportNameEnum>;
+
+export const ViewportsField = z
+  .array(ViewportNameEnum)
+  .min(1)
+  .default(['desktop']);
+
+/**
+ * Phase 5b T5B-018 — cookie_policy field (REQ-GATEWAY-AUDITREQ-COOKIE-001).
+ * `dismiss` (auto-click Accept only in MVP per act-015) or `preserve` (keep
+ * banner for analysis). `block` REJECTED — breaks consent flows. Default
+ * `dismiss`. snake_case key per Phase 4b T4B-009 convention (act-008).
+ */
+export const CookiePolicyEnum = z.enum(['dismiss', 'preserve']);
+export type CookiePolicy = z.infer<typeof CookiePolicyEnum>;
+
+/**
+ * `cookie_policy` accepts the 2 MVP values + emits a descriptive Zod error
+ * mentioning `block` so consumers can debug the rejected branch.
+ */
+export const CookiePolicyField = z
+  .union([
+    CookiePolicyEnum,
+    z.literal('block').superRefine((_, ctx) => {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          'REQ-GATEWAY-AUDITREQ-COOKIE-001: cookie_policy="block" is not ' +
+          'supported in MVP — breaks consent flows. Use "dismiss" or "preserve".',
+      });
+    }),
+  ])
+  .default('dismiss');
+
+/**
  * Phase 4b deferred-archetype warning codes — emitted by Pass 2 inference
  * when the inferred archetype falls outside the 6 MVP-supported values
  * (per spec.md §Out-of-Scope act-007). These flags are advisory in v1.0
@@ -266,6 +307,10 @@ export const AuditRequestSchema = z
     pre_audit_context: ContextProfileSchema.partial().optional(),
     unsupported_business_archetype: UnsupportedBusinessArchetypeFlag.optional(),
     unsupported_regulated_vertical: UnsupportedRegulatedVerticalFlag.optional(),
+    // REQ-GATEWAY-AUDITREQ-VIEWPORTS-001 — Phase 5b T5B-001.
+    viewports: ViewportsField,
+    // REQ-GATEWAY-AUDITREQ-COOKIE-001 — Phase 5b T5B-018.
+    cookie_policy: CookiePolicyField,
   })
   .strict()
   .superRefine((req, ctx) => {

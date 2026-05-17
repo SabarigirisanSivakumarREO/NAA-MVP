@@ -1,12 +1,12 @@
 ---
 title: Phase 5b — Multi-Viewport + Trigger Taxonomy + Cookie Policy
 artifact_type: spec
-status: draft
-version: 0.1
+status: implemented
+version: 0.4
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-05-17
 owner: engineering lead
-authors: [Claude (drafter)]
+authors: [Claude (drafter), Claude (master orchestrator Pass 1 patch wave 2026-05-17), Claude (master orchestrator Pass 2 micro-wave 2026-05-17)]
 reviewers: []
 
 supersedes: null
@@ -22,31 +22,43 @@ derived_from:
   - docs/specs/final-architecture/20-state-exploration.md (trigger taxonomy)
   - docs/specs/final-architecture/06-browse-mode.md (BrowseGraph integration)
   - docs/specs/mvp/phases/phase-5-browse-mvp/spec.md (predecessor — single-viewport baseline)
+  - docs/specs/mvp/phases/phase-1b-perception-extensions/phase-1b-current.md (popups[] presence layer)
+  - docs/specs/mvp/phases/phase-1c-perception-bundle/phase-1c-current.md (PerceptionBundle envelope + settle predicate)
   - docs/Improvement/perception_layer_spec.md §3.1 trigger taxonomy + §4.1 multi-viewport + §4.4 cookie banners
 
 req_ids:
   - REQ-ANALYZE-PERCEPTION-V24-001 (popup behavior + multi-viewport extensions)
   - REQ-GATEWAY-AUDITREQ-VIEWPORTS-001
   - REQ-GATEWAY-AUDITREQ-COOKIE-001
-  - REQ-STATE-EXPL-TRIGGER-001..008 (eight trigger types)
+  - REQ-STATE-EXPL-TRIGGER-002..006 (five NEW triggers: hover/scroll/time/exit_intent/form_input; click trigger TRIGGER-001 ships Phase 5; tab/accordion TRIGGER-007/008 deferred v1.1)
   - REQ-SAFETY-005 (robots/ToS — cookie banner consent)
 
 impact_analysis: docs/specs/mvp/phases/phase-5b-multi-viewport-triggers-cookie/impact.md
 breaking: false
 affected_contracts:
-  - AuditRequest (extended with viewports + cookie_policy)
-  - AnalyzePerception popups[] (behavior fields populated, formerly null)
+  - AuditRequest (extended with viewports + cookie_policy at `src/types/audit-request.ts` per Phase 4b T4B-009 canonical authority; migrates to `src/gateway/AuditRequest.ts` when Phase 6 lands)
+  - AnalyzePerception popups[] (behavior fields Zod widened from `z.null()` to `z.boolean().nullable()`; Phase 1b shipped null-only — schema migration required)
   - PerceptionBundle (per-viewport bundles when multi-viewport)
-  - HeuristicLoader manifest (multi-viewport heuristics added)
+  - HeuristicLoader manifest (multi-viewport heuristics added via Phase 0b lint-only convention until Phase 6 ships HeuristicSchema Zod loader)
 
 delta:
   new:
     - Phase 5b spec — multi-viewport + popup behavior + 5 new trigger types + cookie policy
     - AC-01 through AC-19 stable IDs for T5B-001..T5B-019 acceptance
     - R-01 through R-19 functional requirements
-  changed: []
+  changed:
+    - v0.1 → v0.2 (Pass 1 patch wave 2026-05-17 — 12 spec patches per .phase-state/5b/preflight-verdict.yaml acts 005/007/009/011/014/015/018/019/020/021/022 + req_ids alignment)
+    - req_ids tightened to REQ-STATE-EXPL-TRIGGER-002..006 (was 001..008; over-claimed click+tab+accordion)
+    - affected_contracts annotated with Phase 4b canonical-path + Phase 1b Zod-widening + Phase 0b lint-only convention
+    - NF-01 split → NF-01a (multi-viewport ≤2×) + NF-01b (triggers ≤1.5×/page) + NF-01c (cookie ≤1.05×)
+    - R-14 cookie library list expanded (Quantcast/Didomi/Iubenda added; Generic threshold relaxed cookie|consent|privacy|preferences + >5% fold)
+    - R-06 dark_pattern_flag taxonomy expanded with `weighted_default` (pre-checked consent input)
+    - R-12 FormInputTrigger field exclusions expanded (file/PII/captcha added)
+    - R-15 cookie dismiss locked to accept-only MVP (dropped "or reject")
+    - R-17 trigger budget locked to ≤10 per (trigger_type, state, page)
+    - Out of Scope § expanded — popup trigger types beyond {load,time,scroll,exit_intent} deferred; capture-snapshot-then-dismiss deferred; textual dark patterns (confirmshaming/friend-spam/false_urgency) deferred
   impacted:
-    - AnalyzePerception popups[] behavior fields (`isEscapeDismissible`, `isClickOutsideDismissible`, timing, exit_intent, scroll_trigger, dark_pattern) — populated by Phase 5b (Phase 1b only emitted presence)
+    - AnalyzePerception popups[] behavior fields — Phase 1b emitted as literal `z.null()` (verified at `packages/agent-core/src/perception/types.ts:484-486`); Phase 5b widens Zod to `z.boolean().nullable()` BEFORE mutating in place (R20 cross-phase schema migration)
     - tasks-v2.md (T5B-001..T5B-019 already canonical)
   unchanged:
     - Phase 5 single-viewport browse-mode behavior (Phase 5b is opt-in, default desktop-only)
@@ -197,17 +209,17 @@ A pricing-page comparison table has `<th>` cells with `aria-haspopup` tooltips t
 | AC-06 | PopupDismissibilityTester tests escape key + click-outside on detected popups; updates `popups[].isEscapeDismissible` and `isClickOutsideDismissible` from null → true/false; restores page state after test. | `packages/agent-core/tests/conformance/popup-dismissibility-tester.test.ts` | §07.7.9.2 |
 | AC-07 | DarkPatternDetector detects deceptive close UI / forced-action popup; flags with type tag (deceptive_close / forced_action / no_close_button / hidden_dismiss); catches ≥1 known dark pattern in fixture set. | `packages/agent-core/tests/conformance/dark-pattern-detector.test.ts` | §07.7.9.2 |
 | AC-08 | Multi-viewport heuristics pack loads + Zod-validates; 5 new heuristics for mobile-only / desktop-only issues; tier assigned per heuristic. | `packages/agent-core/tests/conformance/multi-viewport-heuristics-pack.test.ts` | §09 + §07.7.9.2 |
-| AC-09 | Phase 5b multi-viewport integration test: 1 audit with `viewports: ["desktop","mobile"]`; findings include mobile-only + desktop-only + dark-pattern flags; total cost ≤2× single-viewport baseline; popup behavior fields populated. | `packages/agent-core/tests/integration/multi-viewport.test.ts` | All multi-viewport REQ-IDs |
+| AC-09 | Phase 5b multi-viewport integration test: 1 audit with `viewports: ["desktop","mobile"]`; findings include mobile-only + desktop-only + dark-pattern flags; total cost ≤2× single-viewport baseline; popup behavior fields populated for all detected popups in fixture set. | `packages/agent-core/tests/integration/multi-viewport.test.ts` | All multi-viewport REQ-IDs |
 | AC-10 | HoverTrigger detects `:hover` rules + `aria-haspopup` on test fixture; fires mouseenter + dwell; reveals tooltips and dropdown previews; settles within 1s. | `packages/agent-core/tests/conformance/hover-trigger.test.ts` | REQ-STATE-EXPL-TRIGGER-002 |
 | AC-11 | ScrollPositionTrigger detects IntersectionObserver patterns + sticky elements; scrolls to Y-coordinates; captures sticky CTA changes + lazy-loaded content reveal. | `packages/agent-core/tests/conformance/scroll-position-trigger.test.ts` | REQ-STATE-EXPL-TRIGGER-003 |
 | AC-12 | TimeDelayTrigger runs page for N seconds (default 5s, max 10s); diffs DOM; treats new nodes as time-triggered; captures time-delayed banners and announcements. | `packages/agent-core/tests/conformance/time-delay-trigger.test.ts` | REQ-STATE-EXPL-TRIGGER-004 |
 | AC-13 | ExitIntentTrigger searches scripts for mouseleave listeners; simulates mouse to (x, -1); triggers exit-intent popups; populates `popups[].triggerType: "exit_intent"`. No-ops silently on mobile viewport. | `packages/agent-core/tests/conformance/exit-intent-trigger.test.ts` | REQ-STATE-EXPL-TRIGGER-005 |
 | AC-14 | FormInputTrigger types/selects on `<select>` + variant pickers + quantity + address fields; captures variant-driven price/availability changes; skips `autocomplete="cc-*"` and password fields (R26). | `packages/agent-core/tests/conformance/form-input-trigger.test.ts` | REQ-STATE-EXPL-TRIGGER-006 + R26 |
 | AC-15 | TriggerCandidateDiscovery pulls all interactive_nodes from ax_tree + adds hover/scroll/time/exit candidates; returns prioritized candidate list ordered: variant > tabs > accordions > modals > cart > sticky > hover > carousels. | `packages/agent-core/tests/conformance/trigger-candidate-discovery.test.ts` | §20 + REQ-STATE-EXPL-* |
-| AC-16 | CookieBannerDetector detects OneTrust + Cookiebot + TrustArc by selector signature; generic detection: fixed-position element covering >20% of fold with "cookie" text; returns banner descriptor with selector + library + dismissibility metadata. | `packages/agent-core/tests/conformance/cookie-banner-detector.test.ts` | improvement spec §4.4 |
+| AC-16 | CookieBannerDetector detects **7 libraries** (OneTrust + Cookiebot + TrustArc + Quantcast Choice + Didomi + Iubenda + Sourcepoint) by selector signature; generic detection (relaxed per act-018): fixed-position element + regex `/(cookie\|consent\|privacy\|preferences)/i` + **>5% fold coverage** ~~>20%~~ (Superseded by: act-018 R-14 update); returns banner descriptor with selector + library + dismissibility metadata. | `packages/agent-core/tests/conformance/cookie-banner-detector.test.ts` | improvement spec §4.4 |
 | AC-17 | CookieBannerPolicy executes `dismiss` (auto-click accept or reject) or `preserve` per AuditRequest.cookie_policy; `block` mode rejected with structured error; default = `dismiss`; emits `COOKIE_BANNER_BLOCKING_FOLD` if banner covers >40% of fold and not dismissed. | `packages/agent-core/tests/conformance/cookie-banner-policy.test.ts` | improvement spec §4.4 + REQ-SAFETY-005 |
 | AC-18 | `AuditRequest.cookie_policy` Zod field accepts `dismiss | preserve`; default `dismiss`; rejects `block` value with descriptive error. | `packages/agent-core/tests/conformance/audit-request-cookie-policy.test.ts` | REQ-GATEWAY-AUDITREQ-COOKIE-001 |
-| AC-19 | Phase 5b full integration test: 1 audit with `viewports:["desktop","mobile"]`, all 8 trigger types active, both cookie policies tested. Findings include mobile-only / desktop-only / dark patterns / hover-revealed microcopy / exit-intent popups / time-delayed banners. Cost ≤2× single-viewport baseline. All warning types emit on appropriate fixtures. | `packages/agent-core/tests/integration/phase5b-full.test.ts` | All Phase 5b REQ-IDs |
+| AC-19 | Phase 5b full integration test: 1 audit with `viewports:["desktop","mobile"]`, all 6 MVP-active triggers (click from Phase 5 + hover/scroll/time/exit_intent/form_input; tab/accordion deferred v1.1) active, both cookie policies tested. Findings include mobile-only / desktop-only / dark patterns / hover-revealed microcopy / exit-intent popups / time-delayed banners. Cost caps per NF-01a/b/c hold independently — NF-01a `multi_viewport_total_usd_per_run ≤ 2 × single_viewport_total_usd_per_run`; NF-01b `trigger_added_usd_per_page ≤ 1.5 × baseline_browse_usd_per_page`; NF-01c `cookie_added_usd_per_page ≤ 1.05 × baseline_browse_usd_per_page`. All warning types emit on appropriate fixtures. | `packages/agent-core/tests/integration/phase5b-full.test.ts` | All Phase 5b REQ-IDs |
 
 ---
 
@@ -220,18 +232,18 @@ A pricing-page comparison table has `<th>` cells with `aria-haspopup` tooltips t
 | R-03 | System MUST compute a `ViewportDiffFinding` comparing desktop vs mobile perception (fold composition, CTA visibility, sticky elements); attach severity per heuristic-defined dimensions. | F-008 | §07.7.9.2 |
 | R-04 | System MUST runtime-probe popups detected by Phase 1b: trigger type (load / time / scroll / exit_intent) + timing in ms; mutate Phase 1b's popups[] in place. | F-004 | §07.7.9.2 |
 | R-05 | System MUST test popup dismissibility (Escape key + click-outside) and update `isEscapeDismissible` + `isClickOutsideDismissible` from null → true/false; restore page state after each test. | F-004 | §07.7.9.2 |
-| R-06 | System MUST flag dark-pattern popups: `deceptive_close`, `forced_action`, `no_close_button`, `hidden_dismiss`; per-popup tag in `popups[i].dark_pattern_flag`. | F-004 | §07.7.9.2 |
+| R-06 | System MUST flag dark-pattern popups with 5 flags: `deceptive_close`, `forced_action`, `no_close_button`, `hidden_dismiss`, `weighted_default` (pre-checked consent `input[type=checkbox][checked]` or `input[type=radio][checked]` inside detected popup/CMP banner — universally present in CMP cookie banners; in-MVP scope since cookie-banner detection is Phase 5b). Per-popup tag in `popups[i].dark_pattern_flag`. Textual dark patterns (confirmshaming / friend-spam / false_urgency) deferred to v1.1 — require text-classification beyond MVP heuristic scope. | F-004 | §07.7.9.2 |
 | R-07 | System MUST author 5 multi-viewport heuristics (e.g., "primary CTA hidden below fold on mobile"); load + Zod-validate via existing schema. | F-006 | §09 + §07.7.9.2 |
 | R-08 | System MUST implement HoverTrigger with `:hover` + `aria-haspopup` detection; mouseenter + dwell; settle within 1s; no-op on mobile viewport. | F-004 | §20 + REQ-STATE-EXPL-TRIGGER-002 |
 | R-09 | System MUST implement ScrollPositionTrigger using IntersectionObserver pattern detection; scroll to Y-coordinates; capture sticky-CTA + lazy-load reveal. | F-004 | §20 + REQ-STATE-EXPL-TRIGGER-003 |
 | R-10 | System MUST implement TimeDelayTrigger (default 5s, max 10s); DOM diff; new nodes treated as time-triggered. | F-004 | §20 + REQ-STATE-EXPL-TRIGGER-004 |
 | R-11 | System MUST implement ExitIntentTrigger (mouse to (x, -1)); search scripts for mouseleave listeners; populates `popups[i].triggerType: "exit_intent"` on triggered popups; no-op on mobile. | F-004 | §20 + REQ-STATE-EXPL-TRIGGER-005 |
-| R-12 | System MUST implement FormInputTrigger for `<select>` / variant / quantity / address fields; capture variant-driven changes; skip `autocomplete="cc-*"` and password fields per R26. | F-004 | §20 + REQ-STATE-EXPL-TRIGGER-006 + R26 |
+| R-12 | System MUST implement FormInputTrigger for `<select>` / variant / quantity / address fields; capture variant-driven changes. **R26-mandatory field exclusions (all 6):** (1) `<input type="password">`, (2) `<input autocomplete="cc-*">` credit-card fields, (3) `<input type="hidden">`, (4) `<input type="file">` file uploads, (5) `<input name>` matching regex `/(ssn\|tax\|pin\|nin\|aadhaar\|passport)/i` PII fields, (6) reCAPTCHA / hCaptcha iframes + any cross-origin iframe (already covered by R-18 cross-origin refusal). | F-004 | §20 + REQ-STATE-EXPL-TRIGGER-006 + R26 |
 | R-13 | System MUST run TriggerCandidateDiscovery to pull all interactive_nodes + add hover/scroll/time/exit candidates; prioritized order: variant > tabs > accordions > modals > cart > sticky > hover > carousels. | F-004 | §20 |
-| R-14 | System MUST detect cookie banners (OneTrust / Cookiebot / TrustArc by selector signature; generic by fixed-position + "cookie" text + >20% fold coverage); return descriptor with selector + library + dismissibility. | F-004 | improvement spec §4.4 |
-| R-15 | System MUST execute cookie policy: `dismiss` (Accept or Reject click) / `preserve` (no action); reject `block` with structured error; default `dismiss`; emit `COOKIE_BANNER_BLOCKING_FOLD` when banner covers >40% of fold and not dismissed. | F-004 | improvement spec §4.4 + REQ-SAFETY-005 |
-| R-16 | System MUST extend `AuditRequest.cookie_policy: "dismiss" | "preserve"` with default `dismiss`; reject `block`. | F-008 | §18 + REQ-GATEWAY-AUDITREQ-COOKIE-001 |
-| R-17 | System MUST cap per-trigger budget at 10 candidates per type per state to enforce R10 + R26. | F-004 | R10, R26 |
+| R-14 | System MUST detect cookie banners across **7 library signatures** (OneTrust / Cookiebot / TrustArc / Quantcast Choice / Didomi / Iubenda / Sourcepoint) AND a Generic detector. Generic match: fixed-position element + text matching regex `/(cookie\|consent\|privacy\|preferences)/i` + **>5% fold coverage** (relaxed from 20% per Didomi mobile-strip pattern). Return descriptor with selector + library + dismissibility. | F-004 | improvement spec §4.4 |
+| R-15 | System MUST execute cookie policy: `dismiss` (auto-click **Accept only** in MVP; reject-flow deferred v1.1) / `preserve` (no action); reject `block` with structured error; default `dismiss`; emit `COOKIE_BANNER_BLOCKING_FOLD` when banner covers >40% of fold and not dismissed. | F-004 | improvement spec §4.4 + REQ-SAFETY-005 |
+| R-16 | System MUST extend `AuditRequest.cookie_policy: "dismiss" | "preserve"` with default `dismiss`; reject `block` with structured error (error code: `INVALID_COOKIE_POLICY`). | F-008 | §18 + REQ-GATEWAY-AUDITREQ-COOKIE-001 |
+| R-17 | System MUST cap per-trigger budget at **≤10 candidates per (trigger_type, state, page)** to enforce R10 + R26. Cap is per-page; multi-page audits accumulate budgets independently. TriggerCandidateDiscovery dedupes by `(element_id, trigger_type)` within the same (state, page). | F-004 | R10, R26 |
 | R-18 | System MUST refuse trigger candidates that navigate cross-origin or auth-walled URLs (per R26). | F-004 | R26 |
 | R-19 | System MUST integrate trigger taxonomy into `BrowseGraph` so triggered states append to `PerceptionBundle.state_graph.nodes[]` with `trigger_path` populated. | F-004 | §06 + §07.7.9.3 |
 
@@ -241,18 +253,20 @@ A pricing-page comparison table has `<th>` cells with `aria-haspopup` tooltips t
 
 | ID | Metric | Target | Cites PRD NF-NNN | Measurement method |
 |----|--------|--------|------------------|--------------------|
-| NF-01 | Multi-viewport audit cost vs single-viewport baseline | ≤2× when `viewports.length === 2` | NF-002 | Integration test cost diff |
+| NF-01a | Multi-viewport audit $USD vs single-viewport baseline (cost unit = $USD logged via `llm_call_log` per `audit_run_id`, summed across both viewport runs) | ≤2× when `viewports.length === 2` | NF-002 | Integration test (T5B-009) `llm_call_log` SUM(cost_usd) diff |
+| NF-01b | Per-page added $USD when 6 MVP-active triggers (click + hover/scroll/time/exit_intent/form_input) active vs baseline browse (per-page $USD = sum of `llm_call_log.cost_usd` rows scoped to single page_url within audit_run) | ≤1.5× baseline browse $USD per page | NF-002 | T5B-015 + T5B-019 per-page cost diff |
+| NF-01c | Per-page added $USD when cookie policy dismiss path active vs baseline | ≤1.05× baseline browse $USD per page | NF-002 | T5B-017 + T5B-019 per-page cost diff |
 | NF-02 | Popup behavior probing wall time per popup | ≤2s | — | Per-popup timing in conformance test |
-| NF-03 | Trigger candidate budget per state | ≤10 per type | — | Static enforcement; conformance assertion |
+| NF-03 | Trigger candidate budget per (type, state, page) | ≤10 candidates | — | Static enforcement; conformance assertion in T5B-015 |
 | NF-04 | TimeDelayTrigger max wait | 10s | — | Conformance assertion |
-| NF-05 | Net new LLM cost when Phase 5b active | $0 | NF-002 | `llm_call_log` row count diff |
-| NF-06 | Cookie banner detection precision on fixture set | ≥95% | — | Conformance test on OneTrust + Cookiebot + TrustArc + 2 generic fixtures |
+| NF-05 | Net new LLM cost when Phase 5b active | $0 | NF-002 | `llm_call_log` row count diff (Phase 5b adds no LLM calls; only browser-time cost) |
+| NF-06 | Cookie banner detection precision on 8-fixture set (OneTrust + Cookiebot + TrustArc + Quantcast Choice + Didomi + Iubenda + Sourcepoint + 1 generic = 8 fixtures) | ≥95% | — | Conformance test (T5B-016) per-library + generic |
 
 ---
 
 ## Key Entities
 
-- **AuditRequest (extended):** Adds `viewports: ("desktop" | "mobile")[]` (default `["desktop"]`) and `cookie_policy: "dismiss" | "preserve"` (default `"dismiss"`).
+- **AuditRequest (extended):** Adds `viewports: ("desktop" | "mobile")[]` (default `["desktop"]`) and `cookie_policy: "dismiss" | "preserve"` (default `"dismiss"`). **Field naming convention LOCKED to snake_case** (`viewports`, `cookie_policy`) per Phase 4b T4B-009 canonical schema at `src/types/audit-request.ts` (verified L55+; existing fields `primary_kpi`, `pre_audit_context` confirm snake_case convention). act-008 closure.
 - **ViewportConfig:** `{ width, height, device_type }` per viewport. Fixed presets in MVP (desktop 1440×900, mobile 375×812 — iPhone 11 baseline).
 - **ViewportDiffFinding:** New finding type comparing per-viewport perceptions; surfaces fold/CTA/sticky differences.
 - **Popup (behavior fields):** Phase 1b emits popups[] with behavior fields null. Phase 5b mutates in place to populate `triggerType`, `timingMs`, `isEscapeDismissible`, `isClickOutsideDismissible`, `dark_pattern_flag`.
@@ -265,8 +279,8 @@ A pricing-page comparison table has `<th>` cells with `aria-haspopup` tooltips t
 
 - **SC-001:** When opt-in (`viewports` includes "mobile"), multi-viewport audit produces 2 PerceptionBundles + 1 ViewportDiffFinding; total cost ≤2× single-viewport baseline.
 - **SC-002:** Popup behavior fields populated for all detected popups in 5-fixture popup set; ≥1 dark pattern detected in the fixture set.
-- **SC-003:** All 5 new triggers + existing click trigger fire correctly on the 8-trigger integration fixture; per-trigger budget ≤10 candidates respected.
-- **SC-004:** Cookie banner detection precision ≥95% on the 5-fixture cookie set (OneTrust + Cookiebot + TrustArc + 2 generic).
+- **SC-003:** All 6 MVP-active triggers (click from Phase 5 + hover/scroll/time/exit_intent/form_input) fire correctly on the integration fixture; tab/accordion deferred to v1.1; per-trigger budget ≤10 candidates respected.
+- **SC-004:** Cookie banner detection precision ≥95% on the 8-fixture cookie set (OneTrust + Cookiebot + TrustArc + Quantcast Choice + Didomi + Iubenda + Sourcepoint + 1 generic).
 - **SC-005:** Default audit (no Phase 5b opts) behaves identically to Phase 5 — no cost regression, no behavior change.
 - **SC-006:** Net new LLM cost = $0 when Phase 5b active.
 - **SC-007:** R26 compliance — no infinite trigger loops, no destructive form submission (cc-*/password skipped), no cross-origin trigger, per-trigger budget enforced.
@@ -292,10 +306,14 @@ A pricing-page comparison table has `<th>` cells with `aria-haspopup` tooltips t
 ## Out of Scope (cite PRD §3.2 explicit non-goals)
 
 - **Tablet / smartwatch / TV viewports** — desktop + mobile only in MVP. Tablet may land in v1.1 if pilot demand emerges.
+- **Multi-mobile-preset (Android baseline)** — MVP locks mobile preset to iPhone 11 (375×812) based on iOS-skewed D2C client base in REO Digital pilot scope. v1.1 adds Pixel 5 (393×851) for Android-majority client audits; T5B-002 + T5B-008 mobile heuristics will accept Android width-range when added.
 - **Parallel viewport execution** — sequential only in MVP (memory-bounded). Parallelism deferred to v1.1.
 - **Custom trigger types** beyond the 8 in `state_exploration_layer_spec`'s taxonomy — extensions are master-track Phase 13.
+- **Popup trigger types beyond {load, time, scroll, exit_intent}** — `focus`, `blur`, `idle`, `form_abandon`, `custom` (developer-fired event) popups detected only if they happen to align with one of the 4 MVP triggers; explicit detection deferred to v1.1.
 - **Form submission as a trigger** — explicitly forbidden by R26 in MVP.
 - **Cookie banner consent reject flow** — `dismiss` always accepts in MVP. v1.1 adds explicit `dismiss-reject` mode.
+- **Capture-snapshot-then-dismiss cookie mode** — requires dual perception per page (pre-consent + post-consent). Deferred to v1.1.
+- **Textual dark patterns** — confirmshaming ("No thanks, I hate savings"), friend-spam (auto-shareable content), false_urgency (in-popup countdown timer) require text-classification beyond MVP heuristic scope; deferred to v1.1 with NLP integration.
 - **Auth-walled triggers** (e.g., "fire trigger after login") — permanent non-goal.
 - **Conversion-rate prediction** — permanent non-goal (R5.3 + GR-007).
 
@@ -321,3 +339,39 @@ After approval (`status: draft → validated → approved`):
 2. Run `/speckit.tasks` (T5B-001..T5B-019 mirrored from `tasks-v2.md`).
 3. Run `/speckit.analyze` for cross-artifact consistency.
 4. Phase 5b implementation begins after Phase 5 + Phase 1b + Phase 1c rollups are approved.
+
+---
+
+## Delta Log
+
+### v0.3 → v0.4 — 2026-05-17 (Stage 4 exit — status bump approved → implemented per Gate 2 APPROVE verdict)
+
+- R17.4 lifecycle: `status: approved` → `status: implemented`. All 20 tasks landed (T5B-PRE-001 + T5B-001..T5B-019); ~104 new tests green; 19/19 ACs passing per `.phase-state/5b/verify-verdict.yaml`. Cost ceiling honored (zero new LLM calls); Phase 5 backward-compat preserved.
+
+### v0.2 → v0.3 — 2026-05-17 (Pass 2 micro-wave per preflight-correctness-pass2.json)
+
+Applied findings: F1, E1, B1, C1.
+
+- F1 (MED) — Trigger wording aligned: SC-003 + AC-19 + NF-01b now read "6 MVP-active triggers (click from Phase 5 + hover/scroll/time/exit_intent/form_input) + 2 v1.1-deferred (tab/accordion)" instead of "8 triggers".
+- E1 (LOW) — SC-004 updated from "5-fixture (OneTrust + Cookiebot + TrustArc + 2 generic)" to "8-fixture (OneTrust + Cookiebot + TrustArc + Quantcast Choice + Didomi + Iubenda + Sourcepoint + 1 generic)" to match AC-16 / impact §10. NF-06 fixture list corrected to include Sourcepoint (was missing the 7th named library) — 7 named + 1 generic = 8.
+- B1 (LOW) — AC-09 tightened: "popup behavior fields populated" → "populated for all detected popups in fixture set".
+- C1 (LOW) — R-16 promotes error code `INVALID_COOKIE_POLICY` from User Story 4 narrative into the requirement text.
+
+### v0.1 → v0.2 — 2026-05-17 (Pass 1 patch wave per review-notes.md)
+
+Applied actions: act-005, act-006, act-007, act-008, act-009, act-011, act-014, act-015, act-018, act-019, act-020, act-021, act-022.
+
+- act-005 — req_ids tightened to `REQ-STATE-EXPL-TRIGGER-002..006` (dropped 001/007/008 over-claim — click ships Phase 5; tab/accordion v1.1).
+- act-006 — popups[] Zod widening flagged in `affected_contracts` as R20 cross-cutting to Phase 1b; impact.md updated as cross-cutting to Phase 1b + 1c.
+- act-007 — NF-01 cost unit locked to `$USD` measured via `llm_call_log.cost_usd` SUM scoped to `audit_run_id`.
+- act-008 — AuditRequest field naming LOCKED to snake_case (`viewports`, `cookie_policy`) per Phase 4b T4B-009 convention; verified at `src/types/audit-request.ts` (Key Entities § updated).
+- act-009 — NF-01 split into NF-01a (multi-viewport ≤2×) + NF-01b (triggers ≤1.5×/page) + NF-01c (cookie ≤1.05×/page); AC-19 cost caps amended.
+- act-011 — R-17 trigger budget locked to ≤10 per (trigger_type, state, page); dedupe by (element_id, trigger_type).
+- act-014 — frontmatter `updated: 2026-05-17`, version `0.1 → 0.2`, delta block appended (R18).
+- act-015 — R-15 cookie dismiss locked to **Accept only** in MVP; reject-flow deferred v1.1; "or reject" dropped.
+- act-018 — R-14 expanded to 7 libraries (Quantcast Choice / Didomi / Iubenda / Sourcepoint added); Generic detection threshold relaxed from >20% to >5% fold + regex `/(cookie|consent|privacy|preferences)/i`; NF-06 fixture set widened to 8; AC-16 superseded to match (~~>20%~~ → >5%).
+- act-019 — Out of Scope § now documents deferral of 5 popup trigger types (focus / blur / idle / form_abandon / custom).
+- act-020 — R-06 dark_pattern_flag taxonomy adds `weighted_default` (pre-checked CMP consent); 3 textual patterns (confirmshaming / friend-spam / false_urgency) deferred to v1.1.
+- act-021 — Out of Scope § documents capture-snapshot-then-dismiss cookie mode deferral.
+- act-022 — R-12 FormInputTrigger exclusions expanded to 6 categories (file / PII regex / captcha added to existing cc-* / password / hidden + cross-origin via R-18).
+
