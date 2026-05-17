@@ -97,7 +97,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **presets:** desktop 1440×900, mobile 375×812 (iPhone 11) — fixed in MVP
 - **conformance test:** `packages/agent-core/tests/conformance/viewport-config-service.test.ts` (AC-02)
 
-### T5B-003 — MultiViewportOrchestrator
+### T5B-003 — MultiViewportOrchestrator ✅
 - **dep:** T5B-002, T091 (BrowseGraph), T117 (DeepPerceiveNode — see Phase 7)
 - **spec:** §07 §7.9.2 multi-viewport
 - **files:** `packages/agent-core/src/orchestration/MultiViewportOrchestrator.ts`
