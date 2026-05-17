@@ -234,7 +234,7 @@ T084 + T091 carry extended kill criteria.
   - **Files:** `packages/agent-core/tests/integration/phase5-amazon.test.ts`
   - **dep:** T091
 
-- [ ] **T094 [US-1] Integration: multi-step workflow** (AC-13)
+- [x] **T094 [US-1] Integration: multi-step workflow** (AC-13)
   - **Brief — Outcome:** 5-action workflow against a stable fixture (Shopify demo or example login form): navigate → click → type → submit → verify. All 5 pass.
   - **Files:** `packages/agent-core/tests/integration/phase5-workflow.test.ts`
   - **dep:** T091
