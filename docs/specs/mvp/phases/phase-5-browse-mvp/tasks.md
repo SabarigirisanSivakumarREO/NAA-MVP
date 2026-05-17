@@ -224,7 +224,7 @@ T084 + T091 carry extended kill criteria.
 
 ### Integration tests (Phase 5 acceptance gate)
 
-- [ ] **T092 [US-1] Integration: example.com + bbc.com** (AC-11)
+- [x] **T092 [US-1] Integration: example.com + bbc.com** (AC-11)
   - **Brief — Outcome:** `tests/integration/phase5-simple.test.ts` runs BrowseGraph on a 2-URL list (example.com + bbc.com) using MockLLMAdapter (action='agent_complete'). Asserts: both pages browsed, no MCP action invocations, audit_runs.completion_reason='success', wall-clock < 60 s.
   - **Files:** `packages/agent-core/tests/integration/phase5-simple.test.ts`
   - **dep:** T091
