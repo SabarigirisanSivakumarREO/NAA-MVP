@@ -249,7 +249,7 @@ T084 + T091 carry extended kill criteria.
   - **Files:** `packages/agent-core/tests/integration/phase5-budget.test.ts`
   - **dep:** T091
 
-- [ ] **T097 [US-1] client_id thread-through (H1+H2 closure)** (AC-16, R-14) — extended kill criteria
+- [x] **T097 [US-1] client_id thread-through (H1+H2 closure)** (AC-16, R-14) — extended kill criteria
   - **Brief — Outcome:** BrowseNode (T084) reads `state.client_id` and passes to `LLMAdapter.complete({client_id, ...})` on every invocation. Closes Phase 4 Stage 2.5 H1 (PLACEHOLDER_UUID) + H2 (#tryWriteRow swallow on outcome='ok'). Conformance test seeds DB with audit_run + client; mocks LLMAdapter; asserts every llm_call_log row has client_id = the seeded UUID, never PLACEHOLDER_UUID.
   - **Per-task kill criteria (extends default):**
     - "any llm_call_log row written with PLACEHOLDER_UUID during Phase 5 integration tests" → R23 STOP. H1 not closed.
