@@ -239,7 +239,7 @@ T084 + T091 carry extended kill criteria.
   - **Files:** `packages/agent-core/tests/integration/phase5-workflow.test.ts`
   - **dep:** T091
 
-- [ ] **T095 [US-1] Integration: recovery from verify failure** (AC-14)
+- [x] **T095 [US-1] Integration: recovery from verify failure** (AC-14)
   - **Brief — Outcome:** Synthetic verify_failed on action 2 of 4 via MockBrowserEngine returning empty AX-tree. FailureClassifier routes to retry (1x) → replan (LLM picks alternate action) → success → audit_complete.
   - **Files:** `packages/agent-core/tests/integration/phase5-recovery.test.ts`
   - **dep:** T091
