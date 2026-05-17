@@ -225,29 +225,45 @@ function hitlPauseRouter(state: AuditStateBrowseSubset): 'browse' | 'audit_compl
  * channel boundary. Runtime behaviour respects the typed state; the compile-
  * time generic is LangGraph's own.
  */
+/**
+ * Build the 5 node functions from the injected deps. Extracted to keep
+ * buildBrowseGraph() under R10.3 50-LOC cap and to isolate the dep-wiring
+ * shape from the LangGraph composition.
+ */
+function buildNodes(deps: BrowseGraphDeps, logger: Logger) {
+  return {
+    auditSetup: createAuditSetupNode({
+      storage: deps.storage, recorder: deps.recorder, logger,
+    }),
+    pageRouter: createPageRouterNode({
+      domainPolicy: deps.domainPolicy, circuitBreaker: deps.circuitBreaker, logger,
+    }),
+    browse: createBrowseNode({
+      contextAssembler: deps.contextAssembler, llm: deps.llm,
+      toolRegistry: deps.toolRegistry, rateLimiter: deps.rateLimiter,
+      safety: deps.safety, verifyEngine: deps.verifyEngine,
+      scorer: deps.scorer, classifier: deps.classifier,
+      recorder: deps.recorder, hitlManager: deps.hitlManager, logger,
+    }),
+    auditComplete: createAuditCompleteNode({
+      storage: deps.storage, recorder: deps.recorder, logger,
+    }),
+    hitlPause: createHitlPauseNode(logger),
+  };
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildBrowseGraph(deps: BrowseGraphDeps): CompiledStateGraph<any, any, any, any, any, any, any> {
   const logger = deps.logger ?? createLogger('browse-graph');
+  // Build-time log: no audit_run_id/client_id available yet — graph is
+  // composed once at boot/factory time, not per-audit. R14 correlation
+  // rule applies to per-audit runtime logs (emitted by nodes); `phase:
+  // 'build'` annotation marks this line as factory-time so log consumers
+  // can filter.
   const log = createChildLogger(logger, { node_name: 'browse_graph', subgraph: 'browse' });
-  log.info('browse_graph.build.start');
+  log.info({ phase: 'build' }, 'browse_graph.build.start');
 
-  const auditSetup = createAuditSetupNode({
-    storage: deps.storage, recorder: deps.recorder, logger,
-  });
-  const pageRouter = createPageRouterNode({
-    domainPolicy: deps.domainPolicy, circuitBreaker: deps.circuitBreaker, logger,
-  });
-  const browse = createBrowseNode({
-    contextAssembler: deps.contextAssembler, llm: deps.llm,
-    toolRegistry: deps.toolRegistry, rateLimiter: deps.rateLimiter,
-    safety: deps.safety, verifyEngine: deps.verifyEngine,
-    scorer: deps.scorer, classifier: deps.classifier,
-    recorder: deps.recorder, hitlManager: deps.hitlManager, logger,
-  });
-  const auditComplete = createAuditCompleteNode({
-    storage: deps.storage, recorder: deps.recorder, logger,
-  });
-  const hitlPause = createHitlPauseNode(logger);
+  const { auditSetup, pageRouter, browse, auditComplete, hitlPause } = buildNodes(deps, logger);
 
   // LangGraph's conditional-edge router type is anchored to its own internal
   // StateType; we cast our typed routers via `unknown` to satisfy the
@@ -287,7 +303,7 @@ export function buildBrowseGraph(deps: BrowseGraphDeps): CompiledStateGraph<any,
 
   try {
     const compiled = graph.compile({ checkpointer: new MemorySaver() });
-    log.info('browse_graph.build.compiled');
+    log.info({ phase: 'build' }, 'browse_graph.build.compiled');
     return compiled;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
