@@ -104,7 +104,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **acceptance:** Run perception per viewport on 1 page. Both desktop+mobile perceptions stored separately. Correlation ID matches across viewports. Sequential execution (no parallel browser contexts in MVP).
 - **conformance test:** `packages/agent-core/tests/conformance/multi-viewport-orchestrator.test.ts` (AC-03)
 
-### T5B-004 — ViewportDiffEngine
+### T5B-004 — ViewportDiffEngine ✅
 - **dep:** T5B-003
 - **spec:** §07 §7.9.2 multi-viewport diff
 - **files:** `packages/agent-core/src/analysis/ViewportDiffEngine.ts`
