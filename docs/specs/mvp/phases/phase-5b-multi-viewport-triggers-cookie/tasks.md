@@ -127,7 +127,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **kill criteria:** state restoration MUST be reliable; conformance test asserts before/after **content-hash equality** on `<body>` subtree DOM + `window.scrollY` + form input values (formula: `sha256(snapshot.dom_outerHTML + scrollY + JSON.stringify(formStates))`); Phase 1c settle predicate gates capture. Failure → STOP.
 - **conformance test:** `packages/agent-core/tests/conformance/popup-dismissibility-tester.test.ts` (AC-06)
 
-### T5B-007 — DarkPatternDetector
+### T5B-007 — DarkPatternDetector ✅
 - **dep:** T5B-005, T5B-006
 - **spec:** §07 §7.9.2 popup quality; Phase 5b spec R-06
 - **files:** `packages/agent-core/src/analysis/DarkPatternDetector.ts`
