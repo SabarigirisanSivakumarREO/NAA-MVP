@@ -231,7 +231,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 
 ## Full Integration (T5B-019)
 
-### T5B-019 — Phase 5b full integration test
+### T5B-019 — Phase 5b full integration test ✅
 - **dep:** T5B-001 through T5B-018
 - **spec:** Phase 5b extended exit gate
 - **files:** `packages/agent-core/tests/integration/phase5b-full.test.ts`
@@ -244,14 +244,14 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 
 Before declaring Phase 5b complete:
 
-- [ ] AC-01..AC-19 conformance tests all passing
-- [ ] T5B-009 multi-viewport integration test passes; cost ≤2× single-viewport baseline
-- [ ] T5B-019 full integration test passes; all 6 MVP-active triggers (click + hover/scroll/time/exit_intent/form_input; tab/accordion deferred v1.1) active; both cookie policies tested
-- [ ] R26 compliance: per-trigger budget ≤10; cc-*/password skipped; no infinite loops; no cross-origin trigger
-- [ ] Phase 5 (T100) integration test passes unchanged on default AuditRequest (no Phase 5b opts)
-- [ ] PopupDismissibilityTester state restoration verified (before/after equality)
-- [ ] Cookie detection precision ≥95% on 8-fixture cookie set (OneTrust + Cookiebot + TrustArc + Quantcast Choice + Didomi + Iubenda + Sourcepoint + 1 generic)
-- [ ] Net new LLM cost = $0 (no LLM calls in Phase 5b)
+- [x] AC-01..AC-19 conformance tests all passing
+- [x] T5B-009 multi-viewport integration test passes; cost ≤2× single-viewport baseline
+- [x] T5B-019 full integration test passes; all 6 MVP-active triggers (click + hover/scroll/time/exit_intent/form_input; tab/accordion deferred v1.1) active; both cookie policies tested
+- [x] R26 compliance: per-trigger budget ≤10; cc-*/password skipped; no infinite loops; no cross-origin trigger
+- [x] Phase 5 (T100) integration test passes unchanged on default AuditRequest (no Phase 5b opts) — note: no single `T100` file exists; verified via full `phase5-*` integration suite (phase5-simple / phase5-workflow / phase5-recovery / phase5-budget / phase5-amazon) all green post-T5B-019.
+- [x] PopupDismissibilityTester state restoration verified (before/after equality)
+- [x] Cookie detection precision ≥95% on 8-fixture cookie set (OneTrust + Cookiebot + TrustArc + Quantcast Choice + Didomi + Iubenda + Sourcepoint + 1 generic)
+- [x] Net new LLM cost = $0 (no LLM calls in Phase 5b)
 - [ ] `phase-5b-current.md` rollup drafted and approved
 - [ ] PR Contract block (per CLAUDE.md §6) attached to merge PR
 
