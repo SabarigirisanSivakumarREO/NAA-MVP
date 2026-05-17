@@ -211,7 +211,7 @@ T084 + T091 carry extended kill criteria.
 
 ### BrowseGraph assembly
 
-- [ ] **T091 [US-1] BrowseGraph assembly** (AC-10, REQ-BROWSE-GRAPH-001) **— extended kill criteria**
+- [x] **T091 [US-1] BrowseGraph assembly** (AC-10, REQ-BROWSE-GRAPH-001) **— extended kill criteria**
   - **Brief — Outcome:** `orchestration/BrowseGraph.ts` exports `buildBrowseGraph(deps): CompiledStateGraph<AuditStateBrowseSubset>`. Compiles LangGraph from nodes + edges + state schema; injects all Phase 1-4 deps (R9 preserved). Returns runnable graph; `graph.invoke({ initial_state })` runs the loop.
   - **Per-task kill criteria (extends default):**
     - "Phase 1-4 contracts NOT all injected as deps (R9 violation)" → R23 STOP. The whole point of R9 is Phase 5 doesn't import vendor SDKs directly.
