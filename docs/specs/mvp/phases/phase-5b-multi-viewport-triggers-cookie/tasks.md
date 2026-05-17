@@ -158,7 +158,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 
 ## Trigger Taxonomy Stream (T5B-010..T5B-015)
 
-### T5B-010 — HoverTrigger
+### T5B-010 — HoverTrigger ✅
 - **dep:** T091 (BrowseGraph), T1C-007 (ElementGraph for candidate discovery)
 - **spec:** §20 trigger taxonomy + spec §3.1
 - **files:** `packages/agent-core/src/browser-runtime/triggers/HoverTrigger.ts`
