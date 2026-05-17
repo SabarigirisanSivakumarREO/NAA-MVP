@@ -147,7 +147,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **acceptance:** All 5 files conform to Phase 0b heuristic-lint schema (validated by `apps/cli/tests/conformance/heuristic-lint.test.ts`). Tier assigned per heuristic. Heuristic body refs `viewport.device_type === "mobile"` (NOT hardcoded pixel widths) to remain forward-compatible with v1.1 Android baseline addition.
 - **conformance test:** `apps/cli/tests/conformance/heuristic-lint.test.ts` (Phase 0b lint runs across all `heuristics-repo/**/*.json`; lands 5 multi-viewport files in lint pass; AC-08)
 
-### T5B-009 — Phase 5b multi-viewport integration test (legacy)
+### T5B-009 — Phase 5b multi-viewport integration test (legacy) ✅
 - **dep:** T5B-PRE-001 through T5B-008
 - **spec:** Phase 5b exit gate (multi-viewport portion)
 - **files:** `packages/agent-core/tests/integration/multi-viewport.test.ts`
