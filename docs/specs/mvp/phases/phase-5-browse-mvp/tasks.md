@@ -1,10 +1,10 @@
 ---
 title: Tasks — Phase 5 Browse MVP
 artifact_type: tasks
-status: approved
-version: 0.4
+status: verified
+version: 0.5
 created: 2026-04-27
-updated: 2026-05-16
+updated: 2026-05-17
 owner: engineering lead
 authors: [Claude (drafter)]
 
@@ -34,6 +34,7 @@ delta:
     - v0.2 — T090 references canonical 08-tool-manifest.md + adds drift-detection assertion (analyze finding F-002)
     - v0.3 — T097 promoted from reserved → MVP (client_id thread-through, H1+H2 closure); 2 polish tasks added (M3 budget concurrency + W1A migration deadlock); T086/T090/T093/T096 brief polish
     - v0.4 — Pass 2 micro-fix: T085 AC-17 cite + checkpoint count + T086 brief MVP hardcode 60min (drops forward-declared AuditRequest field consistent with AC-18 v0.4)
+    - v0.5 — Stage 4 exit R17 bump approved → verified (Gate 2 APPROVE 2026-05-17; all 21 task checkboxes [x]; 3 bugs + F-015 closed Wave 8; ROLLUP at 49c7dfd)
   changed:
     - v0.1 → v0.2 — T090 brief polish
     - v0.2 → v0.3 — patch-wave applied per .phase-state/5/preflight-verdict.yaml Pass 1 (REVISE) act-001..act-013; MVP count 16 → 17; LOCKED AuditEventTypeEnum compliance + 29-tool split (22+2+5) + budget+timeout patches

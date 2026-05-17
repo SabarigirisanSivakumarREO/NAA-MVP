@@ -1,11 +1,12 @@
 ---
 title: Phase 5 Rollup — Current System State
 artifact_type: rollup
-status: implemented
-version: 1.0
+status: verified
+version: 1.1
 phase_number: 5
 phase_name: Browse Mode MVP
 phase_completed_on: 2026-05-17
+phase_verified_on: 2026-05-17
 created: 2026-05-17
 updated: 2026-05-17
 owner: engineering lead
@@ -14,10 +15,10 @@ reviewers: []
 supersedes: docs/specs/mvp/phases/phase-4b-context-capture/phase-4b-current.md
 supersededBy: null
 derived_from:
-  - docs/specs/mvp/phases/phase-5-browse-mvp/spec.md (v0.4 approved)
-  - docs/specs/mvp/phases/phase-5-browse-mvp/tasks.md (v0.4 approved)
-  - docs/specs/mvp/phases/phase-5-browse-mvp/plan.md (v0.4 approved)
-  - docs/specs/mvp/phases/phase-5-browse-mvp/impact.md (v0.3 approved)
+  - docs/specs/mvp/phases/phase-5-browse-mvp/spec.md (v0.5 verified)
+  - docs/specs/mvp/phases/phase-5-browse-mvp/tasks.md (v0.5 verified)
+  - docs/specs/mvp/phases/phase-5-browse-mvp/plan.md (v0.3 verified)
+  - docs/specs/mvp/phases/phase-5-browse-mvp/impact.md (v0.4 verified)
 req_ids:
   - REQ-BROWSE-NODE-001
   - REQ-BROWSE-NODE-002

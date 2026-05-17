@@ -1,10 +1,10 @@
 ---
 title: Phase 5 — Browse Mode MVP
 artifact_type: spec
-status: approved
-version: 0.4
+status: verified
+version: 0.5
 created: 2026-04-27
-updated: 2026-05-16
+updated: 2026-05-17
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -46,10 +46,12 @@ delta:
     - v0.2 — Temperature invariant cited correctly to R13 NEVER + TemperatureGuard adapter, NOT R10 Code Quality (Constitution R22.6 stale-xref note; analyze finding F-003)
     - v0.3 — AC-16 + AC-17 + AC-18 + R-13 + R-14 (LOCKED-name compliance + client_id thread-through + budget thresholds + wall-clock timeout)
     - v0.4 — Pass 2 micro-fix: AC-18 wording defer
+    - v0.5 — Stage 4 exit R17 bump approved → verified (Gate 2 APPROVE; 30 commits; 18/18 ACs green; 895/1055 tests pass; Bug-A/B/C + F-015 SPEC_GAP closed at Wave 8)
   changed:
     - v0.1 → v0.2 — analyze-driven xref polish; no scope changes
     - v0.2 → v0.3 — patch-wave applied per .phase-state/5/preflight-verdict.yaml Pass 1 (REVISE) act-001..act-013; LOCKED AuditEventTypeEnum drift fixes + Phase 4b R20 propagation + AC-04 test path consolidation + FailureClass routing table + 29-tool split (22+2+5) + 'timeout' wall-clock + R22.6 dedup
     - v0.3 → v0.4 — Pass 2 micro-patch: AC-18 wording (drop AuditRequest forward field declaration; hardcode 60min in MVP); LOCKED-name + R20 hygiene preserved
+    - v0.4 → v0.5 — Stage 4 exit (Gate 2 APPROVE 2026-05-17); R17 status verified
   impacted:
     - Constitution R4.1 (perception first) + R4.2 (verify everything) — first runtime convergence
     - Phase 8 AuditState — Phase 5 ships browse-mode SUBSET; Phase 8 lands full schema (additive, no migration)

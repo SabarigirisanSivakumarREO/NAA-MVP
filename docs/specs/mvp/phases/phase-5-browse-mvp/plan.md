@@ -1,10 +1,10 @@
 ---
 title: Implementation Plan — Phase 5 Browse MVP
 artifact_type: plan
-status: approved
-version: 0.2
+status: verified
+version: 0.3
 created: 2026-04-27
-updated: 2026-05-16
+updated: 2026-05-17
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -37,6 +37,7 @@ delta:
     - First plan introducing LangGraph.js as orchestration runtime
     - 16 MVP tasks (T081-T096; T097-T100 reserved)
     - v0.2 — T097 promoted from reserved → MVP (17 tasks); test path consolidation note; R10/R22.6 dedup
+    - v0.3 — Stage 4 exit R17 bump approved → verified (Gate 2 APPROVE 2026-05-17; impl complete; 18/18 ACs green; phase-5-current.md v1.0 rollup)
   changed:
     - v0.1 → v0.2 — patch-wave applied per .phase-state/5/preflight-verdict.yaml Pass 1 (REVISE) act-001..act-013; conformance test list trimmed to single node-browse.test.ts with two describe blocks; MockLLMAdapter → MockAnthropicAdapter; Constitution Check R10 row dedup
   impacted: []

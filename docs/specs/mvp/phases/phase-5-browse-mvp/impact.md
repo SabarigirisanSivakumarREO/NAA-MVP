@@ -1,10 +1,10 @@
 ---
 title: Impact Analysis — Phase 5 Browse MVP (3 new contracts)
 artifact_type: impact
-status: approved
-version: 0.3
+status: verified
+version: 0.4
 created: 2026-04-27
-updated: 2026-05-16
+updated: 2026-05-17
 owner: engineering lead
 
 supersedes: null
@@ -37,6 +37,7 @@ delta:
     - AuditState forward-compat seam (Phase 5 subset → Phase 8 widening)
     - v0.2 — BrowseAgentSystemPrompt section now cites `docs/specs/final-architecture/08-tool-manifest.md` as canonical tool-name source (analyze finding F-002)
     - v0.3 — Phase 4b R20 propagation; R25 added to governing_rules (Phase 5 read-only consumer of ContextProfile); 22+2+5 tool-split correction
+    - v0.4 — Stage 4 exit R17 bump approved → verified (Gate 2 APPROVE 2026-05-17; 3 shared contracts shipped; forward stability promise honored; Bug-A/B/C + F-015 closed at Wave 8)
   changed:
     - v0.1 → v0.2 — cross-reference polish; no contract changes
     - v0.2 → v0.3 — patch-wave applied per .phase-state/5/preflight-verdict.yaml Pass 1 (REVISE) act-001..act-013; BrowseAgentSystemPrompt section corrected to 22 browser_* + 2 agent_* + 5 page_* = 29
