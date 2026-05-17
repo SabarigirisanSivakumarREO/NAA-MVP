@@ -1,8 +1,8 @@
 ---
 title: Phase 5b — Impact Analysis
 artifact_type: impact
-status: implemented
-version: 0.4
+status: verified
+version: 0.5
 created: 2026-04-28
 updated: 2026-05-17
 owner: engineering lead
