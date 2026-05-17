@@ -119,7 +119,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **acceptance:** Watch popup trigger on test fixtures (load / time-on-page / scroll / exit-intent). Captures `triggerType` + timing in milliseconds. Updates `popups[]` in-place (mutates from Phase 1b output). Mutation requires T5B-PRE-001 Zod widening to accept boolean.
 - **conformance test:** `packages/agent-core/tests/conformance/popup-behavior-probe.test.ts` (AC-05)
 
-### T5B-006 — PopupDismissibilityTester
+### T5B-006 — PopupDismissibilityTester ✅
 - **dep:** T1B-004, T5B-PRE-001, T1C-007 (Phase 1c settle predicate)
 - **spec:** §07 §7.9.2 popup behavior fields
 - **files:** `packages/agent-core/src/browser-runtime/PopupDismissibilityTester.ts`
