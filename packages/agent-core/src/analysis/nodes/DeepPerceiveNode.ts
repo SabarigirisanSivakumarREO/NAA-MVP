@@ -54,6 +54,12 @@ import {
   type Warning,
   WarningEmitter,
 } from '../../perception/WarningEmitter.js';
+import {
+  bundleToAnalyzePerception,
+  type PerceptionBundle,
+} from '../../perception/PerceptionBundle.js';
+import type { AnalysisState, PageType } from '../../orchestration/AnalysisState.js';
+import { detectPageType } from '../utils/detectPageType.js';
 
 /**
  * Minimum Page surface this stub needs. Currently equivalent to SettlePredicate's
@@ -142,7 +148,7 @@ export class DeepPerceiveNode {
    * implementation lands. Phase 1c integration test (AC-12) reads this to
    * route around enrichment assertions while the stub is in place.
    */
-  public static readonly isPhase7Stub: boolean = true;
+  public static readonly isPhase7Stub: boolean = false;
 
   /**
    * Invoke the settle gate. Phase 7 T117 will replace / extend this with the
@@ -157,4 +163,133 @@ export class DeepPerceiveNode {
   ): Promise<DeepPerceiveResult> {
     return deepPerceiveWithSettle(page, emitter, opts);
   }
+}
+
+// ─── Phase 7 T117: deepPerceiveNodeRun (AC-05) ───────────────────────────
+
+/**
+ * Minimal MCP tool surface DeepPerceiveNode invokes. `page_analyze` is
+ * declared on the surface so test scaffolds + future graph wiring can pass
+ * a uniform tool bundle; **DeepPerceiveNode MUST NOT call it** per R24 —
+ * `bundleToAnalyzePerception` is the sole perception source.
+ */
+export interface DeepPerceiveTools {
+  page_analyze: (args: { sections: string[] }) => Promise<unknown>;
+  browser_screenshot: (args: { quality: number }) => Promise<{ imageBase64: string }>;
+  page_screenshot_full: (args: {
+    quality: number;
+    maxHeight: number;
+  }) => Promise<{ imageBase64: string }>;
+}
+
+export interface DeepPerceiveNodeInput {
+  state: AnalysisState;
+  page: PageLike;
+  tools: DeepPerceiveTools;
+  emitter: WarningEmitter;
+  bundle: PerceptionBundle;
+  /** Optional — defaults to `bundle.initial_state_id`. */
+  stateId?: string;
+  /** Forwarded to `waitForSettle` (AC-11). */
+  requireSelector?: string;
+}
+
+export interface DeepPerceiveNodeDelta extends Partial<AnalysisState> {
+  /**
+   * Viewport screenshot (base64). Returned as an extra delta field; NOT in
+   * AnalysisStateSchema yet — T131 (AnnotateNode) + T132 (StoreNode) consume
+   * in-memory before persistence.
+   */
+  viewport_screenshot: string;
+  /** Full-page screenshot (base64). Same persistence note as viewport. */
+  fullpage_screenshot: string;
+}
+
+/**
+ * Pull a `DetectPageTypeInput` from a wrapped PageStateModel (R24 — read-only).
+ */
+function deriveDetectInput(
+  perception: ReturnType<typeof bundleToAnalyzePerception>,
+): Parameters<typeof detectPageType>[0] {
+  const metadata = (perception as { metadata?: { url?: string; schemaOrg?: Array<Record<string, unknown>> } }).metadata ?? {};
+  const ctas = (perception as { ctas?: Array<{ text?: string }> }).ctas ?? [];
+  const formFields = (perception as { formFields?: unknown[] }).formFields ?? [];
+  const schemaOrg = metadata.schemaOrg ?? [];
+  const schemaTypes: string[] = [];
+  for (const frag of schemaOrg) {
+    const t = (frag as { '@type'?: unknown })['@type'];
+    if (typeof t === 'string') schemaTypes.push(t);
+  }
+  return {
+    url: metadata.url ?? '',
+    cta_texts: ctas
+      .map((c) => c.text)
+      .filter((t): t is string => typeof t === 'string'),
+    form_signals: { has_form: formFields.length > 0, field_count: formFields.length },
+    schema_org_types: schemaTypes,
+  };
+}
+
+/**
+ * Read `state.context_profile.page.type` defensively (the field is not in
+ * AnalysisStateSchema today — Phase 4b ContextProfile lives in DB and is
+ * threaded into state at the orchestration seam; this accessor accepts the
+ * Phase 4b shape without coupling the schema).
+ */
+function readContextPageType(state: AnalysisState): PageType | undefined {
+  const cp = (state as unknown as { context_profile?: { page?: { type?: PageType } } })
+    .context_profile;
+  return cp?.page?.type;
+}
+
+/**
+ * DeepPerceiveNode entry — Phase 7 T117 (AC-05, REQ-ANALYZE-NODE-001).
+ *
+ * Single-bundle scope. T133 AnalysisGraph fans out multi-bundle iteration
+ * when Phase 5b active; this node processes one bundle per invocation.
+ *
+ * Flow:
+ *   1. Settle gate (AC-11 preserved — runs FIRST, before screenshots).
+ *   2. Perception via `bundleToAnalyzePerception(bundle, stateId)` — R24:
+ *      sole perception source. Does NOT call `tools.page_analyze`.
+ *   3. Viewport screenshot (quality 85).
+ *   4. Full-page screenshot (quality 80, maxHeight 15000).
+ *   5. Resolve `current_page_type` (context_profile override → detectPageType).
+ *
+ * Returns a state delta plus viewport/fullpage screenshots (extra fields;
+ * not yet in AnalysisStateSchema — T131/T132 consume in-memory).
+ */
+export async function deepPerceiveNodeRun(
+  input: DeepPerceiveNodeInput,
+): Promise<DeepPerceiveNodeDelta> {
+  const { state, page, tools, emitter, bundle, stateId, requireSelector } = input;
+
+  // 1. AC-11 settle gate — MUST run before screenshots.
+  await deepPerceiveWithSettle(
+    page,
+    emitter,
+    requireSelector !== undefined ? { requireSelector } : {},
+  );
+
+  // 2. R24 — perception via accessor only; no tools.page_analyze call.
+  const perception = bundleToAnalyzePerception(bundle, stateId);
+
+  // 3 + 4. Screenshots.
+  const viewport = await tools.browser_screenshot({ quality: 85 });
+  const fullpage = await tools.page_screenshot_full({
+    quality: 80,
+    maxHeight: 15000,
+  });
+
+  // 5. Resolve current_page_type.
+  const override = readContextPageType(state);
+  const current_page_type: PageType =
+    override ?? detectPageType(deriveDetectInput(perception)).primary;
+
+  return {
+    current_page_perception_bundle: bundle,
+    current_page_type,
+    viewport_screenshot: viewport.imageBase64,
+    fullpage_screenshot: fullpage.imageBase64,
+  };
 }

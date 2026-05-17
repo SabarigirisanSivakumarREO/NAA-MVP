@@ -115,7 +115,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 
 ## Block B — Core LLM Nodes (Days 2-4) — FIRST R10/R5.6/R6 ACTIVATIONS
 
-### T117 — DeepPerceiveNode (MOD v2.3)
+### T117 — DeepPerceiveNode (MOD v2.3) ✅
 - **dep:** T048 (page_analyze tool), T046 (browser_screenshot), T025 (page_screenshot_full), T113
 - **spec:** REQ-ANALYZE-NODE-001 + REQ-ANALYZE-PERCEPTION-V23-001
 - **files:** `packages/agent-core/src/analysis/nodes/DeepPerceiveNode.ts`
