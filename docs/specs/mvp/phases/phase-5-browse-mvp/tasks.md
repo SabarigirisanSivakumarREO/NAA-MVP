@@ -244,7 +244,7 @@ T084 + T091 carry extended kill criteria.
   - **Files:** `packages/agent-core/tests/integration/phase5-recovery.test.ts`
   - **dep:** T091
 
-- [ ] **T096 [US-1] Integration: budget exhaustion** (AC-15)
+- [x] **T096 [US-1] Integration: budget exhaustion** (AC-15)
   - **Brief — Outcome:** audit_run with `budget_remaining_usd=0.05`; LLM calls debit > $0.05 across pages. Audit terminates after exhaustion with `completion_reason='budget_exceeded'`. Remaining pages NOT entered. MockAnthropicAdapter configured with `cost_per_call_usd=0.03` (deterministic). With `budget_remaining_usd=0.05`, the 2nd call exhausts the budget. No real Claude API cost variance interferes with the test.
   - **Files:** `packages/agent-core/tests/integration/phase5-budget.test.ts`
   - **dep:** T091
