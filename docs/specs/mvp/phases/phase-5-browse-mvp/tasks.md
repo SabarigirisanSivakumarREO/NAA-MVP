@@ -191,7 +191,7 @@ T084 + T091 carry extended kill criteria.
   - **dep:** T082, T083, T084, T085, T086
   - **Kill criteria:** default block
 
-- [ ] **T089 [P] [US-1] HITL interrupt** (AC-08)
+- [x] **T089 [P] [US-1] HITL interrupt** (AC-08)
   - **Brief — Outcome:** When SafetyCheck throws SafetyBlockedError with class `requires_hitl`, the browse node calls LangGraph's interrupt API; SessionRecorder emits `audit_events.hitl_requested`. External `resumeAudit(audit_run_id, decision)` resumes (decision='approve' or 'reject'). MVP stub auto-timeout: 5 min → auto-escalate to `audit_complete` with `completion_reason='aborted'`.
   - **Constraints:** Auto-timeout configurable; default 5 min.
   - **Acceptance:** AC-08 — pause + resume cycle verified; auto-timeout verified.

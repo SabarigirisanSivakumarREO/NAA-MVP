@@ -32,6 +32,7 @@ import { createChildLogger, createLogger, type Logger } from '../../observabilit
 import { ActionProposalSchema, BROWSE_AGENT_SYSTEM_PROMPT, BROWSE_TOOL_NAMES, type ActionProposal } from '../prompts/browse-agent.js';
 import { AuditStateBrowseSubsetSchema, type AuditStateBrowseSubset } from '../AuditState.js';
 import type { PageStateModel } from '../../perception/types.js';
+import type { HitlManager } from '../hitl.js';
 
 /** Structural-typed SessionRecorder shim (matches AuditSetupNode pattern). */
 export interface SessionRecorderLike {
@@ -50,6 +51,8 @@ export interface BrowseNodeDeps {
   readonly recorder: SessionRecorderLike;
   /** Live BrowserSession threaded to VerifyEngine; MVP gap — see header. */
   readonly session?: BrowserSession;
+  /** T089/AC-08 HITL manager; optional pre-Wave 6 (T091 wires graph-side). */
+  readonly hitlManager?: Pick<HitlManager, 'requestHitl'>;
   readonly logger?: Logger;
 }
 
@@ -208,10 +211,14 @@ function handleSafety(
   const isHitl = err instanceof SafetyBlockedError && err.reason === 'hitl_requested';
   log.warn({ reason: err instanceof SafetyBlockedError ? err.reason : 'unknown' }, 'browse.safety_check_blocked');
   if (isHitl) {
-    return {
-      current_node: NODE, node_status: 'halted', updated_at: new Date(),
-      _phase8_extensions: { ...(state._phase8_extensions ?? {}), browse_loop_iteration: iter, cause_class: 'safety_blocked', hitl_pending: true },
-    };
+    if (deps.hitlManager !== undefined && err instanceof SafetyBlockedError) { // T089/AC-08
+      void deps.hitlManager.requestHitl({
+        audit_run_id: state.audit_run_id, client_id: state.client_id, page_url: state.current_url ?? null,
+        tool_name: err.toolName, domain: err.domain, reason: err.reason, recorder: deps.recorder,
+      }).catch((e: unknown) => log.error({ err: (e as Error).message }, 'browse.hitl_request_failed'));
+    }
+    return { current_node: NODE, node_status: 'halted', updated_at: new Date(),
+      _phase8_extensions: { ...(state._phase8_extensions ?? {}), browse_loop_iteration: iter, cause_class: 'safety_blocked', hitl_pending: true } };
   }
   void deps.recorder.recordEvent({ ...pageEvt(state, 'page_browse_failed'), metadata: { cause_class: 'safety_blocked' } })
     .then(() => log.info({ event_type: 'page_browse_failed' }, 'browse.event_emitted'));
