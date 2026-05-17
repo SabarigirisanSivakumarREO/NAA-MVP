@@ -173,7 +173,7 @@ T084 + T091 carry extended kill criteria.
   - **dep:** T081
   - **Kill criteria:** default block
 
-- [ ] **T087 [P] [US-1] Node-level Zod I/O verification** (AC-06)
+- [x] **T087 [P] [US-1] Node-level Zod I/O verification** (AC-06)
   - **Brief — Outcome:** Each of the 4 nodes wraps its state slice input + output in Zod parsing at module boundaries. Conformance test parameterized over the 4 nodes verifies each rejects malformed input.
   - **Constraints:** Each node's wrapping adds ~10 lines; total impact across 4 nodes: ~40 lines.
   - **Acceptance:** AC-06.

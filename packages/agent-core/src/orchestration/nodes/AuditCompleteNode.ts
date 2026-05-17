@@ -85,9 +85,13 @@ export function createAuditCompleteNode(
 ): (state: AuditStateBrowseSubset) => Promise<Partial<AuditStateBrowseSubset>> {
   const clock = deps.clock ?? ((): Date => new Date());
   return async (state) => {
+    // R2.2 / AC-06 — Zod-validate the FULL incoming state at the module
+    // boundary. Throws ZodError synchronously on malformed input.
+    const validatedState = AuditStateBrowseSubsetSchema.parse(state);
+
     const child = createChildLogger(deps.logger, {
-      audit_run_id: state.audit_run_id,
-      client_id: state.client_id,
+      audit_run_id: validatedState.audit_run_id,
+      client_id: validatedState.client_id,
       node_name: NODE_NAME,
       subgraph: 'browse',
       loop_iteration: 0,
@@ -95,9 +99,9 @@ export function createAuditCompleteNode(
     child.info('audit_complete.entry');
 
     // 1. Resolve completion_reason — wall-clock backstop if upstream missed it.
-    let reason = state.completion_reason;
+    let reason = validatedState.completion_reason;
     if (reason === undefined) {
-      if (isWallClockExceeded(state, clock())) {
+      if (isWallClockExceeded(validatedState, clock())) {
         reason = 'timeout';
       } else {
         throw new Error(
@@ -107,18 +111,18 @@ export function createAuditCompleteNode(
     }
 
     // 2. Persist terminal state to audit_runs.
-    await deps.storage.finalizeAuditRun(state.audit_run_id, {
-      client_id: state.client_id,
+    await deps.storage.finalizeAuditRun(validatedState.audit_run_id, {
+      client_id: validatedState.client_id,
       completion_reason: reason,
     });
     child.info({ completion_reason: reason }, 'audit_complete.finalized');
 
     // 3. Emit LOCKED event (AC-05 4-branch table).
     const eventType = reason === 'success' ? 'audit_completed' : 'audit_failed';
-    const metadata = reason === 'success' ? undefined : { cause_class: resolveCauseClass(reason, state) };
+    const metadata = reason === 'success' ? undefined : { cause_class: resolveCauseClass(reason, validatedState) };
     await deps.recorder.recordEvent({
-      audit_run_id: state.audit_run_id,
-      client_id: state.client_id,
+      audit_run_id: validatedState.audit_run_id,
+      client_id: validatedState.client_id,
       event_type: eventType,
       page_url: null,
       metadata,

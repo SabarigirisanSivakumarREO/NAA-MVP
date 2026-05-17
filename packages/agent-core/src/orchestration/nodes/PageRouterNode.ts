@@ -73,9 +73,13 @@ export function createPageRouterNode(deps: PageRouterNodeDeps): PageRouterNodeFn
   const rootLogger = deps.logger ?? createLogger('page-router-node');
 
   return async function pageRouter(state) {
+    // R2.2 / AC-06 — Zod-validate the FULL incoming state at the module
+    // boundary. Throws ZodError synchronously on malformed input.
+    const validatedState = AuditStateBrowseSubsetSchema.parse(state);
+
     const child = rootLogger.child({
-      audit_run_id: state.audit_run_id,
-      client_id: state.client_id,
+      audit_run_id: validatedState.audit_run_id,
+      client_id: validatedState.client_id,
       node_name: NODE_NAME,
       subgraph: 'browse',
       loop_iteration: 0,
@@ -83,13 +87,13 @@ export function createPageRouterNode(deps: PageRouterNodeDeps): PageRouterNodeFn
 
     child.debug(
       {
-        urls_remaining_count: state.urls_remaining.length,
-        budget_remaining_usd: state.budget_remaining_usd,
+        urls_remaining_count: validatedState.urls_remaining.length,
+        budget_remaining_usd: validatedState.budget_remaining_usd,
       },
       'page_router.entry',
     );
 
-    const slice = decideRoute(state, deps, child);
+    const slice = decideRoute(validatedState, deps, child);
     // R2.2 — runtime invariant check. We discard the parser's return type
     // because Zod `.partial().parse()` types optionals as `T | undefined`,
     // which is narrower than `Partial<...>` (`?: T`) under

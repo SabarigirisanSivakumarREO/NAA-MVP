@@ -30,7 +30,7 @@ import type { FailureClassifier } from '../../verification/FailureClassifier.js'
 import type { AuditEventInput } from '../../observability/SessionRecorder.js';
 import { createChildLogger, createLogger, type Logger } from '../../observability/logger.js';
 import { ActionProposalSchema, BROWSE_AGENT_SYSTEM_PROMPT, BROWSE_TOOL_NAMES, type ActionProposal } from '../prompts/browse-agent.js';
-import { type AuditStateBrowseSubset } from '../AuditState.js';
+import { AuditStateBrowseSubsetSchema, type AuditStateBrowseSubset } from '../AuditState.js';
 import type { PageStateModel } from '../../perception/types.js';
 
 /** Structural-typed SessionRecorder shim (matches AuditSetupNode pattern). */
@@ -65,23 +65,34 @@ const MAX_RETRIES = 2; // 1 primary + 2 corrective
 export function createBrowseNode(deps: BrowseNodeDeps): BrowseNodeFn {
   const base = deps.logger ?? createLogger('browse-node');
   return async function executeBrowseStep(state) {
-    const iter = readIter(state) + 1;
+    // R2.2 / AC-06 — Zod-validate the FULL incoming state at the module
+    // boundary. Throws ZodError synchronously on malformed input.
+    const validatedState = AuditStateBrowseSubsetSchema.parse(state);
+    const iter = readIter(validatedState) + 1;
     const log = createChildLogger(base, {
-      audit_run_id: state.audit_run_id, client_id: state.client_id,
+      audit_run_id: validatedState.audit_run_id, client_id: validatedState.client_id,
       node_name: NODE, subgraph: SUB, loop_iteration: iter,
-      ...(state.current_url !== undefined ? { page_url: state.current_url } : {}),
+      ...(validatedState.current_url !== undefined ? { page_url: validatedState.current_url } : {}),
     });
     log.info('browse.entry');
+    let slice: Partial<AuditStateBrowseSubset>;
     if (iter > MAX_ITER) {
       log.warn({ iter }, 'browse.loop_runaway');
-      await deps.recorder.recordEvent(audEvt(state, 'audit_failed', { cause_class: 'loop_runaway', iter }));
-      return abort(state, 'loop_runaway', iter);
+      await deps.recorder.recordEvent(audEvt(validatedState, 'audit_failed', { cause_class: 'loop_runaway', iter }));
+      slice = abort(validatedState, 'loop_runaway', iter);
+    } else {
+      const sel = await selectAction(validatedState, deps, log, iter);
+      if (sel.aborted) {
+        log.warn('browse.exit (action_selection_failed)');
+        slice = sel.slice;
+      } else {
+        const merged = { ...validatedState, ...sel.slice } as AuditStateBrowseSubset;
+        slice = await verifyAndRoute(merged, deps, log, iter);
+        log.info('browse.exit');
+      }
     }
-    const sel = await selectAction(state, deps, log, iter);
-    if (sel.aborted) { log.warn('browse.exit (action_selection_failed)'); return sel.slice; }
-    const merged = { ...state, ...sel.slice } as AuditStateBrowseSubset;
-    const slice = await verifyAndRoute(merged, deps, log, iter);
-    log.info('browse.exit');
+    // R2.2 / AC-06 — Zod-validate the output state slice before return.
+    AuditStateBrowseSubsetSchema.partial().parse(slice);
     return slice;
   };
 }

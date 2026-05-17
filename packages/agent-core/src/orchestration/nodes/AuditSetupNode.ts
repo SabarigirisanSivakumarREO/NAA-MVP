@@ -89,9 +89,13 @@ export function createAuditSetupNode(deps: AuditSetupNodeDeps): AuditSetupNode {
   const baseLogger = deps.logger ?? createLogger('audit-setup-node');
 
   return async function auditSetupNode(state) {
+    // R2.2 / AC-06 — Zod-validate the FULL incoming state at the module
+    // boundary. Throws ZodError synchronously on malformed input.
+    const validatedState = AuditStateBrowseSubsetSchema.parse(state);
+
     const child = createChildLogger(baseLogger, {
-      audit_run_id: state.audit_run_id,
-      client_id: state.client_id,
+      audit_run_id: validatedState.audit_run_id,
+      client_id: validatedState.client_id,
       node_name: NODE_NAME,
       subgraph: SUBGRAPH,
       loop_iteration: LOOP_ITERATION,
@@ -102,9 +106,9 @@ export function createAuditSetupNode(deps: AuditSetupNodeDeps): AuditSetupNode {
     // 1. Persist a fresh audit_runs row. `rootUrl` mirrors the first queued
     //    URL — the canonical "starting point" for the run; downstream
     //    PageRouterNode pops from `urls_remaining` independently.
-    const rootUrl = state.urls_remaining[0];
+    const rootUrl = validatedState.urls_remaining[0];
     const entry: AuditRunInsert = {
-      clientId: state.client_id,
+      clientId: validatedState.client_id,
       ...(rootUrl !== undefined ? { rootUrl } : {}),
     };
     const newAuditRunId = await deps.storage.createAuditRun(entry);
@@ -114,12 +118,12 @@ export function createAuditSetupNode(deps: AuditSetupNodeDeps): AuditSetupNode {
     //    `null` per §34.4 emit-by column (audit-level lifecycle event).
     await deps.recorder.recordEvent({
       audit_run_id: newAuditRunId,
-      client_id: state.client_id,
+      client_id: validatedState.client_id,
       event_type: 'audit_started',
       page_url: null,
       metadata: {
-        urls_count: state.urls_remaining.length,
-        business_type: state.business_type,
+        urls_count: validatedState.urls_remaining.length,
+        business_type: validatedState.business_type,
       },
     });
     child.info({ event_type: 'audit_started' }, 'audit_setup: event.emitted');
