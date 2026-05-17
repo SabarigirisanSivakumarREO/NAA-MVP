@@ -89,7 +89,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **acceptance:** Schema accepts `["desktop"]` and `["desktop","mobile"]`. Zod validates. Default `["desktop"]`. Rejects unknown viewport names. Field named `viewports` at top level of AuditRequest schema (snake_case convention per Phase 4b T4B-009).
 - **conformance test:** `packages/agent-core/tests/conformance/audit-request-viewports.test.ts` (AC-01)
 
-### T5B-002 — ViewportConfigService
+### T5B-002 — ViewportConfigService ✅
 - **dep:** T5B-001
 - **spec:** §07 §7.9.2 (viewport_context)
 - **files:** `packages/agent-core/src/orchestration/ViewportConfigService.ts`
