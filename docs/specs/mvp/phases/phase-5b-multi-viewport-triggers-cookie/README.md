@@ -2,9 +2,9 @@
 title: Phase 5b — Multi-Viewport + Triggers + Cookie — README
 artifact_type: readme
 status: draft
-version: 0.1
+version: 0.2
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-05-17
 owner: engineering lead
 ---
 
@@ -49,3 +49,17 @@ owner: engineering lead
 | Cost impact | ~2× browse cost when multi-viewport ON; opt-in only. $0 new LLM cost. Default behavior cost-neutral. |
 | Affected contracts | `AuditRequest` extended; `AnalyzePerception popups[]` behavior fields populated; multi-bundle when multi-viewport; BrowseGraph extended |
 | Constitution rule enforced | R26 (State Exploration MUST NOT) — per-trigger budget, cross-origin refusal, cc-*/password skip, no infinite loops, no navigation |
+
+---
+
+## Delta Log
+
+### v0.1 → v0.2 — 2026-05-17 (Pass 1 patch wave per review-notes.md)
+
+Applied actions: act-013, act-014.
+
+- act-013 — Estimated effort confirmed at **~28h ±3** (aligned with plan.md §4 unified total; was already consistent in README).
+- act-014 — frontmatter `updated: 2026-05-17`, version `0.1 → 0.2`, delta block appended (R18).
+
+> No other acts touch this README — README is a navigation index, not a contract surface. Substantive patches landed in spec.md / plan.md / tasks.md / impact.md.
+
