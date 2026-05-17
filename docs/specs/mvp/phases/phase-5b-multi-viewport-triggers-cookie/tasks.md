@@ -193,7 +193,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **acceptance:** Type / select on `<select>` + variant pickers + quantity + address fields. Captures variant-driven price/availability changes. **R26: skip ALL 6 exclusion categories (per plan §2.7):** (1) `<input type="password">`, (2) `[autocomplete^="cc-"]` credit-card, (3) `<input type="hidden">`, (4) `<input type="file">` file upload, (5) `<input name>` matching `/(ssn\|tax\|pin\|nin\|aadhaar\|passport)/i` PII, (6) reCAPTCHA / hCaptcha iframes. Cross-origin iframes already excluded by R-18. Per-category conformance assertion.
 - **conformance test:** `packages/agent-core/tests/conformance/form-input-trigger.test.ts` (AC-14)
 
-### T5B-015 — TriggerCandidateDiscovery
+### T5B-015 — TriggerCandidateDiscovery ✅
 - **dep:** T5B-010 through T5B-014, T1C-007 (ElementGraph)
 - **spec:** §20 + spec §3.2 + §3.3 priority ordering
 - **files:** `packages/agent-core/src/browser-runtime/triggers/TriggerCandidateDiscovery.ts`
