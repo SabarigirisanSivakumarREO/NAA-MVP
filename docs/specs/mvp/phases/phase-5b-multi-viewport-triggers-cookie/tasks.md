@@ -112,7 +112,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **diff dimensions:** see [plan.md §2.3](plan.md)
 - **conformance test:** `packages/agent-core/tests/conformance/viewport-diff-engine.test.ts` (AC-04)
 
-### T5B-005 — PopupBehaviorProbe
+### T5B-005 — PopupBehaviorProbe ✅
 - **dep:** T1B-004 (PopupPresenceDetector — provides popups[] array to enrich), T5B-PRE-001 (popups[] Zod widened)
 - **spec:** §07 §7.9.2 popup behavior fields
 - **files:** `packages/agent-core/src/browser-runtime/PopupBehaviorProbe.ts`
