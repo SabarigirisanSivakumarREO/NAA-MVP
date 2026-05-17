@@ -86,7 +86,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 - **acceptance:** All analyze-mode fields added to AuditState — `current_page_perception_bundle`, `current_page_type`, `confidence_tier`, `evaluate_findings_raw[]`, `critique_findings[]`, `grounded_findings[]`, `rejected_findings[]`, `analysis_cost_usd`, `analysis_status`, `current_page_signals` (for §7.13 cross-page emission). Zod-validated. Backward-compatible (additive only — Phase 1-5 code unaffected).
 - **conformance:** AC-01
 
-### T114 — detectPageType utility (MOD v2.3)
+### T114 — detectPageType utility (MOD v2.3) ✅
 - **dep:** T002
 - **spec:** REQ-ANALYZE-PERCEPTION-V23-001
 - **files:** `packages/agent-core/src/analysis/utils/detectPageType.ts`
@@ -95,7 +95,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 - **acceptance:** Returns one of: homepage, product, checkout, form, pricing, other. Ranked list with confidence scores. Primary matches pre-v2.3 enum result on test fixtures.
 - **conformance:** AC-02
 
-### T115 — assignConfidenceTier utility
+### T115 — assignConfidenceTier utility ✅
 - **dep:** T002
 - **spec:** REQ-ANALYZE-CONF-001 (confidence-tier mapping per §7.7 spec table)
 - **files:** `packages/agent-core/src/analysis/utils/assignTier.ts`
@@ -103,7 +103,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 - **acceptance:** Pure function `(reliability_tier: 1 | 2 | 3, evidenceType: "measurable" | "observable" | "subjective") → "high" | "medium" | "low"`. Mapping per §7.7 spec table.
 - **conformance:** AC-03
 
-### T116 — CostTracker
+### T116 — CostTracker ✅
 - **dep:** T073 (cost-tracking infra)
 - **spec:** REQ-COST-LOG-001 (R14.1 atomic writes) + REQ-COST-BUDGET-001 (R14.2 pre-call gate)
 - **files:** `packages/agent-core/src/analysis/CostTracker.ts`
