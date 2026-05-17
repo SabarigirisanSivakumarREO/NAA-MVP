@@ -1,7 +1,7 @@
 ---
 title: Phase 5b — Impact Analysis
 artifact_type: impact
-status: draft
+status: approved
 version: 0.3
 created: 2026-04-28
 updated: 2026-05-17

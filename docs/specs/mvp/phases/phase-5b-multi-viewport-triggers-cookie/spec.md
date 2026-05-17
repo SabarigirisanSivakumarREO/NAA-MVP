@@ -1,7 +1,7 @@
 ---
 title: Phase 5b — Multi-Viewport + Trigger Taxonomy + Cookie Policy
 artifact_type: spec
-status: draft
+status: approved
 version: 0.3
 created: 2026-04-28
 updated: 2026-05-17
