@@ -100,6 +100,38 @@ import pino, { type Logger, type LoggerOptions } from 'pino';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
+/**
+ * Phase 6 (heuristics KB) redact paths — spec.md line 102 (authoritative).
+ *
+ * Pino's `redact.paths` supports a single-level `*.` wildcard which matches
+ * one path segment (object key OR array index). These 6 paths cover every
+ * known heuristic-IP-carrying field on any object passed via log bindings or
+ * merging object, including arrays such as `loaded_heuristics[*].body`.
+ *
+ * IP-bearing fields (redacted):
+ *   - *.body                            — heuristic body prose
+ *   - *.benchmark.value                 — numeric benchmark threshold
+ *   - *.benchmark.standard_text         — qualitative benchmark prose
+ *   - *.benchmark.unit                  — benchmark unit (e.g. "px")
+ *   - *.benchmark.metric                — benchmark metric key
+ *   - *.provenance.citation_text        — cited source text
+ *
+ * Public metadata (NOT redacted — remains visible for traceability):
+ *   - provenance.source_url, provenance.verified_by,
+ *     provenance.verified_date, provenance.draft_model
+ *
+ * Reference: docs/specs/mvp/phases/phase-6-heuristics/spec.md
+ *            "Constraints Inherited" §line 102; T-PHASE6-LOGGER.
+ */
+const HEURISTIC_REDACT_PATHS = [
+  '*.body',
+  '*.benchmark.value',
+  '*.benchmark.standard_text',
+  '*.benchmark.unit',
+  '*.benchmark.metric',
+  '*.provenance.citation_text',
+];
+
 const baseOptions: LoggerOptions = {
   level: process.env.LOG_LEVEL ?? 'info',
   base: null,
@@ -107,6 +139,10 @@ const baseOptions: LoggerOptions = {
     level: (label) => ({ level: label }),
   },
   timestamp: pino.stdTimeFunctions.isoTime,
+  redact: {
+    paths: HEURISTIC_REDACT_PATHS,
+    censor: '[REDACTED]',
+  },
 };
 
 const devTransport: NonNullable<LoggerOptions['transport']> = {
@@ -183,6 +219,18 @@ export interface LogBindings {
   subgraph?: 'browse' | 'analyze';
   /** Browse loop iteration counter per page; runaway detection trigger at >5 (T084 kill criterion). */
   loop_iteration?: number;
+
+  // --- Phase 6 (heuristics KB) — spec.md line 109 + T-PHASE6-LOGGER ---
+  // Set by HeuristicLoader (T106) + 2-stage filter (T107) consumers.
+  // Heuristic IP content (body, benchmark.*, provenance.citation_text) is
+  // redacted via Pino's `redact` config above; these correlation fields are
+  // metadata only and safe to log.
+  /** UUID per HeuristicLoader.loadAll() invocation (T106). */
+  heuristic_loader_session_id?: string;
+  /** Count of heuristics loaded — metadata only, never content. */
+  kb_size?: number;
+  /** Which filter stage emitted the log line (T107). */
+  filter_stage?: 'business_type' | 'page_type' | 'prioritize';
 }
 
 /**

@@ -271,3 +271,5 @@ If this is your first time authoring a Neural heuristic, do this in order:
 ---
 
 *Maintained by engineering. Updates require a Phase 0b spec.md / plan.md amendment + R17 lifecycle bump per CLAUDE.md §8c.*
+
+*Phase 6 traceability: T110 (Phase 6 tasks.md v0.6) — authoring-workflow documentation. Content authored under Phase 0b (T0B-005) is the canonical source; this README satisfies T110's outcome since the Phase 0b corpus already shipped the 4-step workflow, R15.3.1 provenance requirements, R15.3.2 verification gate, R6 IP boundary, and Phase 6 schema cross-references in one place. No re-authoring required.*

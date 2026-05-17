@@ -1,10 +1,10 @@
 ---
 title: Tasks — Phase 6 Heuristic KB Engine
 artifact_type: tasks
-status: approved
-version: 0.5
+status: implemented
+version: 0.6
 created: 2026-04-27
-updated: 2026-05-05
+updated: 2026-05-17
 owner: engineering lead
 authors: [Claude (drafter)]
 
@@ -41,6 +41,7 @@ delta:
     - v0.2 → v0.3 — added Cross-phase note at top pointing readers to phase-0b-heuristics/tasks.md for T103/T104/T105 (engine vs content split made explicit; analyze L5 finding from Phase 0b /speckit.analyze pass — spans phases since T103-T105 are owned by Phase 0b but referenced in Phase 6)
     - v0.3 → v0.4 — Session 7 /speckit.analyze polish — H1 fix: T-PHASE6-LOGGER (Phase 2 Foundational, line 115) now registers the full 6-path Pino redaction config matching spec.md:101 authoritative list — `['*.body', '*.benchmark.value', '*.benchmark.standard_text', '*.benchmark.unit', '*.benchmark.metric', '*.provenance.citation_text']` — closing the R6 enforcement gap that the prior 3-path with wrong wildcard syntax (`*.benchmark.*.value` etc) would have left open. Frontmatter sync with parallel spec.md v0.3→v0.4 (M1) + plan.md v0.2→v0.4 catch-up (M1 + v0.3 sync + H3) + impact.md v0.1→v0.4 catch-up (v0.2 + v0.3 + H2). No AC-NN/R-NN/SC-NNN ID changes; T101-T112 + T-PHASE6-* task bodies preserved verbatim except T-PHASE6-LOGGER redaction-path list.
     - v0.4 → v0.5 (2026-05-05 Session 8) — T101 marked `[x]` standalone (forward-pulled to week 1 per `implementation-roadmap.md` §6 cross-week ordering note: "T101 MUST land in week 1 alongside T-SKELETON-003 for contract test feasibility"). T101 implementation files: `packages/agent-core/src/analysis/heuristics/types.ts` (HeuristicSchemaBase + HeuristicSchemaExtended + ProvenanceSchema + BenchmarkSchema discriminatedUnion + 6 enum constants + matchesSelector helper) + `packages/agent-core/tests/unit/analysis/heuristics/types.test.ts` (40 tests covering AC-01 + AC-02 + AC-11 partial). Phase 6 overall status remains `approved` — only T101 is forward-pulled; T102 + T106-T112 + T-PHASE6-{TESTS,LOGGER,FIXTURES,DOC,ROLLUP} still `[ ]` and execute in week 4 per the roadmap. Commit `3d2119c`.
+    - v0.5 → v0.6 (2026-05-17 Session 17) — /master 6 --start Stage 1b AI Reviewer Pass 1 act-002. T-PHASE6-TESTS scope clarified: AC-01 + AC-02 are ALREADY covered by `packages/agent-core/tests/unit/analysis/heuristics/types.test.ts` (T101 forward-pull, commit `3d2119c`, 40 tests); T-PHASE6-TESTS therefore SKIPS authoring `tests/conformance/heuristic-schema-base.test.ts` + `tests/conformance/heuristic-schema-extended.test.ts` (per spec.md v0.5 AC table update). T-PHASE6-TESTS scope reduced from 10 conformance + 1 integration to 8 conformance + 1 integration. No task ID changes; only T-PHASE6-TESTS body clarifies the SKIP.
   impacted:
     - Phase 4b T4B-013 — drives the loadForContext() implementation; lands AFTER Phase 6 baseline ships
     - Phase 0b heuristic authoring — heuristic manifests now MUST include archetype/page_type/device selectors
@@ -114,9 +115,9 @@ T106 + T107 carry extended kill criteria.
 
 ## Phase 2 — Foundational
 
-- [ ] **T-PHASE6-TESTS [P] [SETUP]** Author 10 conformance tests + Phase 6 integration test FIRST. AC-01..AC-10 FAIL initially.
-- [ ] **T-PHASE6-LOGGER [SETUP]** Modify `observability/logger.ts` to register `heuristic_loader_session_id`, `kb_size`, `filter_stage` correlation fields **+ the full 6-path Pino redaction config** mapping to BenchmarkSchema discriminated-union shape (per spec.md:101 / plan.md:171 authoritative list): `['*.body', '*.benchmark.value', '*.benchmark.standard_text', '*.benchmark.unit', '*.benchmark.metric', '*.provenance.citation_text']`. Note the syntax: paths target the discriminated-union FLAT shape (`*.benchmark.value`, NOT `*.benchmark.*.value`). `*.body` redacts heuristic body text; `*.benchmark.value` covers the quantitative branch's measurement; `*.benchmark.standard_text` covers the qualitative branch's reference text; `*.benchmark.unit` + `*.benchmark.metric` cover the quantitative branch's IP context (revealing units leaks); `*.provenance.citation_text` is the heuristic's canonical excerpt. Provenance fields `source_url` / `verified_by` / `verified_date` / `draft_model` are NOT redacted (public metadata). **R6 enforcement is the focal rule for this phase — every path here must be present, exactly as listed, before T106 lands.** Conformance test in `tests/conformance/r6-ip-boundary.test.ts` (T-PHASE6-TESTS) asserts each path independently with both quantitative and qualitative benchmark fixtures.
-- [ ] **T-PHASE6-FIXTURES [P] [SETUP]** Author synthetic test heuristics in `tests/fixtures/heuristics/`: 30 valid (10 each Baymard / Nielsen / Cialdini test) + 3 invalid (missing benchmark, missing provenance, malformed JSON). All fixtures use plausible but obviously-fake content (e.g., body text marked "TEST FIXTURE — not a real heuristic").
+- [x] **T-PHASE6-TESTS [P] [SETUP]** Author 8 conformance tests + Phase 6 integration test FIRST. AC-03..AC-10 FAIL initially. **v0.6 SKIP:** `tests/conformance/heuristic-schema-base.test.ts` + `tests/conformance/heuristic-schema-extended.test.ts` — AC-01 + AC-02 already covered by `packages/agent-core/tests/unit/analysis/heuristics/types.test.ts` (T101 forward-pull, commit `3d2119c`, 40 tests). Per spec.md v0.5 AC table.
+- [x] **T-PHASE6-LOGGER [SETUP]** Modify `observability/logger.ts` to register `heuristic_loader_session_id`, `kb_size`, `filter_stage` correlation fields **+ the full 6-path Pino redaction config** mapping to BenchmarkSchema discriminated-union shape (per spec.md:101 / plan.md:171 authoritative list): `['*.body', '*.benchmark.value', '*.benchmark.standard_text', '*.benchmark.unit', '*.benchmark.metric', '*.provenance.citation_text']`. Note the syntax: paths target the discriminated-union FLAT shape (`*.benchmark.value`, NOT `*.benchmark.*.value`). `*.body` redacts heuristic body text; `*.benchmark.value` covers the quantitative branch's measurement; `*.benchmark.standard_text` covers the qualitative branch's reference text; `*.benchmark.unit` + `*.benchmark.metric` cover the quantitative branch's IP context (revealing units leaks); `*.provenance.citation_text` is the heuristic's canonical excerpt. Provenance fields `source_url` / `verified_by` / `verified_date` / `draft_model` are NOT redacted (public metadata). **R6 enforcement is the focal rule for this phase — every path here must be present, exactly as listed, before T106 lands.** Conformance test in `tests/conformance/r6-ip-boundary.test.ts` (T-PHASE6-TESTS) asserts each path independently with both quantitative and qualitative benchmark fixtures.
+- [x] **T-PHASE6-FIXTURES [P] [SETUP]** Author synthetic test heuristics in `tests/fixtures/heuristics/`: 30 valid (10 each Baymard / Nielsen / Cialdini test) + 3 invalid (missing benchmark, missing provenance, malformed JSON). All fixtures use plausible but obviously-fake content (e.g., body text marked "TEST FIXTURE — not a real heuristic").
 
 ---
 
@@ -140,7 +141,7 @@ T106 + T107 carry extended kill criteria.
     - **Kill criteria:** default block
     - **Phase 4b dependency note:** T4B-013 lands `loadForContext()` AFTER T106 ships baseline loader; manifest selector fields here are the contract surface T4B-013 reads.
 
-- [ ] **T102 [P] [US-1] HeuristicKnowledgeBase container** (AC-03)
+- [x] **T102 [P] [US-1] HeuristicKnowledgeBase container** (AC-03)
   - **Brief:**
     - **Outcome:** `analysis/heuristics/kb.ts` exports `HeuristicKnowledgeBase` interface + `InMemoryKB` impl. Indexes by `id`. Provides `get`, `list`, `byBusinessType`, `byPageType` query helpers (read-only views; no mutation).
     - **Constraints:** File < 200 lines.
@@ -149,7 +150,7 @@ T106 + T107 carry extended kill criteria.
     - **dep:** T101
     - **Kill criteria:** default block
 
-- [ ] **T106 [US-1] HeuristicLoader (R6 IP boundary)** (AC-04, REQ-HK-001; AC-11 contract surface — implementation deliverable lives in Phase 4b T4B-013) **— extended kill criteria**
+- [x] **T106 [US-1] HeuristicLoader (R6 IP boundary)** (AC-04, REQ-HK-001; AC-11 contract surface — implementation deliverable lives in Phase 4b T4B-013) **— extended kill criteria**
   - **Brief:**
     - **Outcome:** `analysis/heuristics/loader.ts` exports `HeuristicLoader` interface + `FileSystemHeuristicLoader` impl. Reads `heuristicsDir/*.json`; per file: decryptor.decrypt → JSON.parse → HeuristicSchemaExtended.parse. Admits valid; logs rejection (id-only) for invalid; returns InMemoryKB. **R6 enforcement:** every log line uses `heuristic.id` ONLY; never body / benchmark / provenance content. Pino redaction config (from T-PHASE6-LOGGER) is safety net.
     - **Per-task kill criteria (extends default):**
@@ -161,7 +162,7 @@ T106 + T107 carry extended kill criteria.
     - **Files:** `packages/agent-core/src/analysis/heuristics/loader.ts`
     - **dep:** T101, T102, T108
 
-- [ ] **T107 [US-1] Two-stage filter** (AC-05, AC-06, AC-07, REQ-HK-020a + REQ-HK-020b) **— extended kill criteria**
+- [x] **T107 [US-1] Two-stage filter** (AC-05, AC-06, AC-07, REQ-HK-020a + REQ-HK-020b) **— extended kill criteria**
   - **Brief:**
     - **Outcome:** `analysis/heuristics/filter.ts` exports three pure functions:
       - `filterByBusinessType(kb, businessType): ReadonlyArray<HeuristicExtended>` — Stage 1; reduces 100 → 60-70 per §9.6 acceptance
@@ -176,7 +177,7 @@ T106 + T107 carry extended kill criteria.
     - **Files:** `packages/agent-core/src/analysis/heuristics/filter.ts`
     - **dep:** T101, T102
 
-- [ ] **T108 [P] [US-1] DecryptionAdapter** (AC-08, REQ-HK-001 — encryption seam)
+- [x] **T108 [P] [US-1] DecryptionAdapter** (AC-08, REQ-HK-001 — encryption seam)
   - **Brief:**
     - **Outcome:** `adapters/DecryptionAdapter.ts` exports `DecryptionAdapter` interface + `PlaintextDecryptor` MVP impl returning input as utf-8 string. Used by HeuristicLoader. Forward seam: v1.1 plugs `AES256GCMDecryptor` against the same interface.
     - **Constraints:** File < 100 lines. PlaintextDecryptor is pure; no I/O.
@@ -185,7 +186,7 @@ T106 + T107 carry extended kill criteria.
     - **dep:** T-PHASE6-TESTS
     - **Kill criteria:** default block + extra: any AES-256-GCM concrete impl lands in MVP → STOP, that's v1.1
 
-- [ ] **T109 [P] [US-1] TierValidator** (AC-09)
+- [x] **T109 [P] [US-1] TierValidator** (AC-09)
   - **Brief:**
     - **Outcome:** `analysis/heuristics/tier-validator.ts` exports `TierValidator.validate(heuristic): Tier | TierValidationError`. Maps `heuristic.category` to Tier 1 (visual/structural) / Tier 2 (content/persuasion) / Tier 3 (subjective). Configurable category-to-tier map.
     - **Constraints:** File < 150 lines. Pure function.
@@ -194,7 +195,7 @@ T106 + T107 carry extended kill criteria.
     - **dep:** T101
     - **Kill criteria:** default block
 
-- [ ] **T110 [P] [US-1] heuristics-repo/README.md** (Phase 0b workflow documentation)
+- [x] **T110 [P] [US-1] heuristics-repo/README.md** (Phase 0b workflow documentation)
   - **Brief:**
     - **Outcome:** `heuristics-repo/README.md` documents Phase 0b authoring workflow per PRD F-012 amendment 2026-04-26: directory layout (`baymard.json`, `nielsen.json`, `cialdini.json`), schema reference (HeuristicSchemaExtended), provenance requirements (R15.3.1), human verification gate (R15.3.2). Phase 0b consumes this doc.
     - **Constraints:** Plain markdown < 100 lines. No actual heuristic content.
@@ -203,7 +204,7 @@ T106 + T107 carry extended kill criteria.
     - **dep:** T101 (schema authority)
     - **Kill criteria:** default block
 
-- [ ] **T111 [P] [US-1] analysis/heuristics/index.ts barrel + analysis/index.ts** (typed surface only)
+- [x] **T111 [P] [US-1] analysis/heuristics/index.ts barrel + analysis/index.ts** (typed surface only)
   - **Brief:**
     - **Outcome:** `analysis/heuristics/index.ts` re-exports the typed surface (schemas, KB interface, loader interface, filter functions, TierValidator) but NOT raw heuristic content getters. `analysis/index.ts` re-exports the heuristics submodule.
     - **Constraints:** Each file < 50 lines. Only types + functions exported, never test fixtures.
@@ -214,7 +215,7 @@ T106 + T107 carry extended kill criteria.
 
 ### Phase 6 acceptance gate
 
-- [ ] **T112 [US-1] Phase 6 integration test** (AC-10)
+- [x] **T112 [US-1] Phase 6 integration test** (AC-10)
   - **Brief:**
     - **Outcome:** `tests/integration/phase6.test.ts` runs full cycle: instantiate FileSystemHeuristicLoader pointing at `tests/fixtures/heuristics/` → loadAll() → KB has expected count → filterByBusinessType('ecommerce') → expected reduction → filterByPageType('checkout') → expected reduction → prioritizeHeuristics(30) → cap met → tier validator runs on each. **R6 verification:** Pino transport spy captures all log lines from the cycle; assert no fixture body text in any line. Total wall-clock < 30 s.
     - **Constraints:** File < 250 lines.
@@ -229,8 +230,8 @@ T106 + T107 carry extended kill criteria.
 
 ## Phase N — Polish
 
-- [ ] **T-PHASE6-DOC [P]** Update root README dev quickstart (note: heuristics-repo/ exists but content is Phase 0b workstream).
-- [ ] **T-PHASE6-ROLLUP** Author `phase-6-current.md` per R19. Active modules: `analysis/heuristics/`. Contracts: 7 NEW. Forward dependency: Phase 0b populates content; Phase 7 consumes filtered output.
+- [x] **T-PHASE6-DOC [P]** Update root README dev quickstart (note: heuristics-repo/ exists but content is Phase 0b workstream).
+- [x] **T-PHASE6-ROLLUP** Author `phase-6-current.md` per R19. Active modules: `analysis/heuristics/`. Contracts: 7 NEW. Forward dependency: Phase 0b populates content; Phase 7 consumes filtered output.
 
 ---
 

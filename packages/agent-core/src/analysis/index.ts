@@ -20,3 +20,4 @@
  */
 export * from './types.js';
 export * from './analyzePerception.subschemas.js';
+export * from './heuristics/index.js';

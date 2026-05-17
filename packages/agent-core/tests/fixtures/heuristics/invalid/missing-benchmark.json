@@ -1,0 +1,29 @@
+{
+  "id": "BAYMARD-TEST-999",
+  "body": "TEST FIXTURE — not a real heuristic. NEURAL_TEST_FIXTURE_BODY. Invalid-fixture base used for negative loader tests.",
+  "category": "checkout_friction",
+  "version": "0.0.1",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.5,
+  "effort_category": "quick_win",
+  "preferred_states": [
+    "default"
+  ],
+  "status": "active",
+  "provenance": {
+    "source_url": "https://example.test/baymard/999",
+    "citation_text": "TEST FIXTURE — synthetic provenance; not a real citation",
+    "draft_model": "human",
+    "verified_by": "phase-6-test-fixtures",
+    "verified_date": "2026-05-17T00:00:00Z"
+  },
+  "archetype": [
+    "D2C"
+  ],
+  "page_type": [
+    "pdp"
+  ],
+  "device": [
+    "mobile"
+  ]
+}
