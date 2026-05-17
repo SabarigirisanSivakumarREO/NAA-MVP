@@ -2,9 +2,9 @@
 title: Phase 6 — Heuristic KB Engine
 artifact_type: spec
 status: approved
-version: 0.4
+version: 0.5
 created: 2026-04-27
-updated: 2026-04-30
+updated: 2026-05-17
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -54,6 +54,7 @@ delta:
     - v0.1 → v0.2 — analyze-driven xref + redaction-pattern polish
     - v0.2 → v0.3 — adds T4B-013 ContextProfile filter integration (REQ-CONTEXT-DOWNSTREAM-001); coordinated with Phase 4b
     - v0.3 → v0.4 — Session 7 /speckit.analyze polish — M1 (R10→R13 stale xref for temperature=0 in Constitution Alignment Check); coordinated with parallel plan.md v0.2→v0.4 catch-up (which absorbs v0.3 content + M1 + H3) and impact.md v0.1→v0.4 catch-up (which absorbs v0.2 redaction polish + v0.3 contract surface + H2) and tasks.md v0.3→v0.4 (which absorbs H1 — T-PHASE6-LOGGER 6-path Pino redaction config to match spec.md:101 authoritative list). No AC-NN/R-NN/SC-NNN ID changes (R18 append-only preserved).
+    - v0.4 → v0.5 — Session 17 (2026-05-17) /master 6 --start Stage 1b AI Reviewer Pass 1 act-001 — AC-01 + AC-02 "Conformance test path" column updated to cite `packages/agent-core/tests/unit/analysis/heuristics/types.test.ts` (T101 forward-pulled in v0.5 commit `3d2119c` landed 40 tests there; spec previously cited unauthored conformance/ shim paths, causing SPEC_IMPL_SHAPE_MISMATCH at spec:matrix). No AC-NN/R-NN/SC-NNN ID changes; only test-path column entries updated for AC-01 + AC-02. Coordinated with parallel tasks.md v0.5 → v0.6 (act-002 — T-PHASE6-TESTS scope notes AC-01 + AC-02 already covered by unit suite; conformance/ shims not required for those two ACs).
   impacted:
     - Constitution R6.1-R6.4 — first runtime enforcement of the **logs channel**; full multi-channel enforcement spans Phase 6/7/8/9
     - Constitution R15.3 — schema enforces benchmark + provenance presence; loader rejects heuristics missing either
@@ -150,8 +151,8 @@ The Phase 8 orchestrator (audit_setup) calls `HeuristicLoader.loadAll()` once pe
 
 | ID | Criterion | Conformance test path | Linked task |
 |----|-----------|----------------------|-------------|
-| AC-01 | `HeuristicSchema` (base) Zod validates fixtures conforming to §9.1 | `tests/conformance/heuristic-schema-base.test.ts` | T101 |
-| AC-02 | `HeuristicSchemaExtended` validates fixtures with all §9.10 fields (version, rule_vs_guidance, business_impact_weight, effort_category, preferred_states, status) + R15.3.1 provenance block; rejects entries missing benchmark OR provenance | `tests/conformance/heuristic-schema-extended.test.ts` | T101 |
+| AC-01 | `HeuristicSchema` (base) Zod validates fixtures conforming to §9.1 | `packages/agent-core/tests/unit/analysis/heuristics/types.test.ts` (v0.5 — T101 forward-pull landed here in commit `3d2119c`; conformance/ shim NOT required) | T101 |
+| AC-02 | `HeuristicSchemaExtended` validates fixtures with all §9.10 fields (version, rule_vs_guidance, business_impact_weight, effort_category, preferred_states, status) + R15.3.1 provenance block; rejects entries missing benchmark OR provenance | `packages/agent-core/tests/unit/analysis/heuristics/types.test.ts` (v0.5 — T101 forward-pull landed here; conformance/ shim NOT required) | T101 |
 | AC-03 | `HeuristicKnowledgeBase` container schema indexes heuristics by `id`; provides `get`, `list`, `byBusinessType`, `byPageType` query helpers | `tests/conformance/kb-container.test.ts` | T102 |
 | AC-04 | `HeuristicLoader.loadAll()` reads from `heuristics-repo/` directory; rejects malformed entries; returns typed KB; logs only IDs (R6 conformance) | `tests/conformance/heuristic-loader.test.ts` + `tests/conformance/r6-ip-boundary.test.ts` (Pino transport spy) | T106 |
 | AC-05 | `filterByBusinessType(kb, businessType)` reduces ~100 → ~60-70 per §9.6 (REQ-HK-020a) | `tests/conformance/filter-business-type.test.ts` | T107 |
@@ -162,7 +163,7 @@ The Phase 8 orchestrator (audit_setup) calls `HeuristicLoader.loadAll()` once pe
 | AC-10 | Phase 6 integration test runs full load + filter + prioritize cycle on synthetic heuristics; total wall-clock < 30 s; all 10 ACs pass; **R6 enforcement**: Pino transport spy confirms no heuristic content in any log line | `tests/integration/phase6.test.ts` | T112 (Phase 6 integration test; sub-tasks T110-T111 are helpers) |
 | AC-11 | `HeuristicLoader.loadForContext(profile: ContextProfile)` reads `business.archetype`, `page.type`, `traffic.device_priority` from the profile; matches against heuristic manifest fields `archetype` / `page_type` / `device`; returns 12-25 heuristics for typical contexts (D2C/PDP/mobile, SaaS/pricing/desktop, B2B/comparison/balanced, lead_gen/landing/mobile). **No weight modifiers** — filter only (Phase 13b master adds weights). **Phase 4b T4B-013 owns implementation; Phase 6 v0.3 owns the contract.** | `tests/conformance/heuristic-loader-context-filter.test.ts` (lives in Phase 4b deliverable; cross-references Phase 6 contract) | T4B-013 (Phase 4b) — Phase 6 v0.3 documents the contract |
 
-AC-NN IDs append-only per Constitution R18 — AC-11 added in v0.3.
+AC-NN IDs append-only per Constitution R18 — AC-11 added in v0.3. v0.5 (2026-05-17) only updated AC-01 + AC-02 "Conformance test path" column entries to cite the unit suite where T101 forward-pull landed; no ID changes.
 
 ---
 
