@@ -57,7 +57,7 @@ governing_rules:
 
 # Phase 5b Tasks (T5B-001 to T5B-019)
 
-> **Summary (~80 tokens):** 19 tasks across 4 streams. Multi-viewport (T5B-001..009): AuditRequest + orchestrator + diff + popup behavior + dark patterns + heuristics + integration. Trigger taxonomy (T5B-010..015): 5 new triggers + candidate discovery. Cookie policy (T5B-016..018): detector + policy + AuditRequest field. Full integration (T5B-019). Total ~28h ±3. Canonical defs in `tasks-v2.md` lines 580-696.
+> **Summary (~80 tokens):** 19 tasks across 4 streams. Multi-viewport (T5B-001..009): AuditRequest + orchestrator + diff + popup behavior + dark patterns + heuristics + integration. Trigger taxonomy (T5B-010..015): 5 new triggers + candidate discovery. Cookie policy (T5B-016..018): detector + policy + AuditRequest field. Full integration (T5B-019). Total ~28.5h ±3. Canonical defs in `tasks-v2.md` lines 580-696.
 
 **Source of truth:** `docs/specs/mvp/tasks-v2.md` lines 580-696. Acceptance criteria, file paths, and dependencies below are mirrored verbatim — **do NOT modify this file in lieu of updating `tasks-v2.md`**.
 

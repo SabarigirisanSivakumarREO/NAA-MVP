@@ -312,7 +312,7 @@ Tasks above 2.0h: T5B-006 (2.0h), T5B-014 (2.0h), T5B-019 (3.5h). All have expli
 - **Per-task:** conformance tests pass on dedicated fixtures.
 - **Per-stream:** T5B-009 (multi-viewport) + T5B-019 (full) integration tests pass.
 - **R26 compliance:** explicit conformance assertions in T5B-014 (cc-*/password skip), T5B-013 (mobile no-op), T5B-015 (per-trigger budget), TriggerCandidateDiscovery (no infinite loop).
-- **Cost:** T5B-019 multi-viewport + 8 triggers + cookie audit cost ≤2× single-viewport baseline (NF-01).
+- **Cost:** T5B-019 multi-viewport + 6 MVP-active triggers + cookie audit cost ≤2× single-viewport baseline (NF-01).
 - **State restoration:** T5B-006 before/after AnalyzePerception equality assertion.
 - **Backward compat:** Phase 5 (T100) integration test re-runs unchanged with default AuditRequest (no viewports/cookie_policy opts).
 
