@@ -1,0 +1,25 @@
+{
+  "id": "MULTIVIEW-CTA-001",
+  "body": "Inspect whether the primary call-to-action button is positioned above the fold on mobile viewports (viewport.device_type === \"mobile\"). The primary CTA — the dominant conversion action on the page (e.g., 'Add to Cart', 'Get Started', 'Buy Now') — must be visible without scrolling on a 375x812 viewport so the user encounters the conversion path immediately on landing. Positive signals: the primary CTA's bounding box top edge sits within the first 812 vertical pixels of the page; the CTA is not hidden behind a sticky header or cookie banner; the CTA has tap-target dimensions of at least 44x44 pixels. Negative signals: the primary CTA falls below the 812-pixel fold line on mobile rendering; the CTA is occluded by a fixed overlay; the CTA tap target is below 44 pixels. When violations are found, recommend reflowing the hero section so the primary CTA appears within the first viewport on mobile, removing or relocating fixed overlays that occlude the CTA, and confirming the tap target meets Apple HIG minimums. Reference Baymard mobile fold composition guidance which observes that primary CTAs falling below the mobile fold are encountered substantially later in the session.",
+  "category": "viewport_layout",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.78,
+  "effort_category": "quick_win",
+  "preferred_states": ["default"],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "Primary CTA must be visible in the initial mobile viewport (375x812) without scrolling — Baymard mobile fold composition guideline."
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/mobile-fold-cta-placement",
+    "citation_text": "Baymard's mobile UX research identifies above-the-fold primary CTA placement as a documented mobile conversion baseline; pages where the primary CTA falls below the initial 812-pixel viewport on iPhone-class devices show measurably lower first-encounter rates. The recommendation is to reflow hero sections so the conversion action is reachable without an initial scroll.",
+    "draft_model": "claude-opus-4-7",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-17T20:30:00Z"
+  },
+  "archetype": ["D2C", "SaaS", "marketplace"],
+  "page_type": ["pdp", "landing", "homepage"],
+  "device": ["mobile"]
+}

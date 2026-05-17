@@ -1,0 +1,27 @@
+{
+  "id": "MULTIVIEW-FORM-001",
+  "body": "Inspect form layouts rendered on mobile viewports (viewport.device_type === \"mobile\") for layout breakage — specifically: horizontal overflow greater than 0 pixels relative to the viewport width, or any individual form field with rendered width below the 44-pixel minimum tap-target threshold. Mobile form usability depends on every input being reachable with a thumb and visible without horizontal scrolling. Positive signals: all form fields render within the viewport width; every field has tap-target dimensions of at least 44x44 pixels; labels are positioned above inputs rather than beside them on narrow screens. Negative signals: horizontal scroll appears when interacting with the form; one or more fields render below 44 pixels in either dimension; labels are pushed off-screen by viewport width. When violations are found, recommend collapsing multi-column form layouts to a single column on mobile breakpoints, increasing field heights to 44 pixels minimum, and shifting labels above inputs to avoid horizontal compression. Reference Baymard form usability research which observes that mobile form breakage materially raises abandonment.",
+  "category": "form_usability",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.72,
+  "effort_category": "strategic",
+  "preferred_states": ["default"],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 44,
+    "unit": "px",
+    "metric": "min_form_field_tap_target_mobile"
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/mobile-form-usability",
+    "citation_text": "Baymard's mobile form usability research identifies horizontal overflow and sub-44-pixel form fields as primary causes of mobile form abandonment. The guideline mandates single-column form layouts on mobile breakpoints, 44x44 pixel minimum tap targets per Apple Human Interface Guidelines, and labels positioned above inputs to avoid horizontal compression on 375-pixel-wide viewports.",
+    "draft_model": "claude-opus-4-7",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-17T20:30:00Z"
+  },
+  "archetype": ["D2C", "SaaS", "lead_gen", "B2B"],
+  "page_type": ["checkout", "landing", "pricing"],
+  "device": ["mobile"]
+}

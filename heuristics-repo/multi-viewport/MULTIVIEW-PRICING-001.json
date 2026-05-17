@@ -1,0 +1,25 @@
+{
+  "id": "MULTIVIEW-PRICING-001",
+  "body": "Inspect whether pricing display is truncated, overlapped, or rendered in a degraded layout on mobile viewports (viewport.device_type === \"mobile\"). Pricing comparison and anchoring patterns that work on desktop wide-comparison tables frequently break under a 375-pixel viewport width — leading to truncated numerals, overlapping anchor and sale prices, or horizontally scrollable comparison rows that hide pricing detail. Positive signals: pricing amount, currency, anchor price (if any), and discount annotation are all fully visible on a 375-pixel mobile viewport; the layout reflows from comparison-table to stacked-card form on narrow breakpoints; tax-inclusion language remains legible. Negative signals: pricing amount is clipped by an overflow-hidden container; anchor and sale prices overlap or render with insufficient spacing; comparison-table rows require horizontal scroll to reveal pricing columns. When violations are found, recommend reflowing comparison tables to stacked cards on mobile, ensuring numerals do not clip at the viewport edge, and verifying anchor-and-sale spacing remains readable. Reference Baymard pricing display research.",
+  "category": "pricing_display",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.68,
+  "effort_category": "quick_win",
+  "preferred_states": ["default"],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "Pricing amount, currency, anchor, and discount annotation must all render without truncation or overlap on a 375-pixel mobile viewport — Baymard mobile pricing display guideline."
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/mobile-pricing-display",
+    "citation_text": "Baymard's pricing display research observes that desktop-oriented comparison-table layouts frequently degrade on mobile renderings — producing clipped numerals, overlapping anchor-and-sale price pairs, and horizontally scrollable pricing rows. The guideline recommends reflowing to single-column stacked-card layouts on narrow breakpoints and verifying pricing remains fully readable on a 375-pixel viewport width.",
+    "draft_model": "claude-opus-4-7",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-17T20:30:00Z"
+  },
+  "archetype": ["D2C", "SaaS", "marketplace"],
+  "page_type": ["pdp", "pricing", "comparison"],
+  "device": ["mobile"]
+}

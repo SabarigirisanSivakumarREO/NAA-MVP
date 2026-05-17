@@ -1,0 +1,25 @@
+{
+  "id": "MULTIVIEW-TRUST-001",
+  "body": "Inspect whether trust signals — review counts, star ratings, security badges, third-party verification marks, guarantee statements — are surfaced within the mobile fold (viewport.device_type === \"mobile\") on conversion-critical pages. Trust signals reduce purchase anxiety; mobile users encounter the fold first and may not scroll past it on initial assessment. Positive signals: at least one credible trust signal (aggregate rating, security badge, guarantee text, or third-party verification mark) is visible within the first 812 vertical pixels on mobile; the trust signal is rendered with sufficient contrast to be legible; the trust signal is positioned near the primary CTA rather than buried in a footer. Negative signals: no trust signal appears above the mobile fold; trust signals are present but use such low contrast they are imperceptible; trust signals are pushed entirely below the fold by an oversized hero image. When violations are found, recommend lifting one anchor trust signal — an aggregate rating, a recognizable security badge, or a money-back guarantee statement — into the mobile fold near the primary CTA, ensuring AA contrast minimums. Reference Baymard checkout trust signal research.",
+  "category": "trust_signals",
+  "version": "1.0.0",
+  "rule_vs_guidance": "guidance",
+  "business_impact_weight": 0.55,
+  "effort_category": "quick_win",
+  "preferred_states": ["default"],
+  "status": "active",
+  "benchmark": {
+    "kind": "qualitative",
+    "standard_text": "At least one credible trust signal must be visible within the mobile fold on conversion-critical pages — Baymard mobile checkout trust guideline."
+  },
+  "provenance": {
+    "source_url": "https://baymard.com/blog/perception-of-security",
+    "citation_text": "Baymard's checkout trust research observes that trust signals positioned above the mobile fold near the primary conversion action measurably reduce user anxiety at the decision point. Aggregate ratings, security badges, and money-back guarantee statements are the three categories most frequently surfaced; placement below the fold reduces their effectiveness because mobile users frequently assess the page without scrolling.",
+    "draft_model": "claude-opus-4-7",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-17T20:30:00Z"
+  },
+  "archetype": ["D2C", "marketplace", "lead_gen"],
+  "page_type": ["pdp", "checkout", "cart", "landing"],
+  "device": ["mobile"]
+}

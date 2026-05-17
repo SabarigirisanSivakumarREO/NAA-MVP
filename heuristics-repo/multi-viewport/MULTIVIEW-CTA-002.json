@@ -1,0 +1,27 @@
+{
+  "id": "MULTIVIEW-CTA-002",
+  "body": "Inspect whether a sticky or fixed-position call-to-action element covers more than 40% of the mobile viewport (viewport.device_type === \"mobile\"). Sticky CTAs are a common pattern that reinforces the conversion path during scroll, but oversized sticky bars consume reading area, push content below the fold, and obstruct interaction with the underlying page. Positive signals: the sticky CTA bar's height is below 15% of the viewport height; the CTA remains visible during scroll without obscuring more than one full line of body text; the CTA has a visible dismiss affordance. Negative signals: the sticky CTA exceeds 40% viewport coverage on a 375x812 mobile rendering; the CTA expands on scroll without user interaction; the CTA blocks above-fold reading area on first load. When violations are found, recommend reducing the sticky-CTA height to a single-line bar, collapsing detailed content to expand only on tap, and ensuring the sticky element does not push the primary fold content below the viewport. Reference NN/g sticky element overuse guidance which observes that oversized sticky elements degrade mobile reading flow.",
+  "category": "viewport_layout",
+  "version": "1.0.0",
+  "rule_vs_guidance": "rule",
+  "business_impact_weight": 0.6,
+  "effort_category": "quick_win",
+  "preferred_states": ["default"],
+  "status": "active",
+  "benchmark": {
+    "kind": "quantitative",
+    "value": 40,
+    "unit": "percent",
+    "metric": "max_sticky_cta_viewport_coverage_mobile"
+  },
+  "provenance": {
+    "source_url": "https://www.nngroup.com/articles/sticky-headers/",
+    "citation_text": "Nielsen Norman Group's research on sticky elements observes that elements which occupy more than a small portion of the mobile viewport degrade reading flow and push above-fold content below the screen edge. The guideline recommends keeping sticky bars to single-line height and avoiding expansion on scroll without explicit user gesture.",
+    "draft_model": "claude-opus-4-7",
+    "verified_by": "Sabari (engineering lead)",
+    "verified_date": "2026-05-17T20:30:00Z"
+  },
+  "archetype": ["D2C", "SaaS", "marketplace"],
+  "page_type": ["pdp", "landing", "homepage", "pricing"],
+  "device": ["mobile"]
+}

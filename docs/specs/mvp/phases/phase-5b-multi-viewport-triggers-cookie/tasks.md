@@ -186,7 +186,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **acceptance:** Search scripts for `mouseleave` listeners on document/body. Simulate mouse to (x, -1). Triggers exit-intent popups. Populates `popups[].triggerType: exit_intent`. **No-op silently on mobile viewport.**
 - **conformance test:** `packages/agent-core/tests/conformance/exit-intent-trigger.test.ts` (AC-13)
 
-### T5B-014 — FormInputTrigger
+### T5B-014 — FormInputTrigger ✅
 - **dep:** T091, T017 (TypingBehavior)
 - **spec:** §20 trigger taxonomy + spec §3.1
 - **files:** `packages/agent-core/src/browser-runtime/triggers/FormInputTrigger.ts`
@@ -213,7 +213,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **library signatures:** see [plan.md §2.6](plan.md)
 - **conformance test:** `packages/agent-core/tests/conformance/cookie-banner-detector.test.ts` (AC-16)
 
-### T5B-017 — CookieBannerPolicy
+### T5B-017 — CookieBannerPolicy ✅
 - **dep:** T5B-016, T5B-018
 - **spec:** spec §4.4 + §11.1.1 robots/ToS
 - **files:** `packages/agent-core/src/browser-runtime/CookieBannerPolicy.ts`
