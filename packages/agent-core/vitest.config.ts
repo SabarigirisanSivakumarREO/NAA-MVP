@@ -36,6 +36,9 @@ export default defineConfig({
       ['tests/conformance/hidden-element-capture.test.ts', 'jsdom'],
       ['tests/conformance/element-graph-builder.test.ts', 'jsdom'],
       ['tests/conformance/nondeterminism-detector.test.ts', 'jsdom'],
+      // Phase 5b T5B-016 / T5B-017 cookie banner detection — DOM ops.
+      ['tests/conformance/cookie-banner-detector.test.ts', 'jsdom'],
+      ['tests/conformance/cookie-banner-policy.test.ts', 'jsdom'],
     ],
   },
 });

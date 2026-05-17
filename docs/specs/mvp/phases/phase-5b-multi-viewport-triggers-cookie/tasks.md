@@ -165,7 +165,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **acceptance:** Detect `:hover` rules + `aria-haspopup` on test fixture. Fire mouseenter event + dwell. Reveals tooltips and dropdown previews. Settles within 1s. **No-op silently on mobile viewport.**
 - **conformance test:** `packages/agent-core/tests/conformance/hover-trigger.test.ts` (AC-10)
 
-### T5B-011 — ScrollPositionTrigger
+### T5B-011 — ScrollPositionTrigger ✅
 - **dep:** T091, T1C-007
 - **spec:** §20 trigger taxonomy + spec §3.1
 - **files:** `packages/agent-core/src/browser-runtime/triggers/ScrollPositionTrigger.ts`
