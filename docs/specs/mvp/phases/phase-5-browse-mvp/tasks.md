@@ -229,7 +229,7 @@ T084 + T091 carry extended kill criteria.
   - **Files:** `packages/agent-core/tests/integration/phase5-simple.test.ts`
   - **dep:** T091
 
-- [ ] **T093 [US-1] Integration: amazon.in workflow** (AC-12)
+- [x] **T093 [US-1] Integration: amazon.in workflow** (AC-12)
   - **Brief — Outcome:** Multi-step search workflow with deterministic MockLLM proposing search → click first result → verify product page. Asserts: 3 actions, 3 verifies pass (or graceful CAPTCHA-wall acceptance per spec edge case 9), confidence > 0.85. On `FailureClass='bot_detected_likely'`, page_router routes to `audit_complete` with `completion_reason='aborted'` + AuditEvent `audit_failed` carrying `metadata.cause_class='bot_detected'`.
   - **Files:** `packages/agent-core/tests/integration/phase5-amazon.test.ts`
   - **dep:** T091
