@@ -205,7 +205,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 
 ## Cookie Policy Stream (T5B-016..T5B-018)
 
-### T5B-016 — CookieBannerDetector
+### T5B-016 — CookieBannerDetector ✅
 - **dep:** T091
 - **spec:** spec §4.4
 - **files:** `packages/agent-core/src/browser-runtime/CookieBannerDetector.ts`

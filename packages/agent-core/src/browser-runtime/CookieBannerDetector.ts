@@ -109,7 +109,9 @@ const SIGNATURES: ReadonlyArray<LibrarySignature> = [
   { library: 'Quantcast Choice', rootSelectors: ['#qc-cmp2-container', '[class^="qc-cmp"]', 'iframe[id^="cmp"]'] },
   { library: 'Didomi', rootSelectors: ['#didomi-notice', '#didomi-popup', '[class*="didomi"]'] },
   { library: 'Iubenda', rootSelectors: ['#iubenda-cs-banner', '[class^="iubenda-cs"]', 'iframe[src*="iubenda.com"]'] },
-  { library: 'Sourcepoint', rootSelectors: ['iframe[id^="sp_message"]', '[class*="sp_message_container"]'] },
+  // Sourcepoint: prefer the container (has buttons inside) over the iframe
+  // root — iframes' children are inaccessible from the parent doc.
+  { library: 'Sourcepoint', rootSelectors: ['[class*="sp_message_container"]', 'iframe[id^="sp_message"]'] },
 ];
 
 // ── helpers ──────────────────────────────────────────────────────────────
