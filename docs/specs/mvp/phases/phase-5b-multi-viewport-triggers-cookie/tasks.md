@@ -135,7 +135,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **flag taxonomy:** see [plan.md §2.5](plan.md)
 - **conformance test:** `packages/agent-core/tests/conformance/dark-pattern-detector.test.ts` (AC-07)
 
-### T5B-008 — Multi-viewport heuristics pack (lint-only via Phase 0b)
+### T5B-008 — Multi-viewport heuristics pack (lint-only via Phase 0b) ✅
 - **dep:** Phase 0b heuristic-lint.test.ts already shipped (no Phase 6 HeuristicSchema dep — Zod-schema validation gated to Phase 6 per Gate 1 act-004 decision)
 - **spec:** §09 + §07 §7.9.2
 - **files:** 5 separate JSON files at `heuristics-repo/multi-viewport/`:
