@@ -90,7 +90,17 @@ export function createBrowseNode(deps: BrowseNodeDeps): BrowseNodeFn {
         slice = sel.slice;
       } else {
         const merged = { ...validatedState, ...sel.slice } as AuditStateBrowseSubset;
-        slice = await verifyAndRoute(merged, deps, log, iter);
+        const verifySlice = await verifyAndRoute(merged, deps, log, iter);
+        // Bug-A fix: merge selectAction's slice with verifyAndRoute's slice so
+        // page_state_models write survives the LangGraph state-channel write.
+        // verify keys win on conflicts (current_node, node_status,
+        // _phase8_extensions). _phase8_extensions deep-merged so selectAction's
+        // last_action_proposal + last_llm_cost survive verify's writes.
+        slice = {
+          ...sel.slice,
+          ...verifySlice,
+          _phase8_extensions: { ...(sel.slice._phase8_extensions ?? {}), ...(verifySlice._phase8_extensions ?? {}) },
+        };
         log.info('browse.exit');
       }
     }
@@ -114,6 +124,7 @@ async function selectAction(
   const basePrompt = composePrompt(pageState);
   let userPrompt = basePrompt;
   let proposal: ActionProposal | undefined;
+  let totalCost = 0; // Bug-C fix: accumulate LLM cost across retries for budget debit.
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
     log.info({ attempt }, 'browse.llm_call_attempt');
     const req: LLMCompleteRequest = {
@@ -122,6 +133,7 @@ async function selectAction(
       systemPrompt: BROWSE_AGENT_SYSTEM_PROMPT, userPrompt, temperature: 0.5, maxTokens: 1024,
     };
     const r = await deps.llm.complete(req);
+    totalCost += r.costUsd;
     const p = tryParse(r.text);
     if (p.success) { proposal = p.data; log.info({ tool: proposal.tool, attempt }, 'browse.action_proposed'); break; }
     log.warn({ attempt, issue: p.error }, 'browse.action_zod_failed_retry');
@@ -129,12 +141,12 @@ async function selectAction(
   }
   if (proposal === undefined) {
     log.error('browse.action_zod_failed_final');
-    return { slice: abort(state, 'safety_blocked', iter), aborted: true };
+    return { slice: abort(state, 'safety_blocked', iter, totalCost), aborted: true };
   }
   return { aborted: false, slice: {
     current_node: NODE, node_status: 'running',
     page_state_models: [...state.page_state_models, pageState], updated_at: new Date(),
-    _phase8_extensions: { ...(state._phase8_extensions ?? {}), browse_loop_iteration: iter, last_action_proposal: proposal },
+    _phase8_extensions: { ...(state._phase8_extensions ?? {}), browse_loop_iteration: iter, last_action_proposal: proposal, last_llm_cost: totalCost },
   }};
 }
 
@@ -184,11 +196,16 @@ function success(
   state: AuditStateBrowseSubset, deps: BrowseNodeDeps, log: Logger, iter: number, result: AggregatedVerifyResult,
 ): Partial<AuditStateBrowseSubset> {
   const c = deps.scorer.afterSuccess(state.session_confidence); // R4.4 multiplicative
+  const cost = lastLlmCost(state); // Bug-C fix: debit budget by this iteration's LLM cost.
   void deps.recorder.recordEvent(pageEvt(state, 'page_browse_completed'))
     .then(() => log.info({ event_type: 'page_browse_completed' }, 'browse.event_emitted'));
   return {
     current_node: NODE, node_status: 'complete', session_confidence: c, updated_at: new Date(),
-    _phase8_extensions: { ...(state._phase8_extensions ?? {}), browse_loop_iteration: iter, last_verify_result: result },
+    budget_remaining_usd: Math.max(0, state.budget_remaining_usd - cost),
+    analysis_cost_usd: state.analysis_cost_usd + cost,
+    // Bug-B fix: clear last_failure_class on success so a stale class from a
+    // prior failed iteration doesn't re-route the retry-cap branch in edges.ts.
+    _phase8_extensions: { ...(state._phase8_extensions ?? {}), browse_loop_iteration: iter, last_verify_result: result, last_failure_class: undefined },
   };
 }
 
@@ -197,12 +214,31 @@ function failure(
 ): Partial<AuditStateBrowseSubset> {
   const c = deps.scorer.afterFailure(state.session_confidence); // R4.4 multiplicative
   const fc: FailureClassification = deps.classifier.classify(result);
+  const cost = lastLlmCost(state); // Bug-C fix: debit even on failure (LLM still spent).
+  // F-015 fix: terminal FailureClass values (safety_blocked, bot_detected_likely)
+  // route to audit_complete; AuditCompleteNode requires completion_reason on
+  // entry. Set 'aborted' + cause_class here so the terminal node has the data
+  // it needs without re-deriving from last_failure_class.
+  const isTerminalClass = fc.class === 'safety_blocked' || fc.class === 'bot_detected_likely';
+  const causeClass = fc.class === 'bot_detected_likely' ? 'bot_detected' : fc.class === 'safety_blocked' ? 'safety_blocked' : undefined;
   void deps.recorder.recordEvent({ ...pageEvt(state, 'page_browse_failed'), metadata: { failure_class: fc.class, subclass: fc.subclass } })
     .then(() => log.info({ event_type: 'page_browse_failed' }, 'browse.event_emitted'));
   return {
     current_node: NODE, node_status: 'complete', session_confidence: c, updated_at: new Date(),
-    _phase8_extensions: { ...(state._phase8_extensions ?? {}), browse_loop_iteration: iter, last_verify_result: result, last_failure_class: fc.class },
+    ...(isTerminalClass ? { completion_reason: 'aborted' as const } : {}),
+    budget_remaining_usd: Math.max(0, state.budget_remaining_usd - cost),
+    analysis_cost_usd: state.analysis_cost_usd + cost,
+    _phase8_extensions: {
+      ...(state._phase8_extensions ?? {}), browse_loop_iteration: iter, last_verify_result: result, last_failure_class: fc.class,
+      ...(causeClass !== undefined ? { cause_class: causeClass } : {}),
+    },
   };
+}
+
+/** Bug-C fix: pull last LLM cost from the _phase8_extensions slot written by selectAction. */
+function lastLlmCost(state: AuditStateBrowseSubset): number {
+  const raw = (state._phase8_extensions ?? {})['last_llm_cost'];
+  return typeof raw === 'number' && Number.isFinite(raw) ? raw : 0;
 }
 
 function handleSafety(
@@ -227,9 +263,15 @@ function handleSafety(
 
 // --- pure utilities -------------------------------------------------------
 
-function abort(state: AuditStateBrowseSubset, cause: 'loop_runaway' | 'safety_blocked', iter: number): Partial<AuditStateBrowseSubset> {
+function abort(
+  state: AuditStateBrowseSubset, cause: 'loop_runaway' | 'safety_blocked', iter: number, cost: number = 0,
+): Partial<AuditStateBrowseSubset> {
+  // Bug-C fix: debit any LLM cost incurred before the abort (e.g. failed
+  // action-selection retries). loop_runaway path passes 0 — no LLM call this turn.
   return {
     current_node: NODE, node_status: 'failed', completion_reason: 'aborted', updated_at: new Date(),
+    budget_remaining_usd: Math.max(0, state.budget_remaining_usd - cost),
+    analysis_cost_usd: state.analysis_cost_usd + cost,
     _phase8_extensions: { ...(state._phase8_extensions ?? {}), browse_loop_iteration: iter, cause_class: cause },
   };
 }

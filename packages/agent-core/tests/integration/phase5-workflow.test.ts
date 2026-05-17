@@ -315,11 +315,11 @@ describe('AC-13 — Phase 5 5-action workflow integration', () => {
       'browser_get_state',
     ]);
 
-    // PageStateModels at terminal: empty by design — BrowseNode's success()
-    // slice does NOT re-propagate page_state_models (only selectAction sets
-    // it, and verifyAndRoute's slice overwrites without it). Accumulation
-    // visibility lives in observability events, not on terminal state.
-    expect(final.page_state_models).toEqual([]);
+    // PageStateModels accumulated across iterations — post Bug-A fix
+    // (Wave 8 BrowseNode merges selectAction's slice with verifyAndRoute's
+    // before returning to LangGraph state channel), the 5 captured PSMs
+    // now survive on terminal state.
+    expect(final.page_state_models).toHaveLength(5);
 
     // ----- Confidence floor — 5 successes monotonically non-decreasing -----
     expect(final.session_confidence).toBeGreaterThan(0.85);

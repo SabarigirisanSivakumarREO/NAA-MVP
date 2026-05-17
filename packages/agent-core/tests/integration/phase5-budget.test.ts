@@ -137,8 +137,16 @@ function makePsmFor(url: string): PageStateModel {
   });
 }
 
-/** Phase A — start with 2 URLs + non-zero budget; both pages browse cleanly. */
-function makeInitialStatePhaseA(): AuditStateBrowseSubset {
+/**
+ * Initial state — 3 URLs, budget 0.06, cost per LLM call 0.03.
+ *
+ * Post Bug-C fix (Wave 8): BrowseNode.success() now debits budget_remaining_usd
+ * by lastLlmCost on every iteration. After 2 successful pages, budget reaches
+ * 0; PageRouterNode (T083) R8.1 gate trips on URL_3 entry. URL_3 never browses.
+ * Single invoke is sufficient — the two-phase workaround from the pre-fix
+ * baseline is no longer needed.
+ */
+function makeInitialState(): AuditStateBrowseSubset {
   return AuditStateBrowseSubsetSchema.parse({
     audit_run_id: AUDIT_RUN_ID,
     client_id: CLIENT_ID,
@@ -149,30 +157,8 @@ function makeInitialStatePhaseA(): AuditStateBrowseSubset {
     pending_questions: [],
     created_at: new Date('2026-05-17T00:00:00Z'),
     updated_at: new Date('2026-05-17T00:00:00Z'),
-    urls_remaining: [URL_1, URL_2],
+    urls_remaining: [URL_1, URL_2, URL_3],
     budget_remaining_usd: INITIAL_BUDGET_USD,
-  });
-}
-
-/**
- * Phase B — simulates the "iter 3" state after the spec-gap workaround:
- * URL_3 queued, but budget pre-debited to 0 (representing the cumulative
- * cost of the 2 LLM calls from Phase A: 2 * 0.03 = 0.06; remaining = 0).
- * PageRouterNode's R8.1 gate trips on entry (`<= 0` branch).
- */
-function makeInitialStatePhaseB(): AuditStateBrowseSubset {
-  return AuditStateBrowseSubsetSchema.parse({
-    audit_run_id: AUDIT_RUN_ID,
-    client_id: CLIENT_ID,
-    current_node: 'page_router',
-    node_status: 'pending' as const,
-    context_profile_id: null,
-    context_profile_hash: null,
-    pending_questions: [],
-    created_at: new Date('2026-05-17T00:00:00Z'),
-    updated_at: new Date('2026-05-17T00:00:02Z'),
-    urls_remaining: [URL_3],
-    budget_remaining_usd: 0,
   });
 }
 
@@ -329,73 +315,54 @@ function makeDeps(): BudgetTestHarness {
 
 describe('AC-15 — Phase 5 budget exhaustion integration (T096)', () => {
   it(
-    'budget_remaining_usd=0.06 with 0.03/call: 2 calls fit; on 3rd-page entry the budget gate (R8.1) trips → completion_reason=budget_exceeded; audit_failed emitted with cause_class=budget_exceeded; URL_3 never browsed',
+    'budget_remaining_usd=0.06 with 0.03/call: 2 calls fit; on 3rd-page entry the budget gate (R8.1) trips -> completion_reason=budget_exceeded; audit_failed emitted with cause_class=budget_exceeded; URL_3 never browsed',
     async () => {
       const harness = makeDeps();
       const { deps } = harness;
 
-      // --- Phase A: 2 URLs under budget --------------------------------------
-      // Initial budget 0.06; MockLLM costUsd=0.03. Both pages browse cleanly.
-      // Spec-gap acknowledgement: BrowseNode does NOT debit budget, so this
-      // run terminates with completion_reason='success' (urls_remaining empty)
-      // after 2 LLM calls. The cumulative LLM cost (tracked outside the SUT)
-      // is 0.06 — matching the initial budget — but the SUT's
-      // budget_remaining_usd is still 0.06 because of the gap.
-      const graphA = buildBrowseGraph(deps);
-      const finalA = (await graphA.invoke(makeInitialStatePhaseA(), {
-        configurable: { thread_id: 'ac15-phase-a' },
-      })) as AuditStateBrowseSubset;
-
-      // 2 successful page browses; both URLs captured; 2 LLM calls.
-      expect(finalA.completion_reason).toBe('success');
-      expect(deps.llm.complete).toHaveBeenCalledTimes(2);
-      expect(deps.contextAssembler.capture).toHaveBeenCalledTimes(2);
-      expect(harness.capturedUrls()).toEqual([URL_1, URL_2]);
-      expect(harness.cumulativeCostUsd()).toBeCloseTo(0.06, 6);
-
-      // --- Phase B: budget exhausted; gate trips on next page ----------------
-      // Phase A's 2 calls cost 0.06; simulate the post-debit state by feeding
-      // budget=0 to a fresh thread. URL_3 queued. PageRouterNode (T083 L122)
-      // sees budget_remaining_usd <= 0 → terminate slice with completion_reason
-      // ='budget_exceeded' → routeFromPageRouter → audit_complete →
-      // AuditCompleteNode emits audit_failed + metadata.cause_class
-      // ='budget_exceeded' (L121-128 of AuditCompleteNode).
-      const graphB = buildBrowseGraph(deps);
-      const finalB = (await graphB.invoke(makeInitialStatePhaseB(), {
-        configurable: { thread_id: 'ac15-phase-b' },
+      // Post Bug-C fix: single invoke drives the full budget-exhaustion path.
+      // iter 1 URL_1: capture + LLM ($0.03) -> success; budget 0.06 -> 0.03.
+      // iter 2 URL_2: capture + LLM ($0.03) -> success; budget 0.03 -> 0.
+      // iter 3 page_router on URL_3: budget_remaining_usd <= 0 trips R8.1 gate
+      //   -> completion_reason='budget_exceeded' -> routeFromPageRouter ->
+      //   audit_complete -> AuditCompleteNode emits audit_failed with
+      //   metadata.cause_class='budget_exceeded'.
+      const graph = buildBrowseGraph(deps);
+      const final = (await graph.invoke(makeInitialState(), {
+        configurable: { thread_id: 'ac15-budget-exhaustion' },
       })) as AuditStateBrowseSubset;
 
       // ----- Terminal classifier + node --------------------------------------
-      expect(finalB.completion_reason).toBe('budget_exceeded');
-      expect(finalB.current_node).toBe('audit_complete');
+      expect(final.completion_reason).toBe('budget_exceeded');
+      expect(final.current_node).toBe('audit_complete');
+      expect(final.budget_remaining_usd).toBe(0);
 
-      // ----- URL_3 NEVER browsed (the brief's key assertion) -----------------
-      // No additional LLM calls beyond Phase A's 2; no additional perception
-      // capture; the URL_3 page_browse_started event is never emitted.
+      // ----- URL_3 NEVER browsed (brief's key assertion) --------------------
+      // Exactly 2 LLM calls (URL_1 + URL_2); 2 perception captures; URL_3
+      // never reaches contextAssembler.capture.
       expect(deps.llm.complete).toHaveBeenCalledTimes(2);
       expect(deps.contextAssembler.capture).toHaveBeenCalledTimes(2);
+      expect(harness.capturedUrls()).toEqual([URL_1, URL_2]);
       expect(harness.capturedUrls()).not.toContain(URL_3);
 
-      // ----- AuditEvent stream — Phase B emits audit_failed/budget_exceeded -
-      // Recorder is shared across both phases; collect all events and assert
-      // on the Phase B subset (events after Phase A's audit_completed).
+      // Cumulative LLM cost equals initial budget (2 * 0.03 = 0.06); post Bug-C
+      // fix this drains state.budget_remaining_usd to exactly 0.
+      expect(harness.cumulativeCostUsd()).toBeCloseTo(0.06, 6);
+
+      // ----- AuditEvent stream ----------------------------------------------
       const allEvents = (deps.recorder.recordEvent as unknown as {
         mock: { calls: ReadonlyArray<readonly [AuditEvent]> };
       }).mock.calls.map(([e]) => e);
+      const types = allEvents.map((e) => e.event_type);
 
-      // Phase A emissions: audit_started + 2x page_browse_started + 2x
-      // page_browse_completed + audit_completed.
-      const phaseATypes = allEvents.map((e) => e.event_type);
-      expect(phaseATypes.filter((t) => t === 'page_browse_started')).toHaveLength(2);
-      expect(phaseATypes.filter((t) => t === 'page_browse_completed')).toHaveLength(2);
-      expect(phaseATypes).toContain('audit_started');
-      expect(phaseATypes).toContain('audit_completed');
+      // 2x page_browse_started + 2x page_browse_completed (URL_1 + URL_2).
+      // No 3rd page_browse_started — URL_3 never browsed.
+      expect(types.filter((t) => t === 'page_browse_started')).toHaveLength(2);
+      expect(types.filter((t) => t === 'page_browse_completed')).toHaveLength(2);
+      expect(types).toContain('audit_started');
 
-      // Phase B emissions: NO 3rd page_browse_started; audit_failed with
-      // cause_class='budget_exceeded' (AC-05 v0.4 branch table row 2).
-      // Total page_browse_started count across BOTH phases must remain 2.
-      expect(phaseATypes.filter((t) => t === 'page_browse_started')).toHaveLength(2);
-
+      // audit_failed with metadata.cause_class='budget_exceeded' per AC-05
+      // branch table row 2.
       const failedEvents = allEvents.filter((e) => e.event_type === 'audit_failed');
       expect(failedEvents.length).toBeGreaterThanOrEqual(1);
       const budgetExhaustEvent = failedEvents.find((e) => {
@@ -403,7 +370,7 @@ describe('AC-15 — Phase 5 budget exhaustion integration (T096)', () => {
         return meta?.['cause_class'] === 'budget_exceeded';
       });
       expect(budgetExhaustEvent).toBeDefined();
-      // Audit-level event → page_url is null per audit-events contract L96.
+      // Audit-level event -> page_url is null per audit-events contract L96.
       expect(budgetExhaustEvent?.page_url).toBeNull();
     },
     30_000,

@@ -372,37 +372,24 @@ describe('AC-14 — Phase 5 recovery integration', () => {
     const graph = buildBrowseGraph(scripted.deps);
     const initial = makeInitialState();
 
-    let caught: Error | undefined;
-    let final: AuditStateBrowseSubset | undefined;
-    try {
-      final = (await graph.invoke(initial, {
-        configurable: { thread_id: 'ac14-recovery' },
-      })) as AuditStateBrowseSubset;
-    } catch (err) {
-      // Bug-B manifestation: BrowseNode.success() did not clear the stale
-      // `last_failure_class` on the retry-success iteration. routeFromBrowse
-      // re-entered the failure row with iter past the cap and dispatched to
-      // audit_complete WITHOUT a completion_reason; AuditCompleteNode throws.
-      // (Pattern mirrors T093 amazon-test catch-block; see header note.)
-      caught = err as Error;
-    }
+    // Post Bug-B fix (Wave 8): BrowseNode.success() now clears stale
+    // last_failure_class, so routeFromBrowse takes happy path after the retry.
+    // Full 5-iteration traversal: URL1 + URL2 attempt 1 (verify_failed) +
+    // URL2 attempt 2 REPLAN (success) + URL3 + URL4.
+    const final = (await graph.invoke(initial, {
+      configurable: { thread_id: 'ac14-recovery' },
+    })) as AuditStateBrowseSubset;
 
-    // ----- RECOVERY INVARIANTS — verified regardless of Bug-B surfacing -----
-    // These prove the verify_failed → retry → replan → success cycle EXECUTED
-    // exactly as AC-14 specifies, on URL2, before any post-recovery routing
-    // defect can intervene.
-
-    // 3 browse iterations actually completed before Bug-B short-circuits:
-    //   iter 1 — URL1 success
-    //   iter 2 — URL2 attempt 1 (verify FAILS; routes back to 'browse')
-    //   iter 3 — URL2 attempt 2 REPLAN (verify SUCCEEDS)
-    expect(scripted.deps.contextAssembler.capture).toHaveBeenCalledTimes(3);
-    expect(scripted.llmCalls.count).toBe(3);
-    expect(scripted.verifyCalls.count).toBe(3);
+    // ----- RECOVERY INVARIANTS — proves verify_failed -> retry -> replan ----
+    // 5 browse iterations: 4 URLs + 1 retry on URL2.
+    expect(scripted.deps.contextAssembler.capture).toHaveBeenCalledTimes(5);
+    expect(scripted.llmCalls.count).toBe(5);
+    expect(scripted.verifyCalls.count).toBe(5);
 
     // Perception ran on URL2 TWICE — R4.1 perception-first applies to every
-    // browse iteration including the retry. This is THE proof of recovery:
-    // the retry didn't reuse stale state; it re-perceived and re-prompted.
+    // browse iteration including the retry. THE proof of recovery: the retry
+    // didn't reuse stale state; it re-perceived and re-prompted. Post Bug-B
+    // fix: traversal continues to URL3 + URL4.
     const captureCalls = (scripted.deps.contextAssembler.capture as unknown as {
       mock: { calls: ReadonlyArray<readonly [string]> };
     }).mock.calls.map(([url]) => url);
@@ -410,6 +397,8 @@ describe('AC-14 — Phase 5 recovery integration', () => {
       WORKFLOW_URLS[0], // URL1
       WORKFLOW_URLS[1], // URL2 first attempt (verify will fail)
       WORKFLOW_URLS[1], // URL2 second attempt (REPLAN)
+      WORKFLOW_URLS[2], // URL3
+      WORKFLOW_URLS[3], // URL4
     ]);
 
     // LLM replan: 3 calls total. The 3rd call (REPLAN on URL2) is the proof
@@ -421,9 +410,11 @@ describe('AC-14 — Phase 5 recovery integration', () => {
       mock: { calls: ReadonlyArray<readonly [string]> };
     }).mock.calls.map(([name]) => name);
     expect(toolGetCalls).toEqual([
-      'browser_navigate', // URL1
-      'browser_click',    // URL2 attempt 1 (primary CTA — verify fails)
-      'browser_click',    // URL2 attempt 2 (REPLAN — alternate selector)
+      'browser_navigate',  // URL1
+      'browser_click',     // URL2 attempt 1 (primary CTA — verify fails)
+      'browser_click',     // URL2 attempt 2 (REPLAN — alternate selector)
+      'browser_type',      // URL3
+      'browser_get_state', // URL4
     ]);
 
     // FailureClassifier invoked exactly once — on the single verify_failed.
@@ -431,19 +422,19 @@ describe('AC-14 — Phase 5 recovery integration', () => {
     // returned 'browse' (iter 2 < BROWSE_RETRY_CAP 3) → retry happened.
     expect(scripted.classifyCalls.count).toBe(1);
 
-    // ConfidenceScorer: 2 successes (URL1 + URL2 retry) + 1 failure (URL2
+    // ConfidenceScorer: 4 successes (URL1 + URL2 retry + URL3 + URL4) + 1 failure (URL2
     // attempt 1). R4.4 multiplicative — failure scaled by ~0.97, successes
     // capped at 1.0.
-    expect(scripted.deps.scorer.afterSuccess).toHaveBeenCalledTimes(2);
+    expect(scripted.deps.scorer.afterSuccess).toHaveBeenCalledTimes(4);
     expect(scripted.deps.scorer.afterFailure).toHaveBeenCalledTimes(1);
 
     // ----- AuditEvent stream invariants (LOCKED-22) ------------------------
-    // 3 page_browse_started (one per browse iteration).
-    // 2 page_browse_completed (URL1 + URL2 retry SUCCESS).
+    // 5 page_browse_started (one per browse iteration).
+    // 4 page_browse_completed (URL1 + URL2 retry + URL3 + URL4 — all SUCCESS).
     // 1 page_browse_failed (URL2 attempt 1 with failure_class metadata).
     const types = scripted.recordedEvents.map((e) => e.event_type);
-    expect(types.filter((t) => t === 'page_browse_started')).toHaveLength(3);
-    expect(types.filter((t) => t === 'page_browse_completed')).toHaveLength(2);
+    expect(types.filter((t) => t === 'page_browse_started')).toHaveLength(5);
+    expect(types.filter((t) => t === 'page_browse_completed')).toHaveLength(4);
     expect(types.filter((t) => t === 'page_browse_failed')).toHaveLength(1);
     expect(types).toContain('audit_started');
 
@@ -459,47 +450,25 @@ describe('AC-14 — Phase 5 recovery integration', () => {
       subclass: 'element_did_not_appear',
     });
 
-    // ----- BRANCH: Bug-B manifested (current behavior, T095 baseline) ------
-    if (caught !== undefined) {
-      // F-015-family SPEC_GAP: AuditCompleteNode throws because routeFromBrowse
-      // dispatched to it on the recovery-success iteration WITHOUT setting
-      // completion_reason — the stale last_failure_class on the success slice
-      // re-fired the verify_failed routing row with iter past the cap.
-      expect(caught.message).toMatch(/completion_reason undefined/);
-
-      // Audit DID NOT complete cleanly — no audit_completed event was emitted.
-      // (audit_failed is also absent: AuditCompleteNode throws BEFORE it can
-      // emit either terminal event in the Bug-B path.)
-      expect(types).not.toContain('audit_completed');
-      expect(types).not.toContain('audit_failed');
-
-      // URL3 + URL4 were NEVER reached — capture/llm/verify call counts above
-      // already prove this (all = 3, not 5). Surface that explicitly:
-      expect(captureCalls).not.toContain(WORKFLOW_URLS[2]);
-      expect(captureCalls).not.toContain(WORKFLOW_URLS[3]);
-      return;
-    }
-
-    // ----- BRANCH: Bug-B closed (future state — full happy terminal) -------
-    // When BrowseNode.success() clears `last_failure_class` (or routeFromBrowse
-    // guards against the stale-class re-entry), the recovery iteration routes
-    // cleanly to page_router → URL3 → URL4 → audit_complete.
-    expect(final).toBeDefined();
-    expect(final?.completion_reason).toBe('success');
-    expect(final?.current_node).toBe('audit_complete');
-    expect(final?.urls_remaining).toEqual([]);
+    // ----- Happy terminal — Bug-B fix applied (Wave 8) ---------------------
+    // BrowseNode.success() now clears stale last_failure_class so the
+    // recovery iteration routes cleanly to page_router -> URL3 -> URL4 ->
+    // audit_complete.
+    expect(final.completion_reason).toBe('success');
+    expect(final.current_node).toBe('audit_complete');
+    expect(final.urls_remaining).toEqual([]);
 
     // Full traversal: 5 browse iterations (4 URLs + 1 retry on URL2),
     // landing AT MAX_ITER=5 without tripping iter>5.
-    const ext = final?._phase8_extensions ?? {};
+    const ext = final._phase8_extensions ?? {};
     expect(ext['browse_loop_iteration']).toBe(5);
     expect(ext['cause_class']).toBeUndefined();
     expect(types).toContain('audit_completed');
     expect(types).not.toContain('audit_failed');
 
     // Confidence after 4 successes + 1 failure stays above 0.85 floor:
-    // 1.0 * 0.97 (failure) * 1.01^4 (successes, clamped ≤1.0) ≈ 0.97.
-    expect(final?.session_confidence).toBeGreaterThan(0.85);
-    expect(final?.session_confidence).toBeLessThanOrEqual(1.0);
+    // 1.0 * 0.97 (failure) * 1.01^4 (successes, clamped <=1.0) ~ 0.97.
+    expect(final.session_confidence).toBeGreaterThan(0.85);
+    expect(final.session_confidence).toBeLessThanOrEqual(1.0);
   }, 35_000);
 });
