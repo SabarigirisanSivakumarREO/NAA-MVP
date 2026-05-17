@@ -82,7 +82,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 
 ## Multi-Viewport Stream (T5B-001..T5B-009)
 
-### T5B-001 — AuditRequest.viewports field
+### T5B-001 — AuditRequest.viewports field ✅
 - **dep:** T4B-009 (Phase 4b AuditRequest intake schema at `src/types/audit-request.ts`), T091 (BrowseGraph)
 - **spec:** §18 REQ-GATEWAY-AUDITREQ-* + §07 §7.9.2
 - **files:** `packages/agent-core/src/types/audit-request.ts` (extend Phase 4b T4B-009 canonical schema; full `src/gateway/AuditRequest.ts` envelope is Phase 6 deliverable per file header L21)
@@ -220,7 +220,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **acceptance:** Execute `dismiss` (auto-click **Accept only** in MVP per act-015; reject-flow deferred to v1.1) or `preserve` (keep banner for analysis) per AuditRequest.cookie_policy. `block` mode rejected with structured error (consent breakage). Default = `dismiss`. Emit `COOKIE_BANNER_BLOCKING_FOLD` warning if banner covers >40% of fold and not dismissed.
 - **conformance test:** `packages/agent-core/tests/conformance/cookie-banner-policy.test.ts` (AC-17)
 
-### T5B-018 — AuditRequest.cookie_policy field
+### T5B-018 — AuditRequest.cookie_policy field ✅
 - **dep:** T5B-001 (AuditRequest.viewports)
 - **spec:** §18 AuditRequest + spec §4.4
 - **files:** `packages/agent-core/src/types/audit-request.ts` (extend Phase 4b T4B-009 canonical path; field name `cookie_policy` snake_case per Phase 4b convention — verified at `src/types/audit-request.ts` L55+; full `src/gateway/AuditRequest.ts` envelope is Phase 6 deliverable)
