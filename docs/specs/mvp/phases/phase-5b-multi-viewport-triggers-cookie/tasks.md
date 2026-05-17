@@ -172,7 +172,7 @@ Per [plan.md](plan.md) §1: Week 8 prep (T5B-PRE-001) + multi-viewport (T5B-001.
 - **acceptance:** Detect IntersectionObserver patterns + sticky elements. Scroll to Y-coordinates. Captures sticky CTA changes + lazy-loaded content reveal.
 - **conformance test:** `packages/agent-core/tests/conformance/scroll-position-trigger.test.ts` (AC-11)
 
-### T5B-012 — TimeDelayTrigger
+### T5B-012 — TimeDelayTrigger ✅
 - **dep:** T091
 - **spec:** §20 trigger taxonomy + spec §3.1
 - **files:** `packages/agent-core/src/browser-runtime/triggers/TimeDelayTrigger.ts`
