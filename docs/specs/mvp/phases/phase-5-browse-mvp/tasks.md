@@ -183,7 +183,7 @@ T084 + T091 carry extended kill criteria.
 
 ### Edges + routing
 
-- [ ] **T088 [US-1] Conditional edges + routing** (AC-07, REQ-BROWSE-GRAPH-001)
+- [x] **T088 [US-1] Conditional edges + routing** (AC-07, REQ-BROWSE-GRAPH-001)
   - **Brief — Outcome:** `orchestration/edges.ts` exports edge config: `audit_setup → page_router`; `page_router → browse` (urls_remaining > 0 AND budget OK AND domain not blocked) OR `audit_complete` (otherwise); `browse → page_router` (success — page complete) OR `browse` (retry; bounded at 3) OR `audit_complete` (escalate / unrecoverable). Routing function reads FailureClassifier output from state.
   - **Constraints:** File < 200 lines.
   - **Acceptance:** AC-07 — 5 routing fixtures verified.
