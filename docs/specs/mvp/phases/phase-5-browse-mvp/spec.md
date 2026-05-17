@@ -1,10 +1,10 @@
 ---
 title: Phase 5 — Browse Mode MVP
 artifact_type: spec
-status: draft
-version: 0.2
+status: verified
+version: 0.5
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-17
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -21,6 +21,7 @@ derived_from:
   - docs/specs/final-architecture/04-orchestration.md (LangGraph canonical)
   - docs/specs/final-architecture/05-unified-state.md (AuditState — full schema Phase 8; subset Phase 5)
   - Phase 1, 2, 3, 4 specs + impact.md (every prior contract consumed)
+  - docs/specs/mvp/phases/phase-4b-context-capture/spec.md (v0.4 verified 2026-05-16)
 
 req_ids:
   - REQ-BROWSE-NODE-001
@@ -43,13 +44,21 @@ delta:
     - R-01..R-12 functional requirements
     - v0.2 — Constraints + AC-09 cite `docs/specs/final-architecture/08-tool-manifest.md` as the canonical 29-tool list source (analyze finding F-002)
     - v0.2 — Temperature invariant cited correctly to R13 NEVER + TemperatureGuard adapter, NOT R10 Code Quality (Constitution R22.6 stale-xref note; analyze finding F-003)
+    - v0.3 — AC-16 + AC-17 + AC-18 + R-13 + R-14 (LOCKED-name compliance + client_id thread-through + budget thresholds + wall-clock timeout)
+    - v0.4 — Pass 2 micro-fix: AC-18 wording defer
+    - v0.5 — Stage 4 exit R17 bump approved → verified (Gate 2 APPROVE; 30 commits; 18/18 ACs green; 895/1055 tests pass; Bug-A/B/C + F-015 SPEC_GAP closed at Wave 8)
   changed:
     - v0.1 → v0.2 — analyze-driven xref polish; no scope changes
+    - v0.2 → v0.3 — patch-wave applied per .phase-state/5/preflight-verdict.yaml Pass 1 (REVISE) act-001..act-013; LOCKED AuditEventTypeEnum drift fixes + Phase 4b R20 propagation + AC-04 test path consolidation + FailureClass routing table + 29-tool split (22+2+5) + 'timeout' wall-clock + R22.6 dedup
+    - v0.3 → v0.4 — Pass 2 micro-patch: AC-18 wording (drop AuditRequest forward field declaration; hardcode 60min in MVP); LOCKED-name + R20 hygiene preserved
+    - v0.4 → v0.5 — Stage 4 exit (Gate 2 APPROVE 2026-05-17); R17 status verified
   impacted:
     - Constitution R4.1 (perception first) + R4.2 (verify everything) — first runtime convergence
     - Phase 8 AuditState — Phase 5 ships browse-mode SUBSET; Phase 8 lands full schema (additive, no migration)
+    - Phase 4b AuditState fwd-stub — Phase 5 EXTENDS (additive) rather than replacing
   unchanged:
-    - AC-NN stable IDs, R-NN statements, User Scenarios
+    - AC-01..AC-15 stable IDs, R-01..R-12 statements (R18 append-only)
+    - User Scenarios except AS#8 + AS#10 (LOCKED-name patches)
 
 governing_rules:
   - Constitution R4 (Browser Agent Rules)
@@ -62,10 +71,10 @@ governing_rules:
 
 # Feature Specification: Phase 5 — Browse Mode MVP
 
-> **Summary (~150 tokens):** First end-to-end browse-mode integration. **16 MVP tasks** (T081-T096; T097-T100 reserved per tasks-v2). Builds the LangGraph browse subgraph: AuditState (browse-mode subset; full schema lands Phase 8), 4-5 nodes (audit_setup, page_router, browse, audit_complete), conditional edges with retry/replan/escalate routing, browse-agent system prompt for LLM-led action selection, and BrowseGraph assembly. Five integration tests exercise the loop on real sites. **Phase 5 is where every prior contract converges:** BrowserEngine + ContextAssembler (Phase 1), 28 MCP tools + RateLimiter + AnalyzePerception schema (Phase 2), ActionContract + VerifyEngine + ConfidenceScorer + FailureClassifier (Phase 3), LLMAdapter + SafetyCheck + DomainPolicy + CircuitBreaker + ScreenshotStorage + AuditLogger + SessionRecorder + StreamEmitter + DB schema (Phase 4). LLM calls use operation class `other` (browse decisions are NOT temperature-bound; classify/extract calls also OK).
+> **Summary (~150 tokens):** First end-to-end browse-mode integration. **17 MVP tasks** (T081-T097; T098-T100 reserved per tasks-v2). Builds the LangGraph browse subgraph: AuditState (browse-mode subset; full schema lands Phase 8), 4 distinct LangGraph nodes (audit_setup, page_router, browse, audit_complete) — browse internally split into 2 functions (selectAction + verifyAndRoute) sharing one node-level Zod I/O boundary, conditional edges with retry/replan/escalate routing, browse-agent system prompt for LLM-led action selection, and BrowseGraph assembly. Five integration tests exercise the loop on real sites. **Phase 5 is where every prior contract converges:** BrowserEngine + ContextAssembler (Phase 1), 29 MCP tools + RateLimiter + AnalyzePerception schema (Phase 2), ActionContract + VerifyEngine + ConfidenceScorer + FailureClassifier (Phase 3), LLMAdapter + SafetyCheck + DomainPolicy + CircuitBreaker + ScreenshotStorage + AuditLogger + SessionRecorder + StreamEmitter + DB schema (Phase 4), ContextProfile read-only consumer (Phase 4b). LLM calls use operation class `other` (browse decisions are NOT temperature-bound; classify/extract calls also OK).
 
 **Feature Branch:** `phase-5-browse-mvp` (created at implementation time)
-**Input:** Phase 5 scope from `docs/specs/mvp/phases/INDEX.md` row 5 + `tasks-v2.md` T081-T096 (16 MVP tasks)
+**Input:** Phase 5 scope from `docs/specs/mvp/phases/INDEX.md` row 5 + `tasks-v2.md` T081-T097 (17 MVP tasks; T097 promoted from reserved per v0.3 act-002)
 
 ---
 
@@ -88,7 +97,7 @@ governing_rules:
 - **R4.2 Verify everything** — every action emits `ActionContract`; `VerifyEngine.verify()` runs; FailureClassifier routes the verdict. Phase 3's structural enforcement now wired into the loop.
 - **R4.3 Safety structural** — every action invocation routes through `SafetyCheck.assertAllowed(toolName, domain, audit_run)` (Phase 4). `requires_hitl` actions emit `audit_events.hitl_requested` and pause the LangGraph at an interrupt point (LangGraph supports interrupt natively).
 - **R4.4 Multiplicative confidence decay** — ConfidenceScorer (Phase 3) called on every verify result; running `audit_state.session_confidence` updated.
-- **R4.5 Exact tool names** — BrowseAgent system prompt enumerates the **29 MCP tools** by their EXACT v3.1 names. **Canonical source:** `docs/specs/final-architecture/08-tool-manifest.md` (per tasks-v2.md v2.3.1 reconciliation: 24 `browser_*` + 2 `agent_*` + 5 `page_*` = 29 across T020-T048). The system prompt's tool-name list is sourced from Phase 2's `MCPToolRegistry.list()` at module load time; the registry was populated against this canonical manifest. LLM is constrained to invoke only registered names (validated at MCP boundary; `ActionProposalSchema` enum mirrors the 29).
+- **R4.5 Exact tool names** — BrowseAgent system prompt enumerates the **29 MCP tools** by their EXACT v3.1 names. **Canonical source:** `docs/specs/final-architecture/08-tool-manifest.md` + Phase 4 rollup §5 (per tasks-v2.md v2.3.1 reconciliation: **22 `browser_*` (21 numbered + restricted `browser_evaluate`) + 2 `agent_*` + 5 `page_*` = 29** across T020-T048). The system prompt's tool-name list is sourced from Phase 2's `MCPToolRegistry.list()` at module load time; the registry was populated against this canonical manifest. LLM is constrained to invoke only registered names (validated at MCP boundary; `ActionProposalSchema` enum mirrors the 29). Per `08-tool-manifest.md` §8.2 Mode Availability Matrix, the 5 `page_*` tools are ANALYZE-mode-only; BROWSE_AGENT prompt MAY exclude them — see `r20-invalidation-from-phase-4b.md` for decision.
 - **R8.1 audit budget cap** — `page_router` checks `audit_state.budget_remaining_usd` before routing to next page; if ≤ 0, terminates with `completion_reason='budget_exceeded'`.
 - **R8.2 page budget** — each page entry resets `analysis_budget_usd = 5.0` (default); browse node skips remaining steps when exhausted (no Phase 7 analysis budget yet — that lands with analyze nodes).
 - **R8.3 rate limiting** — Phase 2's RateLimiter wraps every tool call inside browse node.
@@ -121,14 +130,14 @@ The CLI (`pnpm cro:audit --urls ./urls.txt --business-type ecommerce`) reads URL
 5. **Given** an audit_run with `budget_remaining_usd = 0.20` and a multi-page workflow, **When** the browse loop debits cost across pages, **Then** at exhaustion `audit_runs.completion_reason = 'budget_exceeded'` is written and the loop exits cleanly without invoking further LLM/tool calls.
 6. **Given** a sensitive action (`browser_upload`), **When** SafetyCheck classifies it as `requires_hitl`, **Then** browse emits `audit_events.hitl_requested`, LangGraph pauses at interrupt point; resumption requires `human_approval` event (Phase 5 stub for human; full HITL UI in Phase 9).
 7. **Given** the browse-agent system prompt, **When** the LLM is invoked for action selection, **Then** the prompt instructs use of EXACT v3.1 tool names; if LLM proposes an unrecognized tool, MCP boundary validates and returns error → FailureClassifier routes as replan.
-8. **Given** a `domain_policy.blocked` URL is scheduled, **When** page_router reads the URL, **Then** it logs `audit_events.domain_blocked` and skips the page (does NOT enter browse subgraph).
+8. **Given** a `domain_policy.blocked` URL is scheduled, **When** page_router reads the URL, **Then** it records the block via `AuditLogger.log({ message: 'domain_blocked', metadata: {...} })` (free-text audit_log row, NOT a typed AuditEvent — 'domain_blocked' is not in the 22 LOCKED AuditEventTypeEnum) and skips the page (does NOT enter browse subgraph).
 9. **Given** the integration test on amazon.in (T093) fails on a CAPTCHA wall, **When** Phase 5 runs in degraded mode, **Then** browse captures the CAPTCHA wall PageStateModel + screenshot, FailureClassifier marks `bot_detected_likely`, audit terminates with `completion_reason='aborted'` and a clean rollup is generated.
-10. **Given** the StreamEmitter publishes events during a browse session, **When** the test buffer captures, **Then** ordered events appear: `audit_started` → `page_started` (per page) → `tool_invoked` (per action) → `verify_passed`/`verify_failed` → `page_complete` → `audit_complete`. Phase 9 dashboard will subscribe to this stream.
+10. **Given** the StreamEmitter publishes events during a browse session, **When** the test buffer captures, **Then** ordered AuditEvent rows appear using the 22 LOCKED `AuditEventTypeEnum` only: `audit_started` → `page_browse_started` (per page) → `hitl_requested` (if sensitive) → `page_browse_completed` (or `page_browse_failed`) → `audit_completed` (or `audit_failed`). Non-LOCKED transitions (per-tool invocation, per-verify pass/fail, domain-block, circuit-open) are recorded as Pino structured logs + AuditLogger.log() free-text rows in `audit_log.message` — NOT as typed AuditEvent rows. Phase 9 dashboard subscribes to the LOCKED event stream + the Pino/audit_log firehose separately.
 
 ### Edge Cases
 
 - **LangGraph interrupt for HITL not resumed within 5 minutes:** Phase 5 stubs auto-resumption (mark `hitl_timeout`, route to escalate). Phase 9 dashboard adds the human-in-the-loop UI for real resumption.
-- **CircuitBreaker trips mid-loop:** page_router observes `CircuitBreakerOpen` for the next domain → skip page with `audit_events.domain_circuit_open`.
+- **CircuitBreaker trips mid-loop:** page_router observes `CircuitBreakerOpen` for the next domain → skip page; records the trip via `AuditLogger.log({ message: 'domain_circuit_open', metadata: {...} })` (free-text audit_log row — 'domain_circuit_open' is not in the 22 LOCKED AuditEventTypeEnum).
 - **Failed `browser_get_state` (e.g., navigation timeout):** browse node emits typed error → FailureClassifier marks `unverifiable` → page_router routes to next page, doesn't crash audit.
 - **LLM returns malformed action proposal (not Zod-parseable):** browse node retries up to 2x; if persistent, escalates as `replan` failure → FailureClassifier marks `verify_failed`.
 - **AuditState schema mismatch (Phase 5 subset vs Phase 8 full):** Phase 5 ships only the browse-mode fields; Phase 8 adds the rest as optional fields with defaults. Phase 5 code MUST tolerate (read-only) the missing-from-subset fields gracefully.
@@ -139,13 +148,13 @@ The CLI (`pnpm cro:audit --urls ./urls.txt --business-type ecommerce`) reads URL
 
 | ID | Criterion | Conformance test path | Linked task |
 |----|-----------|----------------------|-------------|
-| AC-01 | `AuditState` (browse-mode subset) Zod schema in `orchestration/AuditState.ts` defines: `audit_run_id`, `client_id`, `urls_remaining`, `current_url`, `page_state_models[]`, `session_confidence`, `budget_remaining_usd`, `completion_reason?`. **Forward-compat:** schema accepts (but does not require) Phase 8's full fields via `.passthrough()` on a wrapper, OR Phase 5 ships a NarrowAuditState that Phase 8 widens. The chosen approach documented in plan.md. | `tests/conformance/audit-state-browse-subset.test.ts` | T081 |
+| AC-01 | `AuditState` (browse-mode subset) Zod schema in `orchestration/AuditState.ts` EXTENDS Phase 4b's `state.ts` fwd-stub via `z.extend()`: Phase 4b base = `audit_run_id`, `client_id`, `current_node`, `node_status`, `context_profile_id`, `context_profile_hash`, `pending_questions`. Phase 5 ADDS: `business_type`, `urls_remaining`, `current_url`, `page_state_models[]`, `session_confidence`, `budget_remaining_usd`, `analysis_cost_usd`, `completion_reason?`. **Forward-compat:** schema accepts (but does not require) Phase 8's full fields via `_phase8_extensions: z.record(...).optional()` escape hatch on the extended schema. | `tests/conformance/audit-state-browse-subset.test.ts` | T081 |
 | AC-02 | `audit_setup` LangGraph node creates audit_run row in DB, initializes AuditState, emits `audit_events.audit_started` | `tests/conformance/node-audit-setup.test.ts` | T082 |
 | AC-03 | `page_router` LangGraph node: reads next URL from `urls_remaining`, checks budget + circuit breaker + domain policy, routes to browse OR audit_complete | `tests/conformance/node-page-router.test.ts` | T083 |
-| AC-04 | `browse` LangGraph node: captures PageStateModel via Phase 1 ContextAssembler, calls LLM via LLMAdapter (operation='other', temp=0.5) for action selection, runs SafetyCheck before tool invocation, runs VerifyEngine after, updates ConfidenceScorer, routes via FailureClassifier on failure | `tests/conformance/node-browse.test.ts` | T084 + T085 (split: action selection vs verify+route) |
-| AC-05 | `audit_complete` LangGraph node: writes terminal AuditState fields, sets `audit_runs.completion_reason`, emits `audit_events.audit_complete` | `tests/conformance/node-audit-complete.test.ts` | T086 |
+| AC-04 | `browse` LangGraph node: captures PageStateModel via Phase 1 ContextAssembler, calls LLM via LLMAdapter (operation='other', temp=0.5) for action selection, runs SafetyCheck before tool invocation, runs VerifyEngine after, updates ConfidenceScorer, routes via FailureClassifier on failure. Single test file with two describe blocks: `actionSelection` (T084) + `verifyAndRoute` (T085). | `tests/conformance/node-browse.test.ts` | T084 + T085 |
+| AC-05 | `audit_complete` LangGraph node: writes terminal AuditState fields, sets `audit_runs.completion_reason`, emits `audit_events.audit_completed` (or `audit_failed`) — LOCKED `AuditEventTypeEnum` names per `packages/agent-core/src/types/audit-events.ts`. On `completion_reason='aborted'`, node also writes `metadata.cause_class` on the event row (values: `hitl_timeout`, `bot_detected`, `safety_blocked`, `circuit_open`). | `tests/conformance/node-audit-complete.test.ts` | T086 |
 | AC-06 | LangGraph node-level Zod I/O: every node's input + output state slice validates via Zod (R2.2) at the node boundary | `tests/conformance/node-io-zod.test.ts` (parameterized over 4 nodes) | T087 |
-| AC-07 | Conditional edges: page_router → browse (if budget remains AND domain allowed) / audit_complete (otherwise); browse → page_router (if action succeeded) / browse (if retry — bounded at 3) / audit_complete (if escalate / unrecoverable) | `tests/conformance/edges-routing.test.ts` | T088 |
+| AC-07 | Conditional edges with FailureClass routing table (R20-LOCKED 5 values): `verify_failed` → retry (bounded 3) → replan → escalate; `safety_blocked` → audit_complete (completion_reason='aborted'); `rate_limited` → Phase 2 RateLimiter token-bucket backoff (no graph transition); `unverifiable` → page_router (next page); `bot_detected_likely` → audit_complete (completion_reason='aborted'). Routing function reads FailureClassifier output from state. | `tests/conformance/edges-routing.test.ts` | T088 |
 | AC-08 | LangGraph interrupt for HITL: SafetyCheck emits `hitl_requested` → graph pauses at interrupt point → external `resumeAudit(audit_run_id, decision)` resumes/aborts | `tests/conformance/hitl-interrupt.test.ts` | T089 |
 | AC-09 | Browse-agent system prompt: enforces EXACT v3.1 tool names (29 names sourced from `docs/specs/final-architecture/08-tool-manifest.md` via Phase 2 MCPToolRegistry), "perception first" instruction, max 3 actions per page guideline, JSON action proposal format (Zod-validated via `ActionProposalSchema` whose enum mirrors the 29). Prompt < 2000 tokens. **Drift detection:** golden snapshot test fails if Phase 2 registry adds/removes tools without Phase 5 prompt update. | `tests/conformance/browse-prompt.test.ts` (golden snapshot + tool-name-parity assertion against MCPToolRegistry.list().length === 29) | T090 |
 | AC-10 | `BrowseGraph.compile()` produces a runnable LangGraph; `BrowseGraph.invoke({ initial_state })` runs the loop on a fixture URL list with mock LLM + mock browser; smoke test exits 0 | `tests/conformance/browse-graph-compile.test.ts` | T091 |
@@ -154,6 +163,9 @@ The CLI (`pnpm cro:audit --urls ./urls.txt --business-type ecommerce`) reads URL
 | AC-13 | Integration test for multi-step workflow: navigate → click → type → submit → verify; all 5 actions verified; final state captured | `tests/integration/phase5-workflow.test.ts` | T094 |
 | AC-14 | Integration test for recovery: synthetic verify_failed on action 2 of 4; FailureClassifier routes to retry (1x) → replan (LLM picks alternate action) → success → audit_complete | `tests/integration/phase5-recovery.test.ts` | T095 |
 | AC-15 | Integration test for budget exhaustion: audit_run with `budget_remaining_usd=0.05` against a multi-page list; loop debits cost across pages; on exhaustion, audit terminates with `completion_reason='budget_exceeded'`; remaining pages NOT entered | `tests/integration/phase5-budget.test.ts` | T096 |
+| AC-16 | Every Phase 5 browse-mode LLM invocation populates `LLMCompleteRequest.client_id` from `AuditState.client_id` (no PLACEHOLDER_UUID). Closes Phase 4 Stage 2.5 H1 + H2 carry-forward per `r20-invalidation-from-phase-4.md` L24-26. Conformance test asserts zero `llm_call_log.client_id = PLACEHOLDER_UUID` for any browse-mode row. | `tests/conformance/browse-llm-client-id.test.ts` | T097 |
+| AC-17 | `page_browse_started` emitted on entry to browse node per page; `page_browse_completed` on successful exit; `page_browse_failed` on unrecoverable failure (all LOCKED names from the 22-value `AuditEventTypeEnum`). | `tests/conformance/node-browse-events.test.ts` | T085 |
+| AC-18 | Audit-level wall-clock cap (hardcoded 60 min in MVP; configurable wiring via `AuditRequest.max_wall_clock_ms` deferred to v1.1 + Phase 4b R20 amendment) terminates audit cleanly with `completion_reason='timeout'`. AuditEvent row uses `audit_failed` with `metadata.cause_class='wall_clock_timeout'`. | `tests/conformance/audit-timeout.test.ts` | T086 |
 
 AC-NN IDs append-only per Constitution R18.
 
@@ -175,6 +187,8 @@ AC-NN IDs append-only per Constitution R18.
 | R-10 | System MUST assemble `BrowseGraph` (LangGraph compiled) with all nodes + edges + system prompt | F-002 + F-003 | 04-orchestration.md |
 | R-11 | System MUST provide 5 integration tests (T092-T096) | F-003 acceptance | (integration tests) |
 | R-12 | System MUST log every Phase 5 LLM call to `llm_call_log` with operation in {`other`, `classify`, `extract`} | F-014 + R14.1 | 11-safety-cost.md |
+| R-13 | System MUST emit `budget_warning` AuditEvent at 80% audit_budget consumption threshold; `budget_exceeded` at 100% per AC-15 | F-014 + R8.1 | 11-safety-cost.md |
+| R-14 | System MUST thread `client_id` from `AuditState` through every `LLMCompleteRequest.client_id` field; no PLACEHOLDER_UUID values land in `llm_call_log` | F-014 + R14.1 + R14.4 | 11-safety-cost.md |
 
 ---
 
@@ -253,6 +267,7 @@ See impact.md for full surface.
 - **AuditState forward-compat** — Phase 5 ships a browse-mode subset; Phase 8 widens additively (new optional fields). Phase 5 code does not depend on Phase 8 fields and tolerates their absence.
 - **Mock LLM adapter** is provided in test code (Phase 4 already lands MockLLMAdapter); Phase 5 integration tests use it for deterministic action selection.
 - **Mock BrowserEngine** for unit tests — Phase 5 also uses Playwright real browser for integration tests (T092-T096).
+- **MVP serializes LLM calls per audit_run.** Parallel LLM calls within one audit deferred to v1.1; M3 budget concurrency hardening (Phase 4 carry-forward) addresses this at v1.1 boundary. Phase 5 enforces single-concurrent-LLM via BrowseNode kill criterion.
 
 ---
 
@@ -260,7 +275,7 @@ See impact.md for full surface.
 
 1. impact.md authored.
 2. plan.md drafted.
-3. tasks.md drafted (16 MVP tasks).
+3. tasks.md drafted (17 MVP tasks per v0.3; T097 promoted from reserved).
 4. /speckit.analyze (Explore subagent).
 5. Phase 5 implementation in a separate session.
 
