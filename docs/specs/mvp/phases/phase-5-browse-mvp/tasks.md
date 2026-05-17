@@ -146,7 +146,7 @@ T084 + T091 carry extended kill criteria.
   - **dep:** T081
   - **Kill criteria:** default block
 
-- [ ] **T084 [US-1] BrowseNode (action selection)** (AC-04, REQ-BROWSE-NODE-003) **— extended kill criteria**
+- [x] **T084 [US-1] BrowseNode (action selection)** (AC-04, REQ-BROWSE-NODE-003) **— extended kill criteria**
   - **Brief — Outcome:** `orchestration/nodes/BrowseNode.ts` exports `selectAction(state) → Partial<state>`. Calls Phase 1 ContextAssembler.capture(current_url) → PageStateModel; calls LLMAdapter (operation='other', temp=0.5, system=BROWSE_AGENT_SYSTEM_PROMPT) for action proposal; Zod-parses ActionProposalSchema; on parse failure retries up to 2x with corrective feedback. LLM operation routing: `other` for primary action selection (default); `classify` for corrective-feedback retries after Zod parse failures (action constrained to 1 of 29 tool names). `extract` reserved for structured-data sub-tasks (none in MVP).
   - **Per-task kill criteria (extends default):**
     - "perception-first violation (action invoked without preceding browser_get_state OR PageStateModel in state)" → R23 STOP. R4.1 violation.
@@ -157,7 +157,7 @@ T084 + T091 carry extended kill criteria.
   - **Files:** `packages/agent-core/src/orchestration/nodes/BrowseNode.ts`
   - **dep:** T081, T090 (browse-agent prompt + ActionProposalSchema)
 
-- [ ] **T085 [US-1] BrowseNode (verify + route portion)** (AC-04 cont'd + AC-17)
+- [x] **T085 [US-1] BrowseNode (verify + route portion)** (AC-04 cont'd + AC-17)
   - **Brief — Outcome:** Same file `BrowseNode.ts` (or a sibling file if size > 300 — split decision in T084). After action invocation: SafetyCheck → MCP tool dispatch (with RateLimiter wrap) → VerifyEngine.verify(contract, session) → ConfidenceScorer.afterFailure/afterSuccess → FailureClassifier.classify if failed. Updates state with new PageStateModel + confidence + completion fields.
   - **Constraints:** Functions < 50 lines each.
   - **Acceptance:** AC-04 (verify+route portion) + AC-17 (emits page_browse_started on entry, page_browse_completed on success exit, page_browse_failed on unrecoverable).
