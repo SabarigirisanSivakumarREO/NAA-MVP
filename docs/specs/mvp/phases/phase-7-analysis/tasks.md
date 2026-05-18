@@ -239,14 +239,14 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 
 ## Block C3 — AnalysisGraph + Integration (Day 9 — EXIT GATE)
 
-### T133 — AnalysisGraph (compile)
+### T133 — AnalysisGraph (compile) ✅
 - **dep:** T117, T119, T121, T130, T131, T132
 - **spec:** REQ-ANALYZE-GRAPH-001 + REQ-ANALYZE-EDGE-001..003
 - **files:** `packages/agent-core/src/analysis/AnalysisGraph.ts`
 - **acceptance:** 5-step graph compiles; all edges connected per §7.3; 3 routing functions (`routeAfterEvaluate`, `routeAfterCritique`, `routeAfterGround`) implemented per REQ-ANALYZE-EDGE-001..003. LangGraph compile-time validation green.
 - **conformance:** AC-21
 
-### T133a — Quality-gate routing conformance (v0.2 act-003)
+### T133a — Quality-gate routing conformance (v0.2 act-003) ✅
 - **dep:** T117, T119, T133
 - **spec:** REQ-ANALYZE-QUALITY-001, REQ-ANALYZE-QUALITY-002, REQ-ANALYZE-QUALITY-003, REQ-ANALYZE-RECOVERY-003, §7.10 + R15.1
 - **files:** `packages/agent-core/tests/conformance/quality-gate-routing.test.ts`
@@ -258,7 +258,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
   - Each routing emits `audit_events` row with non-null `analysis_status` (REQ-ANALYZE-RECOVERY-003 taxonomy completeness)
 - **conformance:** AC-22a
 
-### T134 — Phase 7 integration test (EXIT GATE)
+### T134 — Phase 7 integration test (EXIT GATE) ✅ (mock-orchestration green; real-LLM 3-fixture smoke env-gated)
 - **dep:** T133 + Phase 0b 30-heuristic pack committed (T103/T104/T105)
 - **files:** `packages/agent-core/tests/integration/phase7.test.ts`
 - **smoke test:** Full pipeline on 3 fixtures (homepage, PDP, checkout).
