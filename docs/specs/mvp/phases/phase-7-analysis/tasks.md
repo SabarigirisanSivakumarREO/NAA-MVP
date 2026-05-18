@@ -174,7 +174,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 
 ## Block C1 — 8 Grounding Rules (Days 5-7, parallelizable [P])
 
-### T122-T129 — 8 Grounding Rules [P]
+### T122-T129 — 8 Grounding Rules [P] ✅
 - **dep:** T113
 - **spec:** REQ-ANALYZE-GROUND-001 + Constitution R5.7 (GR-006) + R5.3 (GR-007)
 
