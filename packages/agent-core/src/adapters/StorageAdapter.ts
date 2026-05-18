@@ -167,6 +167,13 @@ export interface StorageAdapter {
   /** Phase 7 StoreNode — insert one `findings` row. */
   appendFinding(entry: FindingInsert): Promise<string>;
 
+  /**
+   * Phase 7 T132 StoreNode — append one row to `rejected_findings`.
+   * R7.4 append-only; rejection_reason + rejected_by_rule preserve
+   * grounding-pipeline traceability.
+   */
+  appendRejectedFinding(entry: RejectedFindingInsert): Promise<string>;
+
   // ── Reproducibility (Phase 8 consumer) ──────────────────────────────
   /**
    * REQ-DATA-SCHEMA-001 / R10 — write one `reproducibility_snapshots` row.

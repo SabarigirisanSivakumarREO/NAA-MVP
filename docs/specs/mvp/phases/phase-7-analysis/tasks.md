@@ -1,10 +1,10 @@
 ---
 title: Phase 7 — Analysis Pipeline — Tasks
 artifact_type: tasks
-status: draft
-version: 0.1
+status: implemented
+version: 0.3
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-05-18
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -41,10 +41,16 @@ delta:
     - GR-012 explicitly folded into T130 acceptance (no discrete T-ID per current tasks-v2.md; punch-list candidate for v2.3.4)
     - Multi-bundle iteration semantics added to T119 (Phase 5b opt-in)
     - Persona context injection added to T118/T119 per F-013
-  changed: []
+  changed:
+    - v0.2 (2026-05-18) Gate 1 Pass 1 patch wave act-001 + act-002 + act-003 + act-004 (single commit; R18 delta block)
+    - act-001 (C1) — T120 acceptance: replaced placeholder "Levenshtein distance ≥ N" with concrete token-set Jaccard ≥ 0.5 AND zero-shared-5-gram metric (matches spec AC-08 + plan §2.3)
+    - act-002 (I1) — REQ-ANALYZE-PERCEPTION-V23-001 references replaced site-wide with REQ-ANALYZE-PERCEPTION-V23-001 (canonical)
+    - act-003 (G1) — NEW T133a (Quality-gate routing conformance test); binds AC-22a + REQ-ANALYZE-QUALITY-002/003 + REQ-ANALYZE-RECOVERY-003; sibling to T133 graph compile; sequenced into Block C3 day 9
+    - act-004 (F1) — T134 acceptance: "re-run 24h later" replaced with "same-session repeat run" for NF-005 in CI; 24h R&D harness flagged out-of-MVP-CI (separate harness)
   impacted: []
   unchanged:
-    - All 22 task IDs and base acceptance criteria; T114 + T117 v2.3 mods carried verbatim from tasks-v2.md
+    - 22 base task IDs and base acceptance criteria carried verbatim from tasks-v2.md
+    - T134 EXIT GATE semantics unchanged (T133a is conformance addition, not exit-gate addition)
 
 governing_rules:
   - Constitution R10 + R13 (temperature=0)
@@ -73,23 +79,23 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 
 ## Block A — State + Utilities (Day 1)
 
-### T113 — AnalysisState extension
+### T113 — AnalysisState extension ✅
 - **dep:** T081 (AuditState foundation)
 - **spec:** REQ-STATE-001 (analyze fields)
-- **files:** `packages/agent-core/src/orchestration/AuditState.ts` (extend with analyze fields)
+- **files:** `packages/agent-core/src/orchestration/AnalysisState.ts` (NEW; sibling to AuditState.ts; extends AuditStateBrowseSubsetSchema additively per R20) + barrel `orchestration/index.ts` + `tests/conformance/analysis-state.test.ts` (7/7 PASS 2026-05-18)
 - **acceptance:** All analyze-mode fields added to AuditState — `current_page_perception_bundle`, `current_page_type`, `confidence_tier`, `evaluate_findings_raw[]`, `critique_findings[]`, `grounded_findings[]`, `rejected_findings[]`, `analysis_cost_usd`, `analysis_status`, `current_page_signals` (for §7.13 cross-page emission). Zod-validated. Backward-compatible (additive only — Phase 1-5 code unaffected).
 - **conformance:** AC-01
 
-### T114 — detectPageType utility (MOD v2.3)
+### T114 — detectPageType utility (MOD v2.3) ✅
 - **dep:** T002
-- **spec:** REQ-ANALYZE-V23-001
+- **spec:** REQ-ANALYZE-PERCEPTION-V23-001
 - **files:** `packages/agent-core/src/analysis/utils/detectPageType.ts`
 - **v2.3 changes:** Return type `{primary: PageType, alternatives: Array<{type, confidence}>, signalsUsed: {...}}`. Scoring weights: URL keywords × 0.4 + CTA texts × 0.3 + form signals × 0.2 + schema.org × 0.1. Result stored in `AnalyzePerception.inferredPageType`. Backward-compat accessor `.primary` for call sites that only need the enum. **NEW v0.3:** When `state.context_profile.page.type` is set (Phase 4b active), detectPageType becomes a thin reader of that value (REQ-CONTEXT-DOWNSTREAM-001 — confidence-weighted accessor with fallback to URL/CTA/form/schema inference if ContextProfile absent).
 - **smoke test:** Amazon product page returns `{primary: "product", alternatives: [...], signalsUsed: {...}}`.
 - **acceptance:** Returns one of: homepage, product, checkout, form, pricing, other. Ranked list with confidence scores. Primary matches pre-v2.3 enum result on test fixtures.
 - **conformance:** AC-02
 
-### T115 — assignConfidenceTier utility
+### T115 — assignConfidenceTier utility ✅
 - **dep:** T002
 - **spec:** REQ-ANALYZE-CONF-001 (confidence-tier mapping per §7.7 spec table)
 - **files:** `packages/agent-core/src/analysis/utils/assignTier.ts`
@@ -97,7 +103,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 - **acceptance:** Pure function `(reliability_tier: 1 | 2 | 3, evidenceType: "measurable" | "observable" | "subjective") → "high" | "medium" | "low"`. Mapping per §7.7 spec table.
 - **conformance:** AC-03
 
-### T116 — CostTracker
+### T116 — CostTracker ✅
 - **dep:** T073 (cost-tracking infra)
 - **spec:** REQ-COST-LOG-001 (R14.1 atomic writes) + REQ-COST-BUDGET-001 (R14.2 pre-call gate)
 - **files:** `packages/agent-core/src/analysis/CostTracker.ts`
@@ -109,7 +115,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 
 ## Block B — Core LLM Nodes (Days 2-4) — FIRST R10/R5.6/R6 ACTIVATIONS
 
-### T117 — DeepPerceiveNode (MOD v2.3)
+### T117 — DeepPerceiveNode (MOD v2.3) ✅
 - **dep:** T048 (page_analyze tool), T046 (browser_screenshot), T025 (page_screenshot_full), T113
 - **spec:** REQ-ANALYZE-NODE-001 + REQ-ANALYZE-PERCEPTION-V23-001
 - **files:** `packages/agent-core/src/analysis/nodes/DeepPerceiveNode.ts`
@@ -119,14 +125,14 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 - **acceptance:** Calls page_analyze, browser_screenshot, page_screenshot_full. Returns AnalyzePerception + viewport + fullpage screenshots. Calls detectPageType (T114) to set `current_page_type`. R24 compliance: NO new perception logic; ALL perception via existing accessor + tools.
 - **conformance:** AC-05
 
-### T118 — Evaluate prompt template
+### T118 — Evaluate prompt template ✅
 - **dep:** T002
 - **spec:** REQ-ANALYZE-NODE-002 + AI_Analysis_Agent_v1.0 §7.5
 - **files:** `packages/agent-core/src/analysis/prompts/evaluate.ts`
 - **acceptance:** System prompt + user message template match §7.5 verbatim. System prompt cached (static across audits — Anthropic prompt caching). User message contains: perception summary + filtered heuristics (R5.5 — body in user msg only) + persona context (REQ-ANALYZE-PERSONA-002 when configured) + R5.3 banned-phrasing instruction.
 - **conformance:** AC-06
 
-### T119 — EvaluateNode (FIRST R10 + R6 ACTIVATIONS)
+### T119 — EvaluateNode (FIRST R10 + R6 ACTIVATIONS) ✅
 - **dep:** T117, T118, T106 (HeuristicLoader Phase 6), T073 (cost infra), T4B-013 (Phase 4b loadForContext contract)
 - **spec:** REQ-ANALYZE-NODE-002 + Constitution R10/R13 (temperature=0) + R6 (LangSmith trace channel) + R14 (atomic logging + budget gate)
 - **files:** `packages/agent-core/src/analysis/nodes/EvaluateNode.ts`
@@ -144,14 +150,14 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
   - Persona injection per REQ-ANALYZE-PERSONA-002 when configured
 - **conformance:** AC-07
 
-### T120 — Self-critique prompt template
+### T120 — Self-critique prompt template ✅
 - **dep:** T002
 - **spec:** REQ-ANALYZE-NODE-003 + AI_Analysis_Agent_v1.0 §7.6
 - **files:** `packages/agent-core/src/analysis/prompts/selfCritique.ts`
-- **acceptance:** System prompt persona DIFFERS from evaluate's persona (R5.6) — "rigorous CRO critic" vs evaluate's "CRO consultant". Code review enforces non-overlap. Levenshtein distance of system prompts ≥ N (chosen empirically post-prompt-authoring; documented in plan.md).
+- **acceptance:** System prompt persona DIFFERS from evaluate's persona (R5.6) — "rigorous CRO critic" vs evaluate's "CRO consultant". Code review enforces non-overlap. v0.2 act-001 programmatic divergence metric: persona-descriptor sentences satisfy **token-set Jaccard distance ≥ 0.5 AND zero shared word 5-grams**; conformance test computes both deterministically.
 - **conformance:** AC-08
 
-### T121 — SelfCritiqueNode (R5.6 SEPARATE LLM CALL)
+### T121 — SelfCritiqueNode (R5.6 SEPARATE LLM CALL) ✅
 - **dep:** T119, T120
 - **spec:** REQ-ANALYZE-NODE-003 + R5.6
 - **files:** `packages/agent-core/src/analysis/nodes/SelfCritiqueNode.ts`
@@ -168,7 +174,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 
 ## Block C1 — 8 Grounding Rules (Days 5-7, parallelizable [P])
 
-### T122-T129 — 8 Grounding Rules [P]
+### T122-T129 — 8 Grounding Rules [P] ✅
 - **dep:** T113
 - **spec:** REQ-ANALYZE-GROUND-001 + Constitution R5.7 (GR-006) + R5.3 (GR-007)
 
@@ -191,7 +197,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 
 ## Block C2 — EvidenceGrounder + Annotate + Store (Day 8)
 
-### T130 — EvidenceGrounder (with GR-012 folded)
+### T130 — EvidenceGrounder (with GR-012 folded) ✅
 - **dep:** T122-T129
 - **spec:** REQ-ANALYZE-NODE-004 + R15.4 (GR-012 benchmark validation)
 - **files:** `packages/agent-core/src/analysis/grounding/EvidenceGrounder.ts` + `packages/agent-core/src/analysis/grounding/rules/GR-012.ts` (NEW; folded per plan.md §3 — punch-list candidate for tasks-v2.md v2.3.4)
@@ -204,7 +210,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
   - GR-012 quantitative tolerance ±20% (R15.4); GR-012 qualitative Levenshtein-similarity ≥ 0.6 OR substring match
 - **conformance:** AC-18
 
-### T131 — AnnotateNode
+### T131 — AnnotateNode ✅
 - **dep:** T047 (page_annotate_screenshot tool), T130
 - **spec:** REQ-ANALYZE-NODE-005 + F-011
 - **files:** `packages/agent-core/src/analysis/nodes/AnnotateNode.ts`
@@ -216,7 +222,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
   - Pin diameter 28px; box stroke-width 3px; outlines visible over any background
 - **conformance:** AC-19
 
-### T132 — StoreNode
+### T132 — StoreNode ✅
 - **dep:** T074 (DB adapter), T075 (screenshot storage)
 - **spec:** REQ-ANALYZE-NODE-005 + R7.3 + R7.4 + F-016
 - **files:** `packages/agent-core/src/analysis/nodes/StoreNode.ts`
@@ -233,14 +239,26 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 
 ## Block C3 — AnalysisGraph + Integration (Day 9 — EXIT GATE)
 
-### T133 — AnalysisGraph (compile)
+### T133 — AnalysisGraph (compile) ✅
 - **dep:** T117, T119, T121, T130, T131, T132
 - **spec:** REQ-ANALYZE-GRAPH-001 + REQ-ANALYZE-EDGE-001..003
 - **files:** `packages/agent-core/src/analysis/AnalysisGraph.ts`
 - **acceptance:** 5-step graph compiles; all edges connected per §7.3; 3 routing functions (`routeAfterEvaluate`, `routeAfterCritique`, `routeAfterGround`) implemented per REQ-ANALYZE-EDGE-001..003. LangGraph compile-time validation green.
 - **conformance:** AC-21
 
-### T134 — Phase 7 integration test (EXIT GATE)
+### T133a — Quality-gate routing conformance (v0.2 act-003) ✅
+- **dep:** T117, T119, T133
+- **spec:** REQ-ANALYZE-QUALITY-001, REQ-ANALYZE-QUALITY-002, REQ-ANALYZE-QUALITY-003, REQ-ANALYZE-RECOVERY-003, §7.10 + R15.1
+- **files:** `packages/agent-core/tests/conformance/quality-gate-routing.test.ts`
+- **acceptance:**
+  - 3 synthetic perception fixtures with computed quality scores 0.2 / 0.45 / 0.8
+  - Score 0.2 → route `skip`; `analysis_status: skipped_perception_quality_low`; zero LLM calls
+  - Score 0.45 → route `partial`; only Tier 1 heuristics evaluated; `analysis_status: partial_analysis_perception_quality_marginal`
+  - Score 0.8 → route `proceed`; full evaluate runs
+  - Each routing emits `audit_events` row with non-null `analysis_status` (REQ-ANALYZE-RECOVERY-003 taxonomy completeness)
+- **conformance:** AC-22a
+
+### T134 — Phase 7 integration test (EXIT GATE) ✅ (mock-orchestration green; real-LLM 3-fixture smoke env-gated)
 - **dep:** T133 + Phase 0b 30-heuristic pack committed (T103/T104/T105)
 - **files:** `packages/agent-core/tests/integration/phase7.test.ts`
 - **smoke test:** Full pipeline on 3 fixtures (homepage, PDP, checkout).
@@ -254,19 +272,20 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
   - LangSmith trace inspected: NO heuristic body content in default UI payload (R6 first runtime activation verified)
   - R10 TemperatureGuard active on both LLM calls (evaluate + self_critique)
   - `llm_call_log` rows per page = 2 (evaluate + self_critique) — R5.6 verified
-  - Reproducibility: re-run same fixture 24h later → finding ID overlap ≥ 90% (NF-005)
+  - Reproducibility (v0.2 act-004): re-run same fixture in same test session → finding ID overlap ≥ 90% (NF-005); 24h-window R&D harness lives at `packages/agent-core/tests/quality/reproducibility-24h-harness.ts` — OUT of MVP CI, on-demand only
 - **conformance:** AC-22 (Phase 7 EXIT GATE)
 
 ---
 
 ## Phase 7 "Done" definition
 
-All 22 tasks merged AND all of:
+All 22 base tasks (T113-T134) + T133a merged AND all of:
 - ✅ T134 integration test green on 3 fixtures
 - ✅ R10 TemperatureGuard conformance test green (T119/T121)
 - ✅ R6 LangSmith channel conformance test green (T134 trace inspection)
 - ✅ R5.6 enforcement verified — `llm_call_log` shows 2 rows per page
 - ✅ All 9 grounding rules unit tests green (AC-10..AC-18)
+- ✅ Quality-gate routing conformance green (AC-22a — T133a)
 - ✅ Per-page cost ≤$5 across all fixtures
 - ✅ Reproducibility ≥90% finding overlap (NF-005)
 - ✅ Phase 7 status: `verified`

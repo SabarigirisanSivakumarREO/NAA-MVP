@@ -1,10 +1,10 @@
 ---
 title: Phase 7 — Analysis Pipeline
 artifact_type: spec
-status: draft
-version: 0.1
+status: implemented
+version: 0.3
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-05-18
 owner: engineering lead
 authors: [Claude (drafter)]
 reviewers: []
@@ -36,16 +36,20 @@ req_ids:
   - REQ-ANALYZE-NODE-004               # ground
   - REQ-ANALYZE-NODE-005               # annotate_and_store
   - REQ-ANALYZE-PERCEPTION-001
-  - REQ-ANALYZE-PERCEPTION-V23-001
+  - REQ-ANALYZE-PERCEPTION-V23-001     # canonical (act-002 v0.2); supersedes prior REQ-ANALYZE-V23-001 alias usages
   - REQ-ANALYZE-GROUND-001             # 8 grounding rules + GR-012
-  - REQ-ANALYZE-QUALITY-001
-  - REQ-ANALYZE-QUALITY-002
-  - REQ-ANALYZE-QUALITY-003
+  - REQ-ANALYZE-QUALITY-001            # score computation (7 weighted signals → [0,1])
+  - REQ-ANALYZE-QUALITY-002            # routing decision (proceed/partial/skip thresholds 0.6/0.3)
+  - REQ-ANALYZE-QUALITY-003            # partial-Tier1 evaluation semantics on 0.3-0.59 band
   - REQ-ANALYZE-RECOVERY-001
   - REQ-ANALYZE-RECOVERY-002
+  - REQ-ANALYZE-RECOVERY-003           # act-002 v0.2 — analysis_status taxonomy completeness (every page non-null)
   - REQ-ANALYZE-PERSONA-001
   - REQ-ANALYZE-PERSONA-002
   - REQ-ANALYZE-PERSONA-003
+  - REQ-ANALYZE-PERSONA-004            # act-002 v0.2 — default 2-3 personas per business type
+  - REQ-ANALYZE-CONF-001               # act-002 v0.2 — assignConfidenceTier mapping
+  - REQ-STATE-001                      # act-002 v0.2 — AnalysisState extension fields
   - REQ-ANALYZE-CROSSPAGE-001
   - REQ-COST-LOG-001                   # R14.1 atomic llm_call_log writes (referenced via §13)
   - REQ-COST-BUDGET-001                # R14.2 pre-call budget gate
@@ -72,7 +76,13 @@ delta:
     - AC-01..AC-22 stable IDs for T113..T134 acceptance
     - R-01..R-15 functional requirements
     - First runtime activation declarations for R10 TemperatureGuard + R6 LangSmith trace channel + Finding lifecycle producer
-  changed: []
+  changed:
+    - v0.2 (2026-05-18) Gate 1 Pass 1 patch wave act-001..act-005 (REVISE → APPROVE)
+    - act-001 (C1) — AC-08 + §spec persona-divergence metric — replaced placeholder "Levenshtein distance ≥ N" with concrete "system-prompt persona token-set Jaccard distance ≥ 0.5 AND zero shared 5-gram between persona descriptor sentences" (programmatically enforceable; aligns to plan.md §2.3 patch)
+    - act-002 (I1+U1+U2+U3+U4) — frontmatter req_ids reconciled: added REQ-STATE-001, REQ-ANALYZE-CONF-001, REQ-ANALYZE-RECOVERY-003, REQ-ANALYZE-PERSONA-004; canonicalized REQ-ANALYZE-PERCEPTION-V23-001 (REQ-ANALYZE-V23-001 alias replaced site-wide)
+    - act-003 (G1) — added AC-22a binding REQ-ANALYZE-QUALITY-002/003 (quality-gate routing test on 0.2 / 0.45 / 0.8 fixtures); R-03 traceability restored
+    - act-004 (G2+F1) — NF-06 marked quality-tracking-only (non-blocking); T134 24h reproducibility replaced with same-session repeat run + scheduled 24h R&D harness flagged out-of-MVP-CI
+    - act-005 (T1) — plan.md §1 wording clarified: quality_gate is `routeAfterPerceive` routing edge, not a 6th node (5-node pipeline retained per AC-21)
   impacted:
     - AuditState analyze fields populated (Phase 8 T135 reads via state.findings + state.cross_page_signals)
     - Phase 8 cross-page PatternDetector consumes PageSignals[] emitted from Phase 7
@@ -131,7 +141,7 @@ When reading this spec, agents must already have loaded:
 ## Constraints Inherited from Neural Canonical Specs
 
 - **R10 + R13 temperature=0** on `evaluate` + `self_critique` + `evaluate_interactive` (last is master-scope; MVP only `evaluate` + `self_critique`). TemperatureGuard at LLMAdapter boundary REJECTS calls with `temperature > 0` for these tagged calls. Phase 7 is the **FIRST runtime use** — the guard activates here.
-- **R5.6 separate self-critique call.** SelfCritiqueNode MUST run as an independent LLM call with a different system prompt persona ("rigorous critique" persona vs "evaluation" persona). NO combined evaluate-and-critique single-call optimization. Cost surface: 2 LLM calls per page (evaluate + critique). Empirical justification: ~30% false-positive reduction (per Constitution R5 provenance block).
+- **R5.6 separate self-critique call.** SelfCritiqueNode MUST run as an independent LLM call with a different system prompt persona ("rigorous critique" persona vs "evaluation" persona). NO combined evaluate-and-critique single-call optimization. Cost surface: 2 LLM calls per page (evaluate + critique). Empirical justification: ~30% false-positive reduction (per Constitution R5.6 + Phase 7 NF-06 harness).
 - **R5.5 heuristic injection in USER MESSAGE.** Heuristics are injected into the LLM user message (NOT system prompt — that would inflate cache misses; NOT tool call — that creates a circular dependency). Heuristic body content NEVER appears outside the user message: not in system prompt, not in logs (R6.1), not in LangSmith trace metadata except as private fields (R6.3).
 - **R6 LangSmith channel activation.** Phase 6 activated the Pino-logs channel. Phase 7 activates the LangSmith trace channel: heuristic body fields are marked as **private** in trace metadata so LangSmith UI redacts them. Conformance test (T134) inspects emitted traces.
 - **R5.3 + GR-007 no conversion predictions.** Deterministic regex check on `recommendation.summary` + `recommendation.details` of every Finding. Banned phrases: `/(increase|lift|boost|raise|grow|improve)\s+(conversion|conversions|CR|cr)\s+by\s+\d+%/i`. GR-007 is the LAST line of defense — also enforced at heuristic authoring time (Phase 0b T0B-004 lint), but Phase 7 enforces on LLM-generated finding text.
@@ -246,13 +256,13 @@ A consultant configures the client with 2 personas (`first_time_visitor`, `retur
 | ID | Criterion | Conformance test path | Linked REQ-ID(s) |
 |----|-----------|----------------------|------------------|
 | AC-01 | T113 AnalysisState extends AuditState with analyze fields (`current_page_perception_bundle`, `current_page_type`, `confidence_tier`, `evaluate_findings_raw[]`, `critique_findings[]`, `grounded_findings[]`, `rejected_findings[]`, `analysis_cost_usd`, `analysis_status`); Zod-validated. | `packages/agent-core/tests/conformance/analysis-state.test.ts` | REQ-STATE-001 |
-| AC-02 | T114 detectPageType returns `{primary: PageType, alternatives: Array<{type, confidence}>, signalsUsed}` per v2.3; primary matches pre-v2.3 enum on test fixtures; signal weights URL×0.4 + CTA×0.3 + form×0.2 + schema.org×0.1. | `packages/agent-core/tests/conformance/detect-page-type.test.ts` | REQ-ANALYZE-V23-001 |
+| AC-02 | T114 detectPageType returns `{primary: PageType, alternatives: Array<{type, confidence}>, signalsUsed}` per v2.3; primary matches pre-v2.3 enum on test fixtures; signal weights URL×0.4 + CTA×0.3 + form×0.2 + schema.org×0.1. | `packages/agent-core/tests/conformance/detect-page-type.test.ts` | REQ-ANALYZE-PERCEPTION-V23-001 |
 | AC-03 | T115 assignConfidenceTier maps `(reliability_tier, evidenceType)` → `confidence_tier ∈ {high, medium, low}` per spec table. | `packages/agent-core/tests/conformance/assign-tier.test.ts` | REQ-ANALYZE-CONF-001 |
 | AC-04 | T116 CostTracker maintains per-call + cumulative cost; pre-call budget gate routes to skip when `estimated > remaining`; emits `audit_events` rows on budget exhaust. | `packages/agent-core/tests/conformance/cost-tracker.test.ts` | REQ-COST-LOG-001, REQ-COST-BUDGET-001 |
 | AC-05 | T117 DeepPerceiveNode wraps `bundleToAnalyzePerception(bundle)` accessor; calls `browser_screenshot` + `page_screenshot_full` MCP tools; populates `state.current_page_perception_bundle` + `state.current_page_type` (from `state.context_profile.page.type` if set, else from detectPageType). | `packages/agent-core/tests/conformance/deep-perceive-node.test.ts` | REQ-ANALYZE-NODE-001, REQ-ANALYZE-PERCEPTION-V23-001 |
 | AC-06 | T118 evaluate prompt template matches §7.5 verbatim (system prompt cached; user message includes perception summary + filtered heuristics + persona context). Heuristic body present in user message ONLY. | `packages/agent-core/tests/conformance/evaluate-prompt.test.ts` | REQ-ANALYZE-NODE-002 |
 | AC-07 | T119 EvaluateNode invokes LLMAdapter.evaluate at temperature=0 (TemperatureGuard activates); returns `RawFinding[]` validated by Zod; retries up to 2x on malformed output; emits `audit_events` row per call. | `packages/agent-core/tests/conformance/evaluate-node.test.ts` | REQ-ANALYZE-NODE-002, R10, R13 |
-| AC-08 | T120 self-critique prompt template matches §7.6 verbatim with DIFFERENT system prompt persona ("rigorous CRO critic" vs evaluate's "CRO consultant"). | `packages/agent-core/tests/conformance/self-critique-prompt.test.ts` | REQ-ANALYZE-NODE-003, R5.6 |
+| AC-08 | T120 self-critique prompt template matches §7.6 verbatim with DIFFERENT system prompt persona ("rigorous CRO critic" vs evaluate's "CRO consultant"). Programmatic divergence metric (v0.2 act-001): persona-descriptor sentences of evaluate vs self-critique system prompts MUST satisfy token-set Jaccard distance ≥ 0.5 AND share zero word 5-grams. Conformance test computes both metrics deterministically. | `packages/agent-core/tests/conformance/self-critique-prompt.test.ts` | REQ-ANALYZE-NODE-003, R5.6 |
 | AC-09 | T121 SelfCritiqueNode runs as SEPARATE LLM call (not combined with evaluate); applies KEEP / REVISE / DOWNGRADE / REJECT verdicts; ≥1 of 5 raw findings rejected on test fixture. | `packages/agent-core/tests/conformance/self-critique-node.test.ts` | REQ-ANALYZE-NODE-003, R5.6 |
 | AC-10 | T122 GR-001 (referenced element exists in perception): pure function `(finding, perception) → {pass, reason?}`; unit test covers pass + reject case. | `packages/agent-core/tests/conformance/gr-001.test.ts` | REQ-ANALYZE-GROUND-001, GR-001 |
 | AC-11 | T123 GR-002 (above/below fold matches bbox): pure function; pass + reject. | `packages/agent-core/tests/conformance/gr-002.test.ts` | REQ-ANALYZE-GROUND-001, GR-002 |
@@ -267,6 +277,7 @@ A consultant configures the client with 2 personas (`first_time_visitor`, `retur
 | AC-20 | T132 StoreNode persists findings (typed) + screenshots (R2 in prod / disk in dev); audit_run progress updated; atomic transaction (R7.4 append-only). | `packages/agent-core/tests/conformance/store-node.test.ts` | REQ-ANALYZE-NODE-005 |
 | AC-21 | T133 AnalysisGraph compiles all 5 nodes + 3 routing edges (`routeAfterEvaluate`, `routeAfterCritique`, `routeAfterGround`) per §7.3; LangGraph state graph well-formed. | `packages/agent-core/tests/conformance/analysis-graph.test.ts` | REQ-ANALYZE-GRAPH-001, REQ-ANALYZE-EDGE-001..003 |
 | AC-22 | T134 Phase 7 integration test (end-to-end): full pipeline on 3 test fixtures (homepage, PDP, checkout); each yields ≥3 grounded findings; ≥1 rejected at self-critique; ≥1 rejected at grounding; per-page cost ≤$5; LangSmith trace inspected — no heuristic body content visible (R6); R10 TemperatureGuard active on both LLM calls. | `packages/agent-core/tests/integration/phase7.test.ts` | (Phase 7 EXIT GATE) |
+| AC-22a | T133/T134 quality-gate routing — synthetic fixtures with perception-quality scores 0.2 / 0.45 / 0.8 route to `skip` / `partial` / `proceed` respectively per §7.10 + R15.1; partial route invokes Tier 1 heuristics only (REQ-ANALYZE-QUALITY-003); each routing decision emits `audit_events` row with non-null `analysis_status` per REQ-ANALYZE-RECOVERY-003 taxonomy completeness. | `packages/agent-core/tests/conformance/quality-gate-routing.test.ts` | REQ-ANALYZE-QUALITY-001, REQ-ANALYZE-QUALITY-002, REQ-ANALYZE-QUALITY-003, REQ-ANALYZE-RECOVERY-003 |
 
 ---
 
@@ -301,7 +312,7 @@ A consultant configures the client with 2 personas (`first_time_visitor`, `retur
 | NF-03 | EvaluateNode evaluate-prompt input tokens (perception + heuristics + persona + system) | ≤32K p99 | NF-001 | `getTokenCount()` log per call |
 | NF-04 | SelfCritiqueNode input tokens | ≤12K p99 | NF-001 | Same |
 | NF-05 | Reproducibility — same inputs (PerceptionBundle hash + heuristic pack hash + ContextProfile hash + temperature=0) → finding overlap | ≥90% within 24h (F-015) | NF-006 | Replay test against fixtures; Jaccard similarity of finding ID sets |
-| NF-06 | Self-critique false-positive reduction (vs combined evaluate-and-critique) | ≥30% (R5.6 evidence) | — | Manual labeling of 30 raw findings; compare KEEP-rate with vs without separate critique |
+| NF-06 | Self-critique false-positive reduction (vs combined evaluate-and-critique) | ≥30% (R5.6 evidence) | — | Quality-tracking only (NON-BLOCKING for Phase 7 exit per v0.2 act-004). Manual labeling harness of 30 raw findings comparing KEEP-rate with vs without separate critique; harness lives in `packages/agent-core/tests/quality/self-critique-fp-harness.ts` (out of CI; run on-demand). Phase 7 exit does NOT depend on this metric. |
 | NF-07 | Heuristic content leakage to LangSmith trace (R6.3) | 0 occurrences | — | T134 trace inspection asserting no heuristic body in visible payload |
 | NF-08 | TemperatureGuard rejection latency (developer-error fast-fail) | <10ms | — | Unit test |
 

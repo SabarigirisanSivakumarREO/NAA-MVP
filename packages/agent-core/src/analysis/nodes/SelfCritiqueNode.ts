@@ -43,3 +43,148 @@ export class SelfCritiqueNode {
     return rawFindings.map((finding) => ({ ...finding, verdict: 'KEEP' }));
   }
 }
+
+// ─── Phase 7 T121: selfCritiqueNodeRun (AC-09, REQ-ANALYZE-NODE-003) ────
+//
+// Supersedes skeleton SelfCritiqueNode (passthrough verdict=KEEP). Skeleton
+// class preserved for walking-skeleton audit.ts compatibility.
+//
+// R5.6 — SEPARATE LLM call (operation='self_critique'), distinct from
+//   evaluate. NF-06 verifies via llm_call_log (2 rows per page).
+// R10/R13 — temperature=0 (TemperatureGuard enforces).
+// Persona divergence in system prompt enforced by self-critique-prompt
+//   conformance test (Jaccard ≥ 0.5 + zero shared 5-grams).
+import { z } from 'zod';
+import {
+  type RawFinding as Phase7RawFinding,
+  type CritiqueFinding as Phase7CritiqueFinding,
+  type AnalysisStatus,
+  CritiqueVerdictEnum,
+  CritiqueFindingSchema,
+} from '../../orchestration/AnalysisState.js';
+import type { AnalyzePerception } from '../types.js';
+import {
+  type LLMAdapter,
+  BudgetExceededError,
+  LLMUnavailableError,
+  TemperatureGuardError,
+} from '../../adapters/LLMAdapter.js';
+import {
+  SELF_CRITIQUE_SYSTEM_PROMPT,
+  buildSelfCritiqueUserMessage,
+} from '../prompts/selfCritique.js';
+
+const SELF_CRITIQUE_MAX_TOKENS = 2048;
+const SELF_CRITIQUE_MAX_ATTEMPTS = 3;
+
+/**
+ * Per-finding critique response shape (spec §4.3 RESPOND-with JSON template).
+ * `revised_finding` may be a partial RawFinding patch (REVISE verdict);
+ * structural validation deferred to per-verdict apply step below.
+ */
+const CritiqueResponseItemSchema = z
+  .object({
+    finding_index: z.number().int().nonnegative(),
+    verdict: CritiqueVerdictEnum,
+    reason: z.string().min(1),
+    revised_finding: z.record(z.string(), z.unknown()).nullable().optional(),
+    new_severity: z.enum(['critical', 'high', 'medium', 'low']).nullable().optional(),
+  })
+  .strict();
+
+export interface SelfCritiqueNodeInput {
+  readonly rawFindings: ReadonlyArray<Phase7RawFinding>;
+  readonly perception: AnalyzePerception;
+  readonly llm: LLMAdapter;
+  readonly auditRunId: string;
+  readonly clientId?: string;
+}
+
+export interface SelfCritiqueNodeDelta {
+  readonly critique_findings: Phase7CritiqueFinding[];
+  readonly analysis_status?: AnalysisStatus;
+}
+
+function extractJsonPayload(raw: string): string {
+  const trimmed = raw.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  return (fenced?.[1] ?? trimmed).trim();
+}
+
+/**
+ * Apply the LLM's per-finding verdict to the original raw finding. Returns
+ * `null` for REJECT (caller drops). Output validated by CritiqueFindingSchema
+ * so any malformed revised_finding patch surfaces as a Zod error → retry.
+ */
+function applyVerdict(
+  original: Phase7RawFinding,
+  response: z.infer<typeof CritiqueResponseItemSchema>,
+): Phase7CritiqueFinding | null {
+  if (response.verdict === 'REJECT') return null;
+  const base: Phase7CritiqueFinding = {
+    ...original,
+    verdict: response.verdict,
+    revision_notes: response.reason,
+  };
+  if (response.verdict === 'DOWNGRADE' && response.new_severity != null) {
+    base.severity = response.new_severity;
+  }
+  if (response.verdict === 'REVISE' && response.revised_finding != null) {
+    Object.assign(base, response.revised_finding);
+  }
+  return CritiqueFindingSchema.parse(base);
+}
+
+export async function selfCritiqueNodeRun(
+  input: SelfCritiqueNodeInput,
+): Promise<SelfCritiqueNodeDelta> {
+  const { rawFindings, perception, llm, auditRunId, clientId } = input;
+
+  const reviewable = rawFindings.filter((f) => f.status !== 'pass');
+  if (reviewable.length === 0) {
+    return { critique_findings: [] };
+  }
+
+  const userPrompt = buildSelfCritiqueUserMessage({ perception, rawFindings: reviewable });
+
+  for (let attempt = 1; attempt <= SELF_CRITIQUE_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      // R5.6 — SEPARATE LLM call, distinct from evaluate.
+      const res = await llm.complete({
+        operation: 'self_critique',
+        audit_run_id: auditRunId,
+        userPrompt,
+        systemPrompt: SELF_CRITIQUE_SYSTEM_PROMPT,
+        temperature: 0,
+        maxTokens: SELF_CRITIQUE_MAX_TOKENS,
+        ...(clientId !== undefined ? { client_id: clientId } : {}),
+      });
+      const payload = JSON.parse(extractJsonPayload(res.text)) as unknown;
+      const items = z.array(CritiqueResponseItemSchema).parse(payload);
+      const critiques: Phase7CritiqueFinding[] = [];
+      for (const item of items) {
+        const original = reviewable[item.finding_index];
+        if (original === undefined) continue; // LLM hallucinated index
+        const out = applyVerdict(original, item);
+        if (out !== null) critiques.push(out);
+      }
+      return { critique_findings: critiques };
+    } catch (err) {
+      if (err instanceof BudgetExceededError) {
+        return { critique_findings: [], analysis_status: 'budget_exhausted_partial' };
+      }
+      if (err instanceof TemperatureGuardError) {
+        return {
+          critique_findings: [],
+          analysis_status: 'error_r10_temperature_guard_violation',
+        };
+      }
+      if (err instanceof LLMUnavailableError) {
+        return { critique_findings: [], analysis_status: 'skipped_llm_output_invalid' };
+      }
+      // JSON.parse / Zod failure → loop until exhausted.
+    }
+  }
+
+  return { critique_findings: [], analysis_status: 'skipped_llm_output_invalid' };
+}

@@ -21,6 +21,34 @@ export type {
   CompletionReason,
 } from './AuditState.js';
 
+// Phase 7 — AnalysisState + Finding lifecycle (T113 / AC-01 / REQ-STATE-001)
+export {
+  AnalysisStateSchema,
+  AnalysisStatusEnum,
+  ConfidenceTierEnum,
+  CritiqueFindingSchema,
+  CritiqueVerdictEnum,
+  GroundedFindingSchema,
+  PageSignalsSchema,
+  PageTypeEnum,
+  RawFindingSchema,
+  RejectedFindingSchema,
+  SeverityEnum,
+} from './AnalysisState.js';
+export type {
+  AnalysisState,
+  AnalysisStatus,
+  ConfidenceTier,
+  CritiqueFinding,
+  CritiqueVerdict,
+  GroundedFinding,
+  PageSignals,
+  PageType,
+  RawFinding,
+  RejectedFinding,
+  Severity,
+} from './AnalysisState.js';
+
 export {
   BROWSE_EDGE_CONFIG,
   BROWSE_RETRY_CAP,
