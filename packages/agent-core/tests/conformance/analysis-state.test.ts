@@ -105,10 +105,19 @@ describe('AC-01 — AnalysisState analyze-mode extension', () => {
   it('Test 6 — forward-stub Finding schemas accept reasonable samples', () => {
     const raw = RawFindingSchema.parse({
       heuristic_id: 'BAYMARD-001',
-      name: 'Insufficient form labels',
+      status: 'violation',
+      observation: 'Form#checkout email field has no visible label.',
+      assessment: 'WCAG 3.3.2 requires visible labels for form inputs.',
+      evidence: {
+        element_ref: 'input[name=email]',
+        element_selector: 'form#checkout > input[name=email]',
+        data_point: 'forms[0].fields[0]',
+        measurement: null,
+      },
       severity: 'medium',
-      evidence: { selector: 'form#checkout > input[name=email]', detail: 'label missing' },
-      recommendation: { summary: 'Add visible label', details: 'Per WCAG 3.3.2' },
+      confidence_basis: 'Explicit absence of <label> + no aria-label observed.',
+      recommendation: 'Add visible label above the email input.',
+      needs_review: false,
       persona: 'first_time_visitor',
     });
     expect(raw.heuristic_id).toBe('BAYMARD-001');

@@ -132,7 +132,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 - **acceptance:** System prompt + user message template match §7.5 verbatim. System prompt cached (static across audits — Anthropic prompt caching). User message contains: perception summary + filtered heuristics (R5.5 — body in user msg only) + persona context (REQ-ANALYZE-PERSONA-002 when configured) + R5.3 banned-phrasing instruction.
 - **conformance:** AC-06
 
-### T119 — EvaluateNode (FIRST R10 + R6 ACTIVATIONS)
+### T119 — EvaluateNode (FIRST R10 + R6 ACTIVATIONS) ✅
 - **dep:** T117, T118, T106 (HeuristicLoader Phase 6), T073 (cost infra), T4B-013 (Phase 4b loadForContext contract)
 - **spec:** REQ-ANALYZE-NODE-002 + Constitution R10/R13 (temperature=0) + R6 (LangSmith trace channel) + R14 (atomic logging + budget gate)
 - **files:** `packages/agent-core/src/analysis/nodes/EvaluateNode.ts`

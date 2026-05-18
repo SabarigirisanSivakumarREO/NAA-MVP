@@ -77,3 +77,162 @@ export class EvaluateNode {
     ];
   }
 }
+
+// ─── Phase 7 T119: evaluateNodeRun (AC-07, REQ-ANALYZE-NODE-002) ─────────
+//
+// Supersedes skeleton EvaluateNode class above. The class is preserved for
+// walking-skeleton audit.ts compatibility (RawFinding shape in audit/types.ts);
+// Phase 7 LangGraph orchestrator calls evaluateNodeRun() and consumes the
+// canonical AnalysisState RawFinding shape.
+//
+// R10/R13 — TemperatureGuard first-runtime activation (operation:'evaluate').
+// R5.5  — heuristics injected into USER MESSAGE only (system prompt cached).
+// R6    — projectHeuristicPublic in prompts/evaluate.ts strips body/provenance/ai_review.
+// R14.1 — atomic llm_call_log row written by AnthropicAdapter on every outcome.
+// R14.2 — pre-call BudgetGate; BudgetExceededError → analysis_status='budget_exhausted_partial'.
+// Retry — up to 2 retries (3 attempts total) on malformed LLM output;
+//         exhaust → analysis_status='skipped_llm_output_invalid'.
+import { z } from 'zod';
+import {
+  type AnalysisState,
+  type AnalysisStatus,
+  type RawFinding as Phase7RawFinding,
+  RawFindingSchema,
+} from '../../orchestration/AnalysisState.js';
+import type { AnalyzePerception } from '../types.js';
+import type { HeuristicExtended as Phase7Heuristic } from '../heuristics/types.js';
+import {
+  type LLMAdapter,
+  BudgetExceededError,
+  LLMUnavailableError,
+  TemperatureGuardError,
+} from '../../adapters/LLMAdapter.js';
+import { EVALUATE_SYSTEM_PROMPT, buildEvaluateUserMessage } from '../prompts/evaluate.js';
+import { prioritizeHeuristics } from '../heuristics/filter.js';
+
+const EVALUATE_HEURISTIC_CAP = 30;
+const EVALUATE_MAX_TOKENS = 4096;
+const EVALUATE_MAX_ATTEMPTS = 3;
+
+/**
+ * Minimal duck-typed loader surface. Permits a real HeuristicLoader OR a
+ * test mock to be passed without coupling EvaluateNode to PostgresStorage.
+ */
+export interface HeuristicLoaderSurface {
+  loadForContext(
+    profile: unknown,
+    opts?: { heuristics?: ReadonlyArray<Phase7Heuristic> },
+  ): Promise<Phase7Heuristic[]>;
+}
+
+export interface EvaluateNodeInput {
+  readonly state: AnalysisState;
+  readonly perception: AnalyzePerception;
+  readonly llm: LLMAdapter;
+  readonly heuristicLoader: HeuristicLoaderSurface;
+  readonly auditRunId: string;
+  readonly clientId?: string;
+  readonly currentUrl: string;
+  readonly pageTypeDetected: string;
+  readonly businessType: string;
+  /** Optional REQ-ANALYZE-PERSONA-002 — tagged onto each finding when set. */
+  readonly persona?: string;
+  /** Multi-bundle (Phase 5b): tag findings with viewport. */
+  readonly viewport?: 'desktop' | 'mobile' | 'tablet';
+}
+
+export interface EvaluateNodeDelta extends Partial<AnalysisState> {
+  readonly evaluate_findings_raw: Phase7RawFinding[];
+  readonly analysis_status?: AnalysisStatus;
+}
+
+/**
+ * Strip Markdown code fences if the LLM wrapped its JSON output.
+ */
+function extractJsonPayload(raw: string): string {
+  const trimmed = raw.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  return (fenced?.[1] ?? trimmed).trim();
+}
+
+function tagFinding(
+  f: Phase7RawFinding,
+  persona: string | undefined,
+  viewport: 'desktop' | 'mobile' | 'tablet' | undefined,
+): Phase7RawFinding {
+  if (persona === undefined && viewport === undefined) return f;
+  const out: Phase7RawFinding = { ...f };
+  if (persona !== undefined) out.persona = persona;
+  if (viewport !== undefined) out.viewport = viewport;
+  return out;
+}
+
+export async function evaluateNodeRun(input: EvaluateNodeInput): Promise<EvaluateNodeDelta> {
+  const {
+    state,
+    perception,
+    llm,
+    heuristicLoader,
+    auditRunId,
+    clientId,
+    currentUrl,
+    pageTypeDetected,
+    businessType,
+    persona,
+    viewport,
+  } = input;
+
+  // 1. Load + prioritize heuristics via Phase 4b context_profile.
+  const contextProfile = (state as unknown as { context_profile?: unknown }).context_profile;
+  const candidates = await heuristicLoader.loadForContext(contextProfile);
+  const filtered = prioritizeHeuristics(candidates, EVALUATE_HEURISTIC_CAP);
+  if (filtered.length === 0) {
+    return { evaluate_findings_raw: [], analysis_status: 'complete_no_findings' };
+  }
+
+  // 2. Build prompts. R5.5 — heuristics in user msg only.
+  const userPrompt = buildEvaluateUserMessage({
+    perception,
+    filteredHeuristics: filtered,
+    currentUrl,
+    pageTypeDetected,
+    businessType,
+    ...(persona !== undefined ? { persona } : {}),
+  });
+
+  // 3. Retry loop (≤ 2 retries on malformed output per spec §4.2).
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= EVALUATE_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const res = await llm.complete({
+        operation: 'evaluate',
+        audit_run_id: auditRunId,
+        userPrompt,
+        systemPrompt: EVALUATE_SYSTEM_PROMPT,
+        temperature: 0,
+        maxTokens: EVALUATE_MAX_TOKENS,
+        ...(clientId !== undefined ? { client_id: clientId } : {}),
+      });
+      const payload = JSON.parse(extractJsonPayload(res.text)) as unknown;
+      const findings = z.array(RawFindingSchema).parse(payload);
+      return {
+        evaluate_findings_raw: findings.map((f) => tagFinding(f, persona, viewport)),
+      };
+    } catch (err) {
+      lastError = err;
+      if (err instanceof BudgetExceededError) {
+        return { evaluate_findings_raw: [], analysis_status: 'budget_exhausted_partial' };
+      }
+      if (err instanceof TemperatureGuardError) {
+        return { evaluate_findings_raw: [], analysis_status: 'error_r10_temperature_guard_violation' };
+      }
+      if (err instanceof LLMUnavailableError) {
+        return { evaluate_findings_raw: [], analysis_status: 'skipped_llm_output_invalid' };
+      }
+      // JSON.parse / Zod failure → loop until attempts exhausted.
+    }
+  }
+
+  void lastError;
+  return { evaluate_findings_raw: [], analysis_status: 'skipped_llm_output_invalid' };
+}

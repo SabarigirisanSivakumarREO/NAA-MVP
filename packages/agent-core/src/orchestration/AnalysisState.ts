@@ -97,20 +97,42 @@ export type CritiqueVerdict = z.infer<typeof CritiqueVerdictEnum>;
 // ---------------------------------------------------------------------------
 
 /**
- * RawFinding — EvaluateNode output. Forward-stub: permissive `recommendation`
- * shape to be tightened in T119 against spec §7.5 Zod schema.
+ * RawFindingEvidence — structured evidence per AI_Analysis_Agent_v1.0 §4.2.
+ *   element_ref / element_selector / measurement nullable (LLM may lack any
+ *   one); data_point REQUIRED (anchors finding to a perception field path).
+ */
+export const RawFindingEvidenceSchema = z
+  .object({
+    element_ref: z.string().nullable(),
+    element_selector: z.string().nullable(),
+    data_point: z.string().min(1),
+    measurement: z.string().nullable(),
+  })
+  .strict();
+export type RawFindingEvidence = z.infer<typeof RawFindingEvidenceSchema>;
+
+/**
+ * RawFinding — EvaluateNode output. Tightened in T119 to spec §4.2 shape.
+ *   - status: violation / pass / needs_review (drives self-critique filter)
+ *   - severity nullable when status === 'pass'
+ *   - viewport / persona Phase 7 augmentations (multi-bundle + persona) —
+ *     additive beyond spec §4.2; preserved post-tighten per R20.
  */
 export const RawFindingSchema = z
   .object({
     heuristic_id: z.string().min(1),
-    name: z.string().min(1),
-    severity: SeverityEnum,
-    evidence: z.unknown(),
-    recommendation: z.unknown(),
+    status: z.enum(['violation', 'pass', 'needs_review']),
+    observation: z.string().min(10),
+    assessment: z.string().min(10),
+    evidence: RawFindingEvidenceSchema,
+    severity: SeverityEnum.nullable(),
+    confidence_basis: z.string().nullable(),
+    recommendation: z.string().nullable(),
+    needs_review: z.boolean().default(false),
     persona: z.string().nullable().optional(),
     viewport: z.enum(['desktop', 'mobile', 'tablet']).optional(),
   })
-  .passthrough();
+  .strict();
 export type RawFinding = z.infer<typeof RawFindingSchema>;
 
 /**
