@@ -197,7 +197,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 
 ## Block C2 — EvidenceGrounder + Annotate + Store (Day 8)
 
-### T130 — EvidenceGrounder (with GR-012 folded)
+### T130 — EvidenceGrounder (with GR-012 folded) ✅
 - **dep:** T122-T129
 - **spec:** REQ-ANALYZE-NODE-004 + R15.4 (GR-012 benchmark validation)
 - **files:** `packages/agent-core/src/analysis/grounding/EvidenceGrounder.ts` + `packages/agent-core/src/analysis/grounding/rules/GR-012.ts` (NEW; folded per plan.md §3 — punch-list candidate for tasks-v2.md v2.3.4)
