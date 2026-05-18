@@ -157,7 +157,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 - **acceptance:** System prompt persona DIFFERS from evaluate's persona (R5.6) — "rigorous CRO critic" vs evaluate's "CRO consultant". Code review enforces non-overlap. v0.2 act-001 programmatic divergence metric: persona-descriptor sentences satisfy **token-set Jaccard distance ≥ 0.5 AND zero shared word 5-grams**; conformance test computes both deterministically.
 - **conformance:** AC-08
 
-### T121 — SelfCritiqueNode (R5.6 SEPARATE LLM CALL)
+### T121 — SelfCritiqueNode (R5.6 SEPARATE LLM CALL) ✅
 - **dep:** T119, T120
 - **spec:** REQ-ANALYZE-NODE-003 + R5.6
 - **files:** `packages/agent-core/src/analysis/nodes/SelfCritiqueNode.ts`
