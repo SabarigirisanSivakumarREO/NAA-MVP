@@ -1,7 +1,7 @@
 ---
 title: Phase 7 — Analysis Pipeline
 artifact_type: spec
-status: approved
+status: implemented
 version: 0.3
 created: 2026-04-28
 updated: 2026-05-18
