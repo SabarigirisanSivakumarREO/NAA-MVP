@@ -66,6 +66,7 @@ import {
   auditRuns,
   findings,
   llmCallLog,
+  rejectedFindings,
   reproducibilitySnapshots,
 } from '../db/schema.js';
 import { createLogger } from '../observability/logger.js';
@@ -76,6 +77,7 @@ import type {
   AuditRunInsert,
   FindingInsert,
   FindingRow,
+  RejectedFindingInsert,
   ReproducibilitySnapshotInsert,
   StorageAdapter,
   StorageTx,
@@ -218,6 +220,21 @@ export class PostgresStorage implements StorageAdapter {
       const id = inserted[0]?.id;
       if (id === undefined) {
         throw new Error('appendFinding: insert returned no row');
+      }
+      return id;
+    });
+  }
+
+  async appendRejectedFinding(entry: RejectedFindingInsert): Promise<string> {
+    return this.withClient(entry.clientId, async (tx) => {
+      const drz = drizzle((tx as InternalTx).client, { schema });
+      const inserted = await drz
+        .insert(rejectedFindings)
+        .values(entry)
+        .returning({ id: rejectedFindings.id });
+      const id = inserted[0]?.id;
+      if (id === undefined) {
+        throw new Error('appendRejectedFinding: insert returned no row');
       }
       return id;
     });

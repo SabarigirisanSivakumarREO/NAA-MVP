@@ -74,3 +74,162 @@ export class StoreNode {
     return path;
   }
 }
+
+// ─── Phase 7 T132: storeNodeRun (AC-20, REQ-ANALYZE-NODE-005) ───────────
+//
+// Persists grounded findings + rejected findings + screenshots. Findings
+// land in `findings.publish_status='held'` (F-016 warm-up default;
+// WarmupManager flips to 'published' at Phase 9). Rejected findings land
+// in `rejected_findings` append-only (R7.4) with rule_id + reason.
+// Screenshots persist via ScreenshotStorage (R2 in prod, disk in dev per
+// R7.3) — NO base64 in DB.
+//
+// NOTE: each appendFinding / appendRejectedFinding opens its own
+// withClient tx (StorageAdapter contract). Tighter atomicity (single tx
+// across all rows) requires extending StorageTx with insert helpers;
+// deferred to future ratchet. Append-only tables + idempotent
+// screenshot put() bound partial-failure blast radius.
+import type {
+  GroundedFinding as Phase7GroundedFinding,
+  RejectedFinding as Phase7RejectedFinding,
+} from '../../orchestration/AnalysisState.js';
+import type { StorageAdapter } from '../../adapters/StorageAdapter.js';
+import type { ScreenshotStorage } from '../../adapters/ScreenshotStorage.js';
+
+export interface StoreNodeInput {
+  readonly grounded_findings: ReadonlyArray<Phase7GroundedFinding>;
+  readonly rejected_findings: ReadonlyArray<Phase7RejectedFinding>;
+  readonly auditRunId: string;
+  readonly clientId: string;
+  readonly pageUrl: string;
+  readonly pageType?: string;
+  readonly screenshots: {
+    readonly viewport_clean: Buffer;
+    readonly fullpage_clean: Buffer;
+    readonly viewport_annotated?: Buffer;
+    readonly fullpage_annotated?: Buffer;
+  };
+  readonly storage: StorageAdapter;
+  readonly screenshotStorage: ScreenshotStorage;
+}
+
+export interface StoreNodeResult {
+  readonly finding_ids: string[];
+  readonly rejected_ids: string[];
+  readonly screenshot_paths: {
+    readonly viewport_clean: string;
+    readonly fullpage_clean: string;
+    readonly viewport_annotated: string | null;
+    readonly fullpage_annotated: string | null;
+  };
+}
+
+function buildFindingInsert(
+  f: Phase7GroundedFinding,
+  auditRunId: string,
+  clientId: string,
+  pageUrl: string,
+  pageType: string | undefined,
+  screenshotRef: string,
+): Record<string, unknown> {
+  return {
+    auditRunId,
+    clientId,
+    pageUrl,
+    pageType: pageType ?? null,
+    heuristicId: f.heuristic_id,
+    heuristicSource: 'evaluate',
+    category: 'general',
+    status: f.status,
+    severity: f.severity ?? 'low',
+    name: f.heuristic_id,
+    observation: f.observation,
+    assessment: f.assessment,
+    evidence: f.evidence,
+    recommendation: f.recommendation ?? null,
+    confidenceTier: f.confidence_tier,
+    confidenceBasis: f.confidence_basis ?? null,
+    needsReview: f.needs_review ?? false,
+    publishStatus: 'held', // F-016 warm-up default
+    screenshotRef,
+  };
+}
+
+function buildRejectedInsert(
+  r: Phase7RejectedFinding,
+  auditRunId: string,
+  clientId: string,
+  pageUrl: string,
+): Record<string, unknown> {
+  return {
+    auditRunId,
+    clientId,
+    pageUrl,
+    heuristicId: r.heuristic_id,
+    findingContent: r,
+    rejectionStage: 'grounding',
+    rejectionReason: r.rejection_reason,
+    rejectedByRule: r.rejected_by_rule,
+  };
+}
+
+export async function storeNodeRun(input: StoreNodeInput): Promise<StoreNodeResult> {
+  const {
+    grounded_findings,
+    rejected_findings,
+    auditRunId,
+    clientId,
+    pageUrl,
+    pageType,
+    screenshots,
+    storage,
+    screenshotStorage,
+  } = input;
+
+  // Screenshots first — paths are needed for findings.screenshotRef.
+  const putOpts = { audit_run_id: auditRunId, page_url: pageUrl };
+  const viewport_clean = await screenshotStorage.put(screenshots.viewport_clean, putOpts);
+  const fullpage_clean = await screenshotStorage.put(screenshots.fullpage_clean, {
+    ...putOpts,
+    page_url: `${pageUrl}#fullpage`,
+  });
+  const viewport_annotated = screenshots.viewport_annotated
+    ? await screenshotStorage.put(screenshots.viewport_annotated, {
+        ...putOpts,
+        page_url: `${pageUrl}#vp-annot`,
+      })
+    : null;
+  const fullpage_annotated = screenshots.fullpage_annotated
+    ? await screenshotStorage.put(screenshots.fullpage_annotated, {
+        ...putOpts,
+        page_url: `${pageUrl}#fp-annot`,
+      })
+    : null;
+
+  const finding_ids: string[] = [];
+  for (const f of grounded_findings) {
+    const id = await storage.appendFinding(
+      buildFindingInsert(f, auditRunId, clientId, pageUrl, pageType, viewport_clean) as never,
+    );
+    finding_ids.push(id);
+  }
+
+  const rejected_ids: string[] = [];
+  for (const r of rejected_findings) {
+    const id = await storage.appendRejectedFinding(
+      buildRejectedInsert(r, auditRunId, clientId, pageUrl) as never,
+    );
+    rejected_ids.push(id);
+  }
+
+  return {
+    finding_ids,
+    rejected_ids,
+    screenshot_paths: {
+      viewport_clean,
+      fullpage_clean,
+      viewport_annotated,
+      fullpage_annotated,
+    },
+  };
+}

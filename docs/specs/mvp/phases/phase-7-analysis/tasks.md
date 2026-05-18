@@ -222,7 +222,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
   - Pin diameter 28px; box stroke-width 3px; outlines visible over any background
 - **conformance:** AC-19
 
-### T132 — StoreNode
+### T132 — StoreNode ✅
 - **dep:** T074 (DB adapter), T075 (screenshot storage)
 - **spec:** REQ-ANALYZE-NODE-005 + R7.3 + R7.4 + F-016
 - **files:** `packages/agent-core/src/analysis/nodes/StoreNode.ts`
