@@ -125,7 +125,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
 - **acceptance:** Calls page_analyze, browser_screenshot, page_screenshot_full. Returns AnalyzePerception + viewport + fullpage screenshots. Calls detectPageType (T114) to set `current_page_type`. R24 compliance: NO new perception logic; ALL perception via existing accessor + tools.
 - **conformance:** AC-05
 
-### T118 — Evaluate prompt template
+### T118 — Evaluate prompt template ✅
 - **dep:** T002
 - **spec:** REQ-ANALYZE-NODE-002 + AI_Analysis_Agent_v1.0 §7.5
 - **files:** `packages/agent-core/src/analysis/prompts/evaluate.ts`
@@ -150,7 +150,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
   - Persona injection per REQ-ANALYZE-PERSONA-002 when configured
 - **conformance:** AC-07
 
-### T120 — Self-critique prompt template
+### T120 — Self-critique prompt template ✅
 - **dep:** T002
 - **spec:** REQ-ANALYZE-NODE-003 + AI_Analysis_Agent_v1.0 §7.6
 - **files:** `packages/agent-core/src/analysis/prompts/selfCritique.ts`
