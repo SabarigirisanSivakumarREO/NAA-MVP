@@ -20,6 +20,10 @@ const BANNED_PATTERNS: ReadonlyArray<{ readonly id: string; readonly re: RegExp 
   { id: 'uplift_noun', re: /\b\d+(?:\.\d+)?\s*%\s*(?:uplift|lift)\b/i },
   { id: 'uplift_bare', re: /\buplift\b/i },
   { id: 'drive_sales', re: /\bdrive\s+(?:more\s+)?sales\b/i },
+  // Probabilistic bypass patterns (Stage 2.5 review act-007):
+  { id: 'expected_conversion', re: /\b(?:expected|likely|probable|projected|anticipated)\s+(?:to\s+)?(?:increase|boost|drive|lift|improve)\s+(?:the\s+)?(?:conversion|revenue|sales|aov|ltv)/i },
+  { id: 'expected_pct', re: /\b(?:expected|likely|probable|projected|anticipated)\s+(?:to\s+)?(?:increase|boost|lift|improve)\s+(?:by\s+)?\d+(?:\.\d+)?\s*%/i },
+  { id: 'chance_of_lift', re: /\b\d+(?:\.\d+)?\s*%\s+(?:chance|probability|likelihood)\b/i },
 ];
 
 export const GR_007_noConversionPredictions: GroundingRule = (finding) => {

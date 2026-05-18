@@ -266,6 +266,21 @@ describe('AC-16 GR-007 noConversionPredictions (R5.3)', () => {
   it('FAIL — "ROI of 3x"', () => {
     expect(GR_007_noConversionPredictions(f({ assessment: 'Likely ROI of 3 within Q2' }), p(), []).pass).toBe(false);
   });
+  it('FAIL — probabilistic bypass: "expected to increase conversion"', () => {
+    expect(
+      GR_007_noConversionPredictions(f({ recommendation: 'Expected to increase conversion by Q3' }), p(), []).pass,
+    ).toBe(false);
+  });
+  it('FAIL — probabilistic bypass: "likely to boost revenue"', () => {
+    expect(
+      GR_007_noConversionPredictions(f({ assessment: 'This is likely to boost revenue significantly' }), p(), []).pass,
+    ).toBe(false);
+  });
+  it('FAIL — probabilistic bypass: "30% chance of lift"', () => {
+    expect(
+      GR_007_noConversionPredictions(f({ recommendation: 'Estimated 30% chance based on past tests' }), p(), []).pass,
+    ).toBe(false);
+  });
 });
 
 describe('AC-17 GR-008 dataPointReferencesRealSection', () => {
