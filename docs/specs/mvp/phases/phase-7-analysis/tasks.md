@@ -210,7 +210,7 @@ Per [plan.md](plan.md) §1: Day 1 Block A (state + utilities) → Days 2-4 Block
   - GR-012 quantitative tolerance ±20% (R15.4); GR-012 qualitative Levenshtein-similarity ≥ 0.6 OR substring match
 - **conformance:** AC-18
 
-### T131 — AnnotateNode
+### T131 — AnnotateNode ✅
 - **dep:** T047 (page_annotate_screenshot tool), T130
 - **spec:** REQ-ANALYZE-NODE-005 + F-011
 - **files:** `packages/agent-core/src/analysis/nodes/AnnotateNode.ts`
